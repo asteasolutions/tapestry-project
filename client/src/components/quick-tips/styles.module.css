@@ -1,0 +1,44 @@
+.root {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+
+  .content-container {
+    border: 1px dashed var(--color-neutral-200);
+    text-align: center;
+    border-radius: 16px;
+    padding: 26px;
+    margin-top: 11px;
+    color: var(--theme-text-primary);
+
+    .title {
+      font-weight: 600;
+    }
+  }
+
+  hr {
+    height: 1px;
+    background-color: var(--color-neutral-200);
+    border: none;
+    margin: 24px 0;
+  }
+
+  .tips-container {
+    display: grid;
+    grid-template-columns: auto auto;
+    gap: 23px 8px;
+    align-items: center;
+
+    :global(.material-symbols-outlined) {
+      font-size: 22px;
+    }
+
+    :global(.typography) {
+      text-align: left;
+    }
+  }
+}

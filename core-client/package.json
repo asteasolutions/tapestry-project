@@ -1,0 +1,49 @@
+{
+  "name": "tapestry-core-client",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint-ts": "eslint src --report-unused-disable-directives --max-warnings 0",
+    "lint-css": "stylelint src/**/*.css",
+    "prettier": "prettier ./src --check",
+    "lint": "tsc --build && npm run lint-ts && npm run lint-css && npm run prettier"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "stylelint": "^16.25.0",
+    "stylelint-config-standard": "^39.0.1",
+    "vite-css-modules": "^1.11.1"
+  },
+  "peerDependencies": {
+    "@asteasolutions/epub-reader": "^1.0.0",
+    "@tweenjs/tween.js": "^25.0.0",
+    "bowser": "^2.12.1",
+    "clsx": "^2.1.1",
+    "immer": "^10.1.1",
+    "lodash-es": "^4.17.21",
+    "pixi.js": "^8.14.1",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-modal": "^3.16.3",
+    "react-pdf": "^10.2.0",
+    "react-router": "^7.9.6",
+    "tapestry-core": "^1.0.0"
+  },
+  "dependencies": {
+    "@tiptap/extension-color": "^2.24.1",
+    "@tiptap/extension-font-family": "^2.24.1",
+    "@tiptap/extension-highlight": "^2.24.1",
+    "@tiptap/extension-link": "^2.24.1",
+    "@tiptap/extension-placeholder": "^2.24.1",
+    "@tiptap/extension-text-align": "^2.24.1",
+    "@tiptap/extension-text-style": "^2.24.1",
+    "@tiptap/extension-underline": "^2.24.1",
+    "@tiptap/pm": "^2.24.1",
+    "@tiptap/react": "^2.24.1",
+    "@tiptap/starter-kit": "^2.24.1"
+  }
+}

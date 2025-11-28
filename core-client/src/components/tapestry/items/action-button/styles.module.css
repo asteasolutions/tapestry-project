@@ -1,0 +1,15 @@
+.root {
+  :global(.tiptap) {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    p {
+      text-align: center;
+
+      :global(&.is-empty.is-editor-empty)::before {
+        float: none !important;
+      }
+    }
+  }
+}

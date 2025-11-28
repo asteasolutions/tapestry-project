@@ -1,0 +1,55 @@
+.root {
+  background-color: var(--theme-background-neutral);
+  color: var(--theme-text-primary);
+  height: 100%;
+  padding: 20px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  :global(> .title-bar) {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+
+    :global(> .cover) {
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      max-width: 300px;
+      max-height: 300px;
+      box-shadow: var(--box-shadow);
+    }
+
+    :global(> .title-container) {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+  }
+
+  :global(> .epub-container) {
+    flex: 1;
+
+    :global(> iframe) {
+      border: none;
+      width: 100%;
+      height: 100%;
+      flex: 1;
+    }
+  }
+
+  :global(.controls-container) {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  :global(.progress-bar-container) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+}

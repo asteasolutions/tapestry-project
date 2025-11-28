@@ -1,0 +1,100 @@
+.root {
+  --control-color: var(--theme-background-brand);
+  --resize-handle-size: 10px;
+  --create-rel-anchor-size: 11px;
+  --active-create-rel-anchor-size: 15px;
+
+  pointer-events: none;
+  position: absolute;
+  inset: calc(-0.5 * var(--resize-handle-size));
+  display: grid;
+  grid-template-rows: var(--resize-handle-size) 1fr var(--resize-handle-size);
+  grid-template-columns: var(--resize-handle-size) 1fr var(--resize-handle-size);
+
+  .resize-handle {
+    display: grid;
+    place-content: center;
+    pointer-events: auto;
+
+    /* z-index is 1 so that the handles are above the group backgrounds */
+    z-index: 1;
+
+    .create-rel-anchor {
+      pointer-events: auto;
+      cursor: grab;
+      width: var(--create-rel-anchor-size);
+      height: var(--create-rel-anchor-size);
+      border-radius: calc(var(--create-rel-anchor-size) / 2);
+      background-color: var(--control-color);
+      opacity: 1;
+      transition: opacity var(--transition-duration);
+
+      &:hover {
+        width: var(--active-create-rel-anchor-size);
+        height: var(--active-create-rel-anchor-size);
+        border-radius: calc(var(--active-create-rel-anchor-size) / 2);
+      }
+    }
+
+    &.top-left,
+    &.bottom-right {
+      cursor: nwse-resize;
+    }
+
+    &.top-right,
+    &.bottom-left {
+      cursor: nesw-resize;
+    }
+
+    &.top-right,
+    &.bottom-left,
+    &.top-left,
+    &.bottom-right {
+      z-index: 2;
+      transform: scale(var(--scale));
+      border: 1px solid var(--theme-border-brand);
+      background-color: var(--theme-background-primary);
+      border-radius: 4px;
+
+      &.hover,
+      &:hover {
+        background-color: var(--theme-background-brand);
+      }
+    }
+
+    &.top,
+    &.bottom {
+      cursor: ns-resize;
+      transform: scaleY(var(--scale));
+
+      .create-rel-anchor {
+        transform: scaleX(var(--scale));
+      }
+    }
+
+    &.left,
+    &.right {
+      cursor: ew-resize;
+      transform: scaleX(var(--scale));
+
+      .create-rel-anchor {
+        transform: scaleY(var(--scale));
+      }
+    }
+  }
+
+  :global(.anchor) {
+    position: relative;
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: -4px;
+    }
+  }
+
+  .content-placeholder {
+    grid-row: 2;
+    grid-column: 2;
+  }
+}

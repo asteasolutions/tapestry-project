@@ -1,0 +1,18 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+
+  @media screen and (width > 600px) {
+    position: absolute;
+    inset: 0;
+  }
+
+  .placeholder-text {
+    margin: 20px 0 15px;
+    font-weight: 600;
+    text-align: center;
+  }
+}

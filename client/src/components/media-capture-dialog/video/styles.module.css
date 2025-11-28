@@ -1,0 +1,28 @@
+.root {
+  .device-selector-container {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  video {
+    width: 100%;
+    max-width: 640px;
+    border-radius: 8px;
+  }
+
+  :global(.media-capture-stream-preview-wrapper) {
+    &:global(.hidden) {
+      display: none;
+    }
+
+    .preview-placeholder {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      display: grid;
+      justify-content: center;
+      align-items: center;
+    }
+  }
+}

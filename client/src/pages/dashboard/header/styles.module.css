@@ -1,0 +1,36 @@
+.root {
+  .header {
+    display: flex;
+    justify-content: space-between;
+    padding: 20px var(--padding-x);
+    gap: 8px;
+    background-color: var(--theme-background-primary);
+
+    .gemini svg {
+      margin: -1px;
+    }
+
+    .user-menu-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+  }
+
+  .sections-container {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px var(--padding-x);
+    border-top: 1px solid var(--bg-color);
+    background-color: var(--theme-background-primary);
+
+    .new-tapestry-button {
+      @media screen and (width <= 600px) {
+        width: 32px;
+        overflow: hidden;
+        font-size: 0;
+        justify-content: start;
+      }
+    }
+  }
+}

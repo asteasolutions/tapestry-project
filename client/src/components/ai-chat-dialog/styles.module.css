@@ -1,0 +1,12 @@
+.root {
+  height: 800px;
+
+  :global(.modal-wrapper) {
+    width: 600px;
+    height: 100%;
+  }
+
+  :global(.modal-content) {
+    padding: 0;
+  }
+}

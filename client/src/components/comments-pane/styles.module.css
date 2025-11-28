@@ -1,0 +1,11 @@
+.root {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-height: 0;
+
+  .empty-placeholder {
+    text-align: center;
+    padding: 48px;
+    color: var(--theme-text-disabled);
+  }
+}

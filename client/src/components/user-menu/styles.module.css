@@ -1,0 +1,10 @@
+.avatar-container {
+  position: relative;
+}
+
+.user-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 1;
+}

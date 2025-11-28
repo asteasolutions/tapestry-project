@@ -1,0 +1,17 @@
+.error {
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  color: var(--theme-text-negative);
+  text-align: center;
+
+  :global(.material-symbols-outlined) {
+    font-size: 32px;
+  }
+
+  :global(.typography) {
+    overflow-wrap: anywhere;
+  }
+}

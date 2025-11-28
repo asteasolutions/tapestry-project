@@ -1,0 +1,14 @@
+.root {
+  border-radius: 8px;
+  border: 1px solid var(--theme-border-primary);
+  padding: 12px 16px;
+  color: var(--theme-text-secondary);
+  background-color: var(--theme-background-primary);
+  resize: none;
+}
+
+.textarea-label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}

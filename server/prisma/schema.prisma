@@ -1,0 +1,369 @@
+// Prisma schema docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [citext]
+}
+
+model User {
+  id                   String                @id @default(uuid())
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  gsiUserId            String?               @unique
+  email                String                @unique
+  username             String                @unique
+  givenName            String
+  familyName           String
+  avatar               String?
+  tapestries           Tapestry[]
+  tapestryAccess       TapestryAccess[]
+  comments             Comment[]
+  tapestryCreateJobs   TapestryCreateJob[]
+  tapestryInteractions TapestryInteraction[]
+  aiChats              AiChat[]
+  secrets              UserSecret[]
+  tapestryBookmarks    TapestryBookmark[]
+}
+
+enum UITheme {
+  light
+  dark
+}
+
+enum TapestryVisibility {
+  private
+  link
+  public
+}
+
+model Tapestry {
+  id               String                @id @default(uuid())
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  visibility       TapestryVisibility    @default(private)
+  title            String                @db.Citext
+  slug             String
+  description      String?
+  owner            User                  @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  ownerId          String
+  items            Item[]
+  rels             Rel[]
+  theme            UITheme
+  background       String
+  startViewX       Int?
+  startViewY       Int?
+  startViewWidth   Int?
+  startViewHeight  Int?
+  thumbnail        String?
+  parent           Tapestry?             @relation("fork", fields: [parentId], references: [id], onDelete: SetNull)
+  parentId         String?
+  allowForking     Boolean               @default(true)
+  children         Tapestry[]            @relation("fork")
+  userAccess       TapestryAccess[]
+  userInvitations  TapestryInvitation[]
+  comments         Comment[]
+  createJob        TapestryCreateJob?
+  userInteractions TapestryInteraction[]
+  aiChats          AiChat[]
+  groups           Group[]
+  bookmarks        TapestryBookmark[]
+
+  @@unique([ownerId, slug])
+}
+
+model TapestryAccess {
+  id         String   @id @default(uuid())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tapestryId String
+  tapestry   Tapestry @relation(fields: [tapestryId], references: [id], onDelete: Cascade)
+  canEdit    Boolean  @default(false)
+
+  @@unique([userId, tapestryId])
+}
+
+model TapestryInvitation {
+  id         String   @id @default(uuid())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  tapestryId String
+  tapestry   Tapestry @relation(fields: [tapestryId], references: [id], onDelete: Cascade)
+  canEdit    Boolean  @default(false)
+}
+
+model TapestryInteraction {
+  id         String   @id @default(uuid())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tapestryId String
+  tapestry   Tapestry @relation(fields: [tapestryId], references: [id], onDelete: Cascade)
+  lastSeen   DateTime
+  firstSeen  DateTime
+
+  @@unique([userId, tapestryId])
+}
+
+model TapestryBookmark {
+  id         String   @id @default(uuid())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tapestryId String
+  tapestry   Tapestry @relation(fields: [tapestryId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, tapestryId])
+}
+
+enum ItemType {
+  text
+  actionButton
+  audio
+  video
+  book
+  image
+  pdf
+  webpage
+}
+
+enum WebpageType {
+  youtube
+  vimeo
+  iaWayback
+  iaAudio
+  iaVideo
+}
+
+enum ActionType {
+  link
+}
+
+model Item {
+  id                     String                    @id @default(uuid())
+  createdAt              DateTime                  @default(now())
+  updatedAt              DateTime                  @updatedAt
+  tapestry               Tapestry                  @relation(fields: [tapestryId], references: [id], onDelete: Cascade)
+  tapestryId             String
+  positionX              Int
+  positionY              Int
+  width                  Int
+  height                 Int
+  type                   ItemType
+  webpageType            WebpageType?
+  title                  String?
+  dropShadow             Boolean
+  text                   String?
+  backgroundColor        String?
+  source                 String?
+  thumbnail              String?
+  customThumbnail        String?
+  thumbnailWidth         Int?
+  thumbnailHeight        Int?
+  startTime              Int?
+  stopTime               Int?
+  groupId                String?
+  group                  Group?                    @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  notes                  String?
+  defaultPage            Int?
+  actionType             ActionType?
+  action                 String?
+  outRels                Rel[]                     @relation("from")
+  inRels                 Rel[]                     @relation("to")
+  comments               Comment[]
+  presentationSteps      PresentationStep[]
+  referencingAttachments AiChatMessageAttachment[]
+}
+
+model PresentationStep {
+  id         String             @id @default(uuid())
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+  itemId     String?
+  item       Item?              @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  groupId    String?
+  group      Group?             @relation(fields: [groupId], references: [id], onDelete: Restrict)
+  prevStepId String?
+  prevStep   PresentationStep?  @relation("order", fields: [prevStepId], references: [id], onDelete: Restrict)
+  nextSteps  PresentationStep[] @relation("order")
+}
+
+enum RelArrowhead {
+  none
+  arrow
+}
+
+enum LineWeight {
+  light
+  medium
+  heavy
+}
+
+model Rel {
+  id            String       @id @default(uuid())
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  tapestry      Tapestry     @relation(fields: [tapestryId], references: [id], onDelete: Cascade)
+  tapestryId    String
+  fromItem      Item         @relation("from", fields: [fromItemId], references: [id], onDelete: Cascade)
+  fromItemId    String
+  fromAnchorX   Float
+  fromAnchorY   Float
+  fromArrowhead RelArrowhead @default(none)
+  toItem        Item         @relation("to", fields: [toItemId], references: [id], onDelete: Cascade)
+  toItemId      String
+  toAnchorX     Float
+  toAnchorY     Float
+  toArrowhead   RelArrowhead @default(arrow)
+  color         String
+  weight        LineWeight   @default(light)
+  comments      Comment[]
+}
+
+enum CommentContextType {
+  tapestry
+  item
+  rel
+  comment
+}
+
+model Comment {
+  id              String             @id @default(uuid())
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  text            String
+  author          User               @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  authorId        String
+  contextType     CommentContextType
+  tapestry        Tapestry           @relation(fields: [tapestryId], references: [id], onDelete: Cascade)
+  tapestryId      String
+  item            Item?              @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  itemId          String?
+  rel             Rel?               @relation(fields: [relId], references: [id], onDelete: Cascade)
+  relId           String?
+  parentComment   Comment?           @relation("reply", fields: [parentCommentId], references: [id], onDelete: Cascade)
+  parentCommentId String?
+  replies         Comment[]          @relation("reply")
+  deletedAt       DateTime?
+}
+
+enum JobStatus {
+  pending
+  processing
+  complete
+  failed
+}
+
+enum TapestryCreateJobType {
+  import
+  fork
+}
+
+model TapestryCreateJob {
+  id          String                @id @default(uuid())
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+  user        User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  status      JobStatus
+  progress    Float
+  type        TapestryCreateJobType
+  tapestry    Tapestry?             @relation(fields: [tapestryId], references: [id], onDelete: Cascade)
+  tapestryId  String?               @unique
+  title       String?
+  description String?
+  parentId    String?
+  s3Key       String?
+}
+
+enum AiProvider {
+  google
+}
+
+model AiChat {
+  id            String          @id @default(uuid())
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  lastMessageAt DateTime?
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        String
+  aiProvider    AiProvider
+  aiModel       String
+  tapestry      Tapestry?       @relation(fields: [tapestryId], references: [id], onDelete: Cascade)
+  tapestryId    String?
+  messages      AiChatMessage[]
+}
+
+enum AiChatParticipantRole {
+  user
+  assistant
+}
+
+enum AiChatMessageState {
+  pending
+  processed
+  error
+}
+
+model AiChatMessage {
+  id          String                    @id @default(uuid())
+  createdAt   DateTime                  @default(now())
+  updatedAt   DateTime                  @updatedAt
+  chat        AiChat                    @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  chatId      String
+  role        AiChatParticipantRole
+  content     String
+  state       AiChatMessageState
+  attachments AiChatMessageAttachment[]
+}
+
+enum AiChatMessageAttachmentType {
+  item
+}
+
+model AiChatMessageAttachment {
+  id        String                      @id @default(uuid())
+  createdAt DateTime                    @default(now())
+  updatedAt DateTime                    @updatedAt
+  messageId String
+  message   AiChatMessage               @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  type      AiChatMessageAttachmentType
+  itemId    String?
+  item      Item?                       @relation(fields: [itemId], references: [id], onDelete: SetNull)
+}
+
+model Group {
+  id                String             @id @default(uuid())
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  items             Item[]
+  tapestryId        String
+  tapestry          Tapestry           @relation(fields: [tapestryId], references: [id], onDelete: Cascade)
+  color             String?
+  hasBackground     Boolean            @default(true)
+  hasBorder         Boolean            @default(true)
+  presentationSteps PresentationStep[]
+}
+
+enum UserSecretType {
+  googleApiKey
+}
+
+model UserSecret {
+  id          String         @id @default(uuid())
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  type        UserSecretType
+  maskedValue String
+  owner       User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId     String
+}

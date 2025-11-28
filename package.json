@@ -1,0 +1,47 @@
+{
+  "name": "tapestry-project",
+  "author": "Astea Solutions",
+  "license": "MIT",
+  "description": "Tapestry Project",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "core",
+    "core-client",
+    "client",
+    "server",
+    "shared"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "sh -c 'cd core && npm run lint' && sh -c 'cd core-client && npm run lint' && sh -c 'cd shared && npm run lint' && sh -c 'cd client && npm run lint' && sh -c 'cd server && npm run lint'",
+    "db:start": "docker compose -f ./docker-compose.local.yml --env-file ./server/.env up -d --build db",
+    "db:logs": "docker compose -f ./docker-compose.local.yml logs -f db",
+    "redis:start": "docker compose -f ./docker-compose.local.yml --env-file ./server/.env up -d --build redis",
+    "redis:logs": "docker compose -f ./docker-compose.local.yml logs -f redis",
+    "localstack:start": "docker compose -f ./docker-compose.local.yml --env-file ./server/.env up -d --build localstack",
+    "localstack:logs": "docker compose -f ./docker-compose.local.yml logs -f localstack",
+    "worker:start": "docker compose -f ./docker-compose.local.yml --env-file ./server/.env up -d --build worker",
+    "worker:logs": "docker compose -f ./docker-compose.local.yml logs -f worker",
+    "vault:start": "docker compose -f ./docker-compose.local.yml --env-file=./server/.env up -d --build vault",
+    "vault:logs": "docker compose -f ./docker-compose.local.yml logs -f vault"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@types/color": "^4.2.0",
+    "@types/google.accounts": "^0.0.18",
+    "@types/lodash": "^4.17.20",
+    "@types/lodash-es": "^4.17.12",
+    "@types/node": "^24.9.2",
+    "@types/qs": "^6.14.0",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "@types/react-modal": "^3.16.3",
+    "@types/wavesurfer.js": "^6.0.12",
+    "eslint": "^9.39.1",
+    "globals": "^16.4.0",
+    "prettier": "^3.6.2",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.46.4"
+  }
+}

@@ -1,0 +1,111 @@
+.root {
+  position: absolute;
+  background-color: var(--theme-background-inverse);
+  color: var(--theme-text-primary-inverse);
+  padding: 8px;
+  border-radius: 4px;
+  font-size: 0;
+  line-height: initial;
+  white-space: nowrap;
+  z-index: 2;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+
+  :global(body.desktop *:not(:hover) > &),
+  :global(body.mobile &:not(.shown)) {
+    display: none;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    border: 4px solid transparent;
+  }
+
+  :global(&.tooltip-top) {
+    bottom: 100%;
+
+    &::after {
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border-top-color: var(--theme-background-inverse);
+    }
+  }
+
+  :global(&.tooltip-right) {
+    left: 100%;
+
+    &::after {
+      right: 100%;
+      top: 50%;
+      transform: translateY(-50%);
+      border-right-color: var(--theme-background-inverse);
+    }
+  }
+
+  :global(&.tooltip-bottom) {
+    top: 100%;
+
+    &::after {
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border-bottom-color: var(--theme-background-inverse);
+    }
+  }
+
+  :global(&.tooltip-left) {
+    right: 100%;
+
+    &::after {
+      left: 100%;
+      top: 50%;
+      transform: translateY(-50%);
+      border-left-color: var(--theme-background-inverse);
+    }
+  }
+
+  :global(&.tooltip-bottom),
+  :global(&.tooltip-top) {
+    :global(&.tooltip-center) {
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    :global(&.tooltip-start) {
+      left: 0;
+    }
+
+    :global(&.tooltip-end) {
+      right: 0;
+    }
+  }
+
+  :global(&.tooltip-right),
+  :global(&.tooltip-left) {
+    :global(&.tooltip-center) {
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    :global(&.tooltip-start) {
+      top: 0;
+    }
+
+    :global(&.tooltip-end) {
+      bottom: 0;
+    }
+  }
+
+  &.arrow-follows-alignment {
+    &:global(.tooltip-start)::after {
+      left: 15px;
+    }
+
+    &:global(.tooltip-end)::after {
+      left: calc(100% - 15px);
+    }
+  }
+}

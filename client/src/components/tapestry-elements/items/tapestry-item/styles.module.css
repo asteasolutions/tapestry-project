@@ -1,0 +1,46 @@
+.root {
+  .upload-indicator {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    top: calc(100% + var(--active-border-width));
+  }
+
+  &:global(.tapestry-item-active) {
+    .upload-indicator {
+      top: 100%;
+      left: calc(8px + var(--active-border-width));
+      right: calc(8px + var(--active-border-width));
+    }
+  }
+
+  :global(.pointer-action-drag.pointer-action-layer-pixi) & {
+    pointer-events: none;
+
+    & .hit-area {
+      pointer-events: none;
+    }
+  }
+
+  .resize-indicators {
+    --resize-indicators-size: 2px;
+
+    position: absolute;
+    z-index: 0;
+    inset: calc(-0.5 * var(--resize-indicators-size));
+    border-style: solid;
+    border-color: transparent;
+    border-width: calc(var(--resize-indicators-size) * var(--scale));
+    border-radius: var(--border-radius);
+
+    &.restricted-width {
+      border-left-color: var(--theme-border-negative);
+      border-right-color: var(--theme-border-negative);
+    }
+
+    &.restricted-height {
+      border-top-color: var(--theme-border-negative);
+      border-bottom-color: var(--theme-border-negative);
+    }
+  }
+}

@@ -1,0 +1,24 @@
+.root {
+  :global(.loading-dots) {
+    height: 40px;
+  }
+
+  :global(.list-items-container) {
+    display: grid;
+    gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+
+    @media screen and (width <= 1200px) {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    @media screen and (width <= 900px) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media screen and (width <= 600px) {
+      grid-template-columns: minmax(200px, 375px);
+      justify-content: center;
+    }
+  }
+}

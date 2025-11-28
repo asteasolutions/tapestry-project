@@ -1,0 +1,27 @@
+.root {
+  --right-offset: 16px;
+  --width: min(400px, calc(100vw - var(--right-offset) * 2));
+
+  display: grid;
+  grid-template-rows: auto 1fr;
+  position: fixed;
+  top: var(--top);
+  bottom: var(--bottom);
+  right: var(--right-offset);
+  width: var(--width);
+  border-radius: 16px;
+  box-shadow: var(--box-shadow);
+  background-color: var(--theme-background-primary);
+  color: var(--theme-text-primary);
+  transition: right var(--transition-duration);
+
+  &.minimized {
+    right: calc(10px - var(--width));
+  }
+
+  .header {
+    display: flex;
+    align-items: center;
+    padding: 12px 12px 12px 20px;
+  }
+}

@@ -1,0 +1,47 @@
+.root {
+  aspect-ratio: 12 / 10;
+  padding: 12px;
+  box-sizing: border-box;
+  box-shadow: 0 4px 6px 0 rgb(0 0 0 / 8%);
+  background-color: var(--theme-background-primary);
+  border-radius: 16px;
+
+  .image {
+    background-color: var(--theme-background-neutral);
+    border-radius: 8px;
+    animation: pulse 3s infinite;
+    aspect-ratio: 21 / 10;
+  }
+
+  .title {
+    background-color: var(--theme-background-neutral);
+    margin-top: 16px;
+    width: 85%;
+    height: 16px;
+    border-radius: 8px;
+    animation: pulse 3s infinite;
+  }
+
+  .sub-title {
+    background-color: var(--theme-background-neutral);
+    margin-top: 8px;
+    width: 70%;
+    height: 16px;
+    border-radius: 8px;
+    animation: pulse 3s infinite;
+  }
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}

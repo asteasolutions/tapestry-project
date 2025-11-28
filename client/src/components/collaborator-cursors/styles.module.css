@@ -1,0 +1,29 @@
+.collaborators-cursors-container {
+  position: absolute;
+  inset: 0;
+  transform-origin: 0% 0%;
+
+  .cursor-container {
+    position: absolute;
+    display: flex;
+    width: 20px;
+    height: 20px;
+
+    .avatar {
+      --size: 22px;
+
+      position: absolute;
+      top: calc(100% - 8px);
+      left: calc(100% - 8px);
+      border-radius: 50%;
+      border: 1px solid var(--theme-border-inverse);
+      font-size: calc(var(--size) / 2);
+      font-weight: 600;
+      line-height: calc(var(--size) / 2);
+
+      &:has(img) {
+        border-color: var(--bg-color);
+      }
+    }
+  }
+}

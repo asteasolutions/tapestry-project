@@ -1,0 +1,11 @@
+:global(.button-tertiary).icon-button {
+  --icon-color: var(--theme-icon-primary);
+  --text-color: var(--theme-text-primary);
+  --hover-bg-color: var(--theme-background-hover);
+  --hover-icon-color: var(--theme-icon-selected);
+  --active-icon-color: var(--theme-icon-selected);
+  --active-border-color: var(--theme-border-brand-focus);
+  --disabled-bg-color: transparent;
+
+  padding: 4px;
+}

@@ -1,0 +1,11 @@
+.root {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 12px;
+  align-items: center;
+  color: var(--theme-text-primary);
+
+  :global(input) {
+    width: 64px;
+  }
+}

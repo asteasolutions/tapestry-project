@@ -1,0 +1,36 @@
+.loader {
+  height: 100%;
+  display: grid;
+  place-items: stretch;
+
+  > * {
+    grid-area: 1/1;
+  }
+
+  iframe {
+    background-color: white;
+    border: none;
+  }
+}
+
+.loading-spinner {
+  position: absolute;
+  inset: 0;
+  background-color: var(--theme-overlay);
+
+  .loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(var(--scale));
+    width: 150px;
+  }
+}
+
+.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-neutral-0);
+  overflow: hidden;
+}

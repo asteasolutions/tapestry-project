@@ -1,0 +1,15 @@
+.add-api-key-dialog {
+  .form {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+
+    .input {
+      padding: 12px 16px;
+    }
+
+    .label-text {
+      font-weight: 600;
+    }
+  }
+}

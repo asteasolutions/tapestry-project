@@ -1,0 +1,52 @@
+.comment-header {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+
+  .comment-author {
+    font-weight: 600;
+  }
+
+  .author-chip {
+    font-weight: 300;
+    background-color: var(--theme-background-disabled);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  .buttons-container {
+    display: flex;
+
+    button :global(.button-icon) {
+      color: var(--theme-text-tertiary);
+    }
+  }
+
+  .comment-date {
+    color: var(--theme-text-tertiary);
+  }
+}
+
+.edit-comment {
+  margin: 8px 0 0;
+
+  :global(.avatar) {
+    display: none;
+  }
+}
+
+.comment-text {
+  margin: 4px 0 0;
+  padding-left: 32px;
+  white-space: pre-wrap;
+
+  .edit-label {
+    position: relative;
+    color: var(--theme-text-disabled);
+    font-style: italic;
+
+    :global(.tooltip) {
+      font-style: normal;
+    }
+  }
+}

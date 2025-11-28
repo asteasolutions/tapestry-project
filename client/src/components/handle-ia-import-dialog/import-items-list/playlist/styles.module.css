@@ -1,0 +1,45 @@
+.root {
+  overflow: auto;
+  scrollbar-width: none;
+  display: flex;
+  flex-direction: column;
+
+  @media screen and (width <= 900px) {
+    padding: 0 var(--padding-x);
+  }
+
+  .select-all {
+    position: sticky;
+    top: 0;
+    padding-bottom: 8px;
+    background-color: var(--theme-background-primary);
+    border-bottom: 1px solid var(--theme-border-subtle);
+  }
+
+  .entry {
+    flex: 1;
+    padding: 8px 0;
+    display: grid;
+    gap: 10px;
+    align-items: center;
+    grid-template-columns: min-content auto 70px;
+
+    @media screen and (width <= 900px) {
+      grid-template-columns: min-content auto 40px;
+      gap: 5px;
+    }
+
+    .index {
+      text-align: end;
+    }
+
+    .duration {
+      text-align: end;
+    }
+  }
+
+  .checkbox {
+    width: 18px;
+    height: 18px;
+  }
+}

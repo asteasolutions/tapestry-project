@@ -1,0 +1,24 @@
+.root {
+  height: 100%;
+
+  .api-key {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 8px;
+    align-items: center;
+  }
+}
+
+@media screen and (width <= 600px) {
+  .api-key {
+    grid-template-columns: repeat(2, auto);
+    grid-template-rows: repeat(2, auto);
+    justify-items: start;
+
+    .value {
+      grid-row: 2;
+      grid-column: 1/-1;
+      justify-self: stretch;
+    }
+  }
+}

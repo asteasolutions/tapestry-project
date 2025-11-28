@@ -1,0 +1,10 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./core" },
+    { "path": "./core-client" },
+    { "path": "./shared" },
+    { "path": "./client" },
+    { "path": "./server" }
+  ]
+}

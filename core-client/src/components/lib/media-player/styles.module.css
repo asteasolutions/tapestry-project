@@ -1,0 +1,84 @@
+.root {
+  :global(.video-js) {
+    :global(.vjs-big-play-button) {
+      display: none;
+    }
+
+    :global(.vjs-control-bar) {
+      display: flex;
+      background-color: var(--theme-background-primary);
+      padding: 8px;
+      box-sizing: content-box;
+      width: calc(100% - 16px);
+
+      :global(.vjs-control) {
+        color: var(--theme-icon-primary);
+      }
+
+      :global(.vjs-play-control) {
+        color: var(--theme-background-primary);
+        background-color: var(--theme-icon-primary);
+        border-radius: 50%;
+        width: 3em;
+      }
+
+      :global(.vjs-volume-panel) {
+        :global(.vjs-volume-level) {
+          background-color: var(--theme-background-brand-secondary);
+
+          &::before {
+            color: var(--theme-background-brand-secondary);
+          }
+        }
+      }
+
+      :global(.vjs-slider) {
+        background-color: var(--theme-background-neutral);
+
+        :global(.vjs-mouse-display) {
+          background-color: var(--theme-background-brand-secondary);
+        }
+      }
+
+      :global(.vjs-progress-control) {
+        :global(.vjs-load-progress) {
+          background-color: transparent;
+
+          > div {
+            background: none;
+          }
+        }
+
+        :global(.vjs-play-progress) {
+          background-color: var(--theme-background-brand-secondary);
+
+          &::before {
+            color: var(--theme-background-brand-secondary);
+          }
+        }
+      }
+
+      :global(.vjs-menu-content) {
+        background-color: var(--theme-background-primary);
+      }
+    }
+
+    &:global(.vjs-audio-poster-mode) {
+      height: 100%;
+      padding-top: 0;
+
+      :global(.vjs-poster) > img {
+        object-fit: cover;
+      }
+    }
+
+    &:global(.vjs-audio-only-mode) {
+      height: 100%;
+      background-color: transparent;
+
+      :global(.vjs-control-bar) {
+        border-radius: var(--border-radius);
+      }
+    }
+  }
+}

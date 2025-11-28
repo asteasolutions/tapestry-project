@@ -1,0 +1,18 @@
+.root {
+  display: flex;
+  gap: 8px;
+  background-color: var(--theme-background-primary);
+
+  .menu-button {
+    min-width: unset;
+
+    @media screen and (width <= 600px) {
+      width: 20px;
+      overflow: hidden;
+
+      &:global(.button-active) {
+        width: auto;
+      }
+    }
+  }
+}

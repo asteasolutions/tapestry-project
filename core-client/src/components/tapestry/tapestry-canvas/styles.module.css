@@ -1,0 +1,9 @@
+.tapestry-element-container {
+  pointer-events: auto;
+
+  &.inactive,
+  &:has(:global([data-component-type='rel'])),
+  :global(.pointer-action:not(.pointer-action-hover)) > & {
+    pointer-events: none;
+  }
+}

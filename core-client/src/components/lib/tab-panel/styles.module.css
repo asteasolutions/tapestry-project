@@ -1,0 +1,21 @@
+.root {
+  display: flex;
+  border-bottom: 1px solid var(--theme-border-subtle);
+
+  .tab {
+    font-weight: 600;
+    flex: 1;
+    border-radius: 0;
+    border-width: 0;
+    border-bottom: 2px solid transparent;
+    transition: border-bottom-color var(--transition-duration);
+
+    &:not(.selected) {
+      --text-color: var(--theme-text-tertiary);
+    }
+
+    &.selected {
+      border-bottom-color: var(--theme-border-selected);
+    }
+  }
+}

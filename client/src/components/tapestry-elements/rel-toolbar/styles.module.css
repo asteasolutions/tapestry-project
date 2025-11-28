@@ -1,0 +1,22 @@
+.root {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+
+  :global(.weight .toolbar-row) {
+    gap: 2px;
+  }
+
+  .line-width-option {
+    min-width: 50px;
+    height: 24px;
+
+    &::after {
+      content: '';
+      display: block;
+      width: 100%;
+      border-bottom: var(--line-width) solid var(--theme-text-primary);
+    }
+  }
+}

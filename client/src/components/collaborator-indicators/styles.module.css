@@ -1,0 +1,27 @@
+.root {
+  display: flex;
+  align-items: center;
+  user-select: none;
+  padding-right: 12px;
+
+  .collaborator-container {
+    width: 20px;
+
+    .avatar {
+      pointer-events: auto;
+      border-radius: 50%;
+      border: 1px solid var(--theme-border-inverse);
+      font-weight: 600;
+      transition: transform var(--transition-duration);
+
+      &:has(img) {
+        border-color: var(--bg-color);
+      }
+
+      &:hover {
+        transform: scale(1.1, 1.1);
+        z-index: 1;
+      }
+    }
+  }
+}

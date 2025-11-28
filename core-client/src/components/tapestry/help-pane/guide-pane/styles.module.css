@@ -1,0 +1,30 @@
+.root {
+  padding: 30px 40px;
+  user-select: none;
+  -webkit-user-select: none;
+  overflow-y: auto;
+
+  .section {
+    &:not(:last-child) {
+      padding-bottom: 30px;
+    }
+
+    .section-title {
+      font-weight: bold;
+      padding-bottom: 5px;
+    }
+
+    .group-title {
+      padding-top: 10px;
+      padding-left: 2px;
+    }
+
+    .tip {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 15px 0;
+      padding-left: 4px;
+    }
+  }
+}

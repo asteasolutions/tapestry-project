@@ -1,0 +1,105 @@
+.root {
+  display: grid;
+  grid-template-rows: 1fr auto;
+  color: var(--theme-text-primary);
+  border-radius: 0 0 16px 16px;
+  border-top: 1px solid var(--theme-border-subtle);
+  box-sizing: border-box;
+  height: 100%;
+  min-height: 300px;
+
+  &.hidden {
+    display: none;
+  }
+
+  .missing-api-key-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: var(--theme-text-secondary);
+    gap: 8px;
+
+    .api-icon {
+      font-size: 40px;
+      padding: 8px;
+      border-radius: 8px;
+      background: var(--theme-background-secondary-inverse);
+      color: var(--theme-icon-inverse);
+    }
+
+    .missing-api-key-message {
+      font-weight: bold;
+    }
+
+    .add-api-key-button {
+      margin-top: 12px;
+    }
+  }
+
+  .empty-placeholder {
+    text-align: center;
+    padding: 48px;
+    color: var(--theme-text-disabled);
+  }
+
+  .chat {
+    display: grid;
+    grid-template-rows: 1fr;
+    min-height: 0;
+
+    .greeting-colored {
+      background-image: linear-gradient(to right, #1b80fc, #9b87ed);
+      color: transparent;
+      background-clip: text;
+      padding: 24px 32px 12px;
+      width: fit-content;
+    }
+
+    .greeting {
+      color: var(--theme-text-tertiary);
+      padding: 0 32px;
+    }
+
+    .list-loading-indicator {
+      position: absolute;
+      inset: 0;
+    }
+
+    :global(.lazy-list-item) {
+      padding: 12px 32px;
+      overflow-wrap: anywhere;
+    }
+
+    .input-wrapper {
+      display: flex;
+      border-top: 1px solid var(--theme-border-disabled);
+      margin-top: 8px;
+
+      .input {
+        flex: 1;
+      }
+
+      .attached-items-indicator {
+        user-select: none;
+        -webkit-user-select: none;
+        background-color: var(--color-primary-100);
+        color: var(--color-neutral-0);
+        border-radius: 8px;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+      }
+    }
+
+    .error-message {
+      color: var(--theme-text-negative);
+      padding: 8px;
+      text-align: center;
+    }
+  }
+}

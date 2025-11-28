@@ -1,0 +1,22 @@
+:global(.info-modal-table) {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 4px 16px;
+  margin: 16px 0;
+
+  :global(.info-modal-key) {
+    font-weight: 500;
+    justify-self: end;
+  }
+
+  :global(.info-modal-value) {
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+    min-width: 200px;
+    max-width: 300px;
+
+    :global(.material-symbols-outlined) {
+      font-size: inherit;
+    }
+  }
+}

@@ -1,0 +1,131 @@
+services:
+  client:
+    build:
+      dockerfile: ./Dockerfile.client
+      args:
+        VITE_API_URL: https://${HOST}-api.asteasolutions.net/api
+        VITE_AUTH_PROVIDER: ${AUTH_PROVIDER}
+        VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+        VITE_BUG_REPORT_FORM_URL: ${BUG_REPORT_FORM_URL}
+        VITE_AI_CHAT_EXPIRES_IN: ${AI_CHAT_EXPIRES_IN}
+        VITE_WEBPAGE_LOADER_TIMEOUT: ${WEBPAGE_LOADER_TIMEOUT}
+        VITE_STUN_SERVER: ${STUN_SERVER}
+    networks:
+      - traefik
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.${ENVIRONMENT_NAME}.rule=Host(`${HOST}.asteasolutions.net`)
+      - traefik.http.services.${ENVIRONMENT_NAME}.loadbalancer.server.port=80
+      - traefik.http.routers.${ENVIRONMENT_NAME}.entrypoints=https
+      - traefik.http.routers.${ENVIRONMENT_NAME}.tls=true
+
+  server:
+    build:
+      dockerfile: ./Dockerfile.server
+      target: server
+    environment: &server_env
+      DB_HOST: db
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      DB_USE_SSL: ${DB_USE_SSL}
+      DATABASE_URL: postgresql://${DB_USER}:${DB_PASS}@db:5432/${DB_NAME}?schema=public
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      SECRET_KEY: ${SECRET_KEY}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_REGION: ${AWS_REGION}
+      AWS_S3_BUCKET_NAME: ${AWS_S3_BUCKET_NAME}
+      REDIS_HOST: redis
+      REDIS_PORT: ${REDIS_PORT}
+      EXTERNAL_SERVER_URL: https://${HOST}-api.asteasolutions.net
+      VIEWER_URL: https://${HOST}.asteasolutions.net
+      JOBS_ADMIN_NAME: ${JOBS_ADMIN_NAME}
+      JOBS_ADMIN_PASSWORD: ${JOBS_ADMIN_PASSWORD}
+      VAULT_ADDR: ${VAULT_ADDR}
+      VAULT_ROLE_ID: ${VAULT_ROLE_ID}
+      VAULT_SECRET_ID: ${VAULT_SECRET_ID}
+    networks:
+      - traefik
+      - database
+      - redis
+      - vault
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.${ENVIRONMENT_NAME}-api.rule=Host(`${HOST}-api.asteasolutions.net`)
+      - traefik.http.services.${ENVIRONMENT_NAME}-api.loadbalancer.server.port=3000
+      - traefik.http.routers.${ENVIRONMENT_NAME}-api.entrypoints=https
+      - traefik.http.routers.${ENVIRONMENT_NAME}-api.tls=true
+
+    depends_on:
+      - db
+      - redis
+      - vault
+
+  worker:
+    build:
+      dockerfile: ./Dockerfile.server
+      target: worker
+    environment:
+      <<: *server_env
+      PUPPETEER_ARGS: "--no-sandbox,--disable-gpu,--disable-dev-shm-usage"
+    depends_on:
+      - db
+      - redis
+    networks:
+      - database
+      - redis
+
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - database
+
+  redis:
+    image: redis:7
+    volumes:
+      - ./deployment/redis/redis.conf:/usr/local/etc/redis/redis.conf
+    networks:
+      - redis
+
+  vault:
+    image: hashicorp/vault:1.20
+    ports:
+      - "8200:8200"
+    restart: unless-stopped
+    cap_add:
+      - IPC_LOCK
+    environment:
+      VAULT_ADDR: http://127.0.0.1:8200
+      ROLE_ID: ${VAULT_ROLE_ID}
+      SECRET_ID: ${VAULT_SECRET_ID}
+      VAULT_TOKEN: ${VAULT_ROOT_TOKEN}
+      VAULT_SEAL_TYPE: awskms
+      AWS_REGION: ${VAULT_AWS_REGION}
+      VAULT_AWSKMS_SEAL_KEY_ID: ${VAULT_KMS_KEY_ARN}
+      AWS_ACCESS_KEY_ID: ${VAULT_AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${VAULT_AWS_SECRET_ACCESS_KEY}
+      VAULT_LOCAL_CONFIG: 'ui = true disable_mlock = false storage "file" { path="/vault/data" } listener "tcp" { address="0.0.0.0:8200" tls_disable = true }'
+    volumes:
+      - vault-data:/vault/data
+      - ./deployment/vault:/scripts
+    networks:
+      - vault
+    command: ["/scripts/start-vault.sh"]
+
+networks:
+  database:
+  redis:
+  traefik:
+    external: true
+  vault:
+
+volumes:
+  pgdata:
+  vault-data:

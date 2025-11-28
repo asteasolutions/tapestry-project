@@ -1,0 +1,7 @@
+.root {
+  :global(.more .submenu) {
+    inset: auto;
+    right: -8px;
+    bottom: calc(100% + 16px);
+  }
+}

@@ -1,0 +1,16 @@
+.page-selector {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+
+  .page-input {
+    width: 25px;
+    border-radius: 8px;
+    padding: 5px 7px;
+  }
+
+  .page-input-button {
+    padding: 0;
+    border: none;
+  }
+}

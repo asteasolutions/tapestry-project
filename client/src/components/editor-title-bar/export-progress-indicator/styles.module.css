@@ -1,0 +1,7 @@
+.circle {
+  fill: transparent;
+  stroke-width: 2;
+  transition: stroke-dasharray 0.2s;
+  transform: rotate(-90deg);
+  transform-origin: center;
+}

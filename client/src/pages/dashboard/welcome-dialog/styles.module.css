@@ -1,0 +1,45 @@
+.root {
+  :global(&.modal) {
+    width: auto;
+    max-width: min(1000px, 90%);
+    max-height: 90%;
+  }
+
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-weight: 600;
+
+    .icon-container {
+      height: 36px;
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--color-primary-500);
+      border-radius: 8px;
+    }
+  }
+
+  :global(.modal-wrapper) {
+    gap: 16px;
+  }
+
+  .content {
+    columns: auto 2;
+
+    @media screen and (width <= 900px) {
+      columns: unset;
+    }
+
+    p:first-of-type {
+      margin-top: 0;
+    }
+  }
+
+  :global(.simple-modal-buttons-container) {
+    align-items: center;
+    gap: 24px;
+  }
+}

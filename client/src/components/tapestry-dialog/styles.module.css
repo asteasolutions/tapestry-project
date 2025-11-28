@@ -1,0 +1,21 @@
+.modal {
+  .form {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    padding: 10px 0;
+
+    .input {
+      padding: 12px 16px;
+    }
+
+    .label-text {
+      font-weight: 600;
+
+      .optional {
+        color: var(--theme-text-tertiary);
+        font-weight: 400;
+      }
+    }
+  }
+}

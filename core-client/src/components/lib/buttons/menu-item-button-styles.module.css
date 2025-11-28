@@ -1,0 +1,39 @@
+:global(.button-tertiary.menu-item-button),
+:global(.button-tertiary-negative.menu-item-button) {
+  --disabled-bg-color: transparent;
+
+  gap: 8px;
+  flex-grow: 1;
+  justify-content: start;
+  padding: 8px;
+  white-space: nowrap;
+  min-width: 200px;
+
+  :global(&.typography-body-sm) {
+    font-weight: 400;
+  }
+
+  .shortcut-label {
+    color: var(--theme-text-tertiary);
+    flex-grow: 1;
+    text-align: end;
+  }
+
+  @media screen and (width <= 600px) {
+    padding: 4px;
+  }
+}
+
+:global(.button-tertiary.menu-item-button) {
+  --text-color: var(--theme-text-primary);
+  --icon-color: var(--theme-icon-primary);
+  --hover-bg-color: var(--theme-background-selected);
+  --hover-text-color: var(--theme-text-brand);
+  --hover-icon-color: var(--hover-text-color);
+  --active-text-color: var(--theme-text-brand);
+  --active-icon-color: var(--active-text-color);
+}
+
+:global(.button-tertiary-negative.menu-item-button) {
+  --hover-bg-color: var(--theme-background-negative-subtle);
+}

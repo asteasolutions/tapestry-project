@@ -1,0 +1,34 @@
+.scroll-indicator {
+  position: absolute;
+  pointer-events: none;
+  bottom: 10px;
+  right: 5px;
+}
+
+.editor {
+  height: 100%;
+
+  &::highlight(match-highlight) {
+    background-color: orange;
+    color: white;
+  }
+
+  &:not(.interactive) {
+    :global(.tiptap) {
+      scrollbar-width: none;
+      overflow: hidden;
+    }
+  }
+
+  &.interactive {
+    :global(.tiptap) {
+      /*
+      We can thank Safari for this masterpiece. If the editor is always scrollable this causes the God-forsaken browser
+      to draw an extra "layer" (https://webkit.org/web-inspector/layers-tab/) for every text item. The reason being
+      that the DOM element has -webkit-overflow-scrolling: touch. Turns out that the new Internet Explorer decides
+      to apply it whenever we set the overflow property to scroll or auto.
+      */
+      overflow: auto;
+    }
+  }
+}

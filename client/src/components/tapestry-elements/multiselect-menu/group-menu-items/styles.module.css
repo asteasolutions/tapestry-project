@@ -1,0 +1,50 @@
+.color-buttons-row {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.checkboxes {
+  display: flex;
+  justify-content: space-between;
+  width: 90%;
+}
+
+.group-color-button {
+  &.has-border :global(.color-circle) {
+    border: 1px dashed var(--opaque-color);
+    background-clip: content-box;
+  }
+
+  &.has-border:not(.has-background) :global(.color-circle) {
+    background-color: transparent;
+  }
+
+  &:not(.has-border, .has-background) :global(.color-circle) {
+    position: relative;
+    border: 2.5px solid var(--theme-icon-primary);
+    transform: rotate(-45deg);
+
+    :global(&::before) {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 2px;
+      height: calc(100% + 3px);
+      background-color: var(--color);
+      transform: translateY(-50%);
+    }
+
+    :global(&::after) {
+      content: '';
+      position: absolute;
+      right: 50%;
+      top: 50%;
+      width: 2px;
+      height: calc(100% + 12px);
+      background-color: var(--theme-icon-primary);
+      transform: translateY(-50%);
+    }
+  }
+}

@@ -1,0 +1,24 @@
+.root {
+  margin: 2px;
+  border: 3px solid var(--theme-background-primary);
+  background-color: var(--color-neutral-150);
+  border-radius: 6px;
+  box-shadow:
+    0 1px 4px rgb(12 12 13 / 10%),
+    0 1px 4px rgb(12 12 13 / 5%);
+  height: 4px;
+  overflow: hidden;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    background-color: var(--theme-background-brand-secondary);
+    border-radius: 4px;
+    width: var(--upload-progress);
+    min-width: 4px;
+    transition: width 0.3s linear;
+  }
+}

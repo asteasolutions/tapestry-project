@@ -1,0 +1,18 @@
+.root {
+  :global(.modal-wrapper) {
+    gap: 12px;
+    width: 540px;
+  }
+
+  :global(.modal-content) {
+    padding: 0;
+  }
+
+  .content {
+    padding: 30px;
+  }
+
+  &.minimized {
+    display: none !important;
+  }
+}

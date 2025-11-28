@@ -1,0 +1,46 @@
+.root {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: var(--theme-text-primary);
+  padding: 8px 12px;
+  border: 1px solid var(--theme-border-subtle);
+  border-radius: 6px;
+  gap: 12px;
+
+  &:hover {
+    border-color: var(--theme-border-brand-focus);
+  }
+
+  &.highlighted {
+    border-color: var(--theme-border-focus-button);
+  }
+
+  .item-type-icon {
+    font-size: 16px;
+    padding: 8px;
+    border: 1px solid var(--theme-border-primary);
+    border-radius: 6px;
+  }
+
+  .result-content-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .thumbnail {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 52px;
+    border: 1px solid var(--theme-border-primary);
+    border-radius: 6px;
+
+    img& {
+      object-fit: contain;
+    }
+  }
+}

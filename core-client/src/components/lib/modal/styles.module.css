@@ -1,0 +1,112 @@
+.root {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  background-color: var(--theme-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  :global(.modal) {
+    outline: none;
+    max-width: max-content;
+    max-height: calc(100% - 120px);
+    overflow: hidden;
+    display: flex;
+    background-color: var(--theme-background-primary);
+    color: var(--theme-text-primary);
+    border-radius: 16px;
+    border: none;
+  }
+
+  :global(.modal-compact) {
+    max-width: 300px;
+    width: fit-content;
+    height: fit-content;
+  }
+
+  :global(.modal-wrapper) {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 100%;
+    max-width: 100%;
+  }
+
+  --padding-x: 30px;
+  --padding-y: 20px;
+
+  @media screen and (width <= 900px) {
+    --padding-x: 15px;
+    --padding-y: 10px;
+  }
+
+  :global(.modal-title-bar) {
+    padding: 20px var(--padding-x) 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  :global(.modal-content) {
+    flex: 1 1 0%;
+    overflow: auto;
+    padding: 0 var(--padding-x) 20px;
+  }
+}
+
+.simple-modal {
+  &:global(.modal) {
+    width: 568px;
+    max-width: unset;
+
+    @media screen and (width <= 600px) {
+      width: 90%;
+    }
+  }
+
+  :global(.modal-title-bar) {
+    padding: 20px 16px 0 28px;
+
+    @media screen and (width <= 600px) {
+      padding: 16px 14px 0 24px;
+    }
+  }
+
+  :global(.modal-wrapper) {
+    width: 100%;
+  }
+
+  :global(.modal-content) {
+    padding: 0;
+  }
+
+  :global(.simple-modal-content-container) {
+    padding: 8px 28px 32px;
+    overflow: auto;
+
+    @media screen and (width <= 600px) {
+      padding: 8px 24px 24px;
+    }
+  }
+
+  .separator {
+    margin: 0;
+    border: none;
+    height: 1px;
+    background-color: var(--theme-border-subtle);
+    flex-shrink: 0;
+  }
+
+  :global(.simple-modal-buttons-container) {
+    display: flex;
+    align-items: end;
+    justify-content: end;
+    gap: 8px;
+    padding: 16px;
+
+    @media screen and (width <= 600px) {
+      padding: 12px 14px;
+    }
+  }
+}

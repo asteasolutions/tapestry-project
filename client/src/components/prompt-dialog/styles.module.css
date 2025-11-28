@@ -1,0 +1,26 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  margin: 10px 50px 70px;
+
+  :global(&.compact) {
+    margin: 10px;
+  }
+
+  .icon-container {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-primary-500);
+    border-radius: 8px;
+    margin-bottom: 6px;
+  }
+
+  .content {
+    margin-top: 24px;
+  }
+}

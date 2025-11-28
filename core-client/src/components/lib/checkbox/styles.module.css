@@ -1,0 +1,10 @@
+.label {
+  color: var(--theme-text-primary);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+
+  .disabled {
+    color: var(--theme-text-disabled);
+  }
+}

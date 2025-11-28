@@ -1,0 +1,11 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 5px;
+  gap: 15px;
+  color: var(--theme-text-primary);
+
+  .toggle {
+    align-self: start;
+  }
+}

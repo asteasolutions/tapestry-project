@@ -1,0 +1,102 @@
+.content {
+  display: grid;
+  gap: 8px;
+
+  .pending-permissions-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    color: var(--theme-text-negative);
+
+    :global(> .typography) {
+      font-weight: 600;
+    }
+
+    .icon-container {
+      width: 68px;
+      height: 68px;
+      padding: 14px;
+      box-sizing: border-box;
+      border-radius: 50%;
+      background-color: var(--theme-icon-negative);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      img {
+        width: 40px;
+        height: 40px;
+        display: none;
+      }
+
+      &::after {
+        content: attr(data-icon);
+        font-size: 40px;
+        display: block;
+        font-family: 'Material Symbols Outlined', sans-serif;
+        color: white;
+      }
+
+      &:hover {
+        img {
+          display: block;
+        }
+
+        &::after {
+          display: none;
+        }
+      }
+    }
+
+    &.granted {
+      color: var(--theme-text-positive);
+
+      .icon-container {
+        background-color: var(--theme-icon-positive);
+
+        &::after {
+          display: none;
+        }
+
+        img {
+          display: block;
+        }
+      }
+    }
+  }
+
+  .status {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    padding: 4px;
+
+    :global(.material-symbols-outlined) {
+      font-size: 16px;
+    }
+
+    .recording-icon {
+      color: var(--theme-text-negative);
+      animation: 1s ease-in-out 0s infinite alternate blink;
+    }
+  }
+}
+
+.buttons {
+  display: flex;
+  justify-content: end;
+  align-items: center;
+  gap: 8px;
+  margin-top: 24px;
+}
+
+@keyframes blink {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}

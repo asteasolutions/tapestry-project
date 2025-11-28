@@ -1,0 +1,21 @@
+.root {
+  display: grid;
+  grid-template-rows: 1fr auto;
+  color: var(--theme-text-primary);
+  min-height: 0;
+
+  :global(.lazy-list-item) {
+    padding: 12px 32px;
+  }
+
+  .loading-indicator {
+    position: absolute;
+    inset: 0;
+  }
+
+  .empty-placeholder {
+    text-align: center;
+    padding: 48px;
+    color: var(--theme-text-disabled);
+  }
+}

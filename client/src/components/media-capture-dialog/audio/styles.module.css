@@ -1,0 +1,18 @@
+.root {
+  :global(.media-capture-stream-preview-wrapper) {
+    height: 40px;
+    padding: 4px 8px;
+    background-color: var(--theme-background-info-subtle);
+    border-radius: 8px;
+
+    &:global(.hidden) {
+      /* Setting `display: none` messes up the WaveSurfer's dimension calculations */
+      position: absolute;
+      left: -9999px;
+    }
+  }
+
+  .player {
+    border-radius: 8px;
+  }
+}

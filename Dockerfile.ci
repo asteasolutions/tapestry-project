@@ -1,0 +1,21 @@
+FROM node:24-alpine
+
+ADD package.json package-lock.json /app/
+ADD core/package.json /app/core/
+ADD core-client/package.json /app/core-client/
+ADD shared/package.json /app/shared/
+ADD client/package.json /app/client/
+ADD server/package.json /app/server/
+
+WORKDIR /app
+RUN npm ci
+
+ADD core/ /app/core
+ADD core-client/ /app/core-client
+ADD shared/ /app/shared
+ADD client/ /app/client
+ADD server/ /app/server
+
+RUN cd /app/server && npm run prisma:generate
+
+CMD ["npm", "run", "lint"]

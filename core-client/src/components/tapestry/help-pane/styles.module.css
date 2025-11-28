@@ -1,0 +1,14 @@
+.root {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-height: 0;
+
+  .tab-panel {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+
+    :global(.button-tertiary) {
+      padding: 8px;
+    }
+  }
+}

@@ -1,0 +1,23 @@
+.line-clamp {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--line-clamp);
+  line-clamp: var(--line-clamp);
+}
+
+:global(.typography) {
+  :global(&.error) {
+    color: var(--theme-text-negative);
+  }
+
+  :global(&.warning) {
+    color: var(--theme-text-warning);
+  }
+
+  :global(&.ellipsize) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}

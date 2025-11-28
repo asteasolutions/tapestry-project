@@ -1,0 +1,38 @@
+.container {
+  --item-width: 14px;
+  --toggle-height: 20px;
+  --displacement: calc(var(--toggle-height) / 2 - var(--item-width) / 2);
+
+  position: relative;
+  width: calc(2 * var(--toggle-height));
+  height: var(--toggle-height);
+  background-color: var(--theme-background-neutral);
+  border-radius: var(--toggle-height);
+  transition: background-color 0.3s;
+
+  &:global(.checked) {
+    background-color: var(--theme-background-brand);
+  }
+
+  &.disabled {
+    background-color: var(--theme-background-disabled);
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    display: block;
+    top: var(--displacement);
+    left: var(--displacement);
+    bottom: var(--displacement);
+    width: var(--item-width);
+    background-color: white;
+    transition: left 0.3s ease-in-out;
+    border-radius: calc(var(--item-width) / 2);
+    pointer-events: none;
+  }
+
+  &:global(.checked)::after {
+    left: calc(100% - var(--item-width) - var(--displacement));
+  }
+}

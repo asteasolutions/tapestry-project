@@ -1,0 +1,201 @@
+.button {
+  :global(&.typography-body-sm) {
+    font-weight: 600;
+  }
+
+  cursor: pointer;
+  text-decoration: none;
+  display: flex;
+  gap: 2px;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border-style: solid;
+  user-select: none;
+  -webkit-user-select: none;
+  transition:
+    background-color var(--transition-duration),
+    border-color var(--transition-duration),
+    color var(--transition-duration),
+    width var(--transition-duration);
+
+  /* Set variable defaults. Button variants should *not* override --internal-* variables. */
+  --internal-border-width: var(--border-width, 2px);
+
+  /* Default state: */
+  --internal-bg-color: var(--bg-color);
+  --internal-text-color: var(--text-color, var(--theme-text-primary-inverse));
+  --internal-icon-color: var(--icon-color, var(--theme-icon-inverse));
+  --internal-border-color: var(--border-color, var(--internal-bg-color));
+
+  /* Hover: */
+  --internal-hover-bg-color: var(--hover-bg-color, var(--internal-bg-color));
+  --internal-hover-text-color: var(--hover-text-color, var(--internal-text-color));
+  --internal-hover-icon-color: var(--hover-icon-color, var(--internal-icon-color));
+  --internal-hover-border-color: var(--hover-border-color, var(--internal-hover-bg-color));
+
+  /* Active: */
+  --internal-active-bg-color: var(--active-bg-color, var(--internal-hover-bg-color));
+  --internal-active-text-color: var(--active-text-color, var(--internal-text-color));
+  --internal-active-icon-color: var(--active-icon-color, var(--internal-icon-color));
+  --internal-active-border-color: var(--active-border-color, var(--internal-active-bg-color));
+
+  /* Disabled: */
+  --internal-disabled-bg-color: var(--disabled-bg-color, var(--theme-background-disabled));
+  --internal-disabled-text-color: var(--disabled-text-color, var(--theme-text-disabled));
+  --internal-disabled-icon-color: var(--disabled-icon-color, var(--theme-icon-disabled));
+  --internal-disabled-border-color: var(--disabled-border-color, var(--internal-disabled-bg-color));
+
+  background-color: var(--internal-bg-color);
+  border-width: var(--internal-border-width);
+  border-color: var(--internal-border-color);
+  color: var(--internal-text-color);
+
+  :global(.button-icon) {
+    font-size: 20px;
+    color: var(--internal-icon-color);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    background-color: var(--internal-disabled-bg-color);
+    border-color: var(--internal-disabled-border-color);
+    color: var(--internal-disabled-text-color);
+
+    :global(.button-icon) {
+      color: var(--internal-disabled-icon-color);
+    }
+  }
+
+  &.with-icon {
+    padding-left: calc(16px - var(--internal-border-width));
+  }
+
+  &.icon-only {
+    padding: calc(6px - var(--internal-border-width));
+  }
+
+  :global(&.button-small) {
+    padding: calc(6px - var(--internal-border-width)) calc(15px - var(--internal-border-width));
+
+    &.with-icon {
+      padding-left: calc(10px - var(--internal-border-width));
+    }
+
+    &.icon-only {
+      padding: calc(2px - var(--internal-border-width));
+    }
+  }
+
+  &.with-tooltip {
+    position: relative;
+  }
+
+  &:hover:not(:disabled) {
+    background-color: var(--internal-hover-bg-color);
+    border-color: var(--internal-hover-border-color);
+    color: var(--internal-hover-text-color);
+
+    :global(.button-icon) {
+      color: var(--internal-hover-icon-color);
+    }
+  }
+
+  &:active:not(:disabled),
+  :global(&.button-active):not(:disabled) {
+    background-color: var(--internal-active-bg-color);
+    border-color: var(--internal-active-border-color);
+    color: var(--internal-active-text-color);
+
+    :global(.button-icon) {
+      color: var(--internal-active-icon-color);
+    }
+  }
+
+  @media screen and (width <= 600px) {
+    padding: 4px 12px;
+
+    &.with-icon {
+      padding-left: 4px;
+    }
+  }
+}
+
+:global(.button-primary) {
+  --bg-color: var(--theme-background-brand-secondary);
+  --hover-bg-color: var(--theme-background-brand-secondary-hover);
+  --active-border-color: var(--theme-border-focus-button);
+}
+
+:global(.button-primary-negative) {
+  --bg-color: var(--theme-background-negative);
+  --hover-bg-color: var(--theme-background-negative-hover);
+  --active-border-color: var(--theme-border-negative);
+}
+
+:global(.button-secondary) {
+  --bg-color: var(--theme-background-neutral);
+  --text-color: var(--theme-text-secondary);
+  --icon-color: var(--theme-icon-primary);
+  --hover-bg-color: var(--theme-background-neutral-hover);
+  --active-border-color: var(--theme-border-primary);
+}
+
+:global(.button-tertiary) {
+  --bg-color: transparent;
+  --text-color: var(--theme-text-primary);
+  --icon-color: var(--theme-icon-brand);
+  --disabled-bg-color: transparent;
+}
+
+:global(.button-tertiary-negative) {
+  --bg-color: transparent;
+  --text-color: var(--theme-text-negative);
+  --icon-color: var(--theme-icon-negative);
+  --hover-text-color: var(--theme-text-negative-hover);
+  --hover-icon-color: var(--hover-text-color);
+  --active-text-color: var(--theme-text-negative-focused);
+  --active-icon-color: var(--active-text-color);
+  --disabled-bg-color: transparent;
+}
+
+:global(.button-outline) {
+  --border-width: 1px;
+  --bg-color: transparent;
+  --text-color: var(--theme-text-primary);
+  --icon-color: var(--theme-icon-primary);
+  --border-color: var(--theme-border-primary);
+  --hover-border-color: var(--theme-border-primary);
+  --hover-bg-color: var(--theme-background-neutral);
+  --active-border-color: var(--theme-border-primary);
+  --disabled-bg-color: transparent;
+  --disabled-border-color: var(--theme-border-disabled);
+}
+
+:global(.button-outline-negative) {
+  --border-width: 1px;
+  --bg-color: transparent;
+  --text-color: var(--theme-text-negative);
+  --icon-color: var(--theme-icon-negative);
+  --border-color: var(--theme-border-negative);
+  --hover-border-color: var(--theme-border-negative);
+  --hover-bg-color: var(--theme-background-negative-subtle);
+  --active-border-color: var(--theme-border-negative);
+  --disabled-bg-color: transparent;
+  --disabled-border-color: var(--theme-border-disabled);
+}
+
+:global(.button-mono) {
+  --bg-color: var(--theme-background-mono);
+  --hover-bg-color: var(--theme-background-mono-hover);
+  --active-border-color: var(--theme-border-mono);
+}
+
+:global(.button-clear) {
+  --internal-text-color: var(--theme-text-primary);
+
+  background-color: transparent;
+  border: none;
+  padding: 0;
+}

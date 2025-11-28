@@ -1,0 +1,25 @@
+.group {
+  --border-color: var(--group-border-color, var(--theme-background-brand));
+
+  background-color: var(
+    --group-background-color,
+    color-mix(in hsl, var(--theme-background-brand), transparent 90%)
+  );
+  border: calc(2px * var(--border-scale)) dashed var(--border-color);
+  border-radius: 16px;
+  box-sizing: border-box;
+  background-clip: padding-box;
+
+  &:not(.selected, .has-background) {
+    background-color: initial;
+  }
+
+  &:not(.selected, .has-border) {
+    border: initial;
+  }
+
+  &.selected {
+    border-radius: 0;
+    border-style: solid;
+  }
+}

@@ -1,0 +1,43 @@
+.root {
+  display: flex;
+  gap: 16px;
+  pointer-events: auto;
+}
+
+.link {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: transparent;
+}
+
+:global(.menu-item-wrapper):has(.logo) {
+  width: 48px;
+  height: 48px;
+  background: var(--theme-background-brand-secondary);
+}
+
+.tapestry-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 300px;
+  overflow: auto;
+}
+
+.button {
+  width: 100%;
+  min-width: 200px;
+  height: auto;
+  gap: 8px;
+  padding: 8px;
+  justify-content: start;
+  white-space: nowrap;
+
+  &.with-submenu {
+    display: flex;
+    align-items: center;
+  }
+}

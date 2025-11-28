@@ -1,0 +1,16 @@
+.comments-indicator {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background-color: var(--bg-color);
+  color: var(--fg-color);
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+
+  :global(.material-symbols-outlined) {
+    font-size: 16px;
+    padding-top: 2px;
+  }
+}

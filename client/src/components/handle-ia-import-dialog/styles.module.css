@@ -1,0 +1,45 @@
+.modal {
+  height: 700px;
+
+  &.collection-list,
+  &.playlist {
+    max-width: calc(100% - 50px);
+    width: unset;
+  }
+
+  :global(.modal-wrapper) {
+    @media screen and (width > 900px) {
+      .collection-list > & {
+        width: 1200px;
+      }
+
+      .playlist > & {
+        width: 900px;
+      }
+    }
+
+    :global(.modal-content) {
+      display: flex;
+      flex-direction: column;
+
+      :global(.simple-modal-content-container) {
+        flex: 1;
+        padding-bottom: 0;
+
+        .content {
+          flex-grow: 1;
+          display: grid;
+          grid-template-columns: 300px 1fr;
+          gap: 15px;
+          height: 100%;
+
+          @media screen and (width <= 900px) {
+            margin: 0 calc(-1 * var(--padding-x));
+            grid-template-columns: 1fr;
+            gap: 10px;
+          }
+        }
+      }
+    }
+  }
+}

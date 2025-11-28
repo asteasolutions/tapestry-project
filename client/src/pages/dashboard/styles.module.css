@@ -1,0 +1,74 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+
+  --padding-x: 22px;
+  --bg-color: color-mix(in hsl, var(--color-neutral-50), transparent 44%);
+
+  background-color: var(--bg-color);
+
+  .drag-area {
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+
+    .main-content-header {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      white-space: nowrap;
+      padding: 0;
+      margin: 32px var(--padding-x);
+
+      @media screen and (width <= 600px) {
+        flex-direction: column;
+        gap: 22px;
+      }
+
+      .search-input {
+        max-width: 350px;
+        flex: 1;
+
+        @media screen and (width <= 600px) {
+          max-width: initial;
+        }
+      }
+
+      .list-controls {
+        display: flex;
+        gap: 8px;
+        justify-content: space-between;
+        align-items: center;
+
+        @media screen and (width <= 600px) {
+          width: 100%;
+        }
+
+        .found-label {
+          color: var(--theme-text-tertiary);
+        }
+
+        .sort-controls {
+          display: flex;
+          gap: 8px;
+          align-items: center;
+        }
+      }
+    }
+
+    :global(.lazy-list) {
+      flex: 1;
+
+      :global(> .list-items-container) {
+        box-sizing: border-box;
+        padding: 0 var(--padding-x) 128px;
+
+        &:has(:global(.no-tapestries)) {
+          padding: 0;
+        }
+      }
+    }
+  }
+}

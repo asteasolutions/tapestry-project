@@ -1,0 +1,108 @@
+.scene-container {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+
+  &:global(.scene-cursor) {
+    &,
+    * {
+      cursor: var(--scene-cursor) !important;
+    }
+  }
+
+  :global(> .pixi-container) {
+    position: absolute;
+    inset: 0;
+
+    > canvas {
+      display: block;
+    }
+  }
+
+  :global(> .dom-container) {
+    position: absolute;
+    inset: 0;
+    transform-origin: 0% 0%;
+    user-select: none;
+    -webkit-user-select: none;
+
+    .tapestry-element-container {
+      pointer-events: auto;
+
+      &.inactive,
+      &:has(:global([data-component-type='rel'])),
+      :global(.pointer-action:not(.pointer-action-hover)) > & {
+        pointer-events: none;
+      }
+    }
+  }
+
+  :global(#item-picker) {
+    position: absolute;
+    inset: 0;
+
+    &:not(:has(*)) {
+      display: none;
+    }
+  }
+}
+
+.main-toolbar {
+  position: absolute;
+  top: 16px;
+  left: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  align-items: start;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.users-data {
+  position: absolute;
+  top: 16px;
+  right: 18px;
+  z-index: 1;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.left-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bottom-toolbars {
+  position: absolute;
+  bottom: 16px;
+  right: 18px;
+  z-index: 1;
+  display: flex;
+  gap: 12px;
+}
+
+.offline-indicator {
+  position: absolute;
+  bottom: 16px;
+  left: 24px;
+}
+
+.hidden {
+  visibility: hidden;
+}
+
+:global(#titlebar-action-buttons) {
+  display: flex;
+
+  :global(.titlebar-action-done) {
+    --bg-color: var(--color-success-300);
+    --hover-bg-color: var(--color-success-400);
+    --active-border-color: var(--color-success-500);
+
+    gap: 8px;
+  }
+}

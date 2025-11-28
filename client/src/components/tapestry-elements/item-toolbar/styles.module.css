@@ -1,0 +1,13 @@
+.menu-item-button {
+  width: 246px;
+}
+
+.move-arrow {
+  color: var(--theme-icon-primary);
+  align-self: center;
+  cursor: grab;
+
+  &:active {
+    cursor: grabbing;
+  }
+}

@@ -1,0 +1,10 @@
+.root {
+  .avatar-container :global(.avatar) {
+    width: 32px;
+    height: 32px;
+  }
+
+  .gemini {
+    margin: -2px;
+  }
+}

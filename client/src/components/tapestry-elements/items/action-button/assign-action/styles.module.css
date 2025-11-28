@@ -1,0 +1,28 @@
+.modal {
+  /* The additional selector is used in order to have greater specificity than the modal's selectors */
+  :global(&.modal),
+  :global(.modal-content) {
+    overflow: visible;
+  }
+
+  .input-container {
+    display: flex;
+    gap: 20px;
+
+    .action-container {
+      position: relative;
+
+      > input {
+        padding-right: 40px;
+        min-width: 250px;
+      }
+
+      > button {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+      }
+    }
+  }
+}

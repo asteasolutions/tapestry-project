@@ -1,0 +1,4 @@
+.root {
+  /* height property set to prevent resizing while button renders */
+  height: 40px;
+}

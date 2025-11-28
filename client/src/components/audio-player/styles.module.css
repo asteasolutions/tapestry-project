@@ -1,0 +1,27 @@
+.root {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 8px;
+  container-type: size;
+  height: var(--height, 40px);
+  padding: 4px 8px;
+  background-color: var(--theme-background-info-subtle);
+
+  .button {
+    border-radius: 50%;
+
+    --bg-color: var(--theme-background-neutral);
+    --hover-bg-color: var(--theme-background-neutral-hover);
+  }
+
+  .waveform {
+    height: 100%;
+  }
+}
+
+@container (min-height: 100px) {
+  .button :global(.material-symbols-outlined) {
+    font-size: 40px;
+  }
+}

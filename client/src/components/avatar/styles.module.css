@@ -1,0 +1,51 @@
+.root {
+  --bg-color: var(--color-neutral-400);
+  --hover-bg-color: var(--color-neutral-300);
+  --active-border-color: var(--color-neutral-300);
+  --hover-text-color: var(--color-neutral-100);
+  --active-text-color: var(--color-neutral-150);
+
+  width: var(--size);
+  height: var(--size);
+  border-radius: var(--border-radius);
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  display: grid;
+  justify-content: center;
+  align-items: center;
+  color: var(--color-neutral-0);
+
+  div& {
+    background-color: var(--bg-color);
+
+    &.with-tooltip {
+      position: relative;
+      overflow: visible;
+    }
+  }
+
+  &.small {
+    --size: 24px;
+    --border-radius: 4px;
+
+    font-size: 12px;
+  }
+
+  &.medium {
+    --size: 32px;
+    --border-radius: 8px;
+  }
+
+  &.large {
+    --size: 40px;
+    --border-radius: 8px;
+  }
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: inherit;
+  }
+}

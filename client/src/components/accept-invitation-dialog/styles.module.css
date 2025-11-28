@@ -1,0 +1,14 @@
+.accept-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+
+  .email {
+    font-style: italic;
+  }
+}
+
+.subtitle {
+  max-width: 400px;
+}

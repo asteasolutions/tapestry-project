@@ -1,0 +1,33 @@
+.root {
+  position: absolute;
+  z-index: 1;
+
+  :global(.material-symbols-outlined) {
+    font-size: 20px;
+    color: var(--theme-icon-primary);
+  }
+
+  .form {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: var(--theme-background-primary);
+    box-shadow: var(--box-shadow);
+    border-radius: 8px;
+    padding: 8px 16px;
+  }
+
+  .link {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+    max-width: 500px;
+    cursor: default;
+
+    :global(a) {
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+}

@@ -1,0 +1,52 @@
+.root {
+  position: relative;
+
+  .drag-overlay {
+    position: absolute;
+    inset: 0;
+    background-color: var(--theme-overlay);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+
+    .drop-area {
+      padding: 50px 90px;
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      border: 2px solid var(--color-neutral-200);
+      background-color: var(--theme-background-primary);
+
+      * {
+        pointer-events: none;
+      }
+
+      &.dragging {
+        border-color: var(--color-primary-400);
+      }
+
+      .import-gif {
+        padding: 1px;
+        height: 78px;
+      }
+
+      .heading {
+        font-weight: bold;
+        padding: 10px 0 5px;
+      }
+
+      .icon {
+        font-size: 80px;
+        color: var(--color-neutral-800);
+      }
+    }
+  }
+
+  &.visible {
+    .drag-overlay {
+      display: flex;
+    }
+  }
+}

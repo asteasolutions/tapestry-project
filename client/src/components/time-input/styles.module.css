@@ -1,0 +1,28 @@
+.root {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.input-container {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--theme-border-primary);
+  border-radius: 4px;
+  padding: 4px 8px;
+
+  &:has(input[disabled]) {
+    color: var(--theme-text-disabled);
+  }
+
+  > form > input {
+    width: 20px;
+    border: none;
+    padding: 0;
+
+    &[disabled] {
+      color: var(--theme-text-disabled);
+    }
+  }
+}

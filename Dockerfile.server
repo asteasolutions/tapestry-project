@@ -1,0 +1,47 @@
+FROM node:24-alpine AS server
+
+ADD package.json package-lock.json /app/
+ADD core/package.json /app/core/
+ADD shared/package.json /app/shared/
+ADD server/package.json /app/server/
+
+RUN cd /app && npm ci
+
+ADD core/ /app/core
+ADD shared/ /app/shared
+ADD server/ /app/server
+
+WORKDIR /app/server
+RUN npm run prisma:generate
+
+ENTRYPOINT ["npm", "run"]
+CMD ["start:api"]
+
+
+FROM node:24-alpine AS worker
+
+RUN apk add --no-cache \
+  chromium \
+  nss \
+  freetype \
+  harfbuzz \
+  ca-certificates \
+  ttf-freefont \
+  nodejs \
+  mesa-gl \
+  mesa-dev \
+  vulkan-loader \
+  chromium-swiftshader \
+  yarn \
+  ffmpeg \
+  imagemagick \
+  ghostscript;
+
+COPY --from=server /app /app
+
+WORKDIR /app/server/
+
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+
+ENTRYPOINT ["npm", "run"]
+CMD ["start:worker"]

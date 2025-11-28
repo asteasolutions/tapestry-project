@@ -1,0 +1,13 @@
+.root {
+  display: flex;
+  gap: 4px;
+
+  .font-input-button {
+    padding: 0;
+    border: none;
+
+    & > span {
+      font-size: 16px;
+    }
+  }
+}

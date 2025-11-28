@@ -1,0 +1,19 @@
+.recording:global(.button-tertiary) {
+  animation: pulse infinite 1.5s !important;
+
+  --icon-color: var(--theme-icon-negative);
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}

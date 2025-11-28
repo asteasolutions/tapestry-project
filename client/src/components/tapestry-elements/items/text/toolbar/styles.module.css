@@ -1,0 +1,22 @@
+.text-color-picker {
+  :global(.button-icon) {
+    color: transparent;
+    background-image: linear-gradient(
+      var(--internal-icon-color) 80%,
+      var(--editor-text-color, var(--internal-text-color)) 80%
+    );
+    background-clip: text;
+  }
+}
+
+.color-palette {
+  display: grid;
+  grid-template-columns: repeat(4, auto);
+  background-color: var(--theme-background-primary);
+  position: absolute;
+  gap: 16px 8px;
+  padding: 8px;
+  border-radius: 8px;
+  box-shadow: var(--box-shadow);
+  top: 40px;
+}

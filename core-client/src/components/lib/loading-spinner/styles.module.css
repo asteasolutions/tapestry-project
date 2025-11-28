@@ -1,0 +1,8 @@
+.spinner {
+  --default-size: 24px;
+
+  width: var(--size, var(--default-size));
+  height: var(--size, var(--default-size));
+  display: inline-block;
+  box-sizing: border-box;
+}

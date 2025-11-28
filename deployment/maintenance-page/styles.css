@@ -1,0 +1,39 @@
+html,
+body {
+  height: 100%;
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  box-sizing: border-box;
+  padding: 40px;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  justify-items: center;
+  align-items: center;
+  font-family: "Plus Jakarta Sans", Arial, Helvetica, sans-serif;
+
+  .message-wrapper {
+    min-height: 350px;
+    background: url("./gears.png") no-repeat center;
+    text-align: center;
+
+    h1 {
+      margin-top: 90px;
+      margin-bottom: 20px;
+      font-size: 64px;
+      font-weight: 600;
+      color: #19216c;
+    }
+
+    p {
+      font-size: 20px;
+      color: #353d44;
+    }
+  }
+
+  .logo {
+    width: 200px;
+  }
+}

@@ -1,0 +1,4 @@
+FROM localstack/localstack:4
+ADD ./localstack-s3-cors-config.json /
+ADD ./init-localstack.sh /etc/localstack/init/ready.d/
+RUN chmod +x /etc/localstack/init/ready.d/init-localstack.sh

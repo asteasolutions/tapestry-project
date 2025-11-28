@@ -1,0 +1,26 @@
+.root {
+  video {
+    width: 100%;
+    max-width: 640px;
+    border-radius: 8px;
+  }
+
+  :global(.media-capture-stream-preview-wrapper) {
+    &:global(.hidden) {
+      display: none;
+    }
+
+    .preview-placeholder {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      display: grid;
+      justify-content: center;
+      align-items: center;
+      border: 1px solid var(--theme-border-subtle);
+
+      :global(.material-symbols-outlined) {
+        font-size: inherit;
+      }
+    }
+  }
+}

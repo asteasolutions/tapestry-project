@@ -1,0 +1,56 @@
+.snackbar {
+  z-index: 2;
+  position: fixed;
+  bottom: 50px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--theme-background-inverse);
+  padding: 10px 16px;
+  border-radius: 8px;
+  box-shadow: 0 4px 4px rgb(0 0 0 / 25%);
+  pointer-events: none;
+  color: var(--theme-text-primary-inverse);
+  animation-duration: var(--transition-duration);
+  animation-name: appear;
+
+  &.hidden {
+    animation-name: disappear;
+    opacity: 0;
+  }
+
+  /* TODO: We should probably add some system colors to the theme  */
+  :global(&.error) {
+    background-color: var(--theme-background-negative);
+    color: var(--color-neutral-0);
+  }
+
+  :global(&.warning) {
+    background-color: var(--theme-background-warning);
+    color: var(--color-neutral-0);
+  }
+
+  :global(&.success) {
+    background-color: var(--theme-background-positive);
+    color: var(--color-neutral-0);
+  }
+}
+
+@keyframes appear {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes disappear {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}

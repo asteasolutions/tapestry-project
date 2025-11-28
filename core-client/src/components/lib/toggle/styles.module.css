@@ -1,0 +1,21 @@
+.root {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: pointer;
+
+  &.disabled {
+    cursor: not-allowed;
+  }
+
+  input {
+    pointer-events: none;
+    opacity: 0;
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+}

@@ -1,0 +1,55 @@
+.root {
+  padding: 20px 30px;
+  user-select: none;
+  -webkit-user-select: none;
+  overflow-y: auto;
+
+  .search-input {
+    border-radius: 8px;
+    border: 1px solid var(--theme-border-primary);
+  }
+
+  .section {
+    padding: 20px 0;
+
+    .section-title {
+      font-weight: bold;
+      padding-bottom: 8px;
+    }
+
+    .action {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      align-items: center;
+      padding: 8px 0;
+      padding-left: 4px;
+
+      .shortcut {
+        display: flex;
+        gap: 4px;
+
+        &:not(:last-child) {
+          padding-bottom: 5px;
+        }
+
+        .key {
+          height: 26px;
+          min-width: 26px;
+          box-sizing: border-box;
+          padding: 1px 6px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 4px;
+          background: var(--theme-background-neutral);
+          box-shadow: 0 2px 0 0 var(--color-neutral-200);
+
+          .icon {
+            font-size: inherit;
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,6 @@
+.color-options {
+  display: grid;
+  grid-template-columns: repeat(5, auto);
+  gap: 4px;
+  margin-top: 8px;
+}

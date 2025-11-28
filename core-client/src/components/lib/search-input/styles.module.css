@@ -1,0 +1,27 @@
+.root {
+  position: relative;
+
+  .input {
+    border: 0;
+    padding-left: 36px;
+    border-radius: 8px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .start-adornment {
+    position: absolute;
+    left: 12px;
+    top: 8px;
+  }
+
+  .icon {
+    font-size: 20px;
+  }
+
+  .spinner {
+    --size: 16px;
+
+    top: 10px;
+  }
+}

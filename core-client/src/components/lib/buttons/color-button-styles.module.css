@@ -1,0 +1,69 @@
+.color-button {
+  --multicolor-gradient: conic-gradient(
+    from 0deg at 50% 50%,
+    #a179f2 45deg,
+    #c969c3 90deg,
+    #f7575a 135deg,
+    #ffaa01 180deg,
+    #ffd501 225deg,
+    #b8e741 270deg,
+    #1a4fe6 315deg,
+    #a179f2 360deg
+  );
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  padding: 0;
+  background-color: transparent;
+  cursor: pointer;
+
+  .color-circle-wrapper {
+    padding: 1px;
+    border: 2px solid transparent;
+    width: var(--size);
+    height: var(--size);
+    border-radius: 50%;
+    transition: border-color var(--transition-duration);
+  }
+
+  :global(.color-circle) {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: var(--color, var(--multicolor-gradient));
+    box-sizing: border-box;
+    border: 1px solid color-mix(in hsl, var(--color), var(--theme-contrast) 25%);
+  }
+
+  :global(&.selected),
+  &:hover {
+    .color-circle-wrapper {
+      border-color: var(--theme-border-selected);
+    }
+  }
+
+  &.transparent {
+    :global(.color-circle) {
+      position: relative;
+      border: 1px solid var(--theme-border-subtle);
+
+      :global(&::after) {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: calc(50% - 0.5px);
+        width: 1px;
+        height: 100%;
+        background-color: var(--theme-border-subtle);
+        transform: rotate(45deg);
+      }
+    }
+  }
+
+  &.with-tooltip {
+    position: relative;
+  }
+}

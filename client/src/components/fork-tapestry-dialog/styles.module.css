@@ -1,0 +1,16 @@
+.status-wrapper {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+
+  :global(.material-symbols-outlined) {
+    font-size: 22px;
+  }
+}
+
+.link {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  text-decoration: none;
+}

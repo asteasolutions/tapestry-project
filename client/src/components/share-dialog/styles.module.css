@@ -1,0 +1,168 @@
+.root:global(.modal) {
+  width: 550px;
+  max-width: none;
+
+  :global(.modal-wrapper) {
+    width: 100%;
+    gap: 12px;
+  }
+
+  :global(.modal-content) {
+    padding: 0;
+  }
+
+  .loading {
+    height: 2px;
+  }
+
+  .disabled {
+    color: var(--theme-text-disabled);
+    user-select: none;
+  }
+
+  .people-with-access-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .content {
+    padding: 20px 25px;
+
+    .general-access-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 30px;
+      margin-bottom: 10px;
+
+      @media screen and (width <= 600px) {
+        flex-direction: column;
+        align-items: start;
+        gap: 8px;
+
+        .visibility-dropdown {
+          align-self: end;
+        }
+      }
+
+      .visibility-dropdown {
+        :global(.material-symbols-outlined) {
+          font-size: 20px;
+        }
+
+        .visibility-option {
+          font-weight: 600;
+        }
+      }
+    }
+
+    .collaborator-header {
+      margin-bottom: 10px;
+    }
+
+    .people-with-access {
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+
+      .people-with-access-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        .avatars-wrapper {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+
+          .avatars-container {
+            display: flex;
+            align-items: center;
+
+            :global(.avatar) {
+              border: 2px solid var(--theme-border-inverse);
+
+              &:not(:first-of-type) {
+                margin-left: -10px;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    .separator {
+      height: 1px;
+      background-color: var(--theme-border-subtle);
+      border: none;
+      margin: 20px 0;
+    }
+
+    .forking-permissions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 30px;
+
+      .toggle {
+        padding: 10px;
+      }
+    }
+
+    .people-with-access-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+
+      .people-with-access-list-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        .people-with-access-list-row-avatar-container {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+      }
+    }
+
+    .embed-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      .embed-title {
+        display: flex;
+        align-items: center;
+        font-weight: 600;
+        gap: 8px;
+      }
+    }
+
+    .embed-code {
+      resize: none;
+      border-radius: 8px;
+      border: 1px solid var(--theme-border-subtle);
+      background-color: var(--theme-background-neutral);
+      padding: 20px 15px;
+      box-sizing: border-box;
+      color: var(--theme-text-secondary);
+      overflow-wrap: anywhere;
+
+      &.share-link {
+        height: 85px;
+        display: flex;
+        gap: 20px;
+        justify-content: space-between;
+        align-items: center;
+      }
+    }
+  }
+}
+
+.regeneration-confirmation-dialog {
+  max-width: 550px;
+}

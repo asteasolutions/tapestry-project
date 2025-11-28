@@ -1,0 +1,99 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  .mobile-select-all {
+    position: sticky;
+    top: 0;
+    padding: 5px var(--padding-x);
+    background-color: var(--theme-background-primary);
+    border-bottom: 1px solid var(--theme-border-subtle);
+
+    /* The z-index is needed because the summary arrow has a transform property which creates a new stacking context */
+    z-index: 1;
+  }
+
+  :global(.lazy-list) {
+    flex-grow: 1;
+
+    :global(.list-items-container) {
+      padding-top: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+  }
+
+  .collection-item {
+    display: grid;
+    gap: 10px;
+    align-items: center;
+    grid-template-columns: auto 150px 110px 60px;
+
+    @media screen and (width <= 900px) {
+      padding: 5px var(--padding-x);
+      grid-template-columns: auto 15px;
+    }
+
+    .item-image {
+      height: 30px;
+      width: 30px;
+      object-fit: cover;
+    }
+  }
+
+  .details-element {
+    .details-icon {
+      font-size: 16px;
+      transform: rotate(90deg);
+      color: var(--theme-text-tertiary-inverse);
+    }
+
+    summary::marker {
+      content: '';
+    }
+
+    &[open] {
+      background-color: var(--theme-background-disabled);
+
+      .details-icon {
+        transform: rotate(-90deg);
+        color: var(--theme-text-primary);
+      }
+
+      .item-details {
+        border-top: 0.3px solid var(--theme-border-subtle);
+        padding: 5px 15px;
+        display: grid;
+        grid-template: 1fr 1fr / 1fr 1fr 1fr;
+        justify-items: center;
+        text-align: center;
+      }
+    }
+  }
+
+  .header {
+    padding: 0 0 5px;
+    border-bottom: 1px solid var(--theme-border-subtle);
+  }
+
+  .views {
+    text-align: end;
+  }
+
+  .bold {
+    font-weight: bold;
+  }
+
+  .loading-indicator {
+    position: absolute;
+    inset: 0;
+  }
+
+  .checkbox {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+}

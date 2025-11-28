@@ -1,0 +1,47 @@
+.root {
+  --container-gap: 12px;
+
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  overflow: auto;
+  scrollbar-width: none;
+  gap: var(--container-gap);
+
+  .header {
+    display: flex;
+    flex-direction: column;
+    gap: var(--container-gap);
+
+    .thumbnail {
+      flex-shrink: 0;
+      max-height: 150px;
+      border: 1px solid var(--theme-border-disabled);
+      border-radius: 10px;
+      object-fit: contain;
+
+      @media screen and (width <= 900px) {
+        max-height: 100px;
+        max-width: 130px;
+      }
+    }
+
+    .metadata-container {
+      display: flex;
+      gap: var(--container-gap);
+      flex-direction: column;
+    }
+  }
+
+  @media screen and (width <= 900px) {
+    padding: 0 var(--padding-x) 10px;
+
+    .header {
+      flex-direction: row;
+    }
+  }
+
+  .skeleton-loader {
+    box-shadow: none;
+  }
+}

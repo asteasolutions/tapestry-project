@@ -1,0 +1,28 @@
+.root {
+  border-radius: 8px;
+  border: 1px solid var(--theme-border-primary);
+  padding: 8px;
+  background-color: var(--theme-background-primary);
+  color: var(--theme-text-secondary);
+  transition:
+    background-color var(--transition-duration),
+    color var(--transition-duration);
+
+  &.invalid-input {
+    border-color: var(--theme-border-negative);
+  }
+
+  &:disabled {
+    opacity: 0.25;
+  }
+}
+
+.error {
+  color: var(--theme-text-negative);
+}
+
+.input-label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}

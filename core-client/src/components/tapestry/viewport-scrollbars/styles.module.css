@@ -1,0 +1,56 @@
+.root {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity ease-in-out var(--transition-duration);
+  user-select: none;
+  -webkit-user-select: none;
+
+  &.visible {
+    opacity: 0.4;
+  }
+
+  .scrollbar-container {
+    --thickness: 6px;
+    --side-padding: 6px;
+    --cross-padding: calc(var(--thickness) + var(--side-padding));
+
+    position: absolute;
+
+    .scrollbar {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: calc(var(--thickness) / 2);
+      background-color: var(--theme-border-primary);
+    }
+
+    &.horizontal {
+      position: absolute;
+      bottom: var(--side-padding);
+      left: var(--side-padding);
+      right: var(--cross-padding);
+      height: var(--thickness);
+
+      .scrollbar {
+        left: var(--scroll-position);
+        width: var(--size);
+        transform: translateX(calc(-1 * var(--scroll-position)));
+      }
+    }
+
+    &.vertical {
+      top: var(--side-padding);
+      right: var(--side-padding);
+      bottom: var(--cross-padding);
+      width: var(--thickness);
+
+      .scrollbar {
+        top: var(--scroll-position);
+        height: var(--size);
+        transform: translateY(calc(-1 * var(--scroll-position)));
+      }
+    }
+  }
+}
