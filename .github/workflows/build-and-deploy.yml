@@ -17,6 +17,8 @@ jobs:
   deploy-dev:
     runs-on: self-hosted
 
+    environment: dev
+
     if: github.ref_name == 'main'
 
     steps:
