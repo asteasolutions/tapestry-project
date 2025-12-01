@@ -1,5 +1,4 @@
 on: [push]
-runs-on: self-hosted
 jobs:
   lint-all:
     runs-on: self-hosted
