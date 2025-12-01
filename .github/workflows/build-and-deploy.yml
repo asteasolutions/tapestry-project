@@ -1,0 +1,29 @@
+on: [push]
+runs-on: self-hosted
+jobs:
+  lint-all:
+    runs-on: self-hosted
+
+    if: >
+      github.ref_name != 'main' &&
+      github.ref_name != 'demo' &&
+      !startsWith(github.ref, 'refs/tags/')
+
+    steps:
+      - uses: actions/checkout@v5
+      - run: >
+          docker run --rm $(docker build -q -f Dockerfile.ci .)
+          docker system prune -af
+
+  deploy-dev:
+    runs-on: self-hosted
+
+    if: github.ref_name == 'main'
+
+    steps:
+      - uses: actions/checkout@v5
+      - run: docker compose up -d --build
+        env:
+          COMPOSE_PROJECT_NAME: dev
+          ENVIRONMENT_NAME: dev
+          HOST: tapestries-dev
