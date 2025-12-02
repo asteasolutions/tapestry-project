@@ -1,0 +1,13 @@
+on: [push]
+jobs:
+  deploy-dev:
+    runs-on: self-hosted
+    environment: dev
+    if: github.ref_name == 'main'
+    steps:
+      - uses: actions/checkout@v5
+      - run: docker compose up -d --build
+        env:
+          COMPOSE_PROJECT_NAME: dev
+          ENVIRONMENT_NAME: dev
+          HOST: tapestries-dev

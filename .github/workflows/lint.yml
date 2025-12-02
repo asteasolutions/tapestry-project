@@ -1,0 +1,13 @@
+on: [push]
+jobs:
+  lint-all:
+    runs-on: self-hosted
+    if: >
+      github.ref_name != 'main' &&
+      github.ref_name != 'demo' &&
+      !startsWith(github.ref, 'refs/tags/')
+    steps:
+      - uses: actions/checkout@v5
+      - run: |
+          docker run --rm $(docker build -q -f Dockerfile.ci .)
+          docker system prune -af
