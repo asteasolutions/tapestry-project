@@ -33,8 +33,7 @@ import { GlobalEventsController } from 'tapestry-core-client/src/stage/controlle
 enableMapSet()
 enablePatches()
 
-export type TapestryViewerStore = Store<TapestryViewModel, { base: TapestryViewModel }>
-const TapestryStoreContext = createContext<TapestryViewerStore | null>(null)
+const TapestryStoreContext = createContext<Store<TapestryViewModel> | null>(null)
 
 export const {
   useStore: useTapestryStore,
@@ -58,7 +57,7 @@ function Tapestry() {
     lifecycleController: (stage) =>
       new TapestryLifecycleController(store, stage, {
         default: [
-          new ViewportController(store.as('base'), stage),
+          new ViewportController(store, stage),
           new (class extends TapestryRenderer<TapestryElementViewModel> {
             protected getItems() {
               return idMapToArray(this.store.get('items'))
@@ -86,7 +85,6 @@ function Tapestry() {
       <div ref={pixiContainerRef} className="pixi-container" />
       <TapestryCanvas classes={{ root: 'dom-container' }} />
       <div className="pixi-container" ref={presentationOrderContainerRef} inert />
-      <div id="item-picker" />
       <ViewportScrollbars />
       <TopToolbar />
       <SidePane />

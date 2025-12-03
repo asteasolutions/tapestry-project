@@ -1,12 +1,11 @@
 import clsx from 'clsx'
-import { DragEvent, ReactNode, useState } from 'react'
+import { DragEvent, PropsWithChildren, useState } from 'react'
 import { Icon } from '../../../../src/components/lib/icon/index'
 import { Text } from '../../../../src/components/lib/text/index'
 import ImportGIF from '../../../assets/gifs/import.gif'
 import styles from './styles.module.css'
 
-interface DragAreaProps {
-  children?: ReactNode
+interface DragAreaProps extends PropsWithChildren {
   allowDrop: (items: DataTransferItem[]) => boolean
   onDrop: (event: DragEvent<HTMLDivElement>) => unknown
   title?: string
