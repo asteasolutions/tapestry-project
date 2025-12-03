@@ -58,6 +58,7 @@ import { Point } from 'tapestry-core/src/data-format/schemas/common'
 import { userToPublicProfileDto } from 'tapestry-shared/src/utils'
 import { PublicUserProfileDto } from 'tapestry-shared/src/data-transfer/resources/dtos/user'
 import { TapestryDto } from 'tapestry-shared/src/data-transfer/resources/dtos/tapestry'
+import { APIError } from '../../../errors'
 
 type TapestryRTCMessage =
   | {
@@ -111,7 +112,14 @@ export class TapestryDataSync {
           (model) => {
             --model.pendingRequests
           },
-          !!error && setSnackbar({ variant: 'error', text: 'Error during save' }),
+          !!error &&
+            setSnackbar({
+              variant: 'error',
+              text:
+                error instanceof APIError && error.data.name !== 'ServerError'
+                  ? error.message
+                  : 'Error during save',
+            }),
         )
       },
     })
