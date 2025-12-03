@@ -1,12 +1,28 @@
-.drag-area {
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  align-items: center;
+  justify-content: center;
   height: 100%;
 
-  :global(> div:first-of-type) {
-    align-items: normal;
-  }
+  .import-button {
+    display: block;
+    width: 300px;
+    height: 300px;
 
-  .drop-area {
-    width: 100%;
-    justify-content: center;
+    .drag-area {
+      height: 100%;
+
+      :global(> div:first-of-type) {
+        align-items: normal;
+        background-color: transparent;
+      }
+
+      .drop-area {
+        width: 100%;
+        justify-content: center;
+      }
+    }
   }
 }

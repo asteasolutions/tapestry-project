@@ -3,6 +3,7 @@ import 'pixi.js/math-extras'
 import { createContext, useRef, useState } from 'react'
 
 import { useResponsiveClass } from 'tapestry-core-client/src/components/lib/hooks/use-responsive-class'
+import { useThemeCss } from 'tapestry-core-client/src/components/lib/hooks/use-theme-css'
 import {
   TapestryConfigProvider,
   type ProviderConfig,
@@ -29,6 +30,10 @@ import { TapestryRenderer } from 'tapestry-core-client/src/stage/renderer'
 import { ViewportController } from 'tapestry-core-client/src/stage/controller/viewport-controller'
 import { ItemController } from 'tapestry-core-client/src/stage/controller/item-controller'
 import { GlobalEventsController } from 'tapestry-core-client/src/stage/controller/global-events-controller'
+import { useSearchParams } from 'react-router'
+import { useAsync } from 'tapestry-core-client/src/components/lib/hooks/use-async'
+import { ImportService } from './components/tapestry-import/import-service'
+import { LoadingSpinner } from 'tapestry-core-client/src/components/lib/loading-spinner'
 
 enableMapSet()
 enablePatches()
@@ -95,8 +100,27 @@ function Tapestry() {
 
 export function App() {
   const [store, setStore] = useState<Store<TapestryViewModel>>()
+  const source = useSearchParams()[0].get('source')
+
+  const { loading } = useAsync(
+    async ({ signal }) => {
+      if (!source) {
+        return
+      }
+
+      const buffer = await (await fetch(source, { signal })).arrayBuffer()
+      const file = new File([buffer], 'tapestry')
+      const store = await new ImportService().parse(file)
+      if (!store) {
+        return
+      }
+      setStore(store)
+    },
+    [source],
+  )
 
   useResponsiveClass()
+  useThemeCss('light')
 
   return (
     <TapestryConfigProvider config={tapestryConfig}>
@@ -104,6 +128,16 @@ export function App() {
         <TapestryStoreContext value={store}>
           <Tapestry />
         </TapestryStoreContext>
+      ) : loading ? (
+        <LoadingSpinner
+          size="150px"
+          style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+          }}
+        />
       ) : (
         <TapestryImport onImport={setStore} />
       )}
