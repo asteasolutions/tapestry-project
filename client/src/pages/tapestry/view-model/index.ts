@@ -166,7 +166,8 @@ export type ActiveCollaborator = RequiredFields<Collaborator, 'cursorPosition'>
 export type TapestryWithOwner<T extends Partial<TapestryDto>> = RequiredFields<T, 'owner'>
 
 export interface EditableTapestryViewModel
-  extends TapestryViewModel<
+  extends
+    TapestryViewModel<
       EditableItemViewModel,
       EditableRelViewModel,
       EditableGroupViewModel,

@@ -23,9 +23,9 @@ export class ViewContainer<C extends ContainerChild = ContainerChild> extends Co
   }
 }
 
-export abstract class TapestryElementRenderer<T extends TapestryElementViewModel>
-  implements Renderer<T>
-{
+export abstract class TapestryElementRenderer<
+  T extends TapestryElementViewModel,
+> implements Renderer<T> {
   protected lastRenderedModel?: T
   protected pixiContainer: ViewContainer
 

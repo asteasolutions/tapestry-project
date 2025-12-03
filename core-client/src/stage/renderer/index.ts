@@ -34,9 +34,9 @@ const USER_INTERACTION_CURSOR: Partial<
 const SCENE_CURSOR_CLASS = 'scene-cursor'
 const SCENE_CURSOR_VARIABLE = '--scene-cursor'
 
-export abstract class TapestryRenderer<E extends TapestryElementViewModel>
-  implements TapestryStageController
-{
+export abstract class TapestryRenderer<
+  E extends TapestryElementViewModel,
+> implements TapestryStageController {
   private tapestryElementRenderers = new Map<string, TapestryElementRenderer<E>>()
 
   constructor(

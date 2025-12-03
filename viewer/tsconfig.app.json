@@ -11,12 +11,8 @@
     "skipLibCheck": true,
     "jsx": "react-jsx",
     "allowSyntheticDefaultImports": true,
-    "lib": [
-      "ES2023",
-      "DOM",
-      "DOM.Iterable",
-      "ESNext.Collection"
-    ],
+    "lib": ["ES2023", "DOM", "DOM.Iterable", "ESNext.Collection"],
+
     /* Linting */
     "strict": true,
     "noUnusedLocals": true,
@@ -24,14 +20,8 @@
     "noFallthroughCasesInSwitch": true
   },
   "references": [
-    {
-      "path": "../core"
-    },
-    {
-      "path": "../core-client"
-    }
+    { "path": "../core" },
+    { "path": "../core-client" }
   ],
-  "include": [
-    "src"
-  ]
+  "include": ["src"]
 }

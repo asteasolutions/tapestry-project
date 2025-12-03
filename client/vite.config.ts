@@ -1,10 +1,10 @@
-import { defineConfig, loadEnv, normalizePath } from 'vite'
 import react from '@vitejs/plugin-react'
-import svgr from 'vite-plugin-svgr'
-import { viteStaticCopy } from 'vite-plugin-static-copy'
-import { patchCssModules } from 'vite-css-modules'
-import path from 'path'
 import { createRequire } from 'module'
+import path from 'path'
+import { defineConfig, loadEnv, normalizePath } from 'vite'
+import { patchCssModules } from 'vite-css-modules'
+import { viteStaticCopy } from 'vite-plugin-static-copy'
+import svgr from 'vite-plugin-svgr'
 
 const pdfjsDistPath = path.dirname(
   createRequire(import.meta.url).resolve('pdfjs-dist/package.json'),

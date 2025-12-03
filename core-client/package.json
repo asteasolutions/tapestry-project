@@ -34,11 +34,16 @@
     "tapestry-core": "^1.0.0"
   },
   "dependencies": {
+    "@tiptap/extension-bullet-list": "^2.24.1",
+    "@tiptap/extension-bold": "^2.24.1",
     "@tiptap/extension-color": "^2.24.1",
     "@tiptap/extension-font-family": "^2.24.1",
     "@tiptap/extension-highlight": "^2.24.1",
+    "@tiptap/extension-italic": "^2.24.1",
     "@tiptap/extension-link": "^2.24.1",
+    "@tiptap/extension-ordered-list": "^2.24.1",
     "@tiptap/extension-placeholder": "^2.24.1",
+    "@tiptap/extension-strike": "^2.24.1",
     "@tiptap/extension-text-align": "^2.24.1",
     "@tiptap/extension-text-style": "^2.24.1",
     "@tiptap/extension-underline": "^2.24.1",

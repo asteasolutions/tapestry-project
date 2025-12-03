@@ -23,8 +23,10 @@ import { PropsWithStyle } from '../../lib'
 import { GroupBackground } from '../group-background'
 import styles from './styles.module.css'
 
-export interface TapestryCanvasProps
-  extends PropsWithStyle<object, 'root' | 'itemContainer' | 'relContainer'> {
+export interface TapestryCanvasProps extends PropsWithStyle<
+  object,
+  'root' | 'itemContainer' | 'relContainer'
+> {
   orderByPosition?: boolean
 }
 

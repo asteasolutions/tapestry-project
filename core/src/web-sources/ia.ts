@@ -6,9 +6,10 @@ interface IAMediaSourceParams extends BaseWebSourceParams {
   startTime?: number | null | undefined
 }
 
-export class IAMediaSourceParser<T extends WebpageType>
-  implements WebSourceParser<T, IAMediaSourceParams>
-{
+export class IAMediaSourceParser<T extends WebpageType> implements WebSourceParser<
+  T,
+  IAMediaSourceParams
+> {
   constructor(
     private iaMediaType: IAMediaType,
     readonly webpageType: T,
