@@ -21,12 +21,7 @@ export default defineConfig(({ mode }) => {
       svgr(),
       patchCssModules({ generateSourceTypes: true }),
       viteStaticCopy({
-        targets: [
-          {
-            src: pdfWasmDir,
-            dest: '',
-          },
-        ],
+        targets: [{ src: pdfWasmDir, dest: '' }],
       }),
     ],
     server: {
