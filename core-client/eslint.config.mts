@@ -1,18 +1,10 @@
-import eslintConfigBase from 'tapestry-core/eslint.config-base.mjs'
+import eslintConfigBase from 'tapestry-core/eslint.config-base.mts'
 import globals from 'globals'
 import reactHooks from 'eslint-plugin-react-hooks'
 import tseslint from 'typescript-eslint'
+import { Config } from 'eslint/config'
 
-export default tseslint.config({
-  extends: [...eslintConfigBase],
-  languageOptions: {
-    parser: tseslint.parser,
-    ecmaVersion: 2020,
-    globals: globals.browser,
-    parserOptions: {
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
+export const config: Config = {
   plugins: {
     'react-hooks': reactHooks,
   },
@@ -39,4 +31,17 @@ export default tseslint.config({
     ],
     'no-fallthrough': 'off',
   },
+}
+
+export default tseslint.config({
+  extends: [...eslintConfigBase],
+  languageOptions: {
+    parser: tseslint.parser,
+    ecmaVersion: 2020,
+    globals: globals.browser,
+    parserOptions: {
+      tsconfigRootDir: import.meta.dirname,
+    },
+  },
+  ...config,
 })

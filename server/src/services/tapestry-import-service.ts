@@ -214,6 +214,10 @@ export class TapestryImportService {
                   backgroundColor: isMedia ? undefined : i.backgroundColor,
                   text: isMedia ? undefined : i.text,
 
+                  ...(i.type === 'actionButton'
+                    ? { action: i.action, actionType: i.actionType }
+                    : {}),
+
                   source,
                   title: i.title,
                   type: i.type,

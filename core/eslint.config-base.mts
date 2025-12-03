@@ -1,7 +1,7 @@
 import js from '@eslint/js'
 import tseslint from 'typescript-eslint'
 
-export const allowDefaultProject = ['*.mjs', '.prettierrc.cjs']
+export const allowDefaultProject = ['*.mts', '.prettierrc.cjs']
 
 export default tseslint.config({
   extends: [

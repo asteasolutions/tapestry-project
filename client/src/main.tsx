@@ -1,5 +1,5 @@
-import './index.css'
-import { StrictMode, useEffect } from 'react'
+import { enableMapSet, enablePatches } from 'immer'
+import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import {
   createBrowserRouter,
@@ -9,23 +9,23 @@ import {
   RouterProvider,
   useLocation,
 } from 'react-router'
-import { Dashboard } from './pages/dashboard/index'
-import { SessionLayout } from './layouts/session/index'
-import { enableMapSet, enablePatches } from 'immer'
-import { TapestryBySlugPage, TapestryPage } from './pages/tapestry/index'
-import { isMobile } from 'tapestry-core-client/src/lib/user-agent'
-import { ResponsiveProvider } from './providers/responsive-provider'
-import { UserProfile } from './pages/user-profile/index'
-import { dashboardPath } from './utils/paths'
+
+import { useResponsiveClass } from 'tapestry-core-client/src/components/lib/hooks/use-responsive-class'
 import { GoogleFonts } from 'tapestry-core-client/src/components/lib/icon/index'
+
+import './index.css'
+import { SessionLayout } from './layouts/session/index'
+import { Dashboard } from './pages/dashboard/index'
+import { TapestryBySlugPage, TapestryPage } from './pages/tapestry/index'
+import { UserProfile } from './pages/user-profile/index'
+import { ResponsiveProvider } from './providers/responsive-provider'
+import { dashboardPath } from './utils/paths'
 
 enableMapSet()
 enablePatches()
 
 function Providers() {
-  useEffect(() => {
-    document.body.classList.add(isMobile ? 'mobile' : 'desktop')
-  }, [])
+  useResponsiveClass()
   return (
     <ResponsiveProvider>
       <SessionLayout>

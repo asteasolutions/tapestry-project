@@ -1,12 +1,12 @@
 import clsx from 'clsx'
 import { DragEvent, ReactNode, useState } from 'react'
-import styles from './styles.module.css'
-import { Text } from 'tapestry-core-client/src/components/lib/text/index'
+import { Icon } from '../../../../src/components/lib/icon/index'
+import { Text } from '../../../../src/components/lib/text/index'
 import ImportGIF from '../../../assets/gifs/import.gif'
-import { Icon } from 'tapestry-core-client/src/components/lib/icon/index'
+import styles from './styles.module.css'
 
-interface DragArea {
-  children: ReactNode
+interface DragAreaProps {
+  children?: ReactNode
   allowDrop: (items: DataTransferItem[]) => boolean
   onDrop: (event: DragEvent<HTMLDivElement>) => unknown
   title?: string
@@ -28,7 +28,7 @@ export function DragArea({
   classes = {},
   disabled,
   alwaysVisible,
-}: DragArea) {
+}: DragAreaProps) {
   const [visible, setVisible] = useState(alwaysVisible)
   const [dropAreaDragging, setDropAreaDragging] = useState(false)
 

@@ -17,7 +17,7 @@ import {
   SortDirection,
 } from 'tapestry-shared/src/data-transfer/resources/dtos/common'
 import { userSettings } from '../../services/user-settings'
-import { DragArea } from './drag-area'
+import { DragArea } from 'tapestry-core-client/src/components/lib/drag-area'
 import { Breakpoint, useResponsive } from '../../providers/responsive-provider'
 import { DashboardHeader } from './header'
 import { TapestryListControls } from './tapestry-list-controls'

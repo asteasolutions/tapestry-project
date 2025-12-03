@@ -220,7 +220,6 @@ export function TapestryCard({
         <TapestryInfoDialog
           tapestry={tapestry}
           owner={fullName(tapestry.owner)}
-          createdAt={tapestry.createdAt}
           onClose={() => setViewingInfo(false)}
           buttons={
             <>

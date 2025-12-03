@@ -1,0 +1,12 @@
+.drag-area {
+  height: 100%;
+
+  :global(> div:first-of-type) {
+    align-items: normal;
+  }
+
+  .drop-area {
+    width: 100%;
+    justify-content: center;
+  }
+}

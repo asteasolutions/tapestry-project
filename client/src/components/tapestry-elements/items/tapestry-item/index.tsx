@@ -1,21 +1,21 @@
-import { ReactNode } from 'react'
-import styles from './styles.module.css'
 import clsx from 'clsx'
+import { ReactNode } from 'react'
 import { useObservable } from 'tapestry-core-client/src/components/lib/hooks/use-observable'
-import { itemUpload } from '../../../../services/item-upload'
-import { UploadIndicator } from '../../../upload-indicator'
-import { CommentsIndicator } from '../../../comments-indicator'
+import { TapestryItem as BaseTapestryItem } from 'tapestry-core-client/src/components/tapestry/items/tapestry-item'
+import { THEMES } from 'tapestry-core-client/src/theme/themes'
+import { computeRestrictedScale } from 'tapestry-core-client/src/view-model/utils'
+import { Size } from 'tapestry-core/src/lib/geometry'
+import { idMapToArray } from 'tapestry-core/src/utils'
 import { useDispatch, useTapestryData } from '../../../../pages/tapestry/tapestry-providers'
 import {
   setInteractiveElement,
   setSidePane,
 } from '../../../../pages/tapestry/view-model/store-commands/tapestry'
-import { THEMES } from 'tapestry-core-client/src/theme/themes'
+import { itemUpload } from '../../../../services/item-upload'
+import { CommentsIndicator } from '../../../comments-indicator'
+import { UploadIndicator } from '../../../upload-indicator'
 import { ResizeHandles } from '../../resize-handles'
-import { Size } from 'pixi.js'
-import { idMapToArray } from 'tapestry-core/src/utils'
-import { computeRestrictedScale } from 'tapestry-core-client/src/view-model/utils'
-import { TapestryItem as BaseTapestryItem } from 'tapestry-core-client/src/components/tapestry/items/tapestry-item'
+import styles from './styles.module.css'
 
 export interface TapestryItemProps {
   id: string

@@ -209,5 +209,7 @@ export abstract class TapestryRenderer<E extends TapestryElementViewModel>
     if (isRelViewModel(model)) {
       return new RelRenderer(this.store, this.stage, model)
     }
+
+    return new (class extends TapestryElementRenderer<E> {})(this.store, this.stage, model)
   }
 }

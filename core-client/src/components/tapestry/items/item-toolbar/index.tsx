@@ -14,6 +14,8 @@ export function ItemToolbar({ items = [], tapestryItemId: id, ...props }: ItemTo
   const { useStoreData } = useTapestryConfig()
   const dto = useStoreData(`items.${id}.dto`)!
 
+  const isInteractive = useStoreData('interactiveElement.modelId') === dto.id
+
   const menu = useItemMenu(id, [
     ...items,
     items.length > 0 && 'separator',
@@ -24,6 +26,10 @@ export function ItemToolbar({ items = [], tapestryItemId: id, ...props }: ItemTo
     'prev',
     'next',
   ])
+
+  if (!isInteractive) {
+    return null
+  }
 
   return (
     <>

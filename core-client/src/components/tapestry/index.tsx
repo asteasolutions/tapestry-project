@@ -1,10 +1,29 @@
-import { createContext, FC, useContext } from 'react'
+import { defaults } from 'lodash-es'
+import { createContext, FC, PropsWithChildren, useContext } from 'react'
 import { Id } from 'tapestry-core/src/data-format/schemas/common.js'
 import { ItemType, WebpageType } from 'tapestry-core/src/data-format/schemas/item.js'
 import { ContextHookInvocationError } from '../../errors.js'
 import { StoreHooks } from '../../lib/store/provider.js'
-import { TapestryViewModel } from '../../view-model/index.js'
+import { GroupViewModel, TapestryViewModel } from '../../view-model/index.js'
 import { ItemInfoModal } from './item-info-modal/index.js'
+import { ActionButtonItem } from './items/action-button/index.js'
+import { AudioItem } from './items/audio/index.js'
+import { BookItem } from './items/book/index.js'
+import { ImageItem } from './items/image/index.js'
+import { PdfItem } from './items/pdf/index.js'
+import { TapestryItem } from './items/tapestry-item/index.js'
+import { TextItem } from './items/text/index.js'
+import { VideoItem } from './items/video/index.js'
+import { WebpageItem } from './items/webpage/index.js'
+import { Multiselection } from './multiselection/index.js'
+import {
+  getBoundingRectangle,
+  getSelectionItems,
+  isSingleGroupSelected,
+  MULTISELECT_RECTANGLE_PADDING,
+} from '../../view-model/utils.js'
+import { useMultiselectMenu } from '../lib/hooks/use-multiselect-menu.js'
+import { ElementToolbar } from './element-toolbar/index.js'
 
 export const SELECTION_Z_INDEX = 1
 
@@ -37,6 +56,80 @@ export interface TapestryConfig extends StoreHooks<TapestryViewModel> {
 }
 
 export const TapestryConfigContext = createContext<TapestryConfig | null>(null)
+
+export type ProviderConfig = Omit<TapestryConfig, 'components'> & {
+  components?: Partial<TapestryComponentsConfig>
+}
+
+interface TapestryConfigProviderProps extends PropsWithChildren {
+  config: ProviderConfig
+}
+
+export function TapestryConfigProvider({
+  children,
+  config: { components = {}, ...rest },
+}: TapestryConfigProviderProps) {
+  return (
+    <TapestryConfigContext
+      value={{
+        ...rest,
+        components: defaults<Partial<TapestryConfig['components']>, TapestryConfig['components']>(
+          components,
+          {
+            ActionButtonItem,
+            AudioItem,
+            BookItem,
+            ImageItem,
+            PdfItem,
+            TextItem,
+            VideoItem,
+            WebpageItem: {
+              default: WebpageItem,
+              iaWayback: ({ id }) => (
+                <TapestryItem id={id} halo={null}>
+                  'Webpage wayback'
+                </TapestryItem>
+              ),
+            },
+            Rel: () => null,
+            Multiselection: () => {
+              const { items, selection, groups } = rest.useStoreData([
+                'items',
+                'selection',
+                'groups',
+              ])
+              const selectionItems = getSelectionItems({ items, selection })
+              const selectionBounds = getBoundingRectangle(selectionItems).expand(
+                MULTISELECT_RECTANGLE_PADDING,
+              )
+
+              let selectedGroup: GroupViewModel | undefined
+              if (isSingleGroupSelected(selection)) {
+                selectedGroup = groups[[...selection.groupIds][0]]
+              }
+
+              const toolbar = useMultiselectMenu(
+                selectedGroup ? ['focus', 'separator', 'presentation'] : ['focus'],
+                selectedGroup?.dto.id,
+              )
+
+              return (
+                <Multiselection
+                  bounds={selectionBounds}
+                  style={{ pointerEvents: 'none' }}
+                  halo={<ElementToolbar elementBounds={selectionBounds} items={toolbar} isOpen />}
+                ></Multiselection>
+              )
+            },
+            ItemInfoModal,
+          },
+        ),
+      }}
+    >
+      {children}
+    </TapestryConfigContext>
+  )
+}
 
 export function useTapestryConfig(): TapestryConfig {
   const context = useContext(TapestryConfigContext)

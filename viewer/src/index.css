@@ -1,0 +1,39 @@
+:root {
+  --transition-duration: 0.15s;
+  --box-shadow: 0px 4px 4px -4px rgb(12 12 13 / 50%), 0px 16px 32px -4px rgb(12 12 13 / 50%);
+}
+
+html {
+  overscroll-behavior-x: none;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.pixi-container {
+  position: absolute;
+  inset: 0;
+
+  > canvas {
+    display: block;
+  }
+}
+
+.dom-container {
+  position: absolute;
+  inset: 0;
+  transform-origin: 0% 0%;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.zoom-toolbar {
+  position: absolute;
+  bottom: 16px;
+  right: 18px;
+}
