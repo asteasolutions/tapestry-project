@@ -57,7 +57,7 @@ function Tapestry() {
 
   useStageInit(sceneRef, pixiContainerRef, presentationOrderContainerRef, {
     tapestryPixiOptions: { background: store.get('background') },
-    presentationPixiOptions: { background: 'black', backgroundAlpha: 0.05 },
+    presentationPixiOptions: { background: 'black', backgroundAlpha: 0 },
     gestureDectorOptions: { scrollGesture: 'pan', dragToPan: store.get('pointerMode') === 'pan' },
     lifecycleController: (stage) =>
       new TapestryLifecycleController(store, stage, {

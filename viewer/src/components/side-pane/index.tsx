@@ -8,12 +8,16 @@ import { useTapestryData } from '../../app'
 export function SidePane() {
   const displaySidePane = useTapestryData('displaySidePane')
 
-  const content =
-    displaySidePane === 'guide' || displaySidePane === 'shortcuts' ? (
-      <HelpPane sidePaneType={displaySidePane} guide={DEFAULT_GUIDE} shortcuts={DEFAULT_ACTIONS} />
-    ) : displaySidePane === 'search' ? (
-      <SearchPane />
-    ) : undefined
+  const isHelpPanel = displaySidePane === 'guide' || displaySidePane === 'shortcuts'
+  const content = isHelpPanel ? (
+    <HelpPane sidePaneType={displaySidePane} guide={DEFAULT_GUIDE} shortcuts={DEFAULT_ACTIONS} />
+  ) : displaySidePane === 'search' ? (
+    <SearchPane />
+  ) : undefined
 
-  return <BaseSidePane isShown={!!displaySidePane}>{content}</BaseSidePane>
+  return (
+    <BaseSidePane isShown={!!displaySidePane} heading={isHelpPanel && 'Help'}>
+      {content}
+    </BaseSidePane>
+  )
 }
