@@ -1,0 +1,14 @@
+on:
+  pull_request:
+    branches:
+      - main
+      - demo
+
+jobs:
+  lint-all:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v5
+      - run: |
+          docker run --rm $(docker build -q -f Dockerfile.ci .)
+          docker system prune -af
