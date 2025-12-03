@@ -1,0 +1,34 @@
+on:
+  push:
+    branches:
+      - demo
+
+jobs:
+  build-aws-backend:
+    runs-on: self-hosted
+    environment: demo
+    steps:
+      - uses: actions/checkout@v5
+      - run: ./deployment/docker/build-backend.sh
+
+  deploy-aws-backend:
+    runs-on: self-hosted
+    environment: demo
+    needs: [build-aws-backend]
+    steps:
+      - uses: actions/checkout@v5
+      - run: ./deployment/docker/deploy-backend.sh
+
+  deploy-aws-vault:
+    runs-on: self-hosted
+    environment: demo
+    steps:
+      - uses: actions/checkout@v5
+      - run: ./deployment/docker/deploy-vault.sh
+
+  build-and-deploy-aws-frontend:
+    runs-on: self-hosted
+    environment: demo
+    steps:
+      - uses: actions/checkout@v5
+      - run: ./deployment/docker/build-and-deploy-frontend.sh
