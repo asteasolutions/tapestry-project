@@ -62,7 +62,7 @@ npm start
 
 # In a new terminal
 cd server
-npm run start:worker
+npm run start:worker:dev
 
 # In a new terminal
 cd client
@@ -141,7 +141,7 @@ The setup for the background worker is identical to the one for the API server s
 
 ```sh
 cd server
-npm run start:worker
+npm run start:worker:dev
 ```
 
 Note that the worker requires some additional packages to be installed on the host machine, such as `chromium`, `ffmpeg`, and `imagemagick`. They are all described in the `worker` section of `Dockerfile.server`.
