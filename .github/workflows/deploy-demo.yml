@@ -1,9 +1,12 @@
-on: [push]
+on:
+  push:
+    branches:
+      - demo
+
 jobs:
   build-aws-backend:
     runs-on: self-hosted
     environment: demo
-    if: github.ref_name == 'demo'
     steps:
       - uses: actions/checkout@v5
       - run: ./deployment/docker/build-backend.sh
@@ -11,7 +14,6 @@ jobs:
   deploy-aws-backend:
     runs-on: self-hosted
     environment: demo
-    if: github.ref_name == 'demo'
     needs: [build-aws-backend]
     steps:
       - uses: actions/checkout@v5
@@ -20,7 +22,6 @@ jobs:
   deploy-aws-vault:
     runs-on: self-hosted
     environment: demo
-    if: github.ref_name == 'demo'
     steps:
       - uses: actions/checkout@v5
       - run: ./deployment/docker/deploy-vault.sh
@@ -28,7 +29,6 @@ jobs:
   build-and-deploy-aws-frontend:
     runs-on: self-hosted
     environment: demo
-    if: github.ref_name == 'demo'
     steps:
       - uses: actions/checkout@v5
       - run: ./deployment/docker/build-and-deploy-frontend.sh
