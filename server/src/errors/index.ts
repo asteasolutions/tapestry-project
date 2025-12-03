@@ -1,4 +1,7 @@
+import { Prisma } from '@prisma/client'
 import { ErrorRequestHandler } from 'express'
+import { HttpError } from 'http-errors'
+import { mapValues } from 'lodash-es'
 import {
   BadRequestErrorDetails,
   BadRequestErrorResponse,
@@ -13,11 +16,9 @@ import {
   ErrorResponseSchema,
   ZodError,
 } from 'tapestry-shared/src/data-transfer/resources/schemas/errors.js'
-import { isNotFoundError, isUniqueConstraintViolation } from '../db.js'
 import { flattenError } from 'zod/v4'
 import { RegisterJWTData } from '../auth/tokens.js'
-import { mapValues } from 'lodash-es'
-import { Prisma } from '@prisma/client'
+import { isNotFoundError, isUniqueConstraintViolation } from '../db.js'
 
 abstract class APIError<T extends ErrorName = ErrorName> extends Error {
   constructor(
@@ -130,6 +131,11 @@ export class ServerError extends APIError<'ServerError'> implements BaseErrorRes
 }
 
 export function toAPIError(err: unknown) {
+  // The body-parser (actually raw-body) adds a `type` property with the value "entity.too.large"
+  // which might be more reliable, but the typings are lacking
+  if (err instanceof HttpError && err.name === 'PayloadTooLargeError') {
+    return new BadRequestError('Content too large')
+  }
   if (err instanceof ZodError) {
     return new BadRequestError(err)
   }
