@@ -3,6 +3,10 @@ import z from 'zod/v4'
 import { deepFreeze } from 'tapestry-core/src/utils.js'
 
 const port = z.coerce.number<number>().int().min(0).max(65535)
+const checkTrue = z
+  .string()
+  .transform((v) => v === 'true')
+  .default(false)
 
 export const config = deepFreeze(
   z
@@ -14,10 +18,7 @@ export const config = deepFreeze(
       DB_USER: z.string(),
       DB_PASS: z.string(),
       DB_LOG_LEVEL: z.string().default('query,error'),
-      DB_USE_SSL: z
-        .string()
-        .transform((v) => v === 'true')
-        .default(false),
+      DB_USE_SSL: checkTrue,
       DATABASE_URL: z.string().nonempty(),
 
       // Server
@@ -43,14 +44,12 @@ export const config = deepFreeze(
       AWS_SECRET_ACCESS_KEY: z.string().nullish(),
       AWS_REGION: z.string(),
       AWS_S3_BUCKET_NAME: z.string(),
+      AWS_S3_FORCE_PATH_STYLE: checkTrue,
 
       // Redis
       REDIS_HOST: z.string().default('localhost'),
       REDIS_PORT: port.default(6379),
-      REDIS_USE_TLS: z
-        .string()
-        .transform((v) => v === 'true')
-        .default(false),
+      REDIS_USE_TLS: checkTrue,
 
       // Worker
       PUPPETEER_ARGS: z.string().default(''),
@@ -108,6 +107,7 @@ export const config = deepFreeze(
         region: input.AWS_REGION,
         s3: {
           bucketName: input.AWS_S3_BUCKET_NAME,
+          forcePathStyle: input.AWS_S3_FORCE_PATH_STYLE,
         },
       },
       redis: {

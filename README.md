@@ -91,6 +91,8 @@ npm run localstack:start
 
 Another alternative is to use [Minio](https://www.min.io/), or any other S3-compatible service.
 
+Sometimes you might need to change the way the aws presigned URLs are generated. By default virtual-hosted style is used (i.e. the bucket name is used as a subdomain - `https://<bucket-name>.s3.<region>.amazonaws.com`). By setting `AWS_S3_FORCE_PATH_STYLE` to `true` you can change this to path style - `https://s3.<region>.amazonaws.com/<bucket-name>/`.
+
 When using anything other than the default AWS S3, you also need to configure the env variable `AWS_ENDPOINT_URL`. For example, for LocalStack it could look something like this:
 
 ```
