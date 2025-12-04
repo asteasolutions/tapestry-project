@@ -10,6 +10,50 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - run: ./deployment/docker/build-backend.sh
+        env: &demo_env
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+          AWS_DEPLOY_ROLE_NAME: ${{ secrets.AWS_DEPLOY_ROLE_NAME }}
+          AWS_OPENTOFU_KEY: ${{ secrets.AWS_OPENTOFU_KEY }}
+          AWS_OPENTOFU_KEY_ID: ${{ secrets.AWS_OPENTOFU_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          BUG_REPORT_FORM_URL: ${{ vars.BUG_REPORT_FORM_URL }}
+          DEPLOY_AWS_ACCESS_KEY_ID: ${{ secrets.DEPLOY_AWS_ACCESS_KEY_ID }}
+          DEPLOY_AWS_ECR_API_REPO: ${{ secrets.DEPLOY_AWS_ECR_API_REPO }}
+          DEPLOY_AWS_ECR_WORKER_REPO: ${{ secrets.DEPLOY_AWS_ECR_WORKER_REPO }}
+          DEPLOY_AWS_INSTANCE_ID: ${{ secrets.DEPLOY_AWS_INSTANCE_ID }}
+          DEPLOY_AWS_REGION: ${{ secrets.DEPLOY_AWS_REGION }}
+          DEPLOY_AWS_SECRET_ACCESS_KEY: ${{ secrets.DEPLOY_AWS_SECRET_ACCESS_KEY }}
+          PUPPETEER_ARGS: ${{ vars.PUPPETEER_ARGS }}
+          REDIS_PORT: ${{ secrets.REDIS_PORT }}
+          STUN_SERVER: ${{ vars.STUN_SERVER }}
+          VAULT_AWS_ACCESS_KEY_ID: ${{ secrets.VAULT_AWS_ACCESS_KEY_ID }}
+          VAULT_AWS_REGION: ${{ secrets.VAULT_AWS_REGION }}
+          VAULT_AWS_SECRET_ACCESS_KEY: ${{ secrets.VAULT_AWS_SECRET_ACCESS_KEY }}
+          VAULT_KMS_KEY_ARN: ${{ secrets.VAULT_KMS_KEY_ARN }}
+          VAULT_LOCAL_CONFIG: ${{ secrets.VAULT_LOCAL_CONFIG }}
+          WEBPAGE_LOADER_TIMEOUT: ${{ vars.WEBPAGE_LOADER_TIMEOUT }}
+          AWS_S3_BUCKET_NAME: ${{ secrets.AWS_S3_BUCKET_NAME }}
+          DATABASE_URL: postgresql://${{ secrets.DB_USER }}:${{ secrets.DB_PASS }}@db:5432/${{ secrets.DB_NAME }}?schema=public
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_PASS: ${{ secrets.DB_PASS }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_USE_SSL: ${{ secrets.DB_USE_SSL }}
+          DEPLOY_FRONTEND_CF_DISTRIBUTION_ID: ${{ secrets.DEPLOY_FRONTEND_CF_DISTRIBUTION_ID }}
+          DEPLOY_FRONTEND_S3_BUCKET: ${{ secrets.DEPLOY_FRONTEND_S3_BUCKET }}
+          EXTERNAL_SERVER_URL: ${{ vars.EXTERNAL_SERVER_URL }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          JOBS_ADMIN_NAME: ${{ secrets.JOBS_ADMIN_NAME }}
+          JOBS_ADMIN_PASSWORD: ${{ secrets.JOBS_ADMIN_PASSWORD }}
+          REDIS_HOST: ${{ secrets.REDIS_HOST }}
+          REDIS_USE_TLS: ${{ secrets.REDIS_USE_TLS }}
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          VAULT_ADDR: ${{ secrets.VAULT_ADDR }}
+          VAULT_ROLE_ID: ${{ secrets.VAULT_ROLE_ID }}
+          VAULT_ROOT_TOKEN: ${{ secrets.VAULT_ROOT_TOKEN }}
+          VAULT_SECRET_ID: ${{ secrets.VAULT_SECRET_ID }}
+          VIEWER_URL: ${{ vars.VIEWER_URL }}
 
   deploy-aws-backend:
     runs-on: self-hosted
@@ -18,6 +62,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - run: ./deployment/docker/deploy-backend.sh
+        env: *demo_env
 
   deploy-aws-vault:
     runs-on: self-hosted
@@ -25,6 +70,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - run: ./deployment/docker/deploy-vault.sh
+        env: *demo_env
 
   build-and-deploy-aws-frontend:
     runs-on: self-hosted
@@ -32,3 +78,4 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - run: ./deployment/docker/build-and-deploy-frontend.sh
+        env: *demo_env
