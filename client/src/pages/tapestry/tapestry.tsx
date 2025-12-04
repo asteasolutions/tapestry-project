@@ -39,6 +39,7 @@ import {
 } from './tapestry-providers'
 import { setInteractionMode, setSnackbar } from './view-model/store-commands/tapestry'
 import { ViewportDebugData } from './viewport-debug-data'
+import { createPixiApp } from 'tapestry-core-client/src/stage'
 
 function useInteractionModeUrlParam() {
   const { username, slug, edit } = useTapestryPathParams()
@@ -67,11 +68,26 @@ export function Tapestry() {
 
   const store = useTapestryStore()
   const tapestryDataSyncCommandsRef = usePropRef(useTapestryDataSyncCommands())
-  const overlay = new Color(THEMES[store.get('theme')].color('overlay'))
-  useStageInit(sceneRef, pixiContainerRef, presentationOrderContainerRef, {
-    tapestryPixiOptions: { background: store.get('background') },
-    presentationPixiOptions: { background: overlay.hex(), backgroundAlpha: overlay.alpha() },
+  useStageInit(sceneRef, {
     gestureDectorOptions: { scrollGesture: 'pan', dragToPan: store.get('pointerMode') === 'pan' },
+    createPixiApps: async () => {
+      const overlay = new Color(THEMES[store.get('theme')].color('overlay'))
+      return [
+        {
+          name: 'tapestry',
+          app: await createPixiApp(pixiContainerRef.current!, {
+            background: store.get('background'),
+          }),
+        },
+        {
+          name: 'presentationOrder',
+          app: await createPixiApp(presentationOrderContainerRef.current!, {
+            background: overlay.hex(),
+            backgroundAlpha: overlay.alpha(),
+          }),
+        },
+      ]
+    },
     lifecycleController: (stage) =>
       new EditorLifecycleController(store, stage, tapestryDataSyncCommandsRef.current),
   })

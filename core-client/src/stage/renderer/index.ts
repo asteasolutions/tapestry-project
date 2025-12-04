@@ -178,12 +178,10 @@ export abstract class TapestryRenderer<
 
     if (!renderer) {
       renderer = this.createTapestryElementRenderer(viewModel)
-      if (renderer) {
-        this.tapestryElementRenderers.set(id, renderer)
-      }
+      this.tapestryElementRenderers.set(id, renderer)
     }
 
-    renderer?.render(viewModel)
+    renderer.render(viewModel)
   }
 
   protected getRenderedTapestryElementIds() {
@@ -205,7 +203,7 @@ export abstract class TapestryRenderer<
     }
   }
 
-  protected createTapestryElementRenderer(model: E): TapestryElementRenderer<E> | undefined {
+  protected createTapestryElementRenderer(model: E): TapestryElementRenderer<E> {
     if (isRelViewModel(model)) {
       return new RelRenderer(this.store, this.stage, model)
     }

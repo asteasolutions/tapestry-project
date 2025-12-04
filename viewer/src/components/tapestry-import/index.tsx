@@ -32,7 +32,7 @@ export function TapestryImport({ onImport }: TapestryImportProps) {
             allowDrop={(items) => items.some((i) => i.type === TYPE)}
             classes={{ root: styles.dragArea, dropArea: styles.dropArea }}
             onDrop={(e) => handleFile(e.dataTransfer.files[0])}
-          ></DragArea>
+          />
         </Button>
       </FilePicker>
     </div>

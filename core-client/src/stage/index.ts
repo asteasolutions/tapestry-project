@@ -65,5 +65,7 @@ export async function createPixiApp(container: HTMLDivElement, opts?: Partial<Ap
     ...opts,
   })
 
+  container.appendChild(app.canvas)
+
   return app
 }

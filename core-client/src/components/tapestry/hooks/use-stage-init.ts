@@ -1,22 +1,24 @@
 import { RefObject } from 'react'
 import { useAsync } from '../../lib/hooks/use-async'
-import { createPixiApp, createTapestryStage, TapestryStage } from '../../../stage'
+import { createTapestryStage, TapestryStage } from '../../../stage'
 import { TapestryLifecycleController } from '../../../stage/controller'
-import { ApplicationOptions } from 'pixi.js'
+import { Application } from 'pixi.js'
 import { usePropRef } from '../../lib/hooks/use-prop-ref'
 import { TapestryViewModel } from '../../../view-model'
 import { GestureDetectorOptions } from '../../../stage/gesture-detector'
 
-export function useStageInit<T extends TapestryViewModel, M extends Exclude<string, 'default'>>(
+export function useStageInit<
+  T extends TapestryViewModel,
+  M extends Exclude<string, 'default'>,
+  S extends string,
+>(
   sceneRef: RefObject<HTMLDivElement | null>,
-  pixiRef: RefObject<HTMLDivElement | null>,
-  presentationOrderRef: RefObject<HTMLDivElement | null>,
   config: {
-    tapestryPixiOptions: Partial<ApplicationOptions>
-    presentationPixiOptions: Partial<ApplicationOptions>
-    lifecycleController: (
-      stage: TapestryStage<'presentationOrder'>,
-    ) => TapestryLifecycleController<T, M>
+    createPixiApps: () => Promise<
+      | [{ name: 'tapestry'; app: Application }]
+      | [{ name: 'tapestry'; app: Application }, { name: S; app: Application }]
+    >
+    lifecycleController: (stage: TapestryStage<S>) => TapestryLifecycleController<T, M>
     gestureDectorOptions: GestureDetectorOptions
   },
 ) {
@@ -25,42 +27,38 @@ export function useStageInit<T extends TapestryViewModel, M extends Exclude<stri
   useAsync(
     async (_abortCtrl, cleanUp) => {
       const scene = sceneRef.current!
+      const { gestureDectorOptions, lifecycleController, createPixiApps } = configRef.current
 
       let cancelled = false as boolean
       cleanUp(() => {
         cancelled = true
       })
 
-      const [tapestryApp, presentationOrderApp] = await Promise.all([
-        createPixiApp(pixiRef.current!, configRef.current.tapestryPixiOptions),
-        createPixiApp(presentationOrderRef.current!, configRef.current.presentationPixiOptions),
-      ])
+      const pixiApps = await createPixiApps()
 
       if (cancelled) {
-        tapestryApp.destroy()
-        presentationOrderApp.destroy()
+        pixiApps.forEach(({ app }) => app.destroy(true, true))
         return
       }
 
-      pixiRef.current!.appendChild(tapestryApp.canvas)
-      presentationOrderRef.current!.appendChild(presentationOrderApp.canvas)
-
-      const stage = createTapestryStage<'presentationOrder'>(
+      const stage = createTapestryStage<S>(
         scene,
-        { tapestry: tapestryApp, presentationOrder: presentationOrderApp },
-        configRef.current.gestureDectorOptions,
+        pixiApps.reduce(
+          (acc, { app, name }) => ({ ...acc, [name]: app }),
+          {} as Record<'tapestry' | S, Application>,
+        ),
+        gestureDectorOptions,
       )
 
-      const lifecycleController = configRef.current.lifecycleController(stage)
+      const controller = lifecycleController(stage)
 
-      lifecycleController.init()
+      controller.init()
 
       cleanUp(() => {
-        lifecycleController.dispose()
-        tapestryApp.destroy()
-        presentationOrderApp.destroy()
+        controller.dispose()
+        pixiApps.forEach(({ app }) => app.destroy(true, true))
       })
     },
-    [sceneRef, pixiRef, presentationOrderRef, configRef],
+    [sceneRef, configRef],
   )
 }

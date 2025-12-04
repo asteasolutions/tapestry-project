@@ -34,6 +34,7 @@ import { useSearchParams } from 'react-router'
 import { useAsync } from 'tapestry-core-client/src/components/lib/hooks/use-async'
 import { ImportService } from './components/tapestry-import/import-service'
 import { LoadingSpinner } from 'tapestry-core-client/src/components/lib/loading-spinner'
+import { createPixiApp } from 'tapestry-core-client/src/stage'
 
 enableMapSet()
 enablePatches()
@@ -51,14 +52,19 @@ const tapestryConfig: ProviderConfig = createStoreHooks(createUseStoreHook(Tapes
 function Tapestry() {
   const sceneRef = useRef<HTMLDivElement>(null)
   const pixiContainerRef = useRef<HTMLDivElement>(null)
-  const presentationOrderContainerRef = useRef<HTMLDivElement>(null)
 
   const store = useTapestryStore()
 
-  useStageInit(sceneRef, pixiContainerRef, presentationOrderContainerRef, {
-    tapestryPixiOptions: { background: store.get('background') },
-    presentationPixiOptions: { background: 'black', backgroundAlpha: 0 },
+  useStageInit(sceneRef, {
     gestureDectorOptions: { scrollGesture: 'pan', dragToPan: store.get('pointerMode') === 'pan' },
+    createPixiApps: async () => [
+      {
+        name: 'tapestry',
+        app: await createPixiApp(pixiContainerRef.current!, {
+          background: store.get('background'),
+        }),
+      },
+    ],
     lifecycleController: (stage) =>
       new TapestryLifecycleController(store, stage, {
         default: [
@@ -89,7 +95,6 @@ function Tapestry() {
     <div ref={sceneRef} style={{ position: 'relative', height: '100%', overflow: 'hidden' }}>
       <div ref={pixiContainerRef} className="pixi-container" />
       <TapestryCanvas classes={{ root: 'dom-container' }} />
-      <div className="pixi-container" ref={presentationOrderContainerRef} inert />
       <ViewportScrollbars />
       <TopToolbar />
       <SidePane />
