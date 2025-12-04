@@ -147,7 +147,7 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
   }, [options, intervalRef, onReadyRef, component])
 
   return (
-    <div data-vjs-player style={{ height: component === 'audio' ? '100%' : undefined }}>
+    <div data-vjs-player style={{ height: '100%' }}>
       <div ref={internalRef} style={style} className={styles.root} />
     </div>
   )

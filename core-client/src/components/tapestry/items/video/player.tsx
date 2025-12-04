@@ -15,6 +15,7 @@ import Player from 'video.js/dist/types/player'
 import { Id } from 'tapestry-core/src/data-format/schemas/common'
 import { useTapestryConfig } from '../..'
 import { VideoPlayOverlay } from '../../video-play-overlay'
+import styles from './styles.module.css'
 
 function useVideoThumbnail(dto: VideoItemDto, player: Player | undefined) {
   const [thumbnail, setThumbnail] = useState(dto.customThumbnail ?? dto.thumbnail?.source)
@@ -80,7 +81,7 @@ export const VideoItemPlayer = memo(
     )
 
     return (
-      <>
+      <div className={styles.root}>
         <MediaPlayer
           component="video"
           options={options}
@@ -113,7 +114,7 @@ export const VideoItemPlayer = memo(
         {!isInteractive && player?.paused() && (
           <VideoPlayOverlay itemSize={dto.size} type="play_arrow" />
         )}
-      </>
+      </div>
     )
   },
 )
