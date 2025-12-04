@@ -14,9 +14,10 @@ assume_deploy_role () {
 setup_deploy_env () {
   assume_deploy_role
 
+  SHORT_SHA=${GITHUB_SHA:0:8}
   export ECR_URL=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
   export SERVER_TAG_LATEST=${ECR_URL}/${DEPLOY_AWS_ECR_API_REPO}:latest
-  export SERVER_TAG_COMMIT=${ECR_URL}/${DEPLOY_AWS_ECR_API_REPO}:api-${CI_COMMIT_SHORT_SHA}
+  export SERVER_TAG_COMMIT=${ECR_URL}/${DEPLOY_AWS_ECR_API_REPO}:api-${SHORT_SHA}
   export WORKER_TAG_LATEST=${ECR_URL}/${DEPLOY_AWS_ECR_WORKER_REPO}:latest
-  export WORKER_TAG_COMMIT=${ECR_URL}/${DEPLOY_AWS_ECR_WORKER_REPO}:worker-${CI_COMMIT_SHORT_SHA}
+  export WORKER_TAG_COMMIT=${ECR_URL}/${DEPLOY_AWS_ECR_WORKER_REPO}:worker-${SHORT_SHA}
 }

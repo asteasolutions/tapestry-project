@@ -15,3 +15,31 @@ jobs:
           COMPOSE_PROJECT_NAME: dev
           ENVIRONMENT_NAME: dev
           HOST: tapestries-dev
+          AI_CHAT_EXPIRES_IN: ${{ vars.AI_CHAT_EXPIRES_IN }}
+          AUTH_PROVIDER: ${{ vars.AUTH_PROVIDER }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          AWS_S3_BUCKET_NAME: ${{ secrets.AWS_S3_BUCKET_NAME }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          BUG_REPORT_FORM_URL: ${{ vars.BUG_REPORT_FORM_URL }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_PASS: ${{ secrets.DB_PASS }}
+          DB_USER: ${{ secrets.DB_USER }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          JOBS_ADMIN_NAME: ${{ secrets.JOBS_ADMIN_NAME }}
+          JOBS_ADMIN_PASSWORD: ${{ secrets.JOBS_ADMIN_PASSWORD }}
+          PUPPETEER_ARGS: ${{ vars.PUPPETEER_ARGS }}
+          REDIS_PORT: ${{ secrets.REDIS_PORT }}
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          STUN_SERVER: ${{ vars.STUN_SERVER }}
+          VAULT_ADDR: ${{ secrets.VAULT_ADDR }}
+          VAULT_AWS_ACCESS_KEY_ID: ${{ secrets.VAULT_AWS_ACCESS_KEY_ID }}
+          VAULT_AWS_REGION: ${{ secrets.VAULT_AWS_REGION }}
+          VAULT_AWS_SECRET_ACCESS_KEY: ${{ secrets.VAULT_AWS_SECRET_ACCESS_KEY }}
+          VAULT_KMS_KEY_ARN: ${{ secrets.VAULT_KMS_KEY_ARN }}
+          VAULT_LOCAL_CONFIG: ${{ secrets.VAULT_LOCAL_CONFIG }}
+          VAULT_ROLE_ID: ${{ secrets.VAULT_ROLE_ID }}
+          VAULT_ROOT_TOKEN: ${{ secrets.VAULT_ROOT_TOKEN }}
+          VAULT_SECRET_ID: ${{ secrets.VAULT_SECRET_ID }}
+          WEBPAGE_LOADER_TIMEOUT: ${{ vars.WEBPAGE_LOADER_TIMEOUT }}
