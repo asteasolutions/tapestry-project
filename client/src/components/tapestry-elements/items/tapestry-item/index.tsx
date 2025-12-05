@@ -37,8 +37,7 @@ export function TapestryItem({ id, children, halo }: TapestryItemProps) {
 
   const isContentInteractive = id === interactiveElement?.modelId
 
-  // @ts-expect-error TS wants us to check for a media item
-  const item = useObservable(itemUpload).find((i) => i.objectUrl === dto.source)
+  const item = useObservable(itemUpload).find((i) => i.itemId === dto.id)
 
   return (
     <BaseTapestryItem

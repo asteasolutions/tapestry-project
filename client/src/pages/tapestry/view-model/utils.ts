@@ -1,4 +1,24 @@
+import { Patch, WritableDraft } from 'immer'
 import { chunk, zip } from 'lodash'
+import { PresentationStepViewModel } from 'tapestry-core-client/src/view-model'
+import {
+  getBoundingRectangle,
+  MULTISELECT_RECTANGLE_PADDING,
+} from 'tapestry-core-client/src/view-model/utils'
+import { Identifiable } from 'tapestry-core/src/data-format/schemas/common'
+import { getPresentedModelId, IdMap, idMapToArray } from 'tapestry-core/src/utils'
+import { GroupCreateDto } from 'tapestry-shared/src/data-transfer/resources/dtos/group'
+import {
+  ActionButtonItemDto,
+  ItemCreateDto,
+  TextItemDto,
+} from 'tapestry-shared/src/data-transfer/resources/dtos/item'
+import {
+  PresentationStepCreateDto,
+  PresentationStepDto,
+} from 'tapestry-shared/src/data-transfer/resources/dtos/presentation-step'
+import { RelCreateDto } from 'tapestry-shared/src/data-transfer/resources/dtos/rel'
+import { TapestryDto } from 'tapestry-shared/src/data-transfer/resources/dtos/tapestry'
 import {
   DirectionMask,
   EditableGroupViewModel,
@@ -9,22 +29,7 @@ import {
   MultiselectionUIComponent,
   SelectionResizeState,
 } from '.'
-import {
-  ActionButtonItemDto,
-  ItemCreateDto,
-  TextItemDto,
-} from 'tapestry-shared/src/data-transfer/resources/dtos/item'
-import { RelCreateDto } from 'tapestry-shared/src/data-transfer/resources/dtos/rel'
-import { GroupCreateDto } from 'tapestry-shared/src/data-transfer/resources/dtos/group'
-import {
-  PresentationStepCreateDto,
-  PresentationStepDto,
-} from 'tapestry-shared/src/data-transfer/resources/dtos/presentation-step'
-import { WritableDraft } from 'immer'
-import {
-  getBoundingRectangle,
-  MULTISELECT_RECTANGLE_PADDING,
-} from 'tapestry-core-client/src/view-model/utils'
+import { EDITABLE_TAPESTRY_PROPS } from '../../../model/data/utils'
 
 export function getMultiselectRectangle(
   selectionItems: EditableItemViewModel[],
@@ -147,4 +152,71 @@ export function reassignPresentationStep(
     [`${targetType}Id`]: targetId,
     [`${targetType === 'item' ? 'group' : 'item'}Id`]: null,
   })
+}
+
+export function getAdjacentPresentationSteps(
+  targetId: string,
+  presentationSteps: IdMap<PresentationStepViewModel>,
+) {
+  const stepArray = idMapToArray(presentationSteps)
+  const step = stepArray.find(({ dto }) => getPresentedModelId(dto) === targetId)
+  const prevStepId = step?.dto.prevStepId
+  return {
+    prev: prevStepId ? presentationSteps[prevStepId] : null,
+    next: stepArray.find((s) => s.dto.prevStepId === step?.dto.id),
+  }
+}
+
+type PatchSource = Identifiable[] | undefined | null
+
+const updatePatches = (from: PatchSource, to: PatchSource, path: string) =>
+  to?.reduce<Patch[]>((acc, item) => {
+    if (from?.find((i) => i.id === item.id)) {
+      acc.push({ op: 'replace', path: [path, item.id], value: item })
+    }
+    return acc
+  }, []) ?? []
+
+const removePatches = (from: PatchSource, to: PatchSource, path: string) =>
+  from?.reduce<Patch[]>((acc, item) => {
+    if (!to?.find((i) => i.id === item.id)) {
+      acc.push({ op: 'remove', path: [path, item.id] })
+    }
+    return acc
+  }, []) ?? []
+
+const addPatches = (from: PatchSource, to: PatchSource, path: string) =>
+  to?.reduce<Patch[]>((acc, item) => {
+    if (!from?.find((i) => i.id === item.id)) {
+      acc.push({ op: 'add', path: [path, item.id], value: item })
+    }
+    return acc
+  }, []) ?? []
+
+export function diffTapestryDtos(from: TapestryDto, to: TapestryDto): Patch[] {
+  const tapestryId = from.id
+  const tapestryPatches = EDITABLE_TAPESTRY_PROPS.map(
+    (prop): Patch => ({
+      op: 'replace',
+      path: ['tapestries', tapestryId, prop],
+      value: to[prop],
+    }),
+  )
+
+  return [
+    ...tapestryPatches,
+    ...(['items', 'rels', 'groups'] as const).flatMap((path) => [
+      ...updatePatches(from[path], to[path], path),
+      ...removePatches(from[path], to[path], path),
+      ...addPatches(from[path], to[path], path),
+    ]),
+  ]
+}
+
+export function diffPresentationSteps(from: PresentationStepDto[], to: PresentationStepDto[]) {
+  return [
+    ...updatePatches(from, to, 'presentationSteps'),
+    ...removePatches(from, to, 'presentationSteps'),
+    ...addPatches(from, to, 'presentationSteps'),
+  ]
 }

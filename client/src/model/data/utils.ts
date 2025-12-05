@@ -38,9 +38,8 @@ import { resource } from '../../services/rest-resources'
 import { isFunction } from 'lodash'
 import mime from 'mime'
 import axios, { AxiosProgressEvent } from 'axios'
-import { arrayToIdMap, fileExtension, isMediaItem } from 'tapestry-core/src/utils'
+import { arrayToIdMap, fileExtension, isBlobURL, isMediaItem } from 'tapestry-core/src/utils'
 import { userSettings } from '../../services/user-settings'
-import { itemUpload } from '../../services/item-upload'
 import { PublicUserProfileDto } from 'tapestry-shared/src/data-transfer/resources/dtos/user'
 import { RelDto, RelUpdateDto } from 'tapestry-shared/src/data-transfer/resources/dtos/rel'
 import { CommentThreadsDto } from 'tapestry-shared/src/data-transfer/resources/dtos/comment-threads'
@@ -52,7 +51,7 @@ import {
   PresentationStepUpdateDto,
 } from 'tapestry-shared/src/data-transfer/resources/dtos/presentation-step'
 import { FetchContentTypeProxyDto } from 'tapestry-shared/src/data-transfer/resources/dtos/proxy'
-import { ItemType, MediaItemType } from 'tapestry-core/src/data-format/schemas/item'
+import { ItemType, MediaItem, MediaItemType } from 'tapestry-core/src/data-format/schemas/item'
 import { viewModelFromTapestry } from 'tapestry-core-client/src/view-model/utils'
 
 export const EDITABLE_TAPESTRY_PROPS = [
@@ -270,14 +269,6 @@ export async function uploadAsset(
   return key
 }
 
-function prepareMediaSource(source: MediaItemSource): string {
-  if (typeof source === 'string') {
-    return source
-  }
-
-  return itemUpload.prepare(source)
-}
-
 export async function getItemSize(item: ItemDto): Promise<Size> {
   if (isMediaItem(item)) {
     return getMediaItemSize(item.type, item.source)
@@ -299,7 +290,7 @@ export async function createMediaItem<T extends MediaItemType>(
   return {
     type,
     size,
-    source: prepareMediaSource(source),
+    source: typeof source === 'string' ? source : URL.createObjectURL(source),
     title: '',
     dropShadow: true,
     position: ORIGIN,
@@ -366,4 +357,8 @@ export function userAccess(
 
 export function fullName({ givenName, familyName }: PublicUserProfileDto) {
   return `${givenName} ${familyName}`
+}
+
+export function isLocalMediaItem(item: unknown): item is MediaItem {
+  return isMediaItem(item) && isBlobURL(item.source)
 }

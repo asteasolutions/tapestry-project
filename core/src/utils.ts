@@ -11,6 +11,10 @@ import {
 import { PresentationStep } from './data-format/schemas/presentation-step.js'
 import { Rel, RelSchema } from './data-format/schemas/rel.js'
 
+export function isBlobURL(str: string) {
+  return str.startsWith('blob:')
+}
+
 export function isHTTPURL(str: string | null | undefined): str is `http${string}` {
   if (!str) {
     return false
