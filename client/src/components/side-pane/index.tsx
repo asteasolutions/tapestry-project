@@ -110,11 +110,11 @@ const headerText: Record<string, ReactNode> = {
 }
 
 export function SidePane() {
-  const tapestryId = useTapestryData('id')
-  const { displaySidePane, interactionMode } = useTapestryData([
-    'displaySidePane',
-    'interactionMode',
-  ])
+  const {
+    id: tapestryId,
+    displaySidePane,
+    interactionMode,
+  } = useTapestryData(['id', 'displaySidePane', 'interactionMode'])
   const [isMinimized, setIsMinimized] = useState(false)
   const dispatch = useDispatch()
 

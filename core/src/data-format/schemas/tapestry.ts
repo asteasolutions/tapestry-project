@@ -9,6 +9,7 @@ export const TapestrySchema = z
     ...IdentifiableSchema.shape,
     title: z.string().nonempty().describe('The title of this tapestry.'),
     description: z.string().nullish().describe('An optional description of the tapestry.'),
+    createdAt: z.coerce.date<Date>().describe('The timestamp when the tapestry was created'),
     items: ItemSchema.array().describe('The list of items in this tapestry.'),
     rels: RelSchema.array().describe(
       'The list of rels, i.e. relations between items in the tapestry.',

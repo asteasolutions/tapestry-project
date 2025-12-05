@@ -1,0 +1,28 @@
+{
+  "name": "tapestry-viewer",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "vite",
+    "build": "tsc -b && vite build",
+    "lint-ts": "eslint src --report-unused-disable-directives --max-warnings 0",
+    "lint-css": "stylelint src/**/*.css",
+    "prettier": "prettier ./src --check",
+    "lint": "tsc --build && npm run lint-ts && npm run lint-css && npm run prettier",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-router": "^7.5.3",
+    "tapestry-core": "^1.0.0",
+    "tapestry-core-client": "^1.0.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^5.0.0",
+    "eslint": "^9.39.1",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "vite": "^7.1.11"
+  }
+}

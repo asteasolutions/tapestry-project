@@ -1,16 +1,16 @@
 import clsx from 'clsx'
 import Color from 'color'
-import * as PIXI from 'pixi.js'
 import 'pixi.js/math-extras'
-import { memo, RefObject, useEffect, useRef } from 'react'
+import { memo, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router'
-import { useAsync } from 'tapestry-core-client/src/components/lib/hooks/use-async'
+
 import { usePropRef } from 'tapestry-core-client/src/components/lib/hooks/use-prop-ref'
 import { Snackbar } from 'tapestry-core-client/src/components/lib/snackbar/index'
 import { useFocusedElement } from 'tapestry-core-client/src/components/tapestry/hooks/use-focus-element'
+import { useStageInit } from 'tapestry-core-client/src/components/tapestry/hooks/use-stage-init'
 import { ViewportScrollbars } from 'tapestry-core-client/src/components/tapestry/viewport-scrollbars'
-import { createTapestryStage } from 'tapestry-core-client/src/stage'
 import { THEMES } from 'tapestry-core-client/src/theme/themes'
+
 import { CollaboratorCursors } from '../../components/collaborator-cursors'
 import { CollaboratorIndicators } from '../../components/collaborator-indicators'
 import { DoingWorkIndicator } from '../../components/doing-work-indicator'
@@ -39,6 +39,7 @@ import {
 } from './tapestry-providers'
 import { setInteractionMode, setSnackbar } from './view-model/store-commands/tapestry'
 import { ViewportDebugData } from './viewport-debug-data'
+import { createPixiApp } from 'tapestry-core-client/src/stage'
 
 function useInteractionModeUrlParam() {
   const { username, slug, edit } = useTapestryPathParams()
@@ -54,88 +55,6 @@ function useInteractionModeUrlParam() {
   }, [edit, username, slug, dispatch, navigate])
 }
 
-async function createPixiApp(container: HTMLDivElement, opts?: Partial<PIXI.ApplicationOptions>) {
-  const app = new PIXI.Application()
-
-  await app.init({
-    preference: 'webgl',
-    resizeTo: container,
-    antialias: true,
-    autoDensity: true,
-    resolution: 2,
-    eventMode: 'static',
-    sharedTicker: true,
-    ...opts,
-  })
-
-  return app
-}
-
-function useStageInit(
-  sceneRef: RefObject<HTMLDivElement | null>,
-  pixiRef: RefObject<HTMLDivElement | null>,
-  presentationOrderRef: RefObject<HTMLDivElement | null>,
-) {
-  const store = useTapestryStore()
-
-  const tapestryDataSyncCommandsRef = usePropRef(useTapestryDataSyncCommands())
-
-  useAsync(
-    async (_abortCtrl, cleanUp) => {
-      const scene = sceneRef.current!
-
-      let cancelled = false as boolean
-      cleanUp(() => {
-        cancelled = true
-      })
-
-      const overlay = new Color(THEMES[store.get('theme')].color('overlay'))
-      const [tapestryApp, presentationOrderApp] = await Promise.all([
-        createPixiApp(pixiRef.current!, { background: store.get('background') }),
-        createPixiApp(presentationOrderRef.current!, {
-          background: overlay.hex(),
-          backgroundAlpha: overlay.alpha(),
-        }),
-      ])
-
-      if (cancelled) {
-        tapestryApp.destroy()
-        presentationOrderApp.destroy()
-        return
-      }
-
-      pixiRef.current!.appendChild(tapestryApp.canvas)
-      presentationOrderRef.current!.appendChild(presentationOrderApp.canvas)
-
-      const stage = createTapestryStage<'presentationOrder'>(
-        scene,
-        {
-          tapestry: tapestryApp,
-          presentationOrder: presentationOrderApp,
-        },
-        {
-          scrollGesture: 'pan',
-          dragToPan: store.get('pointerMode') === 'pan',
-        },
-      )
-
-      const lifecycleController = new EditorLifecycleController(
-        store,
-        stage,
-        tapestryDataSyncCommandsRef.current,
-      )
-      lifecycleController.init()
-
-      cleanUp(() => {
-        lifecycleController.dispose()
-        tapestryApp.destroy()
-        presentationOrderApp.destroy()
-      })
-    },
-    [sceneRef, pixiRef, presentationOrderRef, store, tapestryDataSyncCommandsRef],
-  )
-}
-
 export function Tapestry() {
   const sceneRef = useRef<HTMLDivElement>(null)
   const pixiContainerRef = useRef<HTMLDivElement>(null)
@@ -147,7 +66,32 @@ export function Tapestry() {
   ])
   const documentTitle = `Tapestry - ${tapestryTitle}`
 
-  useStageInit(sceneRef, pixiContainerRef, presentationOrderContainerRef)
+  const store = useTapestryStore()
+  const tapestryDataSyncCommandsRef = usePropRef(useTapestryDataSyncCommands())
+  useStageInit(sceneRef, {
+    gestureDectorOptions: { scrollGesture: 'pan', dragToPan: store.get('pointerMode') === 'pan' },
+    createPixiApps: async () => {
+      const overlay = new Color(THEMES[store.get('theme')].color('overlay'))
+      return [
+        {
+          name: 'tapestry',
+          app: await createPixiApp(pixiContainerRef.current!, {
+            background: store.get('background'),
+          }),
+        },
+        {
+          name: 'presentationOrder',
+          app: await createPixiApp(presentationOrderContainerRef.current!, {
+            background: overlay.hex(),
+            backgroundAlpha: overlay.alpha(),
+          }),
+        },
+      ]
+    },
+    lifecycleController: (stage) =>
+      new EditorLifecycleController(store, stage, tapestryDataSyncCommandsRef.current),
+  })
+
   useInteractionModeUrlParam()
   useFocusedElement()
 

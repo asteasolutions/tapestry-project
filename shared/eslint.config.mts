@@ -1,4 +1,4 @@
-import eslintConfigBase from 'tapestry-core/eslint.config-base.mjs'
+import eslintConfigBase from 'tapestry-core/eslint.config-base.mts'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
 

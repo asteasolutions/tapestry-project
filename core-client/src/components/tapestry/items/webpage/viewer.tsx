@@ -75,8 +75,10 @@ export interface WebpageItemViewerApi {
   reload(): void
 }
 
-export interface WebFrameProps
-  extends DetailedHTMLProps<IframeHTMLAttributes<HTMLIFrameElement>, HTMLIFrameElement> {
+export interface WebFrameProps extends DetailedHTMLProps<
+  IframeHTMLAttributes<HTMLIFrameElement>,
+  HTMLIFrameElement
+> {
   src: string
   onLoad: () => void
 }

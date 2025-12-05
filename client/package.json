@@ -4,8 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "start": "npm run dev",
+    "start": "vite",
     "build": "tsc -b && vite build",
     "lint-ts": "eslint src --report-unused-disable-directives --max-warnings 0",
     "lint-css": "stylelint src/**/*.css",

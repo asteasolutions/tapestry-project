@@ -1,4 +1,4 @@
-import Pixi from 'pixi.js'
+import { Application, ApplicationOptions } from 'pixi.js'
 import { GestureDetector, GestureDetectorOptions } from './gesture-detector'
 import { VIEW_MODEL_ANIMATIONS } from '../view-model/tweening'
 
@@ -22,13 +22,13 @@ import { VIEW_MODEL_ANIMATIONS } from '../view-model/tweening'
  */
 export interface TapestryStage<PixiApps extends string = never> {
   root: HTMLDivElement
-  pixi: Record<'tapestry' | PixiApps, Pixi.Application>
+  pixi: Record<'tapestry' | PixiApps, Application>
   gestureDetector: GestureDetector
 }
 
 export function createTapestryStage<PixiApps extends string>(
   root: HTMLDivElement,
-  pixi: Record<'tapestry' | PixiApps, Pixi.Application>,
+  pixi: Record<'tapestry' | PixiApps, Application>,
   gestureDetectorOptions: GestureDetectorOptions,
 ): TapestryStage<PixiApps> {
   // We have a chicken-and-egg problem here. We can't create the GestureDetector without a TapestryStage, but we
@@ -49,4 +49,23 @@ export function createTapestryStage<PixiApps extends string>(
   })
 
   return stage
+}
+
+export async function createPixiApp(container: HTMLDivElement, opts?: Partial<ApplicationOptions>) {
+  const app = new Application()
+
+  await app.init({
+    preference: 'webgl',
+    resizeTo: container,
+    antialias: true,
+    autoDensity: true,
+    resolution: 2,
+    eventMode: 'static',
+    sharedTicker: true,
+    ...opts,
+  })
+
+  container.appendChild(app.canvas)
+
+  return app
 }

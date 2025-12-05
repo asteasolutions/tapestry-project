@@ -1,7 +1,16 @@
 import z from 'zod/v4'
-import { ExportV4Schema, MediaItemSchema, TextItemSchema } from '../v4'
+import {
+  ExportV4Schema,
+  AudioItemSchema,
+  BookItemSchema,
+  ImageItemSchema,
+  PDFItemSchema as PDFItemSchemaV4,
+  VideoItemSchema,
+  WebpageItemSchema,
+  TextItemSchema,
+} from '../v4'
 import { HexColorSchema } from '../../schemas/common'
-import { commonItemProps } from '../../schemas/item'
+import { commonItemProps, ThumbnailSchema } from '../../schemas/item'
 
 const ActionButtonItemSchema = z.object({
   ...commonItemProps.base,
@@ -11,6 +20,20 @@ const ActionButtonItemSchema = z.object({
   text: z.string(),
   backgroundColor: HexColorSchema.nullish(),
 })
+
+const PDFItemSchema = z.object({
+  ...PDFItemSchemaV4.shape,
+  thumbnail: ThumbnailSchema.nullish(),
+})
+
+const MediaItemSchema = z.discriminatedUnion('type', [
+  AudioItemSchema,
+  BookItemSchema,
+  ImageItemSchema,
+  PDFItemSchema,
+  VideoItemSchema,
+  WebpageItemSchema,
+])
 
 const ItemSchema = z.discriminatedUnion('type', [
   ...MediaItemSchema.options,

@@ -1,10 +1,20 @@
-import { createContext, FC, useContext } from 'react'
+import { defaults } from 'lodash-es'
+import { createContext, FC, PropsWithChildren, useContext } from 'react'
 import { Id } from 'tapestry-core/src/data-format/schemas/common.js'
 import { ItemType, WebpageType } from 'tapestry-core/src/data-format/schemas/item.js'
 import { ContextHookInvocationError } from '../../errors.js'
 import { StoreHooks } from '../../lib/store/provider.js'
 import { TapestryViewModel } from '../../view-model/index.js'
 import { ItemInfoModal } from './item-info-modal/index.js'
+import { ActionButtonItem } from './items/action-button/index.js'
+import { AudioItem } from './items/audio/index.js'
+import { BookItem } from './items/book/index.js'
+import { ImageItem } from './items/image/index.js'
+import { PdfItem } from './items/pdf/index.js'
+import { TextItem } from './items/text/index.js'
+import { VideoItem } from './items/video/index.js'
+import { WebpageItem } from './items/webpage/index.js'
+import { DefaultMultiselection } from './multiselection/default.js'
 
 export const SELECTION_Z_INDEX = 1
 
@@ -37,6 +47,45 @@ export interface TapestryConfig extends StoreHooks<TapestryViewModel> {
 }
 
 export const TapestryConfigContext = createContext<TapestryConfig | null>(null)
+
+export type ProviderConfig = Omit<TapestryConfig, 'components'> & {
+  components?: Partial<TapestryComponentsConfig>
+}
+
+interface TapestryConfigProviderProps extends PropsWithChildren {
+  config: ProviderConfig
+}
+
+export function TapestryConfigProvider({
+  children,
+  config: { components = {}, ...rest },
+}: TapestryConfigProviderProps) {
+  return (
+    <TapestryConfigContext
+      value={{
+        ...rest,
+        components: defaults<Partial<TapestryConfig['components']>, TapestryConfig['components']>(
+          components,
+          {
+            ActionButtonItem,
+            AudioItem,
+            BookItem,
+            ImageItem,
+            PdfItem,
+            TextItem,
+            VideoItem,
+            WebpageItem: { default: WebpageItem },
+            Rel: () => null,
+            Multiselection: DefaultMultiselection,
+            ItemInfoModal,
+          },
+        ),
+      }}
+    >
+      {children}
+    </TapestryConfigContext>
+  )
+}
 
 export function useTapestryConfig(): TapestryConfig {
   const context = useContext(TapestryConfigContext)

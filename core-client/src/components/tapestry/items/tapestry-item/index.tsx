@@ -9,8 +9,10 @@ import { PropsWithStyle } from '../../../lib'
 
 export const ACTIVE_ITEM_BORDER_WIDTH = 3
 
-export interface TapestryItemProps
-  extends PropsWithStyle<PropsWithChildren, 'root' | 'title' | 'content' | 'hitArea'> {
+export interface TapestryItemProps extends PropsWithStyle<
+  PropsWithChildren,
+  'root' | 'title' | 'content' | 'hitArea'
+> {
   id: string
   halo: ReactNode
   overlay?: ReactNode

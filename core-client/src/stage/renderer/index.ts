@@ -34,9 +34,9 @@ const USER_INTERACTION_CURSOR: Partial<
 const SCENE_CURSOR_CLASS = 'scene-cursor'
 const SCENE_CURSOR_VARIABLE = '--scene-cursor'
 
-export abstract class TapestryRenderer<E extends TapestryElementViewModel>
-  implements TapestryStageController
-{
+export abstract class TapestryRenderer<
+  E extends TapestryElementViewModel,
+> implements TapestryStageController {
   private tapestryElementRenderers = new Map<string, TapestryElementRenderer<E>>()
 
   constructor(
@@ -178,12 +178,10 @@ export abstract class TapestryRenderer<E extends TapestryElementViewModel>
 
     if (!renderer) {
       renderer = this.createTapestryElementRenderer(viewModel)
-      if (renderer) {
-        this.tapestryElementRenderers.set(id, renderer)
-      }
+      this.tapestryElementRenderers.set(id, renderer)
     }
 
-    renderer?.render(viewModel)
+    renderer.render(viewModel)
   }
 
   protected getRenderedTapestryElementIds() {
@@ -205,9 +203,11 @@ export abstract class TapestryRenderer<E extends TapestryElementViewModel>
     }
   }
 
-  protected createTapestryElementRenderer(model: E): TapestryElementRenderer<E> | undefined {
+  protected createTapestryElementRenderer(model: E): TapestryElementRenderer<E> {
     if (isRelViewModel(model)) {
       return new RelRenderer(this.store, this.stage, model)
     }
+
+    return new (class extends TapestryElementRenderer<E> {})(this.store, this.stage, model)
   }
 }

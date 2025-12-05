@@ -9,8 +9,10 @@ export interface SelectOption<V> {
   label: ReactNode
 }
 
-export interface SelectProps<V>
-  extends Omit<Props<SelectOption<V>, false>, 'value' | 'options' | 'theme' | 'ref'> {
+export interface SelectProps<V> extends Omit<
+  Props<SelectOption<V>, false>,
+  'value' | 'options' | 'theme' | 'ref'
+> {
   value: V
   options: Options<SelectOption<V>>
   ref?: RefObject<SelectInstance<SelectOption<V>> | null>

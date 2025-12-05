@@ -6,6 +6,7 @@ ADD core-client/package.json /app/core-client/
 ADD shared/package.json /app/shared/
 ADD client/package.json /app/client/
 ADD server/package.json /app/server/
+ADD viewer/package.json /app/viewer/
 
 WORKDIR /app
 RUN npm ci
@@ -15,6 +16,7 @@ ADD core-client/ /app/core-client
 ADD shared/ /app/shared
 ADD client/ /app/client
 ADD server/ /app/server
+ADD viewer/ /app/viewer
 
 RUN cd /app/server && npm run prisma:generate
 

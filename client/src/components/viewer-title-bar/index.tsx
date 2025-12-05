@@ -155,9 +155,8 @@ export function ViewerTitleBar() {
       )}
       {viewingInfo && (
         <TapestryInfoDialog
-          tapestry={{ title, description, thumbnail }}
+          tapestry={{ title, description, thumbnail, createdAt }}
           owner={fullName(owner)}
-          createdAt={createdAt}
           onClose={() => setViewingInfo(false)}
         />
       )}

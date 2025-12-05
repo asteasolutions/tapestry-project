@@ -1,5 +1,5 @@
 import { useMediaSource } from '../../../lib/hooks/use-media-source'
-import { memo, useMemo, useState } from 'react'
+import { memo, useMemo, useRef, useState } from 'react'
 import { VideoItem as VideoItemDto } from 'tapestry-core/src/data-format/schemas/item'
 import {
   MediaPlayer,
@@ -19,6 +19,7 @@ import styles from './styles.module.css'
 
 function useVideoThumbnail(dto: VideoItemDto, player: Player | undefined) {
   const [thumbnail, setThumbnail] = useState(dto.customThumbnail ?? dto.thumbnail?.source)
+  const frameThumbnailRef = useRef<string>(undefined)
 
   async function setVideoFrameAsThumb() {
     const video = getVideoElement(player)
@@ -27,11 +28,12 @@ function useVideoThumbnail(dto: VideoItemDto, player: Player | undefined) {
       return
     }
 
-    if (thumbnail) {
+    if (thumbnail && thumbnail === frameThumbnailRef.current) {
       URL.revokeObjectURL(thumbnail)
     }
     const blob = await captureVideoFrame(video)
     const url = URL.createObjectURL(blob)
+    frameThumbnailRef.current = url
     setThumbnail(url)
   }
 
