@@ -1,4 +1,6 @@
 .root {
+  container-type: size;
+
   :global(.video-js) {
     :global(.vjs-big-play-button) {
       display: none;
@@ -13,13 +15,16 @@
 
       :global(.vjs-control) {
         color: var(--theme-icon-primary);
+        align-items: center;
       }
 
       :global(.vjs-play-control) {
         color: var(--theme-background-primary);
         background-color: var(--theme-icon-primary);
         border-radius: 50%;
-        width: 3em;
+        height: 100%;
+        width: unset;
+        aspect-ratio: 1;
       }
 
       :global(.vjs-volume-panel) {
@@ -60,6 +65,111 @@
 
       :global(.vjs-menu-content) {
         background-color: var(--theme-background-primary);
+        max-height: unset;
+      }
+
+      /* Start responsive styles */
+      --size: 30px;
+      --bar-height: calc(0.07 * var(--size));
+      --grabber-size: calc(0.21 * var(--size));
+      --tooltip-font-size: max(10px, calc(0.2 * var(--size)));
+      --tooltip-offset: min(-34px, calc(-0.5 * var(--size)));
+
+      height: var(--size);
+
+      :global(.vjs-icon-placeholder::before) {
+        font-size: calc(var(--size) / 2);
+        line-height: var(--size);
+      }
+
+      :global(.vjs-volume-panel),
+      :global(.vjs-mute-control) {
+        min-width: var(--size);
+      }
+
+      :global(.vjs-volume-panel.vjs-hover),
+      :global(.vjs-volume-panel:focus),
+      :global(.vjs-volume-panel:active),
+      :global(.vjs-volume-panel.vjs-slider-active) {
+        width: calc(2.2 * var(--size));
+
+        :global(.vjs-volume-control) {
+          width: var(--size);
+
+          :global(.vjs-volume-bar) {
+            width: var(--size);
+            height: var(--bar-height);
+
+            :global(.vjs-volume-level) {
+              height: var(--bar-height);
+
+              &::before {
+                font-size: var(--grabber-size);
+              }
+            }
+
+            :global(.vjs-volume-tooltip) {
+              font-size: var(--tooltip-font-size);
+              top: var(--tooltip-offset);
+            }
+          }
+        }
+      }
+
+      :global(.vjs-progress-holder) {
+        height: var(--bar-height);
+
+        :global(.vjs-play-progress::before) {
+          font-size: var(--grabber-size);
+        }
+
+        :global(.vjs-time-tooltip) {
+          font-size: var(--tooltip-font-size);
+          top: var(--tooltip-offset);
+        }
+      }
+
+      :global(.vjs-time-control) {
+        font-size: calc(0.3 * var(--size));
+        line-height: var(--size);
+      }
+
+      :global(.vjs-playback-rate),
+      :global(.vjs-picture-in-picture),
+      :global(.vjs-fullscreen-control) {
+        width: var(--size);
+      }
+
+      :global(.vjs-playback-rate-value) {
+        font-size: calc(0.38 * var(--size));
+        line-height: var(--size);
+      }
+
+      :global(.vjs-menu-button-popup .vjs-menu) {
+        margin-bottom: calc(0.5 * var(--size));
+        width: var(--size);
+
+        :global(.vjs-menu-item) {
+          font-size: calc(0.28 * var(--size));
+        }
+      }
+
+      /* Define a step-wise increase in the height of the control bar based on container width,
+      but only if the new height is at least 15% of the container height. */
+      @container (width > 380px) and (height > 300px) {
+        --size: 45px;
+      }
+
+      @container (width > 600px) and (height > 400px) {
+        --size: 60px;
+      }
+
+      @container (width > 900px) and (height > 533px) {
+        --size: 80px;
+      }
+
+      @container (width > 1200px) and (height > 666px) {
+        --size: 100px;
       }
     }
 

@@ -26,6 +26,7 @@ class S3Service {
       endpoint: endpointUrl || undefined,
       region: region || undefined,
       credentials: accessKeyId && secretAccessKey ? { accessKeyId, secretAccessKey } : undefined,
+      forcePathStyle: config.aws.s3.forcePathStyle,
     })
   }
 
