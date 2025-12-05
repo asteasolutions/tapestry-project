@@ -21,6 +21,7 @@ import { DragArea } from 'tapestry-core-client/src/components/lib/drag-area'
 import { Breakpoint, useResponsive } from '../../providers/responsive-provider'
 import { DashboardHeader } from './header'
 import { TapestryListControls } from './tapestry-list-controls'
+import { useLaunchQueue } from '../../hooks/use-launch-queue'
 import { useThemeCss } from 'tapestry-core-client/src/components/lib/hooks/use-theme-css'
 import { dashboardPath } from '../../utils/paths'
 import { CreateTapestryDialog } from '../../components/create-tapestry-dialog'
@@ -139,6 +140,8 @@ export function Dashboard() {
     importTapestries,
     reset: resetImports,
   } = useTapestryImport(() => tapestryLoader?.reload())
+
+  useLaunchQueue(importTapestries)
 
   const smOrLess = useResponsive() <= Breakpoint.SM
 

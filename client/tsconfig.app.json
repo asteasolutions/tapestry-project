@@ -12,7 +12,6 @@
     "jsx": "react-jsx",
     "allowSyntheticDefaultImports": true,
     "lib": ["ES2023", "DOM", "DOM.Iterable", "ESNext.Collection"],
-
     /* Linting */
     "strict": true,
     "noUnusedLocals": true,
@@ -22,7 +21,7 @@
   "references": [
     { "path": "../core" },
     { "path": "../core-client" },
-    { "path": "../shared" }
+    { "path": "../shared" },
   ],
   "include": ["src"]
 }

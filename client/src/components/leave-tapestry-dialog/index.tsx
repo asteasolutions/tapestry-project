@@ -8,9 +8,7 @@ export function LeaveTapestryDialog() {
   const tapestryViewPath = useTapestryPath('view')
   const pendingRequests = useTapestryData('pendingRequests')
 
-  const pendingUpload = useObservable(itemUpload).some(
-    (i) => i.state === 'pending' || i.state === 'uploading',
-  )
+  const pendingUpload = useObservable(itemUpload).some((i) => i.state === 'uploading')
 
   return (
     <BlockNavigationDialog

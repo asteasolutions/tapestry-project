@@ -1,3 +1,5 @@
+import { fileTypeFromBuffer } from 'file-type'
+
 function isDir(entry: FileSystemEntry): entry is FileSystemDirectoryEntry {
   return entry.isDirectory
 }
@@ -26,10 +28,14 @@ export async function scan<T>(
   return [await cb(entry as FileSystemFileEntry)]
 }
 
-export async function urlToBlob(url: string) {
-  const response = await fetch(url)
-  const buffer = await response.arrayBuffer()
-  return new Blob([buffer])
+export async function urlToBuffer(url: string) {
+  return (await fetch(url)).arrayBuffer()
+}
+
+export async function urlToFile(url: string) {
+  const buffer = await urlToBuffer(url)
+  const type = await fileTypeFromBuffer(buffer)
+  return new File([buffer], `localfile${type ? `.${type.ext}` : ''}`, { type: type?.mime })
 }
 
 export function download(url: string, title: string) {

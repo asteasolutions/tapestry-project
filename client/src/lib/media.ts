@@ -1,5 +1,5 @@
 import { pdfjs } from 'react-pdf'
-import { urlToBlob } from 'tapestry-core-client/src/lib/file'
+import { urlToBuffer } from 'tapestry-core-client/src/lib/file'
 import { aspectRatio, clampSize, innerFit, Size } from 'tapestry-core/src/lib/geometry'
 import { WEB_SOURCE_PARSERS } from 'tapestry-core/src/web-sources'
 
@@ -23,8 +23,8 @@ export function loadImageFromBlob(file: Blob) {
   })
 }
 
-export function mediaSourceToBlob(source: MediaItemSource) {
-  return source instanceof File ? source : urlToBlob(source)
+async function mediaSourceToBlob(source: MediaItemSource) {
+  return source instanceof File ? source : new Blob([await urlToBuffer(source)])
 }
 
 export const MIN_ITEM_SIZE: Size = {

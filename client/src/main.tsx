@@ -1,3 +1,4 @@
+/// <reference types="vite-plugin-pwa/client" />
 import { enableMapSet, enablePatches } from 'immer'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
@@ -12,6 +13,7 @@ import {
 
 import { useResponsiveClass } from 'tapestry-core-client/src/components/lib/hooks/use-responsive-class'
 import { GoogleFonts } from 'tapestry-core-client/src/components/lib/icon/index'
+import { registerSW } from 'virtual:pwa-register'
 
 import './index.css'
 import { SessionLayout } from './layouts/session/index'
@@ -67,3 +69,7 @@ createRoot(document.getElementById('root')!).render(
     <RouterProvider router={router} />
   </StrictMode>,
 )
+
+if (import.meta.env.PROD) {
+  registerSW()
+}
