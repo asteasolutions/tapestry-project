@@ -199,3 +199,15 @@
   border: none;
   padding: 0;
 }
+
+:global(.button-link) {
+  --internal-text-color: var(--theme-text-link);
+
+  background-color: transparent;
+  border: none;
+  text-decoration: underline;
+
+  &:global(.typography-body-sm) {
+    font-weight: 400;
+  }
+}
