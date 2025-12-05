@@ -7,14 +7,17 @@ import { resource } from '../../../services/rest-resources'
 import { UserDto } from 'tapestry-shared/src/data-transfer/resources/dtos/user'
 import styles from './styles.module.css'
 import { uniqueId } from 'lodash'
-
+import geminiGuideVideo from '../../../assets/videos/gemini-api-guide.mov'
+import { getPaletteColor } from 'tapestry-core-client/src/theme/design-system'
 interface ApiKeyDialogProps {
   user: UserDto
   onClose: () => void
   onSubmitted: () => void
+  showGuide?: boolean
 }
 
-export function ApiKeyDialog({ user, onClose, onSubmitted }: ApiKeyDialogProps) {
+export function ApiKeyDialog({ user, onClose, onSubmitted, showGuide }: ApiKeyDialogProps) {
+  const [step, setStep] = useState<'guide' | 'input'>(showGuide ? 'guide' : 'input')
   const [form] = useState(() => uniqueId('form'))
 
   const apiKeyInputRef = useRef<HTMLInputElement>(null)
@@ -32,29 +35,68 @@ export function ApiKeyDialog({ user, onClose, onSubmitted }: ApiKeyDialogProps) 
   return (
     <SimpleModal
       classes={{ root: styles.addApiKeyDialog }}
-      title="Add an API Key"
+      title={step === 'guide' ? 'API Guide' : 'Add an API Key'}
       cancel={{ onClick: onClose }}
-      confirm={{ text: 'Save Key', disabled: creating, form }}
+      confirm={{
+        text: step === 'guide' ? 'Continue' : 'Save Key',
+        disabled: creating,
+        ...(step === 'guide' ? { onClick: () => setStep('input') } : { form }),
+      }}
+      extraButtons={
+        showGuide ? (
+          <Text
+            variant="bodyXs"
+            style={{
+              alignSelf: 'center',
+              marginRight: 'auto',
+              color: getPaletteColor('neutral.400'),
+            }}
+          >
+            Step {step === 'guide' ? 1 : 2}/2
+          </Text>
+        ) : undefined
+      }
     >
-      <form
-        id={form}
-        className={styles.form}
-        onSubmit={(e) => {
-          e.preventDefault()
-          void createUserSecret()
-        }}
-      >
-        <Text>This key is for your AI chats only and is securely stored.</Text>
-        <Input
-          label={<Text className={styles.labelText}>API Key *</Text>}
-          className={styles.input}
-          typography="body"
-          placeholder="E.g. AIzaSyDaGmWKa4JsXZ-HjGw7ISLn_3namBGewQe"
-          required
-          minLength={3}
-          ref={apiKeyInputRef}
-        />
-      </form>
+      {step === 'guide' && (
+        <>
+          <video src={geminiGuideVideo} controls></video>
+          <div style={{ whiteSpace: 'nowrap' }}>
+            <Text style={{ color: 'var(--theme-text-tertiary)', fontSize: '18px' }}>
+              Link to Gemini API Key:
+            </Text>
+            <Text
+              variant="body"
+              component="a"
+              style={{ color: 'var(--theme-text-link)', marginLeft: '8px' }}
+              href="https://aistudio.google.com/app/api-keys"
+              target="_blank"
+            >
+              https://aistudio.google.com/app/api-keys
+            </Text>
+          </div>
+        </>
+      )}
+      {step === 'input' && (
+        <form
+          id={form}
+          className={styles.form}
+          onSubmit={(e) => {
+            e.preventDefault()
+            void createUserSecret()
+          }}
+        >
+          <Text>This key is for your AI chats only and is securely stored.</Text>
+          <Input
+            label={<Text className={styles.labelText}>API Key *</Text>}
+            className={styles.input}
+            typography="body"
+            placeholder="E.g. AIzaSyDaGmWKa4JsXZ-HjGw7ISLn_3namBGewQe"
+            required
+            minLength={3}
+            ref={apiKeyInputRef}
+          />
+        </form>
+      )}
     </SimpleModal>
   )
 }

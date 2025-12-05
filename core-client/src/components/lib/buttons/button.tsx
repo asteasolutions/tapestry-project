@@ -77,6 +77,7 @@ export type ButtonProps<T extends ButtonComponent = 'button'> = Omit<
     | 'outline-negative'
     | 'mono'
     | 'clear'
+    | 'link'
   isActive?: boolean
   onClick?: (event: MouseEvent) => void
   onRepeatClick?: () => void

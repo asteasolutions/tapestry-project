@@ -1,4 +1,13 @@
 .add-api-key-dialog {
+  video {
+    width: 100%;
+    display: block;
+    border: 2px solid var(--theme-border-primary);
+    border-radius: 8px;
+    box-sizing: border-box;
+    margin-bottom: 24px;
+  }
+
   .form {
     display: flex;
     flex-direction: column;
