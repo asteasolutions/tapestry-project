@@ -1,0 +1,8 @@
+.root {
+  display: grid;
+  height: 100%;
+
+  > * {
+    grid-area: 1/1;
+  }
+}
