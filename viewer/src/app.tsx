@@ -4,10 +4,7 @@ import { createContext, useRef, useState } from 'react'
 
 import { useResponsiveClass } from 'tapestry-core-client/src/components/lib/hooks/use-responsive-class'
 import { useThemeCss } from 'tapestry-core-client/src/components/lib/hooks/use-theme-css'
-import {
-  TapestryConfigProvider,
-  type ProviderConfig,
-} from 'tapestry-core-client/src/components/tapestry'
+import { TapestryConfigProvider } from 'tapestry-core-client/src/components/tapestry'
 import { useFocusedElement } from 'tapestry-core-client/src/components/tapestry/hooks/use-focus-element'
 import { useStageInit } from 'tapestry-core-client/src/components/tapestry/hooks/use-stage-init'
 import { TapestryCanvas } from 'tapestry-core-client/src/components/tapestry/tapestry-canvas'
@@ -46,8 +43,6 @@ export const {
   useStoreData: useTapestryData,
   useDispatch,
 } = createStoreHooks(createUseStoreHook(TapestryStoreContext))
-
-const tapestryConfig: ProviderConfig = createStoreHooks(createUseStoreHook(TapestryStoreContext))
 
 function Tapestry() {
   const sceneRef = useRef<HTMLDivElement>(null)
@@ -128,7 +123,9 @@ export function App() {
   useThemeCss('light')
 
   return (
-    <TapestryConfigProvider config={tapestryConfig}>
+    <TapestryConfigProvider
+      config={{ useDispatch, useStore: useTapestryStore, useStoreData: useTapestryData }}
+    >
       {store ? (
         <TapestryStoreContext value={store}>
           <Tapestry />
