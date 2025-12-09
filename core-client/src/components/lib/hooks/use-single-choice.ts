@@ -7,7 +7,7 @@ export function useSingleChoice<const Choice extends string>(): [
 ] {
   const [selected, setSelected] = useState<Choice | ''>('')
 
-  function select(choice: Choice | '', toggle = false) {
+  function select(choice: Choice | '', toggle = true) {
     setSelected(toggle && choice === selected ? '' : choice)
   }
 

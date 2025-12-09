@@ -105,7 +105,7 @@ export function ImportToolbar({ className }: GlobalMenuProps) {
           <IconButton
             aria-label="Add link"
             icon="add_link"
-            onClick={() => selectSubmenu('add-link', true)}
+            onClick={() => selectSubmenu('add-link')}
           />
         ),
         tooltip: {
@@ -195,11 +195,7 @@ export function ImportToolbar({ className }: GlobalMenuProps) {
       id: 'theme',
       ui: {
         element: (
-          <IconButton
-            icon="palette"
-            aria-label="Theme"
-            onClick={() => selectSubmenu('theme', true)}
-          />
+          <IconButton icon="palette" aria-label="Theme" onClick={() => selectSubmenu('theme')} />
         ),
         tooltip: { side: 'right', children: 'Background' },
       },

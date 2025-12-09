@@ -80,7 +80,6 @@ export function EditorTitleBar() {
         </Link>
       ),
       tooltip: { side: 'bottom', children: 'Go to tapestries', offset: -8 },
-      stretch: true,
     },
     !hideEditControls && {
       id: 'more',
@@ -89,7 +88,7 @@ export function EditorTitleBar() {
           <IconButton
             icon="more_vert"
             aria-label="More actions"
-            onClick={() => selectSubmenu('more', true)}
+            onClick={() => selectSubmenu('more')}
             isActive={selectedSubmenu.startsWith('more')}
             style={{ marginLeft: '8px' }}
           />

@@ -1,4 +1,4 @@
-import { MaybeMenuItem, SubmenuIds } from '../../lib/toolbar/index'
+import { MaybeMenuItem } from '../../lib/toolbar/index'
 import { useKeyboardShortcuts } from '../../lib/hooks/use-keyboard-shortcuts'
 import { IconButton, MenuItemButton } from '../../lib/buttons/index'
 import { getMinScale, isMultiselection } from '../../../view-model/utils'
@@ -17,6 +17,9 @@ type MoreMenuCommonItem = 'guide' | 'shortcuts' | 'start-presentation' | 'fullsc
 
 export type MainMenuItem = MaybeMenuItem | CommonMenuItem
 export type MoreMenuItem = MaybeMenuItem | MoreMenuCommonItem
+
+const MORE_SUBMENU_ID = 'more'
+type MoreSubmenu = typeof MORE_SUBMENU_ID
 
 interface UseZoomToolbarItemsResult {
   items: MaybeMenuItem[]
@@ -71,8 +74,7 @@ export function useZoomToolbarItems<
     [],
   )
 
-  const [selectedSubmenu, selectSubmenu, closeSubmenu] =
-    useSingleChoice<SubmenuIds<typeof toolbarItems>>()
+  const [selectedSubmenu, selectSubmenu, closeSubmenu] = useSingleChoice<MoreSubmenu>()
 
   const moreMenuItem: MaybeMenuItem[] =
     moreMenu.length === 0
@@ -80,14 +82,14 @@ export function useZoomToolbarItems<
       : [
           'separator',
           {
-            id: 'more',
+            id: MORE_SUBMENU_ID,
             ui: {
               element: (
                 <IconButton
                   icon="more_vert"
                   aria-label="More actions"
-                  onClick={() => selectSubmenu('more', true)}
-                  isActive={selectedSubmenu.startsWith('more')}
+                  onClick={() => selectSubmenu(MORE_SUBMENU_ID)}
+                  isActive={selectedSubmenu === MORE_SUBMENU_ID}
                 />
               ),
               tooltip: {

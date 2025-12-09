@@ -1,13 +1,11 @@
 import { useEffect } from 'react'
 import { IconButton } from 'tapestry-core-client/src/components/lib/buttons/index'
-import { useKeyboardShortcuts } from 'tapestry-core-client/src/components/lib/hooks/use-keyboard-shortcuts'
 import {
   MultiselectMenuItem,
   useMultiselectMenu,
 } from 'tapestry-core-client/src/components/lib/hooks/use-multiselect-menu'
 import { useSingleChoice } from 'tapestry-core-client/src/components/lib/hooks/use-single-choice'
-import { SubmenuIds } from 'tapestry-core-client/src/components/lib/toolbar'
-import { arrowShortcuts } from 'tapestry-core-client/src/lib/keyboard-event'
+import { getSelectionItems } from 'tapestry-core-client/src/view-model/utils'
 import { Rectangle } from 'tapestry-core/src/lib/geometry'
 import { useDispatch, useTapestryData } from '../../../pages/tapestry/tapestry-providers'
 import { EditableGroupViewModel } from '../../../pages/tapestry/view-model'
@@ -17,16 +15,12 @@ import {
   ungroupSelection,
   updateGroup,
 } from '../../../pages/tapestry/view-model/store-commands/groups'
-import {
-  clearItemPreviews,
-  updateSelectionItems,
-} from '../../../pages/tapestry/view-model/store-commands/items'
+import { clearItemPreviews } from '../../../pages/tapestry/view-model/store-commands/items'
 import { CopyLinkButton } from '../copy-link-button'
 import { EditorElementToolbar } from '../editor-element-toolbar'
-import { moveHandle } from '../item-toolbar'
-import { getGroupMenuItems } from './group-menu-items'
-import { useGridArrangeButton } from './use-grid-arrange-button'
-import { useMoreMenu } from './use-more-menu'
+import { MoreSubmenu, moveHandle, useEditMoreMenu } from '../item-toolbar'
+import { ColorSubmenu, getGroupMenuItems } from './group-menu-items'
+import { GridSubmenu, useGridArrangeButton } from './use-grid-arrange-button'
 
 interface MultiselectMenuProps {
   selectionBounds: Rectangle
@@ -37,25 +31,12 @@ export function MultiselectMenu({ selectionBounds, selectedGroup }: MultiselectM
   const dispatch = useDispatch()
   const isEdit = useTapestryData('interactionMode') === 'edit'
 
-  const [selectedSubmenu, selectSubmenu, close] = useSingleChoice<SubmenuIds<typeof menuItems>>()
+  const { items, selection } = useTapestryData(['items', 'selection'])
+  const selectionItems = getSelectionItems({ items, selection }).map(({ dto }) => dto)
 
-  useKeyboardShortcuts(
-    {
-      ...(isEdit
-        ? {
-            ...arrowShortcuts((dir, distance) => {
-              dispatch(
-                updateSelectionItems((item) => {
-                  item.dto.position[dir] += distance
-                }),
-              )
-            }),
-          }
-        : {}),
-    },
-    [dispatch],
-  )
-
+  const [selectedSubmenu, selectSubmenu, close] = useSingleChoice<
+    GridSubmenu | ColorSubmenu | MoreSubmenu
+  >()
   useEffect(() => () => dispatch(clearItemPreviews()), [dispatch])
 
   const groupId = selectedGroup?.dto.id
@@ -64,14 +45,18 @@ export function MultiselectMenu({ selectionBounds, selectedGroup }: MultiselectM
     dispatch(updateGroup(groupId!, { dto: arg }))
   }
 
-  const gridButton = useGridArrangeButton({ selectedSubmenu, selectSubmenu })
+  const gridButton = useGridArrangeButton({
+    selectedSubmenu,
+    selectSubmenu,
+  })
   const groupMenus: MultiselectMenuItem[] = groupId
     ? [
         ...getGroupMenuItems(selectedGroup.dto, {
           onGroupColorChange: (color) => dispatchUpdate({ color }),
           onSetHasBackground: (hasBackground) => dispatchUpdate({ hasBackground }),
           onSetHasBorder: (hasBorder) => dispatchUpdate({ hasBorder }),
-          selectSubmenu: (submenu) => selectSubmenu(submenu, true),
+          selectSubmenu,
+          selectedSubmenu,
           onUngroupSelection: () => dispatch(ungroupSelection()),
         }),
       ]
@@ -87,7 +72,12 @@ export function MultiselectMenu({ selectionBounds, selectedGroup }: MultiselectM
           tooltip: { side: 'bottom', children: 'Group' },
         },
       ]
-  const moreMenu = useMoreMenu({ selectSubmenu, close, active: isEdit })
+  const moreMenu = useEditMoreMenu({
+    dto: selectionItems,
+    onSelectSubmenu: selectSubmenu,
+    selectedSubmenu,
+    active: isEdit,
+  })
 
   const menuItems: MultiselectMenuItem[] = [
     ...(isEdit ? [gridButton, 'separator' as const, ...groupMenus, 'separator' as const] : []),
@@ -96,10 +86,10 @@ export function MultiselectMenu({ selectionBounds, selectedGroup }: MultiselectM
       element: <CopyLinkButton id={groupId} />,
       tooltip: { side: 'bottom', children: 'Get link' },
     },
-    (isEdit || !!groupId) && 'separator',
-    isEdit && moreMenu,
+    ...(isEdit ? ['separator' as const, moreMenu, 'separator' as const] : []),
     !!groupId && 'presentation',
-    ...(isEdit ? ['separator' as const, moveHandle] : []),
+    isEdit && !!groupId && 'separator',
+    isEdit && moveHandle,
   ]
 
   const toolbarItems = useMultiselectMenu(menuItems, groupId)

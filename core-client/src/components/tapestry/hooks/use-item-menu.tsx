@@ -13,7 +13,12 @@ import { InfoButton } from '../../lib/info-button'
 import { focusPresentationStep } from '../../../view-model/store-commands/viewport'
 import { ShortcutLabel } from '../../lib/shortcut-label'
 
-export type CommonMenuItem = 'focus' | 'info' | 'prev' | 'next'
+const COMMON_MENU_ITEMS = ['focus', 'info', 'prev', 'next'] as const
+export type CommonMenuItem = (typeof COMMON_MENU_ITEMS)[number]
+
+export function isCommonMenuItem(str: unknown): str is CommonMenuItem {
+  return COMMON_MENU_ITEMS.includes(str as CommonMenuItem)
+}
 
 export type ItemMenuItem = MaybeMenuItem | CommonMenuItem
 
@@ -83,8 +88,8 @@ export function useItemMenu<const M extends ItemMenuItem[]>(itemId: Id, menu: M)
 
       return menuItem
     }),
-    ui: [
-      displayInfo && <components.ItemInfoModal item={item} onClose={() => setDisplayInfo(false)} />,
-    ],
+    ui: displayInfo && (
+      <components.ItemInfoModal item={item} onClose={() => setDisplayInfo(false)} />
+    ),
   }
 }

@@ -15,8 +15,9 @@ import { userSettings } from '../../../../services/user-settings'
 import { useItemToolbar } from '../../item-toolbar/use-item-toolbar'
 import { TapestryItem } from '../tapestry-item'
 import { ToggleFormatButton, tooltip } from '../text/toggle-format-button'
-import { textItemToolbar } from '../text/toolbar'
+import { FormattingSubmenu, textItemToolbar } from '../text/toolbar'
 import { AssignAction } from './assign-action'
+import { buildToolbarMenu, MoreSubmenu } from '../../item-toolbar'
 
 const controls = {
   link: false,
@@ -78,29 +79,34 @@ export const ActionButtonItem = memo(({ id }: TapestryItemProps) => {
     },
   })
 
-  const { selectSubmenu, toolbar, closeSubmenu } = useItemToolbar(id, {
-    hasTitle: false,
-    hideCommon: showFormatToolbar,
-    items: isEditMode
-      ? [
-          {
-            element: (
-              <ToggleFormatButton
-                formatting={showFormatToolbar}
-                onClick={() => setShowFormatToolbar(!showFormatToolbar)}
-              />
-            ),
-            tooltip: tooltip(showFormatToolbar),
-          },
-          'separator',
-          {
-            element: <AssignAction dto={dto} />,
-            tooltip: { side: 'bottom', children: 'Assign action' },
-          },
-          ...(showFormatToolbar ? formattingControls : []),
-        ]
-      : [],
-  })
+  const [editorControls] = buildToolbarMenu({ dto, omit: { title: true } })
+
+  const { selectSubmenu, toolbar, closeSubmenu } = useItemToolbar<MoreSubmenu | FormattingSubmenu>(
+    id,
+    {
+      items: isEditMode
+        ? [
+            {
+              element: (
+                <ToggleFormatButton
+                  formatting={showFormatToolbar}
+                  onClick={() => setShowFormatToolbar(!showFormatToolbar)}
+                />
+              ),
+              tooltip: tooltip(showFormatToolbar),
+            },
+            'separator',
+            {
+              element: <AssignAction dto={dto} />,
+              tooltip: { side: 'bottom', children: 'Assign action' },
+            },
+            'separator',
+            ...(showFormatToolbar ? formattingControls : editorControls),
+          ]
+        : [],
+    },
+    !isEditMode,
+  )
 
   return (
     <TapestryItem id={id} halo={toolbar}>
