@@ -83,6 +83,7 @@ const ICONS = [
   'logout',
   'match_case',
   'menu_book',
+  'mic',
   'minimize',
   'more_horiz',
   'more_vert',

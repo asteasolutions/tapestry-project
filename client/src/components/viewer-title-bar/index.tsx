@@ -5,7 +5,7 @@ import { useSingleChoice } from 'tapestry-core-client/src/components/lib/hooks/u
 import { SvgIcon } from 'tapestry-core-client/src/components/lib/svg-icon/index'
 import { SubmenuIds } from 'tapestry-core-client/src/components/lib/toolbar'
 import { MenuItems, Toolbar } from 'tapestry-core-client/src/components/lib/toolbar/index'
-import { useFocusRectInset } from 'tapestry-core-client/src/components/tapestry/hooks/use-focus-rect-inset'
+import { useViewportObstruction } from 'tapestry-core-client/src/components/tapestry/hooks/use-viewport-obstruction'
 import { TapestryInfoDialog } from 'tapestry-core-client/src/components/tapestry/tapestry-info-dialog'
 import Logo from '../../assets/icons/logo.svg?react'
 import { useTapestryBookmark } from '../../hooks/use-tapestry-bookmark'
@@ -20,6 +20,7 @@ import { JoinTapestriesModal } from '../join-tapestries-modal'
 import styles from './styles.module.css'
 
 export function ViewerTitleBar() {
+  const obstruction = useViewportObstruction({ clear: { top: true, left: true } })
   const { id, title, description, thumbnail, userAccess, allowForking, createdAt, owner } =
     useTapestryData([
       'id',
@@ -38,8 +39,6 @@ export function ViewerTitleBar() {
   const dispatch = useDispatch()
 
   const canForkTapestry = userAccess === 'edit' || allowForking
-
-  useFocusRectInset({ top: 64 })
 
   const {
     isBookmarked,
@@ -139,7 +138,7 @@ export function ViewerTitleBar() {
   ] as const satisfies MenuItems
 
   return (
-    <div className={styles.root}>
+    <div className={styles.root} ref={obstruction.ref}>
       <Toolbar isOpen selectedSubmenu={selectedSubmenu} onFocusOut={closeSubmenu} items={items} />
       <div id="titlebar-action-buttons" />
       {joinPopup && <JoinTapestriesModal onClose={() => setJoinPopup(false)} />}

@@ -12,7 +12,7 @@ export function SearchButton() {
   function toggleDialog() {
     dispatch(setSidePane('search', true))
     if (!showing) {
-      // TODO: The timeout is here so the SearchPane can render and call useFocusRectInset,
+      // TODO: The timeout is here so the SearchPane can render and call useViewportObstruction,
       // so that focusing the items will take into account the new panel that has just appeared.
       // We should explore ways to detect in-flight updates that affect the focus rect during focus
       setTimeout(() => dispatch(deselectAll(), focusItems()), 0)

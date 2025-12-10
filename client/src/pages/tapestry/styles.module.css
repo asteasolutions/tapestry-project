@@ -98,6 +98,10 @@
 :global(#titlebar-action-buttons) {
   display: flex;
 
+  &:empty {
+    display: none;
+  }
+
   :global(.titlebar-action-done) {
     --bg-color: var(--color-success-300);
     --hover-bg-color: var(--color-success-400);
