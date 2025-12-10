@@ -1,4 +1,4 @@
-import { chunk, zip } from 'lodash'
+import { chunk, zip } from 'lodash-es'
 import {
   DirectionMask,
   EditableGroupViewModel,

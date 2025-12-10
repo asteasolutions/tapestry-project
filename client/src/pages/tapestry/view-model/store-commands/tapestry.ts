@@ -1,4 +1,4 @@
-import { omit, sample } from 'lodash'
+import { omit, sample } from 'lodash-es'
 import { ORIGIN, Point } from 'tapestry-core/src/lib/geometry'
 import { TapestryDto } from 'tapestry-shared/src/data-transfer/resources/dtos/tapestry'
 import { EditableTapestryViewModel, InteractionMode, IAImport, convertCommand } from '..'

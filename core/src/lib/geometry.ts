@@ -1,4 +1,4 @@
-import { clamp, sum } from 'lodash'
+import { clamp, sum } from 'lodash-es'
 import { EPS } from './algebra.js'
 
 export interface LinearTransform {
@@ -131,6 +131,15 @@ export class Rectangle {
       bottom: -inset.bottom,
       left: -inset.left,
     })
+  }
+
+  isEqual(other: Rectangle) {
+    return (
+      this.position.x === other.position.x &&
+      this.position.y === other.position.y &&
+      this.size.width === other.size.width &&
+      this.size.height === other.size.height
+    )
   }
 
   get left() {

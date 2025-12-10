@@ -1,4 +1,4 @@
-import { forEach } from 'lodash'
+import { forEach } from 'lodash-es'
 import { uploadAsset } from '../model/data/utils'
 import { Observable } from 'tapestry-core-client/src/lib/events/observable'
 import { WritableDraft } from 'immer'

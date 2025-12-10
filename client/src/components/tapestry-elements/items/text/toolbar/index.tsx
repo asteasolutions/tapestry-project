@@ -1,4 +1,4 @@
-import { thru, toPairs } from 'lodash'
+import { thru, toPairs } from 'lodash-es'
 import { ColorPickerButton } from 'tapestry-core-client/src/components/lib/buttons/color-picker-button'
 import { ColorButton, IconButton } from 'tapestry-core-client/src/components/lib/buttons/index'
 import {

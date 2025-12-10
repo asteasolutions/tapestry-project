@@ -1,5 +1,7 @@
+import clsx from 'clsx'
 import { useState } from 'react'
 import { Link } from 'react-router'
+import { PropsWithStyle } from 'tapestry-core-client/src/components/lib'
 import { IconButton, MenuItemButton } from 'tapestry-core-client/src/components/lib/buttons/index'
 import { useSingleChoice } from 'tapestry-core-client/src/components/lib/hooks/use-single-choice'
 import { SvgIcon } from 'tapestry-core-client/src/components/lib/svg-icon/index'
@@ -19,7 +21,7 @@ import { ForkTapestryDialog } from '../fork-tapestry-dialog'
 import { JoinTapestriesModal } from '../join-tapestries-modal'
 import styles from './styles.module.css'
 
-export function ViewerTitleBar() {
+export function ViewerTitleBar({ className }: PropsWithStyle) {
   const { id, title, description, thumbnail, userAccess, allowForking, createdAt, owner } =
     useTapestryData([
       'id',
@@ -139,7 +141,7 @@ export function ViewerTitleBar() {
   ] as const satisfies MenuItems
 
   return (
-    <div className={styles.root}>
+    <div className={clsx(styles.root, className)}>
       <Toolbar isOpen selectedSubmenu={selectedSubmenu} onFocusOut={closeSubmenu} items={items} />
       <div id="titlebar-action-buttons" />
       {joinPopup && <JoinTapestriesModal onClose={() => setJoinPopup(false)} />}

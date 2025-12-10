@@ -1,7 +1,7 @@
 import { Item } from 'tapestry-core/src/data-format/schemas/item'
 import { isHTTPURL, isMediaItem } from 'tapestry-core/src/utils'
 import { TextProps } from '../../lib/text'
-import { chain, startCase } from 'lodash-es'
+import { compact, startCase } from 'lodash-es'
 import { Icon } from '../../lib/icon'
 
 function formatLink(maybeUrl: string) {
@@ -41,10 +41,10 @@ export function getItemInfo(
   exclude: ItemInfoField[] = [],
 ): Map<string, TextProps<'span'>> {
   return new Map(
-    chain(ITEM_INFO_FIELDS)
-      .difference(exclude)
-      .map((field) => ITEM_INFO_FIELD_EXTRACTORS[field](item))
-      .compact()
-      .value(),
+    compact(
+      ITEM_INFO_FIELDS.filter((field) => !exclude.includes(field)).map((field) =>
+        ITEM_INFO_FIELD_EXTRACTORS[field](item),
+      ),
+    ),
   )
 }

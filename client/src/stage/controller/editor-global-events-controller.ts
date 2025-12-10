@@ -18,7 +18,7 @@ import {
   addAndPositionItems,
   deleteSelectionItems,
 } from '../../pages/tapestry/view-model/store-commands/items'
-import { isArray, throttle } from 'lodash'
+import { isArray, throttle } from 'lodash-es'
 import {
   KeyMapping,
   GlobalEventsController,

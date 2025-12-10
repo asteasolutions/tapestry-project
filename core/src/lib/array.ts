@@ -1,4 +1,4 @@
-import { reduce, times } from 'lodash'
+import { reduce, times } from 'lodash-es'
 
 export function mapNotNull<I, O>(arr: ArrayLike<I>, cb: (el: I) => O): NonNullable<O>[] {
   return reduce(

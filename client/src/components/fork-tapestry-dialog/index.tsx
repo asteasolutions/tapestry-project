@@ -1,4 +1,4 @@
-import { startCase } from 'lodash'
+import { startCase } from 'lodash-es'
 import { useAsyncPolled } from '../../hooks/use-poll'
 import { resource } from '../../services/rest-resources'
 import { Modal } from 'tapestry-core-client/src/components/lib/modal/index'

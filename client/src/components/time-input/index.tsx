@@ -1,4 +1,4 @@
-import { clamp } from 'lodash'
+import { clamp } from 'lodash-es'
 import { Checkbox } from 'tapestry-core-client/src/components/lib/checkbox'
 import { SubmitOnBlurInput } from 'tapestry-core-client/src/components/lib/submit-on-blur-input/index'
 import styles from './styles.module.css'

@@ -18,7 +18,7 @@ import {
 import { getPaletteColor } from 'tapestry-core-client/src/theme/design-system'
 import { PresentationStepDto } from 'tapestry-shared/src/data-transfer/resources/dtos/presentation-step'
 import { getPresentedModelId } from 'tapestry-core/src/utils'
-import { mapValues } from 'lodash'
+import { mapValues } from 'lodash-es'
 import { TapestryStage } from 'tapestry-core-client/src/stage'
 import {
   computeRestrictedScale,

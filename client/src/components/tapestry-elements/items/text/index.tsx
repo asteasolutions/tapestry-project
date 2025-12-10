@@ -1,4 +1,4 @@
-import { kebabCase, omit } from 'lodash'
+import { kebabCase, omit } from 'lodash-es'
 import { memo, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import {

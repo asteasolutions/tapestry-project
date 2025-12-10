@@ -1,7 +1,7 @@
 import { GroupDto } from 'tapestry-shared/src/data-transfer/resources/dtos/group'
 import { ColorButton, IconButton } from 'tapestry-core-client/src/components/lib/buttons/index'
 import { splitInRows } from 'tapestry-core/src/lib/array'
-import { toPairs } from 'lodash'
+import { toPairs } from 'lodash-es'
 import { Checkbox } from 'tapestry-core-client/src/components/lib/checkbox'
 import { ColorPickerButton } from 'tapestry-core-client/src/components/lib/buttons/color-picker-button'
 import { isOpaque, LiteralColor } from 'tapestry-core-client/src/theme/types'

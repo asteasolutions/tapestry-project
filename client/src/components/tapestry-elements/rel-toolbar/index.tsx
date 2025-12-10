@@ -1,5 +1,5 @@
 import clsx from 'clsx'
-import { compact, toPairs } from 'lodash'
+import { compact, toPairs } from 'lodash-es'
 import { CSSProperties } from 'react'
 import { Arrowhead, LineWeight, RelEndpoint } from 'tapestry-core/src/data-format/schemas/rel'
 import { useKeyboardShortcuts } from 'tapestry-core-client/src/components/lib/hooks/use-keyboard-shortcuts'

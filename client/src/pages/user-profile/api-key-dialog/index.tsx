@@ -6,7 +6,7 @@ import { useAsyncAction } from 'tapestry-core-client/src/components/lib/hooks/us
 import { resource } from '../../../services/rest-resources'
 import { UserDto } from 'tapestry-shared/src/data-transfer/resources/dtos/user'
 import styles from './styles.module.css'
-import { uniqueId } from 'lodash'
+import { uniqueId } from 'lodash-es'
 
 interface ApiKeyDialogProps {
   user: UserDto

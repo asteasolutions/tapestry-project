@@ -1,4 +1,4 @@
-import { compact } from 'lodash'
+import { compact } from 'lodash-es'
 import { IdMap, idMapToArray, isMediaItem } from 'tapestry-core/src/utils'
 import { MediaItemDto } from 'tapestry-shared/src/data-transfer/resources/dtos/item'
 import { Store, StoreMutationCommand } from 'tapestry-core-client/src/lib/store/index'

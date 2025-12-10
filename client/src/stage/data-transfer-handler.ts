@@ -7,7 +7,7 @@ import { getFile, scan } from 'tapestry-core-client/src/lib/file'
 import { ItemCreateSchema } from 'tapestry-shared/src/data-transfer/resources/schemas/item'
 import { blobUrlToFileMap } from 'tapestry-core-client/src/components/lib/hooks/use-media-source'
 import { ITEM_FACTORIES } from './item-factories'
-import { compact, omit, partition, set } from 'lodash'
+import { compact, omit, partition, set } from 'lodash-es'
 import z from 'zod/v4'
 import { IAImport } from '../pages/tapestry/view-model'
 import {
