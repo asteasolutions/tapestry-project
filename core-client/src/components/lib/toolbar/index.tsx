@@ -56,7 +56,7 @@ function SimpleMenuItem({ ui }: { ui: SimpleMenuItem }) {
   const { element, tooltip } = isToolbarElement(ui) ? ui : { element: ui }
 
   return (
-    <div className={clsx('menu-item-wrapper')}>
+    <div className="menu-item-wrapper">
       {element}
       {tooltip && <Tooltip {...tooltip} offset={16 + (tooltip.offset ?? 0)} />}
     </div>

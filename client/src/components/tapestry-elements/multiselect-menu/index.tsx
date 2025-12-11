@@ -80,13 +80,13 @@ export function MultiselectMenu({ selectionBounds, selectedGroup }: MultiselectM
   })
 
   const menuItems: MultiselectMenuItem[] = [
-    ...(isEdit ? [gridButton, 'separator' as const, ...groupMenus, 'separator' as const] : []),
+    ...(isEdit ? ([gridButton, 'separator', ...groupMenus, 'separator'] as const) : []),
     'focus',
     !!groupId && {
       element: <CopyLinkButton id={groupId} />,
       tooltip: { side: 'bottom', children: 'Get link' },
     },
-    ...(isEdit ? ['separator' as const, moreMenu, 'separator' as const] : []),
+    ...(isEdit ? (['separator', moreMenu, 'separator'] as const) : []),
     !!groupId && 'presentation',
     isEdit && !!groupId && 'separator',
     isEdit && moveHandle,

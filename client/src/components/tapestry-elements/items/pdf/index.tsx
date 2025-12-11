@@ -40,8 +40,9 @@ export const PdfItem = memo(({ id }: TapestryItemProps) => {
           ]
         : []
 
-      const [editorControls, viewerControls] = buildToolbarMenu({
+      const controls = buildToolbarMenu({
         dto,
+        isEdit,
         share:
           pdfDocument &&
           shareMenu({
@@ -54,7 +55,7 @@ export const PdfItem = memo(({ id }: TapestryItemProps) => {
         omit: { share: !pdfDocument },
       })
 
-      return isEdit ? [...pageSelector, ...editorControls] : [...pageSelector, ...viewerControls]
+      return isEdit ? [...pageSelector, ...controls] : [...pageSelector, ...controls]
     },
     moreMenuItems: pdfDocument
       ? [

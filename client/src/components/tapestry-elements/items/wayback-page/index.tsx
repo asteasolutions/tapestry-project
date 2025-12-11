@@ -132,7 +132,7 @@ export const WaybackPageItem = memo(({ id }: TapestryItemProps) => {
     ),
     tooltip: { side: 'bottom', children: 'Refresh this webpage' },
   }
-  const [editorControls, viewerControls] = buildToolbarMenu({ dto })
+  const controls = buildToolbarMenu({ dto, isEdit: isEditMode })
   const { toolbar } = useItemToolbar(id, {
     items: (ctrls) => {
       return isEditMode
@@ -181,9 +181,9 @@ export const WaybackPageItem = memo(({ id }: TapestryItemProps) => {
             'separator',
             refreshButton,
             'separator',
-            ...editorControls,
+            ...controls,
           ]
-        : [refreshButton, 'separator', ...viewerControls]
+        : [refreshButton, 'separator', ...controls]
     },
   })
 

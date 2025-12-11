@@ -14,18 +14,16 @@ export function usePlayableItemToolbar(dto: AudioItemDto | VideoItemDto, duratio
   const isEdit = useTapestryData('interactionMode') === 'edit'
 
   return useItemToolbar(id, {
-    items: (ctrls) => {
-      const [editorMenus, viewerMenus] = buildToolbarMenu({
+    items: (ctrls) =>
+      buildToolbarMenu({
         dto,
+        isEdit,
         share: shareMenu({
           selectSubmenu: (id) => ctrls.selectSubmenu(id, true),
           selectedSubmenu: ctrls.selectedSubmenu,
           menu: <PlayableShareMenu item={dto} />,
         }),
-      })
-
-      return isEdit ? editorMenus : viewerMenus
-    },
+      }),
     moreMenuItems: duration
       ? [
           <TimeInput

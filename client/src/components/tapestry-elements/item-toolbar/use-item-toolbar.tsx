@@ -1,26 +1,25 @@
-import { ItemToolbar, ItemToolbarMenu, ItemToolbarProps, MoreSubmenu, TitleSubmenu } from '.'
+import { ItemToolbar, ItemToolbarMenu, ItemToolbarProps } from '.'
 import { useSingleChoice } from 'tapestry-core-client/src/components/lib/hooks/use-single-choice'
 import { omit } from 'lodash'
 import { useTapestryData } from '../../../pages/tapestry/tapestry-providers'
-import { ShareSubmenu } from './share-menu'
 
-interface SubmenuControls<Choice extends string> {
-  selectedSubmenu: ReturnType<typeof useSingleChoice<Choice>>[0]
-  selectSubmenu: ReturnType<typeof useSingleChoice<Choice>>[1]
-  closeSubmenu: ReturnType<typeof useSingleChoice<Choice>>[2]
+interface SubmenuControls {
+  selectedSubmenu: ReturnType<typeof useSingleChoice<string>>[0]
+  selectSubmenu: ReturnType<typeof useSingleChoice<string>>[1]
+  closeSubmenu: ReturnType<typeof useSingleChoice<string>>[2]
 }
 
-export function useItemToolbar<Submenus extends string = TitleSubmenu | MoreSubmenu | ShareSubmenu>(
+export function useItemToolbar(
   tapestryItemId: string,
   props?: Omit<
     ItemToolbarProps,
     'selectedSubmenu' | 'onSelectSubmenu' | 'tapestryItemId' | 'items'
   > & {
-    items?: ItemToolbarMenu | ((submenuControls: SubmenuControls<Submenus>) => ItemToolbarMenu)
+    items?: ItemToolbarMenu | ((submenuControls: SubmenuControls) => ItemToolbarMenu)
   },
   hide?: boolean,
 ) {
-  const [selectedSubmenu, selectSubmenu, closeSubmenu] = useSingleChoice<Submenus>()
+  const [selectedSubmenu, selectSubmenu, closeSubmenu] = useSingleChoice<string>()
   const submenuControls = { selectedSubmenu, selectSubmenu, closeSubmenu }
   const interactiveElement = useTapestryData('interactiveElement')
 
@@ -32,10 +31,7 @@ export function useItemToolbar<Submenus extends string = TitleSubmenu | MoreSubm
           tapestryItemId={tapestryItemId}
           selectedSubmenu={selectedSubmenu}
           onSelectSubmenu={(submenu) =>
-            selectSubmenu(
-              (typeof submenu === 'string' ? submenu : submenu.join('.')) as Submenus,
-              true,
-            )
+            selectSubmenu(typeof submenu === 'string' ? submenu : submenu.join('.'), true)
           }
           {...omit(props, 'items')}
           items={typeof props?.items === 'function' ? props.items(submenuControls) : props?.items}

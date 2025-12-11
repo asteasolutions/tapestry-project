@@ -154,8 +154,9 @@ export const WebpageItem = memo(({ id }: TapestryItemProps) => {
   const { toolbar } = useItemToolbar(id, {
     items: (ctrls) => {
       const isPlayable = !!webpageType && PLAYABLE_WEBPAGE_TYPES.includes(webpageType)
-      const [editorControls, viewerControls] = buildToolbarMenu({
+      const controls = buildToolbarMenu({
         dto,
+        isEdit: isEditMode,
         share: isPlayable
           ? shareMenu({
               selectSubmenu: (id) => ctrls.selectSubmenu(id, true),
@@ -181,9 +182,9 @@ export const WebpageItem = memo(({ id }: TapestryItemProps) => {
             'separator',
             refreshButton,
             'separator',
-            ...editorControls,
+            ...controls,
           ]
-        : [refreshButton, 'separator', ...viewerControls]
+        : [refreshButton, 'separator', ...controls]
     },
     moreMenuItems:
       webpageType === 'youtube' || webpageType === 'vimeo'

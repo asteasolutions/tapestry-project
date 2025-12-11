@@ -1,17 +1,17 @@
-import { shortcutLabel } from '../../../lib/keyboard-event'
-import { MaybeMenuItem } from '../../lib/toolbar/index'
-import { useKeyboardShortcuts } from '../../lib/hooks/use-keyboard-shortcuts'
-import { IconButton } from '../../lib/buttons/index'
-import { getAdjacentPresentationSteps } from '../../../view-model/utils'
 import { useState } from 'react'
-import { useFocusElement } from './use-focus-element'
 import { Id } from 'tapestry-core/src/data-format/schemas/common'
-import { FocusButton } from '../focus-button'
-import { deselectAll } from '../../../view-model/store-commands/tapestry'
 import { useTapestryConfig } from '..'
-import { InfoButton } from '../../lib/info-button'
+import { shortcutLabel } from '../../../lib/keyboard-event'
+import { deselectAll } from '../../../view-model/store-commands/tapestry'
 import { focusPresentationStep } from '../../../view-model/store-commands/viewport'
+import { getAdjacentPresentationSteps } from '../../../view-model/utils'
+import { IconButton } from '../../lib/buttons/index'
+import { useKeyboardShortcuts } from '../../lib/hooks/use-keyboard-shortcuts'
+import { InfoButton } from '../../lib/info-button'
 import { ShortcutLabel } from '../../lib/shortcut-label'
+import { MaybeMenuItem } from '../../lib/toolbar/index'
+import { FocusButton } from '../focus-button'
+import { useFocusElement } from './use-focus-element'
 
 const COMMON_MENU_ITEMS = ['focus', 'info', 'prev', 'next'] as const
 export type CommonMenuItem = (typeof COMMON_MENU_ITEMS)[number]
@@ -20,9 +20,13 @@ export function isCommonMenuItem(str: unknown): str is CommonMenuItem {
   return COMMON_MENU_ITEMS.includes(str as CommonMenuItem)
 }
 
-export type ItemMenuItem = MaybeMenuItem | CommonMenuItem
+export type ItemMenuItem<T extends CommonMenuItem> = MaybeMenuItem | T
 
-export function useItemMenu<const M extends ItemMenuItem[]>(itemId: Id, menu: M) {
+export function useItemMenu<const M extends string>(
+  itemId: Id,
+  menu: (M | CommonMenuItem | MaybeMenuItem)[],
+  menuParser?: (item: M) => MaybeMenuItem,
+) {
   const { useStoreData, useDispatch, components } = useTapestryConfig()
   const item = useStoreData(`items.${itemId}.dto`)!
   const presentationSteps = useStoreData('presentationSteps')
@@ -65,16 +69,17 @@ export function useItemMenu<const M extends ItemMenuItem[]>(itemId: Id, menu: M)
       }
 
       if (menuItem === 'prev' || menuItem === 'next') {
-        const label = menuItem === 'prev' ? 'Previous item' : 'Next item'
+        const presentation = menuItem as 'prev' | 'next'
+        const label = presentation === 'prev' ? 'Previous item' : 'Next item'
         return {
           element: (
             <IconButton
-              icon={menuItem === 'prev' ? 'arrow_back' : 'arrow_forward'}
+              icon={presentation === 'prev' ? 'arrow_back' : 'arrow_forward'}
               aria-label={label}
-              disabled={!adjacentPresentationSteps[menuItem]}
+              disabled={!adjacentPresentationSteps[presentation]}
               onClick={() =>
                 dispatch(
-                  focusPresentationStep(adjacentPresentationSteps[menuItem]!.dto, {
+                  focusPresentationStep(adjacentPresentationSteps[presentation]!.dto, {
                     zoomEffect: 'bounce',
                     duration: 1,
                   }),
@@ -86,7 +91,11 @@ export function useItemMenu<const M extends ItemMenuItem[]>(itemId: Id, menu: M)
         }
       }
 
-      return menuItem
+      if (menuItem === 'separator') {
+        return 'separator'
+      }
+
+      return typeof menuItem === 'string' ? menuParser?.(menuItem) : menuItem
     }),
     ui: displayInfo && (
       <components.ItemInfoModal item={item} onClose={() => setDisplayInfo(false)} />

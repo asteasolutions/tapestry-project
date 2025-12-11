@@ -16,12 +16,12 @@ import { TapestryItemProps } from '..'
 import { useDispatch, useTapestryData } from '../../../../pages/tapestry/tapestry-providers'
 import { updateItem } from '../../../../pages/tapestry/view-model/store-commands/items'
 import { userSettings } from '../../../../services/user-settings'
-import { buildToolbarMenu, MoreSubmenu } from '../../item-toolbar'
+import { buildToolbarMenu } from '../../item-toolbar'
 import { useItemToolbar } from '../../item-toolbar/use-item-toolbar'
 import { TapestryItem } from '../tapestry-item'
 import { LinkTooltip, LinkTooltipProps } from './link-tooltip'
 import { ToggleFormatButton, tooltip } from './toggle-format-button'
-import { FormattingSubmenu, textItemToolbar } from './toolbar'
+import { textItemToolbar } from './toolbar'
 
 const BACKGROUND_COLORS: Record<LiteralColor, string> = COLOR_PRESETS
 
@@ -113,28 +113,25 @@ export const TextItem = memo(({ id }: TapestryItemProps) => {
     },
   })
 
-  const [editorControls, viewerControls] = buildToolbarMenu({ dto, omit: { title: true } })
+  const controls = buildToolbarMenu({ dto, isEdit: isEditMode, omit: { title: true } })
 
-  const { selectSubmenu, toolbar, closeSubmenu } = useItemToolbar<MoreSubmenu | FormattingSubmenu>(
-    id,
-    {
-      items: isEditMode
-        ? [
-            {
-              element: (
-                <ToggleFormatButton
-                  formatting={showFormatToolbar}
-                  onClick={() => setShowFormatToolbar(!showFormatToolbar)}
-                />
-              ),
-              tooltip: tooltip(showFormatToolbar),
-            },
-            'separator',
-            ...(showFormatToolbar ? formattingControls : editorControls),
-          ]
-        : viewerControls,
-    },
-  )
+  const { selectSubmenu, toolbar, closeSubmenu } = useItemToolbar(id, {
+    items: isEditMode
+      ? [
+          {
+            element: (
+              <ToggleFormatButton
+                formatting={showFormatToolbar}
+                onClick={() => setShowFormatToolbar(!showFormatToolbar)}
+              />
+            ),
+            tooltip: tooltip(showFormatToolbar),
+          },
+          'separator',
+          ...(showFormatToolbar ? formattingControls : controls),
+        ]
+      : controls,
+  })
 
   return (
     <TapestryItem id={id} halo={toolbar}>

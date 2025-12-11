@@ -12,7 +12,6 @@ import {
 } from 'tapestry-core-client/src/components/lib/toolbar/index'
 import {
   CommonMenuItem,
-  isCommonMenuItem,
   useItemMenu,
 } from 'tapestry-core-client/src/components/tapestry/hooks/use-item-menu'
 import { ACTIVE_ITEM_BORDER_WIDTH } from 'tapestry-core-client/src/components/tapestry/items/tapestry-item'
@@ -88,30 +87,6 @@ export function ItemToolbar({
   const commentThread = useTapestryData(`items.${id}.commentThread`)
   const isEdit = useTapestryData('interactionMode') === 'edit'
 
-  const [indexedCommonItems, indexedEditorItems] = items.reduce<
-    [[CommonMenuItem, number][], [EditorMenuItem | MaybeMenuItem, number][]]
-  >(
-    (acc, item, index) => {
-      if (isCommonMenuItem(item)) {
-        acc[0].push([item, index])
-      } else {
-        acc[1].push([item, index])
-      }
-      return acc
-    },
-    [[], []],
-  )
-
-  const commonMenu = useItemMenu(
-    id,
-    indexedCommonItems.map(([m]) => m),
-  )
-
-  const finalItems: MaybeMenuItem[] = []
-  indexedCommonItems.forEach(
-    ([, originalIndex], ind) => (finalItems[originalIndex] = commonMenu.items[ind]),
-  )
-
   const moreMenu = useEditMoreMenu({
     dto,
     selectedSubmenu,
@@ -120,29 +95,30 @@ export function ItemToolbar({
     active: isEdit,
   })
   const titleMenu = useTitleMenu({ dto, selectedSubmenu, onSelectSubmenu })
-  const ungroupMenu = useUnroupMenu(dto.id)
+  const ungroupMenu = useUngroupMenu(dto.id)
 
-  indexedEditorItems.forEach(([m, index]) => {
+  const { items: finalItems, ui } = useItemMenu(id, items, (m) => {
     if (m === 'comment') {
-      finalItems[index] = {
+      return {
         element: <CommentButton count={commentThread?.size} type="inline-comments" />,
         tooltip: { side: 'bottom', children: 'Comments' },
       }
-    } else if (m === 'more-menu') {
-      finalItems[index] = moreMenu
-    } else if (m === 'move-handle') {
-      finalItems[index] = moveHandle
-    } else if (m === 'title') {
-      finalItems[index] = titleMenu
-    } else if (m === 'ungroup') {
-      finalItems[index] = ungroupMenu
-    } else if (m === 'share') {
-      finalItems[index] = {
-        element: <CopyLinkButton id={id} />,
-        tooltip: { side: 'bottom', children: 'Get link' },
-      }
-    } else {
-      finalItems[index] = m
+    }
+    if (m === 'more-menu') {
+      return moreMenu
+    }
+    if (m === 'move-handle') {
+      return moveHandle
+    }
+    if (m === 'title') {
+      return titleMenu
+    }
+    if (m === 'ungroup') {
+      return ungroupMenu
+    }
+    return {
+      element: <CopyLinkButton id={id} />,
+      tooltip: { side: 'bottom', children: 'Get link' },
     }
   })
 
@@ -157,7 +133,7 @@ export function ItemToolbar({
         elementBounds={new Rectangle(dto).expand(ACTIVE_ITEM_BORDER_WIDTH)}
         {...props}
       />
-      {commonMenu.ui}
+      {ui}
     </>
   )
 }
@@ -202,7 +178,7 @@ function useTitleMenu({ dto, selectedSubmenu, onSelectSubmenu }: TitleMenuOption
   }
 }
 
-function useUnroupMenu(id: string): MenuItem {
+function useUngroupMenu(id: string): MenuItem {
   const dispatch = useDispatch()
 
   return {
@@ -382,15 +358,17 @@ export function useEditMoreMenu({
 
 interface BuildToolbarMenuOptions {
   dto: ItemDto
+  isEdit: boolean
   share?: MenuItemWithSubmenu | 'share' | null
   omit?: Partial<Record<'title' | 'share', boolean>>
 }
 
 export function buildToolbarMenu({
   dto,
+  isEdit,
   share = 'share',
   omit = {},
-}: BuildToolbarMenuOptions): [ItemToolbarMenuItem[], ItemToolbarMenuItem[]] {
+}: BuildToolbarMenuOptions): ItemToolbarMenuItem[] {
   const commonItems: ItemToolbarMenuItem[] = [
     'comment',
     'separator',
@@ -399,20 +377,19 @@ export function buildToolbarMenu({
     ...(omit.share ? [] : ([share, 'separator'] as const)),
     'info',
     'separator',
-  ] as const
-
-  return [
-    [
-      ...(omit.title ? [] : (['title', 'separator'] as const)),
-      ...(dto.groupId ? (['ungroup', 'separator'] as const) : []),
-      ...commonItems,
-      'more-menu',
-      'separator',
-      'prev',
-      'next',
-      'separator',
-      'move-handle',
-    ] as const,
-    [...commonItems, 'prev', 'next'] as const,
   ]
+
+  return isEdit
+    ? [
+        ...(omit.title ? [] : (['title', 'separator'] as const)),
+        ...(dto.groupId ? (['ungroup', 'separator'] as const) : []),
+        ...commonItems,
+        'more-menu',
+        'separator',
+        'prev',
+        'next',
+        'separator',
+        'move-handle',
+      ]
+    : [...commonItems, 'prev', 'next']
 }
