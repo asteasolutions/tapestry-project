@@ -34,6 +34,7 @@ export default defineConfig(({ mode }) => {
           runtimeCaching: [
             {
               handler: 'CacheFirst',
+              // TODO: We should handle this in a more stable way. We might not be using amazon's S3.
               urlPattern: ({ url }) => url.host.endsWith('amazonaws.com'),
               options: { cacheName: 'remote-assets' },
             },

@@ -1,23 +1,23 @@
-import { openDB, DBSchema, IDBPDatabase, StoreNames, StoreValue } from 'idb'
-import {
-  TapestryRepoValue,
-  TapestryResourcePatch,
-} from '../pages/tapestry/view-model/tapestry-resources-repo'
+import { DBSchema, IDBPDatabase, IDBPTransaction, openDB, StoreNames, StoreValue } from 'idb'
 import { set, thru } from 'lodash'
 import { urlToBuffer } from 'tapestry-core-client/src/lib/file'
+import { asyncFlatMap } from 'tapestry-core/src/lib/promise'
 import { idMapToArray } from 'tapestry-core/src/utils'
+import { GroupDto } from 'tapestry-shared/src/data-transfer/resources/dtos/group'
 import {
   ActionButtonItemDto,
   ItemDto,
   MediaItemDto,
   TextItemDto,
 } from 'tapestry-shared/src/data-transfer/resources/dtos/item'
-import { TapestryDto } from 'tapestry-shared/src/data-transfer/resources/dtos/tapestry'
-import { RelDto } from 'tapestry-shared/src/data-transfer/resources/dtos/rel'
-import { GroupDto } from 'tapestry-shared/src/data-transfer/resources/dtos/group'
 import { PresentationStepDto } from 'tapestry-shared/src/data-transfer/resources/dtos/presentation-step'
-import { asyncFlatMap } from 'tapestry-core/src/lib/promise'
+import { RelDto } from 'tapestry-shared/src/data-transfer/resources/dtos/rel'
+import { TapestryDto } from 'tapestry-shared/src/data-transfer/resources/dtos/tapestry'
 import { isLocalMediaItem } from '../model/data/utils'
+import {
+  TapestryRepoValue,
+  TapestryResourcePatch,
+} from '../pages/tapestry/view-model/tapestry-resources-repo'
 
 const version = 1
 
@@ -108,42 +108,54 @@ export class DB {
   }
 
   async upsert({ tapestries, items, rels, groups, presentationSteps }: TapestryRepoValue) {
-    const tx = this.db.transaction(stores, 'readwrite')
-
-    await Promise.all([
-      ...idMapToArray(tapestries).map((i) => tx.objectStore('tapestries').put(i)),
-      ...idMapToArray(items).map((i) => tx.objectStore('items').put(i)),
-      ...idMapToArray(rels).map((i) => tx.objectStore('rels').put(i)),
-      ...idMapToArray(groups).map((i) => tx.objectStore('groups').put(i)),
-      ...idMapToArray(presentationSteps).map((i) => tx.objectStore('presentationSteps').put(i)),
-      tx.done,
-    ])
+    await this.withTransaction(
+      (tx) =>
+        Promise.all([
+          ...idMapToArray(tapestries).map((i) => tx.objectStore('tapestries').put(i)),
+          ...idMapToArray(items).map((i) => tx.objectStore('items').put(i)),
+          ...idMapToArray(rels).map((i) => tx.objectStore('rels').put(i)),
+          ...idMapToArray(groups).map((i) => tx.objectStore('groups').put(i)),
+          ...idMapToArray(presentationSteps).map((i) => tx.objectStore('presentationSteps').put(i)),
+        ]),
+      'readwrite',
+    )
   }
 
   async patch(patches: TapestryResourcePatch[]) {
     const operations = await this.toDbOperations(patches)
 
-    // It is important not to put any asynchronous code aside from the one provided by the transaction
-    // https://github.com/jakearchibald/idb?tab=readme-ov-file#transaction-lifetime
-    const tx = this.db.transaction(stores, 'readwrite')
-    await Promise.all([
-      ...operations.map(async (op) => {
-        if (op.type === 'add') {
-          return tx.objectStore(op.store).put(op.value)
-        }
+    await this.withTransaction(
+      (tx) =>
+        Promise.all([
+          ...operations.map(async (op) => {
+            if (op.type === 'add') {
+              return tx.objectStore(op.store).put(op.value)
+            }
 
-        if (op.type === 'delete') {
-          return tx.objectStore(op.store).delete(op.id)
-        }
+            if (op.type === 'delete') {
+              return tx.objectStore(op.store).delete(op.id)
+            }
 
-        const persistedObject = await tx.objectStore(op.store).get(op.id)
-        if (!persistedObject) {
-          throw new Error(`Object with id "${op.id}" was not found in store "${op.store}"`)
-        }
-        return tx.objectStore(op.store).put(set(persistedObject, op.path, op.value))
-      }),
-      tx.done,
-    ])
+            const persistedObject = await tx.objectStore(op.store).get(op.id)
+            if (!persistedObject) {
+              throw new Error(`Object with id "${op.id}" was not found in store "${op.store}"`)
+            }
+            return tx.objectStore(op.store).put(set(persistedObject, op.path, op.value))
+          }),
+        ]),
+      'readwrite',
+    )
+  }
+
+  // It is important not to put any asynchronous code aside from the one provided by the transaction inside the callback
+  // https://github.com/jakearchibald/idb?tab=readme-ov-file#transaction-lifetime
+  private async withTransaction<Mode extends IDBTransactionMode>(
+    callback: (tx: IDBPTransaction<Schema, Store[], Mode>) => Promise<unknown>,
+    mode?: Mode,
+  ) {
+    const tx = this.db.transaction(stores, mode)
+    await callback(tx)
+    await tx.done
   }
 
   async get(
@@ -181,30 +193,28 @@ export class DB {
   }
 
   async delete(tapestryId: string) {
-    // It is important not to put any asynchronous code aside from the one provided by the transaction
-    // https://github.com/jakearchibald/idb?tab=readme-ov-file#transaction-lifetime
-    const tx = this.db.transaction(stores, 'readwrite')
-    const itemKeys = await tx.objectStore('items').index('tapestryId').getAllKeys(tapestryId)
-    const groupKeys = await tx.objectStore('groups').index('tapestryId').getAllKeys(tapestryId)
-    const relKeys = await tx.objectStore('rels').index('tapestryId').getAllKeys(tapestryId)
-    const presenStepKeys = [
-      ...(await asyncFlatMap(itemKeys, (key) =>
-        tx.objectStore('presentationSteps').index('itemId').getAllKeys(key),
-      )),
-      ...(await asyncFlatMap(groupKeys, (key) =>
-        tx.objectStore('presentationSteps').index('groupId').getAllKeys(key),
-      )),
-    ]
+    await this.withTransaction(async (tx) => {
+      const itemKeys = await tx.objectStore('items').index('tapestryId').getAllKeys(tapestryId)
+      const groupKeys = await tx.objectStore('groups').index('tapestryId').getAllKeys(tapestryId)
+      const relKeys = await tx.objectStore('rels').index('tapestryId').getAllKeys(tapestryId)
+      const presenStepKeys = [
+        ...(await asyncFlatMap(itemKeys, (key) =>
+          tx.objectStore('presentationSteps').index('itemId').getAllKeys(key),
+        )),
+        ...(await asyncFlatMap(groupKeys, (key) =>
+          tx.objectStore('presentationSteps').index('groupId').getAllKeys(key),
+        )),
+      ]
 
-    await Promise.all([
-      tx.objectStore('tapestries').delete(tapestryId),
-      ...itemKeys.map((key) => tx.objectStore('items').delete(key)),
-      ...itemKeys.map((key) => tx.objectStore('blobs').delete(key)),
-      ...groupKeys.map((key) => tx.objectStore('groups').delete(key)),
-      ...presenStepKeys.map((key) => tx.objectStore('presentationSteps').delete(key)),
-      ...relKeys.map((key) => tx.objectStore('rels').delete(key)),
-      tx.done,
-    ])
+      await Promise.all([
+        tx.objectStore('tapestries').delete(tapestryId),
+        ...itemKeys.map((key) => tx.objectStore('items').delete(key)),
+        ...itemKeys.map((key) => tx.objectStore('blobs').delete(key)),
+        ...groupKeys.map((key) => tx.objectStore('groups').delete(key)),
+        ...presenStepKeys.map((key) => tx.objectStore('presentationSteps').delete(key)),
+        ...relKeys.map((key) => tx.objectStore('rels').delete(key)),
+      ])
+    }, 'readwrite')
   }
 
   private async toDbOperations(patches: TapestryResourcePatch[]): Promise<DBOperation[]> {

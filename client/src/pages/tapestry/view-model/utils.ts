@@ -1,12 +1,10 @@
 import { Patch, WritableDraft } from 'immer'
 import { chunk, zip } from 'lodash'
-import { PresentationStepViewModel } from 'tapestry-core-client/src/view-model'
 import {
   getBoundingRectangle,
   MULTISELECT_RECTANGLE_PADDING,
 } from 'tapestry-core-client/src/view-model/utils'
 import { Identifiable } from 'tapestry-core/src/data-format/schemas/common'
-import { getPresentedModelId, IdMap, idMapToArray } from 'tapestry-core/src/utils'
 import { GroupCreateDto } from 'tapestry-shared/src/data-transfer/resources/dtos/group'
 import {
   ActionButtonItemDto,
@@ -152,19 +150,6 @@ export function reassignPresentationStep(
     [`${targetType}Id`]: targetId,
     [`${targetType === 'item' ? 'group' : 'item'}Id`]: null,
   })
-}
-
-export function getAdjacentPresentationSteps(
-  targetId: string,
-  presentationSteps: IdMap<PresentationStepViewModel>,
-) {
-  const stepArray = idMapToArray(presentationSteps)
-  const step = stepArray.find(({ dto }) => getPresentedModelId(dto) === targetId)
-  const prevStepId = step?.dto.prevStepId
-  return {
-    prev: prevStepId ? presentationSteps[prevStepId] : null,
-    next: stepArray.find((s) => s.dto.prevStepId === step?.dto.id),
-  }
 }
 
 type PatchSource = Identifiable[] | undefined | null
