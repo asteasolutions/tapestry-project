@@ -15,6 +15,10 @@
     justify-content: center;
   }
 
+  :global(.react-pdf__Page > .textLayer) {
+    user-select: text;
+  }
+
   /* Make page fill the document during load */
   /* stylelint-disable-next-line selector-class-pattern */
   :global(.react-pdf__Page:has(.react-pdf__message)) {
