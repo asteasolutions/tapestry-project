@@ -15,6 +15,7 @@
     justify-content: center;
   }
 
+  /* stylelint-disable-next-line selector-class-pattern */
   :global(.react-pdf__Page > .textLayer) {
     user-select: text;
   }
