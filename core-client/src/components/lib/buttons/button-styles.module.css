@@ -193,9 +193,22 @@
 }
 
 :global(.button-clear) {
-  --internal-text-color: var(--theme-text-primary);
+  --text-color: var(--theme-text-primary);
+  --bg-color: transparent;
 
-  background-color: transparent;
   border: none;
   padding: 0;
+}
+
+:global(.button-link) {
+  --text-color: var(--theme-text-link);
+  --hover-text-color: var(--theme-text-link-hover);
+  --bg-color: transparent;
+  --disabled-bg-color: transparent;
+
+  text-decoration: underline;
+
+  &:global(.typography-body-sm) {
+    font-weight: 400;
+  }
 }
