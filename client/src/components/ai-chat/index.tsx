@@ -205,7 +205,7 @@ export function AIChat({ tapestryId, canAttachItems, onPickingItems }: AIChatPro
         )}
         {lastUserMessageState === 'pending' && <LoadingDots />}
         {lastUserMessageState === 'error' && (
-          <Text variant="bodyXs" className={styles.errorMessage}>
+          <Text variant="bodyXs" textType="error" className={styles.errorMessage}>
             Your message could not be processed. <br />
             Please make sure{' '}
             <Link to={userProfilePath('ai-assistants')} target="_blank">

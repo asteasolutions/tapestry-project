@@ -97,7 +97,6 @@
     }
 
     .error-message {
-      color: var(--theme-text-negative);
       padding: 8px;
       text-align: center;
     }
