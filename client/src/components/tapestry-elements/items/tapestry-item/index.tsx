@@ -43,7 +43,7 @@ export function TapestryItem({ id, children, halo }: TapestryItemProps) {
 
   const viewportRect = new Rectangle(
     positionAtViewport(viewport, ORIGIN),
-    scaleSize(viewport.size, viewport.transform.scale),
+    scaleSize(viewport.size, 1 / viewport.transform.scale),
   )
 
   const isVisible = viewportRect.intersects(new Rectangle(dto))
