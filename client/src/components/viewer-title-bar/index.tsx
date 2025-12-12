@@ -21,7 +21,7 @@ import { ForkTapestryDialog } from '../fork-tapestry-dialog'
 import { JoinTapestriesModal } from '../join-tapestries-modal'
 import styles from './styles.module.css'
 
-export function ViewerTitleBar({ className }: PropsWithStyle) {
+export function ViewerTitleBar({ className, style }: PropsWithStyle) {
   const { id, title, description, thumbnail, userAccess, allowForking, createdAt, owner } =
     useTapestryData([
       'id',
@@ -141,7 +141,7 @@ export function ViewerTitleBar({ className }: PropsWithStyle) {
   ] as const satisfies MenuItems
 
   return (
-    <div className={clsx(styles.root, className)}>
+    <div className={clsx(styles.root, className)} style={style}>
       <Toolbar isOpen selectedSubmenu={selectedSubmenu} onFocusOut={closeSubmenu} items={items} />
       <div id="titlebar-action-buttons" />
       {joinPopup && <JoinTapestriesModal onClose={() => setJoinPopup(false)} />}

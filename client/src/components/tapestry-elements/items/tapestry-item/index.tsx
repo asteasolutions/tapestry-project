@@ -3,8 +3,11 @@ import { ReactNode } from 'react'
 import { useObservable } from 'tapestry-core-client/src/components/lib/hooks/use-observable'
 import { TapestryItem as BaseTapestryItem } from 'tapestry-core-client/src/components/tapestry/items/tapestry-item'
 import { THEMES } from 'tapestry-core-client/src/theme/themes'
-import { computeRestrictedScale } from 'tapestry-core-client/src/view-model/utils'
-import { Rectangle, Size } from 'tapestry-core/src/lib/geometry'
+import {
+  computeRestrictedScale,
+  positionAtViewport,
+} from 'tapestry-core-client/src/view-model/utils'
+import { ORIGIN, Rectangle, scaleSize, Size } from 'tapestry-core/src/lib/geometry'
 import { idMapToArray } from 'tapestry-core/src/utils'
 import { useDispatch, useTapestryData } from '../../../../pages/tapestry/tapestry-providers'
 import {
@@ -38,11 +41,11 @@ export function TapestryItem({ id, children, halo }: TapestryItemProps) {
 
   const isContentInteractive = id === interactiveElement?.modelId
 
-  const left = -viewport.transform.translation.dx / viewport.transform.scale
-  const right = left + viewport.size.width / viewport.transform.scale
-  const top = -viewport.transform.translation.dy / viewport.transform.scale
-  const bottom = top + viewport.size.height / viewport.transform.scale
-  const viewportRect = new Rectangle(left, top, right - left, bottom - top)
+  const viewportRect = new Rectangle(
+    positionAtViewport(viewport, ORIGIN),
+    scaleSize(viewport.size, viewport.transform.scale),
+  )
+
   const isVisible = viewportRect.intersects(new Rectangle(dto))
 
   // @ts-expect-error TS wants us to check for a media item

@@ -133,15 +133,6 @@ export class Rectangle {
     })
   }
 
-  isEqual(other: Rectangle) {
-    return (
-      this.position.x === other.position.x &&
-      this.position.y === other.position.y &&
-      this.size.width === other.size.width &&
-      this.size.height === other.size.height
-    )
-  }
-
   get left() {
     return this.position.x + Math.min(this.size.width, 0)
   }

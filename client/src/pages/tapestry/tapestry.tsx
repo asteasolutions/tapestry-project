@@ -40,6 +40,7 @@ import {
 import { setInteractionMode, setSnackbar } from './view-model/store-commands/tapestry'
 import { ViewportDebugData } from './viewport-debug-data'
 import { createPixiApp } from 'tapestry-core-client/src/stage'
+import { PropsWithStyle } from 'tapestry-core-client/src/components/lib'
 
 function useInteractionModeUrlParam() {
   const { username, slug, edit } = useTapestryPathParams()
@@ -135,11 +136,7 @@ export function Tapestry() {
   )
 }
 
-interface MainToolbarProps {
-  className?: string
-}
-
-const MainToolbar = memo(function MainToolbar({ className }: MainToolbarProps) {
+const MainToolbar = memo(function MainToolbar({ className, style }: PropsWithStyle) {
   const { interactionMode, presentationOrderState, hideEditControls } = useTapestryData([
     'interactionMode',
     'presentationOrderState',
@@ -147,11 +144,11 @@ const MainToolbar = memo(function MainToolbar({ className }: MainToolbarProps) {
   ])
 
   if (interactionMode === 'view') {
-    return <ViewerTitleBar className={className} />
+    return <ViewerTitleBar className={className} style={style} />
   }
 
   return (
-    <div className={className}>
+    <div className={className} style={style}>
       <EditorTitleBar />
       <div className={styles.leftToolbar}>
         {!hideEditControls && <ImportToolbar />}
