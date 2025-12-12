@@ -39,7 +39,7 @@ export function Input({
         onCopy={(e) => e.stopPropagation()}
       />
       {error && (
-        <Text variant="bodySm" className={styles.error}>
+        <Text variant="bodySm" textType="error">
           {error}
         </Text>
       )}

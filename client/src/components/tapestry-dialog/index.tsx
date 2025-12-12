@@ -1,13 +1,13 @@
+import { trim, uniqueId } from 'lodash'
 import { useRef, useState } from 'react'
 import { Input } from 'tapestry-core-client/src/components/lib/input/index'
 import { SimpleModal } from 'tapestry-core-client/src/components/lib/modal/index'
+import { Text } from 'tapestry-core-client/src/components/lib/text/index'
+import { getErrorMessage } from '../../errors'
+import { useSession } from '../../layouts/session'
+import { tapestryPath } from '../../utils/paths'
 import { Textarea } from '../textarea'
 import styles from './styles.module.css'
-import { trim, uniqueId } from 'lodash-es'
-import { getErrorMessage } from '../../errors'
-import { Text } from 'tapestry-core-client/src/components/lib/text/index'
-import { tapestryPath } from '../../utils/paths'
-import { useSession } from '../../layouts/session'
 
 export interface TapestryInfo {
   title: string
@@ -21,7 +21,7 @@ interface TapestryDialogProps {
   cancelText?: string
   onClose?: () => unknown
   onCancel: () => unknown
-  handleSubmit: (tapestryInfo: TapestryInfo) => Promise<void>
+  handleSubmit: (tapestryInfo: TapestryInfo) => unknown
   error?: unknown
   tapestryInfo?: TapestryInfo
   hideSlug?: boolean
@@ -47,6 +47,8 @@ export function TapestryDialog({
   const [tapestryInfo, setTapestryInfo] = useState<Partial<TapestryInfo>>(initialTapestryInfo ?? {})
   const { slug } = tapestryInfo
 
+  const formError = getErrorMessage(error)
+
   return (
     <SimpleModal
       classes={{ root: styles.modal }}
@@ -60,7 +62,7 @@ export function TapestryDialog({
         className={styles.form}
         onSubmit={(e) => {
           e.preventDefault()
-          void handleSubmit({
+          handleSubmit({
             title: tapestryInfo.title ?? '',
             slug,
             description: tapestryInfo.description,
@@ -100,7 +102,7 @@ export function TapestryDialog({
               className={styles.input}
               typography="body"
             />
-            {username && slug && (
+            {username && slug?.trim() && (
               <Text
                 variant="bodyXs"
                 style={{ color: 'var(--theme-text-tertiary)' }}
@@ -121,8 +123,12 @@ export function TapestryDialog({
           onSubmit={(e) => (e.target as HTMLTextAreaElement).form?.requestSubmit()}
           typography="body"
         />
-        <input type="submit" hidden />
       </form>
+      {formError && (
+        <Text variant="bodySm" textType="error">
+          {formError}
+        </Text>
+      )}
     </SimpleModal>
   )
 }
