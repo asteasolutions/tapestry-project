@@ -2,16 +2,17 @@ import { forEach } from 'lodash-es'
 import { uploadAsset } from '../model/data/utils'
 import { Observable } from 'tapestry-core-client/src/lib/events/observable'
 import { WritableDraft } from 'immer'
+import { urlToFile } from 'tapestry-core-client/src/lib/file'
+import { MediaItem } from 'tapestry-core/src/data-format/schemas/item'
 
 type ItemUploadState = {
-  state: 'pending' | 'uploading' | 'completed' | 'failed'
-  objectUrl: string
+  state: 'uploading' | 'completed' | 'failed'
+  itemId: string
   file: File
   progress?: number
   error?: unknown
   s3Key?: string
 } & (
-  | { state: 'pending' }
   | { state: 'uploading' }
   | { state: 'completed'; s3Key: string }
   | { state: 'failed'; error: unknown }
@@ -20,39 +21,36 @@ type ItemUploadState = {
 class ItemUploadObservable extends Observable<ItemUploadState[]> {
   private killSwitches: Record<string, AbortController> = {}
 
-  prepare(file: File) {
-    const objectUrl = URL.createObjectURL(file)
-    this.update((value) => {
-      value.push({ state: 'pending', objectUrl, file })
-    })
-    return objectUrl
-  }
-
-  async upload(objectUrl: string, tapestryId: string) {
-    const item = this.value.find((item) => item.objectUrl === objectUrl)
-    if (!item) {
-      throw new Error(`Item for url ${objectUrl} not found`)
-    }
-    if (item.state !== 'pending') {
-      throw new Error(`Cannot upload item in state "${item.state}"]`)
+  async upload(item: MediaItem, tapestryId: string) {
+    const { source: objectUrl, id } = item
+    const existing = this.value.find(({ itemId }) => itemId === id)
+    const file = existing?.file ?? (await urlToFile(objectUrl))
+    if (existing) {
+      this.mutateItem(id, (item) => {
+        item.state = 'uploading'
+      })
+    } else {
+      this.update((value) => {
+        value.push({ state: 'uploading', itemId: id, file })
+      })
     }
     try {
       const killSwitch = new AbortController()
-      this.killSwitches[objectUrl] = killSwitch
+      this.killSwitches[id] = killSwitch
 
       const key = await uploadAsset(
-        item.file,
+        file,
         { type: 'tapestry-asset', tapestryId },
         {
-          onProgress: ({ progress }) => this.updateProgress(objectUrl, progress),
+          onProgress: ({ progress }) => this.updateProgress(id, progress),
           signal: killSwitch.signal,
         },
       )
 
-      this.complete(objectUrl, key)
+      this.complete(id, key)
       return key
     } catch (error) {
-      this.fail(objectUrl, error)
+      this.fail(id, error)
       throw error
     }
   }
@@ -66,37 +64,34 @@ class ItemUploadObservable extends Observable<ItemUploadState[]> {
     }
   }
 
-  type(url: string) {
-    return this.value.find((item) => item.objectUrl === url)?.file.type
+  type(id: string) {
+    return this.value.find(({ itemId }) => itemId === id)?.file.type
   }
 
-  private updateProgress(objectUrl: string, progress: number | undefined) {
-    this.mutateItem(objectUrl, (item) => {
+  private updateProgress(itemId: string, progress: number | undefined) {
+    this.mutateItem(itemId, (item) => {
       item.state = 'uploading'
       item.progress = progress
     })
   }
 
-  private complete(objectUrl: string, s3Key: string) {
-    this.mutateItem(objectUrl, (item) => {
+  private complete(itemId: string, s3Key: string) {
+    this.mutateItem(itemId, (item) => {
       item.state = 'completed'
       item.s3Key = s3Key
     })
   }
 
-  private fail(objectUrl: string, error: unknown) {
-    this.mutateItem(objectUrl, (value) => {
+  private fail(itemId: string, error: unknown) {
+    this.mutateItem(itemId, (value) => {
       value.state = 'failed'
       value.error = error
     })
   }
 
-  private mutateItem(
-    objectUrl: string,
-    mutator: (item: WritableDraft<ItemUploadState>) => unknown,
-  ) {
+  private mutateItem(id: string, mutator: (item: WritableDraft<ItemUploadState>) => unknown) {
     this.update((value) => {
-      const item = value.find((i) => i.objectUrl === objectUrl)
+      const item = value.find(({ itemId }) => itemId === id)
       if (item) {
         mutator(item)
       }

@@ -1,14 +1,17 @@
 import { useEffect, useRef } from 'react'
 import styles from './styles.module.css'
 import { Breakpoint, useResponsive } from '../../providers/responsive-provider'
+import { useOnline } from '../../services/api'
 
 export function GoogleLoginButton() {
   const button = useRef<HTMLDivElement>(null)
 
   const type = useResponsive() <= Breakpoint.SM ? 'icon' : 'standard'
 
+  const online = useOnline() === 'online'
+
   useEffect(() => {
-    if (button.current) {
+    if (button.current && online) {
       window.google.accounts.id.renderButton(button.current, {
         type,
         shape: 'rectangular',
@@ -18,7 +21,7 @@ export function GoogleLoginButton() {
         logo_alignment: 'left',
       })
     }
-  }, [type])
+  }, [type, online])
 
   return <div ref={button} className={styles.root} />
 }

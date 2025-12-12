@@ -3,6 +3,7 @@ import { debounce, DebouncedFunc } from 'lodash-es'
 import { Draft } from 'immer'
 import { Observable } from 'tapestry-core-client/src/lib/events/observable'
 import { CanceledError } from 'axios'
+import { NoConnectionError } from '../../errors'
 
 export interface LazyListLoaderConfig {
   /**
@@ -134,7 +135,8 @@ export class LazyListLoader<T> extends Observable<ListResponseDto<T> & { state: 
       } catch (error) {
         if (
           !(error instanceof CanceledError) &&
-          !(error instanceof DOMException && error.name === 'AbortError')
+          !(error instanceof DOMException && error.name === 'AbortError') &&
+          !(error instanceof NoConnectionError)
         ) {
           console.error('Error while loading lazy list items', error)
         }
