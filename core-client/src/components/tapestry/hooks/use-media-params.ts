@@ -1,12 +1,5 @@
 import { useSearchParams } from 'react-router'
-import { Id } from 'tapestry-core/src/data-format/schemas/common'
-import z from 'zod'
-
-const NullishInt = z
-  .literal('')
-  .transform(() => undefined)
-  .or(z.coerce.number().int())
-  .nullish()
+import { Id, NullishInt } from 'tapestry-core/src/data-format/schemas/common'
 
 export interface MediaParams {
   startTime: number | undefined | null
@@ -23,8 +16,8 @@ export function useMediaParams(id: Id): MediaParams {
   const autoplay = searchParams.get('autoplay')
 
   return {
-    startTime: NullishInt.safeParse(searchParams.get('startTime')).data,
-    stopTime: NullishInt.safeParse(searchParams.get('stopTime')).data,
+    startTime: NullishInt().safeParse(searchParams.get('startTime')).data,
+    stopTime: NullishInt().safeParse(searchParams.get('stopTime')).data,
     autoplay: autoplay === 'true' ? true : autoplay === 'false' ? false : undefined,
   }
 }

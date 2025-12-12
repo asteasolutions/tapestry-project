@@ -1,4 +1,4 @@
-import { isEmpty, merge } from 'lodash'
+import { isEmpty, merge } from 'lodash-es'
 import { OneOrMore, pickById, ensureArray, idMapToArray } from 'tapestry-core/src/utils'
 import { EditablePresentationStepViewModel, EditableTapestryViewModel } from '..'
 import { StoreMutationCommand } from 'tapestry-core-client/src/lib/store/index'

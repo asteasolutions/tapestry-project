@@ -14,7 +14,7 @@ import {
 import { Draft } from 'immer'
 import { StoreMutationCommand } from 'tapestry-core-client/src/lib/store/index'
 import { getBoundingRectangle, getSelectionItems } from 'tapestry-core-client/src/view-model/utils'
-import { compact } from 'lodash'
+import { compact } from 'lodash-es'
 import {
   isHoveredGroup,
   isHoveredItem,

@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { Button, IconButton } from 'tapestry-core-client/src/components/lib/buttons/index'
 import { ShortcutLabel } from 'tapestry-core-client/src/components/lib/shortcut-label'
 import { Toolbar } from 'tapestry-core-client/src/components/lib/toolbar/index'
-import { useFocusRectInset } from 'tapestry-core-client/src/components/tapestry/hooks/use-focus-rect-inset'
+import { useViewportObstruction } from 'tapestry-core-client/src/components/tapestry/hooks/use-viewport-obstruction'
 import { SearchButton } from 'tapestry-core-client/src/components/tapestry/search/search-button'
 import { shortcutLabel } from 'tapestry-core-client/src/lib/keyboard-event'
 import Gemini from '../../../assets/icons/gemini.svg?react'
@@ -25,6 +25,7 @@ interface UserToolbarProps {
 }
 
 export function UserToolbar({ className }: UserToolbarProps) {
+  const obstruction = useViewportObstruction({ clear: { top: true, right: true } })
   const [joinPopup, setJoinPopup] = useState(false)
   const [sharePopup, setSharePopup] = useState(false)
   const tapestryViewPath = useTapestryPath('view')
@@ -36,8 +37,6 @@ export function UserToolbar({ className }: UserToolbarProps) {
   ])
   const dispatch = useDispatch()
   const { user } = useSession()
-
-  useFocusRectInset({ top: 64 })
 
   async function share() {
     if (userAccess === 'edit') {
@@ -51,6 +50,7 @@ export function UserToolbar({ className }: UserToolbarProps) {
   return (
     <>
       <Toolbar
+        wrapperRef={obstruction.ref}
         isOpen
         className={clsx(styles.root, className)}
         items={[

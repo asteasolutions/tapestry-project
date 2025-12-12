@@ -16,7 +16,7 @@ import {
   createPresentationStep,
   deletePresentationSteps,
 } from '../../pages/tapestry/view-model/store-commands/presentation-steps'
-import { mapValues } from 'lodash'
+import { mapValues } from 'lodash-es'
 import {
   EditablePresentationStepViewModel,
   EditableTapestryViewModel,
@@ -80,6 +80,8 @@ export class PresentationOrderController implements TapestryStageController {
     this.renderer = new PresentationOrderRenderer(this.store, this.stage)
     attachListeners(this, 'dragHandler', this.dragHandler)
     attachListeners(this, 'stage', this.stage.pixi.presentationOrder.stage)
+    // This is needed since the presentation canvas is with display: none;
+    this.stage.pixi.presentationOrder.queueResize()
     this.dragHandler.activate()
     this.store.subscribe(this.onStoreChange)
   }

@@ -10,7 +10,7 @@ import { SimpleModal } from 'tapestry-core-client/src/components/lib/modal/index
 import { Input } from 'tapestry-core-client/src/components/lib/input/index'
 import { useAsyncAction } from 'tapestry-core-client/src/components/lib/hooks/use-async-action'
 import { Text } from 'tapestry-core-client/src/components/lib/text/index'
-import { uniqueId } from 'lodash'
+import { uniqueId } from 'lodash-es'
 import { getErrorMessage } from '../errors'
 
 type ProviderName = typeof config.authProvider

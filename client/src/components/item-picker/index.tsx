@@ -6,7 +6,7 @@ import { CSSProperties, useState } from 'react'
 import { computeRestrictedScale, getBounds } from 'tapestry-core-client/src/view-model/utils'
 import clsx from 'clsx'
 import { Text } from 'tapestry-core-client/src/components/lib/text/index'
-import { without } from 'lodash'
+import { without } from 'lodash-es'
 import { EditableItemViewModel } from '../../pages/tapestry/view-model'
 
 export interface ItemPickerProps {

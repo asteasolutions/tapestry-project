@@ -1,4 +1,4 @@
-import { reduce, times } from 'lodash'
+import { reduce, times } from 'lodash-es'
 
 export function mapNotNull<I, O>(arr: ArrayLike<I>, cb: (el: I) => O): NonNullable<O>[] {
   return reduce(
@@ -40,4 +40,11 @@ export function toggleElement<T extends { id: unknown }>(array: T[], element: T)
     res.push(element)
   }
   return res
+}
+
+export function circularShift<T>(array: readonly T[], n: number) {
+  const shift = n % array.length
+  return array.length < 2 || !shift
+    ? [...array]
+    : [...array.slice(-shift), ...array.slice(0, -shift)]
 }

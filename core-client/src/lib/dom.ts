@@ -1,6 +1,14 @@
 import { maxBy } from 'lodash-es'
 import { CSSProperties } from 'react'
-import { Point } from 'tapestry-core/src/lib/geometry'
+import { Point, Rectangle } from 'tapestry-core/src/lib/geometry'
+
+export function getBoundingRectangle(element?: HTMLElement | null) {
+  const domRect = element?.getBoundingClientRect()
+  if (!domRect) {
+    return
+  }
+  return new Rectangle(domRect.x, domRect.y, domRect.width, domRect.height)
+}
 
 export function assignStyles(element: HTMLElement, styles: CSSProperties) {
   return Object.assign(element.style, styles)

@@ -6,7 +6,7 @@ import { usePropRef } from 'tapestry-core-client/src/components/lib/hooks/use-pr
 import { Button } from 'tapestry-core-client/src/components/lib/buttons/index'
 import { Text } from 'tapestry-core-client/src/components/lib/text/index'
 import mime from 'mime'
-import { compact } from 'lodash'
+import { compact } from 'lodash-es'
 import clsx from 'clsx'
 import styles from './styles.module.css'
 import { MediaCaptureTabProps } from '..'

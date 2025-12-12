@@ -1,5 +1,5 @@
 import clsx from 'clsx'
-import { compact, toPairs } from 'lodash'
+import { compact, toPairs } from 'lodash-es'
 import { CSSProperties } from 'react'
 import { Arrowhead, LineWeight, RelEndpoint } from 'tapestry-core/src/data-format/schemas/rel'
 import { useKeyboardShortcuts } from 'tapestry-core-client/src/components/lib/hooks/use-keyboard-shortcuts'
@@ -104,7 +104,7 @@ export function RelToolbar({ rel, relBounds }: RelToolbarProps) {
             <IconButton
               icon={arrowheadIcon}
               aria-label="Arrowhead"
-              onClick={() => selectSubmenu('arrowheads', true)}
+              onClick={() => selectSubmenu('arrowheads')}
             />
           ),
           tooltip: { side: 'bottom', children: 'Direction' },
@@ -128,7 +128,7 @@ export function RelToolbar({ rel, relBounds }: RelToolbarProps) {
             <IconButton
               icon="line_weight"
               aria-label="Line weight"
-              onClick={() => selectSubmenu('weight', true)}
+              onClick={() => selectSubmenu('weight')}
             />
           ),
           tooltip: { side: 'bottom', children: 'Weight' },
@@ -149,7 +149,7 @@ export function RelToolbar({ rel, relBounds }: RelToolbarProps) {
               color={dto.color}
               size={22}
               aria-label="Change color"
-              onClick={() => selectSubmenu('color', true)}
+              onClick={() => selectSubmenu('color')}
             />
           ),
           tooltip: { side: 'bottom', children: 'Color' },

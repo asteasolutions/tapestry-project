@@ -1,4 +1,4 @@
-import { sortBy, max, sum, merge } from 'lodash'
+import { sortBy, max, sum, merge } from 'lodash-es'
 import { tween } from 'tapestry-core-client/src/view-model/tweening'
 import { ItemDto } from 'tapestry-shared/src/data-transfer/resources/dtos/item'
 import { selectItems } from './tapestry'
@@ -270,15 +270,20 @@ export function copyItemSize(size: Size): StoreMutationCommand<EditableTapestryV
   }
 }
 
-export function pasteItemSize(itemId: string): StoreMutationCommand<EditableTapestryViewModel> {
+export function pasteItemSize(
+  items: OneOrMore<ItemDto>,
+): StoreMutationCommand<EditableTapestryViewModel> {
+  items = ensureArray(items)
   return (_, { store }) => {
     const size = store.get('copiedItemSize')
     if (!size) return
 
     store.dispatch(
-      updateItem(itemId, (item) => {
-        item.dto.size = resizeItem(item.dto, size)
-      }),
+      ...items.map((i) =>
+        updateItem(i.id, (item) => {
+          item.dto.size = resizeItem(item.dto, size)
+        }),
+      ),
     )
   }
 }

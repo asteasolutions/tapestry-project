@@ -1,10 +1,10 @@
-import { isEmpty } from 'lodash'
+import { isEmpty } from 'lodash-es'
 import { IconButton } from 'tapestry-core-client/src/components/lib/buttons/index'
 import { useKeyboardShortcuts } from 'tapestry-core-client/src/components/lib/hooks/use-keyboard-shortcuts'
 import { useObservable } from 'tapestry-core-client/src/components/lib/hooks/use-observable'
 import { ShortcutLabel } from 'tapestry-core-client/src/components/lib/shortcut-label'
 import { Toolbar } from 'tapestry-core-client/src/components/lib/toolbar/index'
-import { useFocusRectInset } from 'tapestry-core-client/src/components/tapestry/hooks/use-focus-rect-inset'
+import { useViewportObstruction } from 'tapestry-core-client/src/components/tapestry/hooks/use-viewport-obstruction'
 import { shortcutLabel } from 'tapestry-core-client/src/lib/keyboard-event'
 import { useTapestryData, useTapestryStore } from '../../../pages/tapestry/tapestry-providers'
 import { deletePresentationSteps } from '../../../pages/tapestry/view-model/store-commands/presentation-steps'
@@ -14,6 +14,7 @@ interface GlobalMenuProps {
 }
 
 export function UndoToolbar({ className }: GlobalMenuProps) {
+  const obstruction = useViewportObstruction({ clear: { top: true, bottom: true, left: true } })
   const store = useTapestryStore()
   const undoState = useObservable(store.undoStack)
   const { presentationOrderState, presentationSteps, interactionMode } = useTapestryData([
@@ -32,10 +33,9 @@ export function UndoToolbar({ className }: GlobalMenuProps) {
     [interactionMode, store],
   )
 
-  useFocusRectInset({ left: 72 })
-
   return (
     <Toolbar
+      wrapperRef={obstruction.ref}
       isOpen
       className={className}
       items={[

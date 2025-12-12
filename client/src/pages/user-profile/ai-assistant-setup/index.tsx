@@ -6,7 +6,7 @@ import styles from './styles.module.css'
 import { Text } from 'tapestry-core-client/src/components/lib/text/index'
 import { Button } from 'tapestry-core-client/src/components/lib/buttons/index'
 import { useState } from 'react'
-import { noop } from 'lodash'
+import { noop } from 'lodash-es'
 import { ApiKeyDialog } from '../api-key-dialog'
 import { ApiKeyList } from '../api-key-list'
 

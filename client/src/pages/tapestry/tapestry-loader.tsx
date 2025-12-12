@@ -1,4 +1,4 @@
-import { pick } from 'lodash'
+import { pick } from 'lodash-es'
 import { useEffect, useMemo } from 'react'
 import { Navigate, useNavigate } from 'react-router'
 import { useAsync } from 'tapestry-core-client/src/components/lib/hooks/use-async'

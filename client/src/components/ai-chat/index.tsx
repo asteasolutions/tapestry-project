@@ -21,7 +21,7 @@ import { APIError } from '../../errors'
 import { Button, IconButton } from 'tapestry-core-client/src/components/lib/buttons/index'
 import { Icon } from 'tapestry-core-client/src/components/lib/icon/index'
 import { ApiKeyDialog } from '../../pages/user-profile/api-key-dialog'
-import { noop } from 'lodash'
+import { noop } from 'lodash-es'
 import { Link } from 'react-router'
 import { config } from '../../config'
 import { useItemPicker } from '../item-picker/use-item-picker'
@@ -84,7 +84,7 @@ function AIChatError({
   onAddApiKey,
 }: {
   error: NonNullable<unknown>
-  onAddApiKey: () => void
+  onAddApiKey: (withGuide: boolean) => void
 }) {
   return error instanceof APIError && error.data.name === 'ConflictError' ? (
     <div className={styles.missingApiKeyContainer}>
@@ -97,8 +97,11 @@ function AIChatError({
         <br />
         in Google AI studio.
       </Text>
-      <Button icon="add" className={styles.addApiKeyButton} onClick={onAddApiKey}>
+      <Button icon="add" className={styles.addApiKeyButton} onClick={() => onAddApiKey(false)}>
         Add API Key
+      </Button>
+      <Button variant="link" onClick={() => onAddApiKey(true)}>
+        Need help?
       </Button>
     </div>
   ) : (
@@ -111,7 +114,7 @@ function AIChatError({
 export function AIChat({ tapestryId, canAttachItems, onPickingItems }: AIChatProps) {
   const { user } = useSession()
   const [lastUserMessageState, setLastUserMessageState] = useState<AIChatMessageState | undefined>()
-  const [isAddingApiKey, setIsAddingApiKey] = useState(false)
+  const [isAddingApiKey, setIsAddingApiKey] = useState<'guide' | 'input'>()
   const [attachedItemIds, setAttachedItemIds] = useState<string[]>([])
   const itemPicker = useItemPicker({
     onItemsChanged: setAttachedItemIds,
@@ -168,7 +171,12 @@ export function AIChat({ tapestryId, canAttachItems, onPickingItems }: AIChatPro
 
   return (
     <div className={clsx(styles.root, { [styles.hidden]: itemPicker.isOpen })}>
-      {!!error && <AIChatError error={error} onAddApiKey={() => setIsAddingApiKey(true)} />}
+      {!!error && (
+        <AIChatError
+          error={error}
+          onAddApiKey={(withGuide) => setIsAddingApiKey(withGuide ? 'guide' : 'input')}
+        />
+      )}
       {loading && <LoadingLogoIcon />}
       <div className={styles.chat}>
         {aiChat && user ? (
@@ -253,11 +261,12 @@ export function AIChat({ tapestryId, canAttachItems, onPickingItems }: AIChatPro
       {user && isAddingApiKey && (
         <ApiKeyDialog
           user={user}
-          onClose={() => setIsAddingApiKey(false)}
+          onClose={() => setIsAddingApiKey(undefined)}
           onSubmitted={() => {
-            setIsAddingApiKey(false)
+            setIsAddingApiKey(undefined)
             reload(noop)
           }}
+          showGuide={isAddingApiKey === 'guide'}
         />
       )}
       {itemPicker.ui}

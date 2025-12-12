@@ -7,7 +7,7 @@ import {
   TypedEvent,
 } from 'tapestry-core-client/src/lib/events/typed-events'
 import { createEventRegistry } from 'tapestry-core-client/src/lib/events/event-registry'
-import { keys } from 'lodash'
+import { keys } from 'lodash-es'
 
 type SignallerConnectedEvent = TypedEvent<
   'signaller-connected',

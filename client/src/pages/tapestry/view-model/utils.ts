@@ -1,5 +1,5 @@
 import { Patch, WritableDraft } from 'immer'
-import { chunk, zip } from 'lodash'
+import { chunk, zip } from 'lodash-es'
 import {
   getBoundingRectangle,
   MULTISELECT_RECTANGLE_PADDING,

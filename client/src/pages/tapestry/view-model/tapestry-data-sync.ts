@@ -1,5 +1,5 @@
 import { Patch } from 'immer'
-import { compact } from 'lodash'
+import { compact } from 'lodash-es'
 import { createEventRegistry } from 'tapestry-core-client/src/lib/events/event-registry'
 import { ChangeEvent } from 'tapestry-core-client/src/lib/events/observable'
 import { EventTypes } from 'tapestry-core-client/src/lib/events/typed-events'

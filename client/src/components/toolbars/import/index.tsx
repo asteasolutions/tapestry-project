@@ -8,7 +8,7 @@ import { ShortcutLabel } from 'tapestry-core-client/src/components/lib/shortcut-
 import { SubmitOnBlurInput } from 'tapestry-core-client/src/components/lib/submit-on-blur-input/index'
 import { SubmenuIds } from 'tapestry-core-client/src/components/lib/toolbar'
 import { MenuItems, Toolbar } from 'tapestry-core-client/src/components/lib/toolbar/index'
-import { useFocusRectInset } from 'tapestry-core-client/src/components/tapestry/hooks/use-focus-rect-inset'
+import { useViewportObstruction } from 'tapestry-core-client/src/components/tapestry/hooks/use-viewport-obstruction'
 import { shortcutLabel } from 'tapestry-core-client/src/lib/keyboard-event'
 import { MediaItemSource } from '../../../lib/media'
 import { createActionButtonItem, createTextItem } from '../../../model/data/utils'
@@ -60,6 +60,7 @@ interface GlobalMenuProps {
 }
 
 export function ImportToolbar({ className }: GlobalMenuProps) {
+  const obstruction = useViewportObstruction({ clear: { top: true, bottom: true, left: true } })
   const uploadButtonRef = useRef<HTMLButtonElement>(null)
   const tapestryId = useTapestryData('id')
   const dispatch = useDispatch()
@@ -78,8 +79,6 @@ export function ImportToolbar({ className }: GlobalMenuProps) {
     'meta + KeyK | KeyK': () => selectSubmenu('add-link'),
     KeyR: openMediaCaptureDialog,
   })
-
-  useFocusRectInset({ left: 72 })
 
   const addToTapestry = useAddToTapestry()
 
@@ -105,7 +104,7 @@ export function ImportToolbar({ className }: GlobalMenuProps) {
           <IconButton
             aria-label="Add link"
             icon="add_link"
-            onClick={() => selectSubmenu('add-link', true)}
+            onClick={() => selectSubmenu('add-link')}
           />
         ),
         tooltip: {
@@ -195,11 +194,7 @@ export function ImportToolbar({ className }: GlobalMenuProps) {
       id: 'theme',
       ui: {
         element: (
-          <IconButton
-            icon="palette"
-            aria-label="Theme"
-            onClick={() => selectSubmenu('theme', true)}
-          />
+          <IconButton icon="palette" aria-label="Theme" onClick={() => selectSubmenu('theme')} />
         ),
         tooltip: { side: 'right', children: 'Background' },
       },
@@ -212,6 +207,7 @@ export function ImportToolbar({ className }: GlobalMenuProps) {
   return (
     <>
       <Toolbar
+        wrapperRef={obstruction.ref}
         isOpen
         className={className}
         selectedSubmenu={selectedSubmenu}

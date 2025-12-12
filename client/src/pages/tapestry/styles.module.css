@@ -26,15 +26,12 @@
     user-select: none;
     -webkit-user-select: none;
 
-    .tapestry-element-container {
-      pointer-events: auto;
-
-      &.inactive,
-      &:has(:global([data-component-type='rel'])),
-      :global(.pointer-action:not(.pointer-action-hover)) > & {
-        pointer-events: none;
-      }
-    }
+    /* This is used in order to force the browser (Safari in particular)
+     * to draw a compositing layer for the dom-container. Otherwise when the dom-container
+     * goes out of the viewport Safari starts drawing layers for every single item in the viewport
+     * which causes crashes on iPhones
+     */
+    will-change: transform;
   }
 
   :global(#item-picker) {
@@ -92,11 +89,19 @@
 }
 
 .hidden {
-  visibility: hidden;
+  /* This used to be visiblity: hidden;, however it creates an extra drawing layer for Safari.
+   * The display: none; works in conjunction with a `queueResize` invocation in PresentationOrderController::init,
+   * otherwise the canvas is not properly sized
+   */
+  display: none;
 }
 
 :global(#titlebar-action-buttons) {
   display: flex;
+
+  &:empty {
+    display: none;
+  }
 
   :global(.titlebar-action-done) {
     --bg-color: var(--color-success-300);

@@ -1,8 +1,8 @@
 import '@dotenvx/dotenvx/config'
 import z from 'zod/v4'
 import { deepFreeze } from 'tapestry-core/src/utils.js'
+import { NullishInt, Port } from 'tapestry-core/src/data-format/schemas/common'
 
-const port = z.coerce.number<number>().int().min(0).max(65535)
 const checkTrue = z
   .string()
   .transform((v) => v === 'true')
@@ -13,7 +13,7 @@ export const config = deepFreeze(
     .object({
       // DB
       DB_HOST: z.string(),
-      DB_PORT: port.default(5432),
+      DB_PORT: Port(5432),
       DB_NAME: z.string(),
       DB_USER: z.string(),
       DB_PASS: z.string(),
@@ -23,14 +23,14 @@ export const config = deepFreeze(
 
       // Server
       NODE_ENV: z.enum(['production', 'development', 'test']).catch('development'),
-      SERVER_PORT: port.default(3000),
+      SERVER_PORT: Port(3000),
       SECRET_KEY: z.string(),
       GOOGLE_CLIENT_ID: z.string().default(''),
       IA_ACCOUNT_ID: z.string().default(''),
       IA_SECRET: z.string().default(''),
-      WBM_RESPONSE_CACHE_DURATION: z.coerce.number().default(3600), // one hour in seconds
-      ASSET_READ_URL_EXPIRES_IN: z.coerce.number().default(604_800), // on week in seconds
-      ASSET_READ_URL_VALIDATION_EXPIRES_IN: z.coerce.number().default(600),
+      WBM_RESPONSE_CACHE_DURATION: NullishInt(3600), // one hour in seconds
+      ASSET_READ_URL_EXPIRES_IN: NullishInt(604_800), // on week in seconds
+      ASSET_READ_URL_VALIDATION_EXPIRES_IN: NullishInt(600),
       EXTERNAL_SERVER_URL: z.string(),
       VIEWER_URL: z.string(),
       SECURE_COOKIE: z
@@ -48,17 +48,17 @@ export const config = deepFreeze(
 
       // Redis
       REDIS_HOST: z.string().default('localhost'),
-      REDIS_PORT: port.default(6379),
+      REDIS_PORT: Port(6379),
       REDIS_USE_TLS: checkTrue,
 
       // Worker
       PUPPETEER_ARGS: z.string().default(''),
       S3_CLEAN_UP_CRON_PATTERN: z.string().default('0 0 * * *'),
-      TAPESTRY_THUMBNAIL_GENERATION_DELAY: z.coerce.number().default(150_000),
+      TAPESTRY_THUMBNAIL_GENERATION_DELAY: NullishInt(150_000),
       // 5 minute timeout may look too long but some larger tapestries with a lot of iframes load slowly
       // so we better wait for a while in order to take a nicer screenshot.
-      TAPESTRY_THUMBNAIL_GENERATION_TIMEOUT: z.coerce.number().default(300_000),
-      ITEM_THUMBNAIL_GENERATION_DELAY: z.coerce.number().default(120_000),
+      TAPESTRY_THUMBNAIL_GENERATION_TIMEOUT: NullishInt(300_000),
+      ITEM_THUMBNAIL_GENERATION_DELAY: NullishInt(120_000),
 
       // Queue monitoring
       JOBS_ADMIN_NAME: z.string().nullish(),

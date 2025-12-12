@@ -6,6 +6,7 @@ import { useObservable } from 'tapestry-core-client/src/components/lib/hooks/use
 import { Icon } from 'tapestry-core-client/src/components/lib/icon/index'
 import { LoadingSpinner } from 'tapestry-core-client/src/components/lib/loading-spinner/index'
 import { Text } from 'tapestry-core-client/src/components/lib/text/index'
+import { SimpleMenuItem } from 'tapestry-core-client/src/components/lib/toolbar'
 import { WebpageLoader } from 'tapestry-core-client/src/components/tapestry/items/webpage/loader'
 import { Observable } from 'tapestry-core-client/src/lib/events/observable'
 import { determineWebpageType, WEB_SOURCE_PARSERS } from 'tapestry-core/src/web-sources'
@@ -16,6 +17,7 @@ import { fetchWBMSnapshots, WBMSnapshotWithDate } from '../../../../lib/internet
 import { useDispatch, useTapestryData } from '../../../../pages/tapestry/tapestry-providers'
 import { updateItem } from '../../../../pages/tapestry/view-model/store-commands/items'
 import { Select } from '../../../select'
+import { buildToolbarMenu } from '../../item-toolbar'
 import { useItemToolbar } from '../../item-toolbar/use-item-toolbar'
 import { TapestryItem } from '../tapestry-item'
 
@@ -117,10 +119,24 @@ export const WaybackPageItem = memo(({ id }: TapestryItemProps) => {
     value: timestamp,
     label: <Text variant="bodyXs">{intlFormat(date, { dateStyle: 'medium' })}</Text>,
   }))
-  const { toolbar, closeSubmenu } = useItemToolbar(id, {
-    items: [
-      ...(isEditMode
-        ? ([
+  const refreshButton: SimpleMenuItem = {
+    element: (
+      <IconButton
+        icon="refresh"
+        aria-label="Refresh this webpage"
+        onClick={() => {
+          setLoading(true)
+          setWebpageReloadIndex((x) => x + 1)
+        }}
+      />
+    ),
+    tooltip: { side: 'bottom', children: 'Refresh this webpage' },
+  }
+  const controls = buildToolbarMenu({ dto, isEdit: isEditMode })
+  const { toolbar } = useItemToolbar(id, {
+    items: (ctrls) => {
+      return isEditMode
+        ? [
             showSnapshots ? (
               <Select
                 options={snapshotOptions}
@@ -136,7 +152,7 @@ export const WaybackPageItem = memo(({ id }: TapestryItemProps) => {
                     }),
                   )
                 }
-                onMenuOpen={() => closeSubmenu()}
+                onMenuOpen={() => ctrls.closeSubmenu()}
                 value={timestamp ?? undefined}
               />
             ) : !snapshotsInitiallyLoaded ? (
@@ -163,22 +179,12 @@ export const WaybackPageItem = memo(({ id }: TapestryItemProps) => {
               tooltip: { side: 'bottom', children: 'Switch to original webpage' },
             },
             'separator',
-          ] as const)
-        : []),
-      {
-        element: (
-          <IconButton
-            icon="refresh"
-            aria-label="Refresh this webpage"
-            onClick={() => {
-              setLoading(true)
-              setWebpageReloadIndex((x) => x + 1)
-            }}
-          />
-        ),
-        tooltip: { side: 'bottom', children: 'Refresh this webpage' },
-      },
-    ],
+            refreshButton,
+            'separator',
+            ...controls,
+          ]
+        : [refreshButton, 'separator', ...controls]
+    },
   })
 
   const missingSnapshotsMessage =

@@ -1,8 +1,8 @@
 import {
-  DirectionalOffsets,
   LinearTransform,
   Rectangle,
   Size,
+  ViewportObstruction,
 } from 'tapestry-core/src/lib/geometry.js'
 import { Group } from 'tapestry-core/src/data-format/schemas/group.js'
 import { Item } from 'tapestry-core/src/data-format/schemas/item.js'
@@ -20,7 +20,7 @@ export const MAX_INITIAL_SCALE = 1
 export interface Viewport {
   readonly transform: LinearTransform
   readonly size: Size
-  readonly focusRectInsets: Record<string, DirectionalOffsets>
+  readonly obstructions: IdMap<ViewportObstruction>
   readonly lastUpdateTimestamp?: number
   readonly ready: boolean
   readonly isZoomingLocked?: boolean

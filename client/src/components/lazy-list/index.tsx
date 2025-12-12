@@ -1,7 +1,7 @@
 import clsx from 'clsx'
 import { ReactNode, useEffect, useRef, useState } from 'react'
 import { useObservable } from 'tapestry-core-client/src/components/lib/hooks/use-observable'
-import { compact, countBy, entries, maxBy } from 'lodash'
+import { compact, countBy, entries, maxBy } from 'lodash-es'
 import { LazyListLoader, LazyListLoaderConfig, LazyListRequestItems } from './lazy-list-loader'
 // styles.css contains only global styles and if it is imported as a CSS module, Vite discards it during build.
 import './styles.css'

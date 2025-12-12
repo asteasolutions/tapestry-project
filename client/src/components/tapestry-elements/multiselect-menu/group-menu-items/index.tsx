@@ -1,7 +1,7 @@
 import { GroupDto } from 'tapestry-shared/src/data-transfer/resources/dtos/group'
 import { ColorButton, IconButton } from 'tapestry-core-client/src/components/lib/buttons/index'
 import { splitInRows } from 'tapestry-core/src/lib/array'
-import { toPairs } from 'lodash'
+import { toPairs } from 'lodash-es'
 import { Checkbox } from 'tapestry-core-client/src/components/lib/checkbox'
 import { ColorPickerButton } from 'tapestry-core-client/src/components/lib/buttons/color-picker-button'
 import { isOpaque, LiteralColor } from 'tapestry-core-client/src/theme/types'
@@ -12,11 +12,15 @@ import { COLOR_PRESETS, TRANSPARENT } from 'tapestry-core-client/src/theme'
 
 const ALPHA_VALUE = '1a'
 
+const COLOR_SUBMENU_ID = 'group_color'
+export type ColorSubmenu = typeof COLOR_SUBMENU_ID
+
 function getTransparentColor(color: LiteralColor): LiteralColor {
   return color.length === 7 ? `${color}${ALPHA_VALUE}` : color
 }
 interface GroupMenuActions {
-  selectSubmenu: (submenu: string) => void
+  selectSubmenu: (submenu: ColorSubmenu) => void
+  selectedSubmenu: string
   onGroupColorChange: (color: LiteralColor | null) => void
   onUngroupSelection: () => void
   onSetHasBackground: (hasBackground: boolean) => void
@@ -27,6 +31,7 @@ export function getGroupMenuItems(
   group: GroupDto,
   {
     selectSubmenu,
+    selectedSubmenu,
     onGroupColorChange,
     onUngroupSelection,
     onSetHasBackground,
@@ -48,12 +53,13 @@ export function getGroupMenuItems(
     },
     'separator',
     {
-      id: 'group-color',
+      id: COLOR_SUBMENU_ID,
       ui: (
         <ColorButton
           aria-label="Change group color"
           color={group.color ?? TRANSPARENT}
-          onClick={() => selectSubmenu('group-color')}
+          onClick={() => selectSubmenu(COLOR_SUBMENU_ID)}
+          isSelected={selectedSubmenu === COLOR_SUBMENU_ID}
           size={22}
           tooltip={{ side: 'bottom', children: 'Group color' }}
           style={{ '--opaque-color': opaqueColor ?? TRANSPARENT } as React.CSSProperties}

@@ -1,4 +1,4 @@
-import { compact, omit, partition, set } from 'lodash'
+import { compact, omit, partition, set } from 'lodash-es'
 import { blobUrlToFileMap } from 'tapestry-core-client/src/components/lib/hooks/use-media-source'
 import { getFile, scan } from 'tapestry-core-client/src/lib/file'
 import { isBlobURL } from 'tapestry-core-client/src/view-model/utils'

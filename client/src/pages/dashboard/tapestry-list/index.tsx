@@ -1,4 +1,4 @@
-import { times } from 'lodash'
+import { times } from 'lodash-es'
 import { LazyList } from '../../../components/lazy-list'
 import { SkeletonLoader } from '../skeleton-loader'
 import { TapestryCard } from '../tapestry-card'

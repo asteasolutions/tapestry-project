@@ -1,6 +1,6 @@
 import { Patch, produce } from 'immer'
 import { BaseUndoStack } from '.'
-import { compact } from 'lodash'
+import { compact } from 'lodash-es'
 import { isItemViewModel, isRelViewModel } from 'tapestry-core-client/src/view-model/utils'
 import { GroupViewModel } from 'tapestry-core-client/src/view-model'
 import { EditableTapestryElementViewModel, EditableTapestryViewModel } from '..'

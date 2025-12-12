@@ -1,7 +1,7 @@
 import { Patch } from 'immer'
 import { BaseUndoStack } from '.'
 import { EditableTapestryViewModel } from '..'
-import { compact, get } from 'lodash'
+import { compact, get } from 'lodash-es'
 import { UndoStackPatchHandler } from 'tapestry-core-client/src/lib/store/index'
 
 /**

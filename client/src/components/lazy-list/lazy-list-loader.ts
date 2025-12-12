@@ -1,5 +1,5 @@
 import { ListResponseDto } from 'tapestry-shared/src/data-transfer/resources/dtos/common'
-import { debounce, DebouncedFunc } from 'lodash'
+import { debounce, DebouncedFunc } from 'lodash-es'
 import { Draft } from 'immer'
 import { Observable } from 'tapestry-core-client/src/lib/events/observable'
 import { CanceledError } from 'axios'

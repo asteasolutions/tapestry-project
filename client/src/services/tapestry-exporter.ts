@@ -9,7 +9,7 @@ import { BlobWriter, TextReader, ZipWriter, BlobReader, Reader } from '@zip.js/z
 import { createDraft, finishDraft } from 'immer'
 import { fileExtension, hasThumbnail, isMediaItem } from 'tapestry-core/src/utils'
 import axios, { AxiosError } from 'axios'
-import { sumBy } from 'lodash'
+import { sumBy } from 'lodash-es'
 import { listAll, resource } from './rest-resources'
 
 const FILE_PATH_HEADER = 'File-Path-Header'

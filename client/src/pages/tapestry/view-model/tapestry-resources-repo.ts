@@ -28,7 +28,7 @@ import {
   RelUpdateDto,
 } from 'tapestry-shared/src/data-transfer/resources/dtos/rel'
 import { idFilter, listAll, resource, RESTMethodOptions } from '../../../services/rest-resources'
-import { isEmpty, isEqual } from 'lodash'
+import { isEmpty, isEqual } from 'lodash-es'
 import {
   BaseResourceDto,
   BatchMutationDto,

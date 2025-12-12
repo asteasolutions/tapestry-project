@@ -1,4 +1,4 @@
-import { kebabCase, omit } from 'lodash'
+import { kebabCase, omit } from 'lodash-es'
 import { memo, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import {
@@ -16,6 +16,7 @@ import { TapestryItemProps } from '..'
 import { useDispatch, useTapestryData } from '../../../../pages/tapestry/tapestry-providers'
 import { updateItem } from '../../../../pages/tapestry/view-model/store-commands/items'
 import { userSettings } from '../../../../services/user-settings'
+import { buildToolbarMenu } from '../../item-toolbar'
 import { useItemToolbar } from '../../item-toolbar/use-item-toolbar'
 import { TapestryItem } from '../tapestry-item'
 import { LinkTooltip, LinkTooltipProps } from './link-tooltip'
@@ -112,9 +113,9 @@ export const TextItem = memo(({ id }: TapestryItemProps) => {
     },
   })
 
+  const controls = buildToolbarMenu({ dto, isEdit: isEditMode, omit: { title: true } })
+
   const { selectSubmenu, toolbar, closeSubmenu } = useItemToolbar(id, {
-    hasTitle: false,
-    hideCommon: showFormatToolbar,
     items: isEditMode
       ? [
           {
@@ -126,9 +127,10 @@ export const TextItem = memo(({ id }: TapestryItemProps) => {
             ),
             tooltip: tooltip(showFormatToolbar),
           },
-          ...(showFormatToolbar ? formattingControls : []),
+          'separator',
+          ...(showFormatToolbar ? formattingControls : controls),
         ]
-      : [],
+      : controls,
   })
 
   return (
