@@ -17,10 +17,6 @@
   }
 }
 
-.error {
-  color: var(--theme-text-negative);
-}
-
 .input-label {
   display: flex;
   flex-direction: column;

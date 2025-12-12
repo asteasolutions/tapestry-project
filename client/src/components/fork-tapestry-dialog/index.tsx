@@ -10,6 +10,7 @@ import { TapestryDialog, TapestryInfo } from '../tapestry-dialog'
 import { JSX, useState } from 'react'
 import { getCopyName } from 'tapestry-core/src/utils'
 import { Icon } from 'tapestry-core-client/src/components/lib/icon/index'
+import { useAsyncAction } from 'tapestry-core-client/src/components/lib/hooks/use-async-action'
 
 export const forkStatusIcons: Record<TapestryCreateJobDto['status'], JSX.Element> = {
   pending: <Icon icon="pending" />,
@@ -71,20 +72,25 @@ interface ForkTapestryDialogProps {
 
 export function ForkTapestryDialog({ onClose, tapestryId, tapestryInfo }: ForkTapestryDialogProps) {
   const [jobId, setJobId] = useState<string>()
+  const { trigger: fork, error } = useAsyncAction(async ({ signal }, info: TapestryInfo) => {
+    const { id } = await resource('tapestryCreateJob').create(
+      {
+        type: 'fork',
+        parentId: tapestryId,
+        ...info,
+      },
+      undefined,
+      { signal },
+    )
+    setJobId(id)
+  })
 
   return (
     <>
       {!jobId && (
         <TapestryDialog
           title={`Duplicate ${tapestryInfo.title}`}
-          handleSubmit={async (newTapestryInfo) => {
-            const { id } = await resource('tapestryCreateJob').create({
-              type: 'fork',
-              parentId: tapestryId,
-              ...newTapestryInfo,
-            })
-            setJobId(id)
-          }}
+          handleSubmit={fork}
           tapestryInfo={{
             title: getCopyName(tapestryInfo.title),
             description: tapestryInfo.description,
@@ -92,6 +98,7 @@ export function ForkTapestryDialog({ onClose, tapestryId, tapestryInfo }: ForkTa
           submitText="Duplicate"
           onCancel={onClose}
           hideSlug
+          error={error}
         />
       )}
       {jobId && <ForkProcessDialog jobId={jobId} onClose={onClose} />}

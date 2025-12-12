@@ -1,5 +1,5 @@
 import clsx from 'clsx'
-import { useEffect, useImperativeHandle, useRef, useState } from 'react'
+import { RefObject, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { Icon } from 'tapestry-core-client/src/components/lib/icon/index'
 import { useFocusElement } from 'tapestry-core-client/src/components/tapestry/hooks/use-focus-element'
 import { iterateParents, matchHighlight, MatchRanges } from 'tapestry-core-client/src/lib/dom'
@@ -27,6 +27,18 @@ export function elementIdFromLink(
   const element = elementId && (items[elementId] ?? groups[elementId])
   const currentTapestryPath = `${location.origin}${location.pathname}`.replace(/(\/edit)?$/, '')
   return link.startsWith(currentTapestryPath) && !!element ? elementId : null
+}
+
+function useHasScroll(editorRef: RefObject<RichTextEditorApi | undefined>) {
+  const [hasScroll, setHasScroll] = useState(compute)
+  function compute() {
+    const editor = editorRef.current
+    if (!editor) {
+      return false
+    }
+    return editor.editor().view.dom.scrollHeight > editor.editor().view.dom.clientHeight
+  }
+  return { hasScroll, check: () => setHasScroll(compute()) }
 }
 
 export interface TextItemViewerProps extends Partial<RichTextEditorProps> {
@@ -96,11 +108,7 @@ export function TextItemViewer({
     }
   }, [isInteractiveElement, wasInteractiveElement])
 
-  const showScrollIndicator =
-    !isInteractiveElement &&
-    editorAPI.current &&
-    editorAPI.current.editor().view.dom.scrollHeight >
-      editorAPI.current.editor().view.dom.clientHeight
+  const { hasScroll, check } = useHasScroll(editorAPI)
 
   // TODO: Updating tiptap will allow us to render a router Link in the editor
   // instead of manually handling link clicks
@@ -136,6 +144,7 @@ export function TextItemViewer({
               setCurrentSearchTerm(null)
             }
             events?.onCreate?.(editor)
+            check()
           },
           onSelectionChanged: (state) => {
             setSelection(state)
@@ -159,7 +168,9 @@ export function TextItemViewer({
         }}
         {...rteProps}
       />
-      {showScrollIndicator && <Icon icon="unfold_more" className={styles.scrollIndicator} />}
+      {!isInteractiveElement && hasScroll && (
+        <Icon icon="unfold_more" className={styles.scrollIndicator} />
+      )}
     </>
   )
 }

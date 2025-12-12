@@ -15,7 +15,7 @@ interface AIAssistantSetupProps {
 }
 
 export function AIAssistantSetup({ user }: AIAssistantSetupProps) {
-  const [isAdding, setIsAdding] = useState(false)
+  const [isAdding, setIsAdding] = useState<'guide' | 'input'>()
 
   const {
     data: secrets,
@@ -30,12 +30,12 @@ export function AIAssistantSetup({ user }: AIAssistantSetupProps) {
     [user.id],
   )
 
-  function openDialog() {
-    setIsAdding(true)
+  function openDialog(state: NonNullable<typeof isAdding>) {
+    setIsAdding(state)
   }
 
   function closeDialog() {
-    setIsAdding(false)
+    setIsAdding(undefined)
   }
 
   return (
@@ -46,8 +46,11 @@ export function AIAssistantSetup({ user }: AIAssistantSetupProps) {
           <Text variant="h4" className={styles.emptyMessage}>
             No API Keys found
           </Text>
-          <Button icon="add" onClick={openDialog}>
+          <Button icon="add" onClick={() => openDialog('input')}>
             Add new
+          </Button>
+          <Button variant="link" onClick={() => openDialog('guide')}>
+            Need help?
           </Button>
         </div>
       )}
@@ -69,7 +72,7 @@ export function AIAssistantSetup({ user }: AIAssistantSetupProps) {
               <div className={styles.buttons}>
                 {/* Currently a user can have at most one Gemini API key. Once we start supporting other AI providers,
                 users will be able to add more keys. */}
-                <Button icon="add" onClick={openDialog} disabled>
+                <Button icon="add" onClick={() => openDialog('input')} disabled>
                   Add new key
                 </Button>
               </div>
@@ -81,6 +84,7 @@ export function AIAssistantSetup({ user }: AIAssistantSetupProps) {
         <ApiKeyDialog
           user={user}
           onClose={closeDialog}
+          showGuide={isAdding === 'guide'}
           onSubmitted={() => {
             closeDialog()
             reload(noop)

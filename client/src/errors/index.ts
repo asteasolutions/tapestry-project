@@ -42,5 +42,8 @@ export function getErrorMessage(error: unknown, name?: string, overrides?: Parti
         return overrides?.[code] ?? FIELD_ERROR_CODE_MESSAGES[code]
       }
     }
+    if (error.data.name === 'ForbiddenError' && !name) {
+      return "You don't have permissions to perform this action"
+    }
   }
 }
