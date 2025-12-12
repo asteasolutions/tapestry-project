@@ -1,18 +1,23 @@
+// <<<<<<< HEAD
+// import { omit, sample } from 'lodash-es'
+// import { ORIGIN, Point } from 'tapestry-core/src/lib/geometry'
+// =======
 import { omit, sample } from 'lodash-es'
-import { ORIGIN, Point } from 'tapestry-core/src/lib/geometry'
+import { maxEmptyArea, ORIGIN, Point, Rectangle } from 'tapestry-core/src/lib/geometry'
+// >>>>>>> main
 import { TapestryDto } from 'tapestry-shared/src/data-transfer/resources/dtos/tapestry'
 import { EditableTapestryViewModel, InteractionMode, IAImport, convertCommand } from '..'
 import { StoreMutationCommand } from 'tapestry-core-client/src/lib/store/index'
 import { EditableTapestryProps } from '../../../../model/data/utils'
-import { getMaxInset, positionAtViewport } from 'tapestry-core-client/src/view-model/utils'
+import { positionAtViewport } from 'tapestry-core-client/src/view-model/utils'
 import { idMapToArray } from 'tapestry-core/src/utils'
 import { COLLABORATOR_COLORS } from 'tapestry-core-client/src/theme'
 import { PublicUserProfileDto } from 'tapestry-shared/src/data-transfer/resources/dtos/user'
 import * as baseCommands from 'tapestry-core-client/src/view-model/store-commands/tapestry'
 
-export const addFocusRectInset = convertCommand(baseCommands.addFocusRectInset)
+export const addViewportObstruction = convertCommand(baseCommands.addViewportObstruction)
 export const deselectAll = convertCommand(baseCommands.deselectAll)
-export const removeFocusRectInset = convertCommand(baseCommands.removeFocusRectInset)
+export const removeViewportObstruction = convertCommand(baseCommands.removeViewportObstruction)
 export const selectAll = convertCommand(baseCommands.selectAll)
 export const selectGroups = convertCommand(baseCommands.selectGroups)
 export const selectItem = convertCommand(baseCommands.selectItem)
@@ -39,15 +44,18 @@ export function updateTapestry(
 export function setViewAsStart(): StoreMutationCommand<EditableTapestryViewModel> {
   return (model) => {
     const { viewport } = model
-    const { top, right, bottom, left } = getMaxInset(Object.values(viewport.focusRectInsets))
+    const visibleArea = maxEmptyArea(
+      new Rectangle(ORIGIN, viewport.size),
+      idMapToArray(viewport.obstructions),
+    )!
     model.startView = {
       position: positionAtViewport(viewport, ORIGIN, {
-        dx: left / viewport.transform.scale,
-        dy: top / viewport.transform.scale,
+        dx: visibleArea.left / viewport.transform.scale,
+        dy: visibleArea.top / viewport.transform.scale,
       }),
       size: {
-        width: (viewport.size.width - (left + right)) / viewport.transform.scale,
-        height: (viewport.size.height - (top + bottom)) / viewport.transform.scale,
+        width: visibleArea.width / viewport.transform.scale,
+        height: visibleArea.height / viewport.transform.scale,
       },
     }
   }

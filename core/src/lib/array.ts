@@ -41,3 +41,10 @@ export function toggleElement<T extends { id: unknown }>(array: T[], element: T)
   }
   return res
 }
+
+export function circularShift<T>(array: readonly T[], n: number) {
+  const shift = n % array.length
+  return array.length < 2 || !shift
+    ? [...array]
+    : [...array.slice(-shift), ...array.slice(0, -shift)]
+}

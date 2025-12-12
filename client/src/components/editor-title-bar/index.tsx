@@ -10,7 +10,7 @@ import { Icon } from 'tapestry-core-client/src/components/lib/icon/index'
 import { SvgIcon } from 'tapestry-core-client/src/components/lib/svg-icon/index'
 import { SubmenuIds } from 'tapestry-core-client/src/components/lib/toolbar'
 import { MenuItems, Toolbar } from 'tapestry-core-client/src/components/lib/toolbar/index'
-import { useFocusRectInset } from 'tapestry-core-client/src/components/tapestry/hooks/use-focus-rect-inset'
+import { useViewportObstruction } from 'tapestry-core-client/src/components/tapestry/hooks/use-viewport-obstruction'
 import { isMobile } from 'tapestry-core-client/src/lib/user-agent'
 import Logo from '../../assets/icons/logo.svg?react'
 import { useTapestryBookmark } from '../../hooks/use-tapestry-bookmark'
@@ -33,6 +33,7 @@ import { PasteButton } from './paste-button'
 import styles from './styles.module.css'
 
 export function EditorTitleBar() {
+  const obstruction = useViewportObstruction({ clear: { left: true, top: true } })
   const {
     title,
     slug,
@@ -70,8 +71,6 @@ export function EditorTitleBar() {
 
   const navigate = useNavigate()
 
-  useFocusRectInset({ top: 64 })
-
   const items = [
     {
       element: (
@@ -80,7 +79,6 @@ export function EditorTitleBar() {
         </Link>
       ),
       tooltip: { side: 'bottom', children: 'Go to tapestries', offset: -8 },
-      stretch: true,
     },
     !hideEditControls && {
       id: 'more',
@@ -89,7 +87,7 @@ export function EditorTitleBar() {
           <IconButton
             icon="more_vert"
             aria-label="More actions"
-            onClick={() => selectSubmenu('more', true)}
+            onClick={() => selectSubmenu('more')}
             isActive={selectedSubmenu.startsWith('more')}
             style={{ marginLeft: '8px' }}
           />
@@ -166,7 +164,7 @@ export function EditorTitleBar() {
             dispatch(
               setSnackbar(
                 isBookmarked
-                  ? 'Tapestry removed from "Bookmakrs"'
+                  ? 'Tapestry removed from "Bookmarks"'
                   : 'Tapestry added to "Bookmarks"',
               ),
             )
@@ -192,7 +190,7 @@ export function EditorTitleBar() {
   ] as const satisfies MenuItems
 
   return (
-    <div className={styles.root}>
+    <div className={styles.root} ref={obstruction.ref}>
       <Toolbar isOpen selectedSubmenu={selectedSubmenu} onFocusOut={closeSubmenu} items={items} />
       <div id="titlebar-action-buttons">
         {!!presentationOrderState && (

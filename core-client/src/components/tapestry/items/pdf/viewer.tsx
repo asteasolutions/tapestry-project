@@ -1,5 +1,5 @@
 import clsx from 'clsx'
-import { times } from 'lodash-es'
+import { clamp, times } from 'lodash-es'
 import {
   Ref,
   RefObject,
@@ -26,6 +26,7 @@ import { Icon } from '../../../lib/icon/index'
 import { LoadingSpinner } from '../../../lib/loading-spinner/index'
 import { ItemPlaceholder } from '../../item-placeholder'
 import styles from './styles.module.css'
+import { useStartPage } from '../../hooks/use-start-page'
 
 const PDF_OPTIONS: Options = {
   disableStream: true,
@@ -92,7 +93,8 @@ export function PdfItemViewer({ id, onDocumentLoaded, onPageChanged, apiRef }: P
   const isInteractive = useStoreData('interactiveElement')?.modelId === id
   const hasBeenActive = useStoreData(`items.${id}.hasBeenActive`)
   const [scrollTop, setScrollTop] = useState(0)
-  const [initialPage] = useState((dto.defaultPage ?? 1) - 1)
+  const startPage = useStartPage(id)
+  const [initialPage] = useState(startPage ?? (dto.defaultPage ?? 1) - 1)
 
   const width = useDebounced(dto.size.width, 200)
   const { data: pages } = usePageHeights(pdfDocument, width)
@@ -109,7 +111,11 @@ export function PdfItemViewer({ id, onDocumentLoaded, onPageChanged, apiRef }: P
     (page: number, behavior: ScrollOptions['behavior'] = 'smooth') =>
       pdfLoaded &&
       documentRef.current?.scrollTo({
-        top: (documentRef.current.children[page] as HTMLElement).offsetTop,
+        top: (
+          documentRef.current.children[
+            clamp(page, 0, documentRef.current.children.length - 1)
+          ] as HTMLElement
+        ).offsetTop,
         behavior,
       }),
     [pdfLoaded],

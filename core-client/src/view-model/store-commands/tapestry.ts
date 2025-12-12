@@ -1,4 +1,4 @@
-import { Rectangle, DirectionalOffsets } from 'tapestry-core/src/lib/geometry.js'
+import { Rectangle, ViewportObstruction } from 'tapestry-core/src/lib/geometry.js'
 import {
   TapestryElementRef,
   PointerInteraction,
@@ -167,18 +167,18 @@ export function setSnackbar(
   }
 }
 
-export function addFocusRectInset(
+export function addViewportObstruction(
   id: string,
-  inset: DirectionalOffsets,
+  obstruction: ViewportObstruction,
 ): StoreMutationCommand<TapestryViewModel> {
   return (model) => {
-    model.viewport.focusRectInsets[id] = inset
+    model.viewport.obstructions[id] = obstruction
   }
 }
 
-export function removeFocusRectInset(id: string): StoreMutationCommand<TapestryViewModel> {
+export function removeViewportObstruction(id: string): StoreMutationCommand<TapestryViewModel> {
   return (model) => {
-    delete model.viewport.focusRectInsets[id]
+    delete model.viewport.obstructions[id]
   }
 }
 

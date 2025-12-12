@@ -1,6 +1,6 @@
 import { Tween, Easing } from '@tweenjs/tween.js'
 import { AnimationOptions, tween } from '../tweening.js'
-import { TapestryViewModel, ZOOM_STEP, MAX_INITIAL_SCALE } from '../index.js'
+import { TapestryViewModel, ZOOM_STEP, MAX_INITIAL_SCALE, MAX_SCALE } from '../index.js'
 import {
   LinearTransform,
   Vector,
@@ -13,6 +13,7 @@ import {
   vector,
   mul,
   IDENTITY_TRANSFORM,
+  ORIGIN,
 } from 'tapestry-core/src/lib/geometry.js'
 import { StoreMutationCommand } from '../../lib/store/index.js'
 import {
@@ -39,6 +40,7 @@ const CONTINUOUS_ZOOM_ANIMATION_OPTIONS: AnimationOptions = {
   easing: Easing.Linear.None,
   duration: 0.1,
 }
+const ELEMENT_TOOLBAR_PADDING = 65
 
 let zoomAnimation: Tween | undefined = undefined
 
@@ -152,10 +154,17 @@ export function setDefaultViewport(animate: boolean): StoreMutationCommand<Tapes
       ? new Rectangle(startView)
       : itemsFocusRect(viewport, idMapToArray(items), minScale)
     const maxScale = startView ? undefined : MAX_INITIAL_SCALE
+    const viewportRect = new Rectangle(ORIGIN, viewport.size)
+    const obstructions = idMapToArray(viewport.obstructions)
 
     // if start view is not set and there are no items, itemsFocusRect returns a small rectangle in the centre
     // of the coordinate system. If MAX_INITIAL_SCALE is 1 the viewport fits around it
-    store.dispatch(transformViewport(zoomToFit(viewport, focusRect, minScale, maxScale), animate))
+    store.dispatch(
+      transformViewport(
+        zoomToFit(viewportRect, obstructions, focusRect, minScale, maxScale),
+        animate,
+      ),
+    )
   }
 }
 
@@ -225,8 +234,26 @@ export function focusItems(
       return
     }
     const minScale = getMinScale(viewport, allItems)
-    const focusRect = itemsFocusRect(viewport, items, minScale, addToolbarPadding)
-    store.dispatch(transformViewport(zoomToFit(viewport, focusRect, minScale), animate))
+    const focusRect = itemsFocusRect(viewport, items, minScale)
+    const viewportOrigin = addToolbarPadding ? { x: 0, y: ELEMENT_TOOLBAR_PADDING } : ORIGIN
+    const viewportSize = addToolbarPadding
+      ? { width: viewport.size.width, height: viewport.size.height - ELEMENT_TOOLBAR_PADDING }
+      : viewport.size
+    const viewportRect = new Rectangle(viewportOrigin, viewportSize)
+    const centralAnchor = { x: viewport.size.width / 2, y: viewport.size.height / 2 }
+    store.dispatch(
+      transformViewport(
+        zoomToFit(
+          viewportRect,
+          idMapToArray(viewport.obstructions),
+          focusRect,
+          minScale,
+          MAX_SCALE,
+          centralAnchor,
+        ),
+        animate,
+      ),
+    )
   }
 }
 

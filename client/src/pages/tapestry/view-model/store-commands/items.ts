@@ -270,15 +270,20 @@ export function copyItemSize(size: Size): StoreMutationCommand<EditableTapestryV
   }
 }
 
-export function pasteItemSize(itemId: string): StoreMutationCommand<EditableTapestryViewModel> {
+export function pasteItemSize(
+  items: OneOrMore<ItemDto>,
+): StoreMutationCommand<EditableTapestryViewModel> {
+  items = ensureArray(items)
   return (_, { store }) => {
     const size = store.get('copiedItemSize')
     if (!size) return
 
     store.dispatch(
-      updateItem(itemId, (item) => {
-        item.dto.size = resizeItem(item.dto, size)
-      }),
+      ...items.map((i) =>
+        updateItem(i.id, (item) => {
+          item.dto.size = resizeItem(item.dto, size)
+        }),
+      ),
     )
   }
 }

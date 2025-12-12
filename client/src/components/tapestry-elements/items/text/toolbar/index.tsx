@@ -21,6 +21,8 @@ import styles from './styles.module.css'
 const BACKGROUND_COLORS = COLOR_PRESETS
 const FOREGROUND_COLORS = OPAQUE_COLOR_PRESETS
 
+export type FormattingSubmenu = 'text-color' | 'text-background'
+
 interface TextItemToolbarOptions {
   selection: SelectionState | undefined
   editorAPI: React.RefObject<RichTextEditorApi | undefined>
@@ -30,7 +32,7 @@ interface TextItemToolbarOptions {
   itemBackgroundColor: LiteralColor | null | undefined
   onBackgroundColorChange: (color: LiteralColor) => unknown
   onColorChange: (color: LiteralColor) => unknown
-  onToggleMenu: (id: string) => unknown
+  onToggleMenu: (id: '' | FormattingSubmenu) => unknown
   controls?: { [K in keyof Controls]: boolean }
 }
 

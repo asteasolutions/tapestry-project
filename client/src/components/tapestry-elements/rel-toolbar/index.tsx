@@ -104,7 +104,7 @@ export function RelToolbar({ rel, relBounds }: RelToolbarProps) {
             <IconButton
               icon={arrowheadIcon}
               aria-label="Arrowhead"
-              onClick={() => selectSubmenu('arrowheads', true)}
+              onClick={() => selectSubmenu('arrowheads')}
             />
           ),
           tooltip: { side: 'bottom', children: 'Direction' },
@@ -128,7 +128,7 @@ export function RelToolbar({ rel, relBounds }: RelToolbarProps) {
             <IconButton
               icon="line_weight"
               aria-label="Line weight"
-              onClick={() => selectSubmenu('weight', true)}
+              onClick={() => selectSubmenu('weight')}
             />
           ),
           tooltip: { side: 'bottom', children: 'Weight' },
@@ -149,7 +149,7 @@ export function RelToolbar({ rel, relBounds }: RelToolbarProps) {
               color={dto.color}
               size={22}
               aria-label="Change color"
-              onClick={() => selectSubmenu('color', true)}
+              onClick={() => selectSubmenu('color')}
             />
           ),
           tooltip: { side: 'bottom', children: 'Color' },
