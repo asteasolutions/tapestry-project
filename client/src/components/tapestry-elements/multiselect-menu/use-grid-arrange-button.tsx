@@ -28,12 +28,15 @@ function useGridState(elementsCount: number) {
   return [grid, setGrid] as const
 }
 
+const GRID_SUBMENU_ID = 'grid_align'
+export type GridSubmenu = typeof GRID_SUBMENU_ID
+
 export function useGridArrangeButton({
   selectedSubmenu,
   selectSubmenu,
 }: {
   selectedSubmenu: string
-  selectSubmenu: (id: string, toggle: boolean) => void
+  selectSubmenu: (id: GridSubmenu) => void
 }): MenuItem {
   const dispatch = useDispatch()
   const selection = useTapestryData('selection')
@@ -44,15 +47,15 @@ export function useGridArrangeButton({
   const columnSelectorRef = useRef<HTMLInputElement>(null)
 
   return {
-    id: 'grid-align',
+    id: GRID_SUBMENU_ID,
     ui: {
       element: (
         <IconButton
           icon="grid_view"
           aria-label="Algin in grid"
           onClick={() => {
-            selectSubmenu('grid-align', true)
-            if (selectedSubmenu === 'grid-align') {
+            selectSubmenu(GRID_SUBMENU_ID)
+            if (selectedSubmenu === GRID_SUBMENU_ID) {
               dispatch(clearItemPreviews())
               setGrid(defaultGrid(elementsCount))
             } else {

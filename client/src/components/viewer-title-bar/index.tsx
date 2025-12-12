@@ -64,7 +64,7 @@ export function ViewerTitleBar() {
           <IconButton
             icon="more_vert"
             aria-label="More actions"
-            onClick={() => selectSubmenu('more', true)}
+            onClick={() => selectSubmenu('more')}
             isActive={selectedSubmenu.startsWith('more')}
           />
         ),

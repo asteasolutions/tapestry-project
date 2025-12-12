@@ -1,6 +1,6 @@
 import clsx from 'clsx'
 import styles from './styles.module.css'
-import { CSSProperties, ReactElement, Ref } from 'react'
+import { CSSProperties, ReactElement, ReactNode, Ref } from 'react'
 import { Tooltip, TooltipProps } from '../tooltip/index.js'
 import { compact } from 'lodash-es'
 import { useOutsideClick } from '../../lib/hooks/use-outside-click.js'
@@ -20,14 +20,13 @@ export type SubmenuIds<T, D extends number = 10> = [D] extends [never]
 export interface ToolbarElement {
   element: ReactElement
   tooltip?: TooltipProps
-  stretch?: boolean
 }
 
 export type SimpleMenuItem = ReactElement | ToolbarElement | Separator
 export interface MenuItemWithSubmenu {
   id: string
   ui: ReactElement | ToolbarElement
-  submenu: MenuItems
+  submenu: MenuItems | ReactNode
   direction?: Direction
 }
 export type MenuItem = SimpleMenuItem | MenuItemWithSubmenu
@@ -41,24 +40,8 @@ function hasSubmenu(item: MenuItem): item is MenuItemWithSubmenu {
   )
 }
 
-export function isMultiLineMenu(items: MenuItems): items is MaybeMenuItem[][] {
-  return Array.isArray(items[0])
-}
-
-export interface ToolbarProps {
-  isOpen?: boolean
-  items: MenuItems
-  selectedSubmenu?: string | string[]
-  className?: string
-  direction?: Direction
-  style?: CSSProperties
-  onFocusOut?: (source: HTMLElement, target: HTMLElement) => void
-  wrapperRef?: Ref<HTMLDivElement | null>
-}
-
-export interface ToolbarRowProps {
-  items: MaybeMenuItem[]
-  selectedSubmenu?: string[]
+export function isMultiLineMenu(items: MenuItems | ReactNode): items is MaybeMenuItem[][] {
+  return Array.isArray(items) && Array.isArray(items[0])
 }
 
 function isToolbarElement(elem: ReactElement | ToolbarElement): elem is ToolbarElement {
@@ -70,14 +53,19 @@ function SimpleMenuItem({ ui }: { ui: SimpleMenuItem }) {
     return <div className="separator" />
   }
 
-  const { element, tooltip, stretch } = isToolbarElement(ui) ? ui : { element: ui }
+  const { element, tooltip } = isToolbarElement(ui) ? ui : { element: ui }
 
   return (
-    <div className={clsx('menu-item-wrapper', { [styles.stretch]: stretch })}>
+    <div className="menu-item-wrapper">
       {element}
       {tooltip && <Tooltip {...tooltip} offset={16 + (tooltip.offset ?? 0)} />}
     </div>
   )
+}
+
+export interface ToolbarRowProps {
+  items: MaybeMenuItem[] | ReactNode
+  selectedSubmenu?: string[]
 }
 
 function ToolbarRow({ items, selectedSubmenu }: ToolbarRowProps) {
@@ -85,24 +73,37 @@ function ToolbarRow({ items, selectedSubmenu }: ToolbarRowProps) {
 
   return (
     <div className="toolbar-row">
-      {compact(items).map((item, index) =>
-        hasSubmenu(item) ? (
-          <div className={clsx('submenu-item', item.id)} key={index}>
-            <SimpleMenuItem ui={item.ui} />
-            <Toolbar
-              isOpen={item.id === openSubmenu}
-              items={item.submenu}
-              className="submenu"
-              direction={item.direction}
-              selectedSubmenu={openNestedSubmenus}
-            />
-          </div>
-        ) : (
-          <SimpleMenuItem key={index} ui={item} />
-        ),
-      )}
+      {Array.isArray(items)
+        ? compact(items).map((item, index) =>
+            hasSubmenu(item) ? (
+              <div className={clsx('submenu-item', item.id)} key={index}>
+                <SimpleMenuItem ui={item.ui} />
+                <Toolbar
+                  isOpen={item.id === openSubmenu}
+                  items={item.submenu}
+                  className="submenu"
+                  direction={item.direction}
+                  selectedSubmenu={openNestedSubmenus}
+                />
+              </div>
+            ) : (
+              <SimpleMenuItem key={index} ui={item} />
+            ),
+          )
+        : items}
     </div>
   )
+}
+
+export interface ToolbarProps {
+  isOpen?: boolean
+  items: MenuItems | ReactNode
+  selectedSubmenu?: string | string[]
+  className?: string
+  direction?: Direction
+  style?: CSSProperties
+  onFocusOut?: (source: HTMLElement, target: HTMLElement) => void
+  wrapperRef?: Ref<HTMLDivElement | null>
 }
 
 export function Toolbar({
