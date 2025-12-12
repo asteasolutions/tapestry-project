@@ -20,8 +20,6 @@ export function isCommonMenuItem(str: unknown): str is CommonMenuItem {
   return COMMON_MENU_ITEMS.includes(str as CommonMenuItem)
 }
 
-export type ItemMenuItem<T extends CommonMenuItem> = MaybeMenuItem | T
-
 export function useItemMenu<const M extends string>(
   itemId: Id,
   menu: (M | CommonMenuItem | MaybeMenuItem)[],
