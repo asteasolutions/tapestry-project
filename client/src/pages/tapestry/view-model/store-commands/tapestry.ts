@@ -1,10 +1,5 @@
-// <<<<<<< HEAD
-// import { omit, sample } from 'lodash-es'
-// import { ORIGIN, Point } from 'tapestry-core/src/lib/geometry'
-// =======
 import { omit, sample } from 'lodash-es'
 import { maxEmptyArea, ORIGIN, Point, Rectangle } from 'tapestry-core/src/lib/geometry'
-// >>>>>>> main
 import { TapestryDto } from 'tapestry-shared/src/data-transfer/resources/dtos/tapestry'
 import { EditableTapestryViewModel, InteractionMode, IAImport, convertCommand } from '..'
 import { StoreMutationCommand } from 'tapestry-core-client/src/lib/store/index'
