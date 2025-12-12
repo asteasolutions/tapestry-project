@@ -35,7 +35,7 @@ import {
   MediaItemSource,
 } from '../../lib/media'
 import { resource } from '../../services/rest-resources'
-import { isFunction } from 'lodash'
+import { isFunction } from 'lodash-es'
 import mime from 'mime'
 import axios, { AxiosProgressEvent } from 'axios'
 import { arrayToIdMap, fileExtension, isMediaItem } from 'tapestry-core/src/utils'

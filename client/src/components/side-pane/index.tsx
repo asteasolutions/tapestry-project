@@ -16,7 +16,7 @@ import {
   DEFAULT_GUIDE,
   GuideSection,
 } from 'tapestry-core-client/src/components/tapestry/help-pane/guide-pane'
-import { thru } from 'lodash'
+import { thru } from 'lodash-es'
 import {
   ActionsSection,
   CustomKeys,

@@ -1,4 +1,4 @@
-import { defaults, merge, pick } from 'lodash'
+import { defaults, merge, pick } from 'lodash-es'
 import { DEFAULT_FONT_SIZE } from 'tapestry-core-client/src/components/lib/rich-text-editor/font-size-extension'
 import { LiteralColor } from 'tapestry-core-client/src/theme/types'
 import { SortDirection } from 'tapestry-shared/src/data-transfer/resources/dtos/common'

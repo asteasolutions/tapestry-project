@@ -1,4 +1,4 @@
-import { toPairs } from 'lodash'
+import { toPairs } from 'lodash-es'
 import { getPaletteColor } from 'tapestry-core-client/src/theme/design-system'
 import { LiteralColor } from 'tapestry-core-client/src/theme/types'
 import { ColorButton } from 'tapestry-core-client/src/components/lib/buttons/index'

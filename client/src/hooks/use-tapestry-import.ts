@@ -5,7 +5,7 @@ import { useAsyncAction } from 'tapestry-core-client/src/components/lib/hooks/us
 import { parseRootJson, ROOT_FILE } from 'tapestry-core/src/data-format/export'
 import { BlobReader, TextWriter, ZipReader, FileEntry } from '@zip.js/zip.js'
 import { useAsyncPolled } from './use-poll'
-import { isNumber } from 'lodash'
+import { isNumber } from 'lodash-es'
 import { JobStatus } from 'tapestry-shared/src/data-transfer/resources/dtos/tapestry-create-job'
 import { mapNotNull } from 'tapestry-core/src/lib/array'
 import { usePropRef } from 'tapestry-core-client/src/components/lib/hooks/use-prop-ref'

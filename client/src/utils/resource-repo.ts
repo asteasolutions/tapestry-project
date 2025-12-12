@@ -4,7 +4,7 @@ import {
   BatchMutationDto,
 } from 'tapestry-shared/src/data-transfer/resources/dtos/common'
 import { Observable } from 'tapestry-core-client/src/lib/events/observable'
-import { cloneDeep, get, isEmpty, isEqual, mapValues, set } from 'lodash'
+import { cloneDeep, get, isEmpty, isEqual, mapValues, set } from 'lodash-es'
 import { createDraft, Patch } from 'immer'
 import { arrayToIdMap, IdMap, pickById } from 'tapestry-core/src/utils'
 import { ResourceName } from 'tapestry-shared/src/data-transfer/resources'

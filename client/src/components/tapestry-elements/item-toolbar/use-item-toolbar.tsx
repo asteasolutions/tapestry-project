@@ -1,6 +1,6 @@
 import { ItemToolbar, ItemToolbarMenu, ItemToolbarProps } from '.'
 import { useSingleChoice } from 'tapestry-core-client/src/components/lib/hooks/use-single-choice'
-import { omit } from 'lodash'
+import { omit } from 'lodash-es'
 import { useTapestryData } from '../../../pages/tapestry/tapestry-providers'
 
 interface SubmenuControls {

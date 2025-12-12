@@ -1,4 +1,4 @@
-import { isEmpty } from 'lodash'
+import { isEmpty } from 'lodash-es'
 import { IconButton } from 'tapestry-core-client/src/components/lib/buttons/index'
 import { useKeyboardShortcuts } from 'tapestry-core-client/src/components/lib/hooks/use-keyboard-shortcuts'
 import { useObservable } from 'tapestry-core-client/src/components/lib/hooks/use-observable'

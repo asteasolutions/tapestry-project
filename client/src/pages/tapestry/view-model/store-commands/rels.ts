@@ -3,7 +3,7 @@ import { RelDto } from 'tapestry-shared/src/data-transfer/resources/dtos/rel'
 import { EditableRelViewModel, EditableTapestryViewModel } from '..'
 import { StoreMutationCommand } from 'tapestry-core-client/src/lib/store/index'
 import { Draft } from 'immer'
-import { merge } from 'lodash'
+import { merge } from 'lodash-es'
 import { ensureArray, OneOrMore } from 'tapestry-core/src/utils'
 import { isPoint } from 'tapestry-core/src/lib/geometry'
 

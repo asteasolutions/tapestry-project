@@ -1,4 +1,4 @@
-import { omit } from 'lodash'
+import { omit } from 'lodash-es'
 import { config } from '../../../../config'
 import { browser } from 'tapestry-core-client/src/lib/user-agent'
 import { MenuItemButton } from 'tapestry-core-client/src/components/lib/buttons'

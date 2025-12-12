@@ -6,7 +6,7 @@ import {
 import { Graphics, Rectangle as PixiRectangle, TilingSprite } from 'pixi.js'
 import { neg, ORIGIN, translate } from 'tapestry-core/src/lib/geometry'
 import { ThemeName } from 'tapestry-core-client/src/theme/themes'
-import { isEqual } from 'lodash'
+import { isEqual } from 'lodash-es'
 import { ItemRenderer } from './item-renderer'
 import { TapestryRenderer } from 'tapestry-core-client/src/stage/renderer'
 import { TapestryStage } from 'tapestry-core-client/src/stage'

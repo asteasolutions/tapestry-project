@@ -40,6 +40,7 @@ import {
 import { setInteractionMode, setSnackbar } from './view-model/store-commands/tapestry'
 import { ViewportDebugData } from './viewport-debug-data'
 import { createPixiApp } from 'tapestry-core-client/src/stage'
+import { PropsWithStyle } from 'tapestry-core-client/src/components/lib'
 
 function useInteractionModeUrlParam() {
   const { username, slug, edit } = useTapestryPathParams()
@@ -110,9 +111,7 @@ export function Tapestry() {
         <ViewportScrollbars />
       </div>
       <QuickTips />
-      <div className={styles.mainToolbar}>
-        <Toolbars />
-      </div>
+      <MainToolbar className={styles.mainToolbar} />
       <TapestrySnackbar />
       {!hideEditControls && (
         <>
@@ -137,27 +136,26 @@ export function Tapestry() {
   )
 }
 
-const Toolbars = memo(function Toolbars() {
+const MainToolbar = memo(function MainToolbar({ className, style }: PropsWithStyle) {
   const { interactionMode, presentationOrderState, hideEditControls } = useTapestryData([
     'interactionMode',
     'presentationOrderState',
     'hideEditControls',
   ])
 
+  if (interactionMode === 'view') {
+    return <ViewerTitleBar className={className} style={style} />
+  }
+
   return (
-    <>
-      {interactionMode === 'edit' && (
-        <>
-          <EditorTitleBar />
-          <div className={styles.leftToolbar}>
-            {!hideEditControls && <ImportToolbar />}
-            {/* The "undo" toolbar is only necessary if we are editing the presentation order or the tapestry itself. */}
-            {(!hideEditControls || presentationOrderState) && <UndoToolbar />}
-          </div>
-        </>
-      )}
-      {interactionMode === 'view' && <ViewerTitleBar />}
-    </>
+    <div className={className} style={style}>
+      <EditorTitleBar />
+      <div className={styles.leftToolbar}>
+        {!hideEditControls && <ImportToolbar />}
+        {/* The "undo" toolbar is only necessary if we are editing the presentation order or the tapestry itself. */}
+        {(!hideEditControls || presentationOrderState) && <UndoToolbar />}
+      </div>
+    </div>
   )
 })
 

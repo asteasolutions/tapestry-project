@@ -23,7 +23,7 @@ import {
   translate,
   Vector,
 } from 'tapestry-core/src/lib/geometry'
-import { compact, map, max } from 'lodash'
+import { compact, map, max } from 'lodash-es'
 import { snapToGrid, updateTransformTargets } from '../utils'
 import { ItemType } from 'tapestry-core/src/data-format/schemas/item'
 import { EPS } from 'tapestry-core/src/lib/algebra'

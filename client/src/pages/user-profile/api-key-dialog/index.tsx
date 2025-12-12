@@ -1,14 +1,14 @@
+import { uniqueId } from 'lodash-es'
 import { useRef, useState } from 'react'
+import { useAsyncAction } from 'tapestry-core-client/src/components/lib/hooks/use-async-action'
+import { Input } from 'tapestry-core-client/src/components/lib/input/index'
 import { SimpleModal } from 'tapestry-core-client/src/components/lib/modal/index'
 import { Text } from 'tapestry-core-client/src/components/lib/text/index'
-import { Input } from 'tapestry-core-client/src/components/lib/input/index'
-import { useAsyncAction } from 'tapestry-core-client/src/components/lib/hooks/use-async-action'
-import { resource } from '../../../services/rest-resources'
-import { UserDto } from 'tapestry-shared/src/data-transfer/resources/dtos/user'
-import styles from './styles.module.css'
-import { uniqueId } from 'lodash'
-import geminiGuideVideo from '../../../assets/videos/gemini-api-guide.mov'
 import { getPaletteColor } from 'tapestry-core-client/src/theme/design-system'
+import { UserDto } from 'tapestry-shared/src/data-transfer/resources/dtos/user'
+import geminiGuideVideo from '../../../assets/videos/gemini-api-guide.mov'
+import { resource } from '../../../services/rest-resources'
+import styles from './styles.module.css'
 interface ApiKeyDialogProps {
   user: UserDto
   onClose: () => void

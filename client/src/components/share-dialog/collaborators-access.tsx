@@ -4,7 +4,7 @@ import { IconButton } from 'tapestry-core-client/src/components/lib/buttons/inde
 import { Text } from 'tapestry-core-client/src/components/lib/text/index'
 import { resource } from '../../services/rest-resources'
 import { useAsyncAction } from 'tapestry-core-client/src/components/lib/hooks/use-async-action'
-import { noop } from 'lodash'
+import { noop } from 'lodash-es'
 import styles from './styles.module.css'
 import { useSession } from '../../layouts/session'
 import { useState } from 'react'

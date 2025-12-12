@@ -1,5 +1,5 @@
 import clsx from 'clsx'
-import { noop } from 'lodash'
+import { noop } from 'lodash-es'
 import { useNavigate } from 'react-router'
 import { IconButton } from 'tapestry-core-client/src/components/lib/buttons/index'
 import { useKeyboardShortcuts } from 'tapestry-core-client/src/components/lib/hooks/use-keyboard-shortcuts'

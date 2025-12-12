@@ -7,7 +7,7 @@ import {
   UndoStackPatchHandler,
   UndoStackState,
 } from 'tapestry-core-client/src/lib/store/index'
-import { isEqual } from 'lodash'
+import { isEqual } from 'lodash-es'
 
 type StackElement = Patch[]
 

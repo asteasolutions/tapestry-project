@@ -6,7 +6,7 @@ import { ActiveCollaborator } from '../../pages/tapestry/view-model'
 import { useEffect, useState } from 'react'
 import { SvgIcon } from 'tapestry-core-client/src/components/lib/svg-icon'
 import { idMapToArray } from 'tapestry-core/src/utils'
-import { isEqual } from 'lodash'
+import { isEqual } from 'lodash-es'
 import { CURSOR_BROADCAST_PERIOD } from '../../stage/utils'
 
 const MAX_INACTIVITY_PERIOD = 15_000
@@ -58,7 +58,12 @@ export function CollaboratorCursors() {
     viewport: {
       transform: { translation, scale },
     },
-  } = useTapestryData(['collaborators', 'viewport'])
+    interactionMode,
+  } = useTapestryData(['collaborators', 'viewport', 'interactionMode'])
+
+  if (interactionMode !== 'edit') {
+    return null
+  }
 
   const visibleCollaborators = idMapToArray(collaborators).filter(
     (collaborator): collaborator is ActiveCollaborator => !!collaborator.cursorPosition,

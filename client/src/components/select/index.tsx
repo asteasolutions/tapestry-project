@@ -1,4 +1,4 @@
-import { merge } from 'lodash'
+import { merge } from 'lodash-es'
 import { ReactNode, RefObject } from 'react'
 // eslint-disable-next-line no-restricted-imports
 import ReactSelect, { Options, Props, SelectInstance, StylesConfig, Theme } from 'react-select'
