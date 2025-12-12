@@ -1,10 +1,10 @@
 import { RefObject, useLayoutEffect, useRef, useState } from 'react'
 import { Rectangle, scaleSize, Size, translate } from 'tapestry-core/src/lib/geometry'
 import { Toolbar, ToolbarProps } from '../../lib/toolbar/index'
-import { clamp, mapValues } from 'lodash-es'
+import { clamp } from 'lodash-es'
 import { useResizeObserver } from '../../lib/hooks/use-resize-observer'
 import { Viewport } from '../../../view-model'
-import { getMaxInset, positionAtViewport } from '../../../view-model/utils'
+import { positionAtViewport } from '../../../view-model/utils'
 import { useTapestryConfig } from '..'
 
 const TOOLBAR_OFFSET = 30
@@ -19,14 +19,12 @@ function useElementToolbarTransform(
   const {
     transform: { scale },
     size,
-    focusRectInsets,
   } = viewport
-  const maxInset = getMaxInset(Object.values(focusRectInsets))
 
   const viewerRect = new Rectangle(
     positionAtViewport(viewport),
     scaleSize(size, 1 / scale),
-  ).contract(mapValues(maxInset, (inset) => (inset + TOOLBAR_MARGIN) / scale))
+  ).contract(TOOLBAR_MARGIN / scale)
 
   const [toolbarDOMSize, setToolbarDOMSize] = useState<Size>()
   const toolbarSize = scaleSize(toolbarDOMSize ?? { width: 0, height: 0 }, 1 / scale)

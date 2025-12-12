@@ -3,10 +3,10 @@ import {
   add,
   coordMax,
   coordMin,
-  DirectionalOffsets,
   IDENTITY_TRANSFORM,
   linearMap,
   LinearTransform,
+  maxEmptyArea,
   mul,
   neg,
   ORIGIN,
@@ -17,7 +17,7 @@ import {
   Size,
   translate,
   Vector,
-  ZERO_OFFSETS,
+  ViewportObstruction,
 } from 'tapestry-core/src/lib/geometry.js'
 import {
   TapestryElementViewModel,
@@ -47,8 +47,6 @@ import { isMobile } from '../lib/user-agent.js'
 import { Rel } from 'tapestry-core/src/data-format/schemas/rel.js'
 
 const CONTENT_FIT_PADDING = 16
-const ELEMENT_TOOLBAR_OFFSET = 30
-const ELEMENT_TOOLBAR_HEIGHT = 48
 
 export function viewModelFromTapestry(
   tapestry: Tapestry,
@@ -75,7 +73,7 @@ export function viewModelFromTapestry(
         width: 0,
         height: 0,
       },
-      focusRectInsets: {},
+      obstructions: {},
       ready: false,
       isZoomingLocked: !tapestry.items.length,
     },
@@ -154,23 +152,12 @@ export function itemsFocusRect<I extends ItemViewModel>(
   viewport: Viewport,
   items: readonly I[],
   minScale: number,
-  addToolbarPadding = false,
 ) {
   const boundingRect = getBoundingRectangle(items)
-  const { scale: itemsFitScale } = zoomToFit(viewport, boundingRect, minScale)
-  const contentFitPadding = CONTENT_FIT_PADDING / itemsFitScale
-  const toolbarPadding = addToolbarPadding
-    ? ELEMENT_TOOLBAR_OFFSET + ELEMENT_TOOLBAR_HEIGHT / itemsFitScale
-    : 0
-
-  const padding = {
-    top: contentFitPadding + toolbarPadding,
-    right: contentFitPadding,
-    bottom: contentFitPadding,
-    left: contentFitPadding,
-  }
-
-  return boundingRect.expand(padding)
+  const viewportRect = new Rectangle(ORIGIN, viewport.size)
+  const obstructions = idMapToArray(viewport.obstructions)
+  const { scale } = zoomToFit(viewportRect, obstructions, boundingRect, minScale)
+  return boundingRect.expand(CONTENT_FIT_PADDING / scale)
 }
 
 export function zoomToCenter(tapestry: TapestryViewModel, step: number) {
@@ -184,14 +171,17 @@ export function zoomToCenter(tapestry: TapestryViewModel, step: number) {
 }
 
 export function zoomToFit(
-  viewport: Viewport,
+  viewportRect: Rectangle,
+  obstructions: ViewportObstruction[],
   rect: Rectangle,
   minScale: number,
   maxScale = MAX_SCALE,
+  centralAnchor = viewportRect.center,
 ): LinearTransform {
-  const { size, focusRectInsets } = viewport
-  const maxInset = getMaxInset(Object.values(focusRectInsets))
-  const focusRect = new Rectangle(ORIGIN, size).contract(maxInset)
+  const focusRect = maxEmptyArea(viewportRect, obstructions, {
+    aspectRatio: rect.aspectRatio,
+    centralAnchor,
+  })!
   const coef = Math.min(focusRect.height / rect.height, focusRect.width / rect.width)
   const newScale = clamp(coef, minScale, maxScale)
 
@@ -323,18 +313,6 @@ export function getItemOverlayScale(itemSize: Size) {
   const minSide = Math.min(height, width)
 
   return Math.max(minSide / ITEM_OVERLAY_SIZE_THRESHOLD, 1)
-}
-
-export function getMaxInset(insets: DirectionalOffsets[]) {
-  return insets.reduce(
-    (acc, inset) => ({
-      top: Math.max(acc.top, inset.top),
-      right: Math.max(acc.right, inset.right),
-      bottom: Math.max(acc.bottom, inset.bottom),
-      left: Math.max(acc.left, inset.left),
-    }),
-    ZERO_OFFSETS,
-  )
 }
 
 export function isSingleGroupSelected(selection: Selection) {

@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router'
 import { IconButton } from 'tapestry-core-client/src/components/lib/buttons/index'
 import { useKeyboardShortcuts } from 'tapestry-core-client/src/components/lib/hooks/use-keyboard-shortcuts'
 import { Toolbar } from 'tapestry-core-client/src/components/lib/toolbar/index'
-import { useFocusRectInset } from 'tapestry-core-client/src/components/tapestry/hooks/use-focus-rect-inset'
+import { useViewportObstruction } from 'tapestry-core-client/src/components/tapestry/hooks/use-viewport-obstruction'
 import { useZoomToolbarItems } from 'tapestry-core-client/src/components/tapestry/hooks/use-zoom-toolbar-items'
 import { useTapestryPath } from '../../../hooks/use-tapestry-path'
 import { useTapestryData } from '../../../pages/tapestry/tapestry-providers'
@@ -16,6 +16,7 @@ interface ZoomControlsProps {
 }
 
 export function ZoomToolbar({ className }: ZoomControlsProps) {
+  const obstruction = useViewportObstruction({ clear: { bottom: true, right: true } })
   const { userAccess, interactionMode, hideEditControls } = useTapestryData([
     'userAccess',
     'interactionMode',
@@ -65,10 +66,9 @@ export function ZoomToolbar({ className }: ZoomControlsProps) {
     ],
   )
 
-  useFocusRectInset({ bottom: 64 })
-
   return (
     <Toolbar
+      wrapperRef={obstruction.ref}
       isOpen
       className={clsx(className, styles.root)}
       onFocusOut={closeSubmenu}

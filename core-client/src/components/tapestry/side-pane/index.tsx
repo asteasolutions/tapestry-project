@@ -3,12 +3,15 @@ import { CSSProperties, PropsWithChildren, ReactNode } from 'react'
 import { useTapestryConfig } from '..'
 import { IconButton } from '../../../../src/components/lib/buttons/index'
 import { Text } from '../../../../src/components/lib/text/index'
-import { getMaxInset } from '../../../../src/view-model/utils'
 import { setSidePane } from '../../../view-model/store-commands/tapestry'
-import { useFocusRectInset } from '../hooks/use-focus-rect-inset'
+import { useViewportObstruction } from '../hooks/use-viewport-obstruction'
 import styles from './styles.module.css'
+import { maxEmptyArea, ORIGIN, Rectangle } from 'tapestry-core/src/lib/geometry'
+import { idMapToArray } from 'tapestry-core/src/utils'
+import { omit } from 'lodash'
 
 const PADDING = 16
+const PANEL_WIDTH = 416
 
 export interface SidePaneProps extends PropsWithChildren {
   isShown: boolean
@@ -17,23 +20,29 @@ export interface SidePaneProps extends PropsWithChildren {
 }
 
 export function SidePane({ isShown, heading, children, isMinimized }: SidePaneProps) {
+  const obstruction = useViewportObstruction({ clear: { top: true, bottom: true, right: true } })
   const { useStoreData, useDispatch } = useTapestryConfig()
-  const focusRectInsets = useStoreData('viewport.focusRectInsets')
+  const { size: viewportSize, obstructions } = useStoreData('viewport', ['size', 'obstructions'])
   const dispatch = useDispatch()
 
-  const { top, bottom } = getMaxInset(Object.values(focusRectInsets))
+  const targetRect = new Rectangle(ORIGIN, viewportSize).contract({
+    left: viewportSize.width - PANEL_WIDTH,
+  })
+  const panelRect = maxEmptyArea(targetRect, idMapToArray(omit(obstructions, obstruction.id)))
 
-  useFocusRectInset(isShown ? { right: isMinimized ? 0 : 416 } : {})
-
-  if (!isShown) {
+  if (!isShown || !panelRect) {
     return null
   }
 
   return (
     <div
+      ref={obstruction.ref}
       className={clsx(styles.root, { [styles.minimized]: isMinimized })}
       style={
-        { '--top': `${top + PADDING}px`, '--bottom': `${bottom + PADDING}px` } as CSSProperties
+        {
+          '--top': `${panelRect.top + PADDING}px`,
+          '--bottom': `${targetRect.bottom - panelRect.bottom + PADDING}px`,
+        } as CSSProperties
       }
     >
       {heading && (

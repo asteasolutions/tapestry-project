@@ -1,6 +1,7 @@
 import { RefObject } from 'react'
 import { add, Rectangle } from 'tapestry-core/src/lib/geometry'
 import { useTapestryConfig } from '../..'
+import { getBoundingRectangle } from '../../../../lib/dom'
 
 export function useOutlineIntersection(dialogRef: RefObject<HTMLDivElement | null>) {
   const { useStore, useStoreData } = useTapestryConfig()
@@ -12,11 +13,10 @@ export function useOutlineIntersection(dialogRef: RefObject<HTMLDivElement | nul
     },
   } = useStoreData(['outlinedItemId', 'viewport'])
 
-  const domRect = dialogRef.current?.getBoundingClientRect()
-  if (!domRect || !id) {
+  const rect = getBoundingRectangle(dialogRef.current)
+  if (!rect || !id) {
     return false
   }
-  const rect = new Rectangle(domRect.x, domRect.y, domRect.width, domRect.height)
   const {
     position: { x, y },
     size: { width, height },
