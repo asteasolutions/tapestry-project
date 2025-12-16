@@ -6,7 +6,6 @@ import {
   SelectionState,
 } from 'tapestry-core-client/src/components/lib/rich-text-editor'
 import { ActionButtonItemViewer } from 'tapestry-core-client/src/components/tapestry/items/action-button/viewer'
-import { LiteralColor } from 'tapestry-core-client/src/theme/types'
 import { ActionButtonItemDto } from 'tapestry-shared/src/data-transfer/resources/dtos/item'
 import { TapestryItemProps } from '..'
 import { useDispatch, useTapestryData } from '../../../../pages/tapestry/tapestry-providers'
@@ -63,16 +62,20 @@ export const ActionButtonItem = memo(({ id }: TapestryItemProps) => {
     selection,
     tapestryId,
     itemBackgroundColor: dto.backgroundColor,
-    onBackgroundColorChange: (color: LiteralColor) => {
+    onBackgroundColorChange: (color, shouldClose) => {
       dispatch(updateItem(id, { dto: { backgroundColor: color } }))
       userSettings.updateTapestrySettings(tapestryId, { textItemColor: color })
-      closeSubmenu()
-      editorAPI.current?.focus()
+      if (shouldClose) {
+        closeSubmenu()
+        editorAPI.current?.focus()
+      }
     },
-    onColorChange: (color) => {
+    onColorChange: (color, shouldClose) => {
       userSettings.updateTapestrySettings(tapestryId, { fontColor: color })
       editorAPI.current?.fgColor(color)
-      closeSubmenu()
+      if (shouldClose) {
+        closeSubmenu()
+      }
     },
     onToggleMenu: (id) => {
       selectSubmenu(id, true)

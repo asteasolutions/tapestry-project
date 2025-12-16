@@ -1,33 +1,25 @@
+import { throttle } from 'lodash-es'
 import { createEventRegistry } from 'tapestry-core-client/src/lib/events/event-registry'
-import { createItemViewModel } from '../../pages/tapestry/view-model/utils'
-import { DataTransferHandler } from '../data-transfer-handler'
+import { TapestryStage } from 'tapestry-core-client/src/stage'
 import {
-  EditableTapestryViewModel,
-  InteractionMode,
-  TapestryEditorStore,
-} from '../../pages/tapestry/view-model'
-import { ItemCreateDto, ItemDto } from 'tapestry-shared/src/data-transfer/resources/dtos/item'
+  GlobalEventsController,
+  KeyMapping,
+} from 'tapestry-core-client/src/stage/controller/global-events-controller'
+import { positionAtViewport } from 'tapestry-core-client/src/view-model/utils'
+import { Point } from 'tapestry-core/src/lib/geometry'
 import { createTextItem } from '../../model/data/utils'
-import {
-  setIAImport,
-  setInteractiveElement,
-  setSnackbar,
-  setViewAsStart,
-} from '../../pages/tapestry/view-model/store-commands/tapestry'
+import { TapestryDataSyncCommands } from '../../pages/tapestry/tapestry-providers'
+import { InteractionMode, TapestryEditorStore } from '../../pages/tapestry/view-model'
 import {
   addAndPositionItems,
   deleteSelectionItems,
 } from '../../pages/tapestry/view-model/store-commands/items'
-import { isArray, throttle } from 'lodash-es'
 import {
-  KeyMapping,
-  GlobalEventsController,
-} from 'tapestry-core-client/src/stage/controller/global-events-controller'
-import { TapestryStage } from 'tapestry-core-client/src/stage'
-import { WritableDraft } from 'immer'
-import { TapestryDataSyncCommands } from '../../pages/tapestry/tapestry-providers'
-import { Point } from 'tapestry-core/src/lib/geometry'
-import { positionAtViewport } from 'tapestry-core-client/src/view-model/utils'
+  setSnackbar,
+  setViewAsStart,
+} from '../../pages/tapestry/view-model/store-commands/tapestry'
+import { createItemViewModel, insertDataTransfer } from '../../pages/tapestry/view-model/utils'
+import { DataTransferHandler } from '../data-transfer-handler'
 import { CURSOR_BROADCAST_PERIOD } from '../utils'
 
 type EventTypesMap = {
@@ -57,7 +49,10 @@ export class EditorGlobalEventsController extends GlobalEventsController {
     super(editorStore.as('base'), stage)
     this.editorKeyMappings = {
       'Delete | Backspace': () => editorStore.dispatch(deleteSelectionItems()),
-      KeyT: () => this.addItems([createTextItem('', editorStore.get('id'))]),
+      KeyT: () =>
+        this.editorStore.dispatch(
+          addAndPositionItems(createItemViewModel(createTextItem('', editorStore.get('id')))),
+        ),
       'meta + shift + KeyS': () =>
         editorStore.dispatch(setViewAsStart(), setSnackbar('Start view has been set')),
     }
@@ -102,9 +97,8 @@ export class EditorGlobalEventsController extends GlobalEventsController {
   @eventListener('scene', 'drop', ['edit'])
   protected async onDrop(event: DragEvent) {
     event.preventDefault()
-    const { clientX: x, clientY: y } = event
 
-    await this.addItems(event.dataTransfer, { x, y })
+    await this.addItems(event.dataTransfer, event)
   }
 
   @eventListener('scene', 'mousemove')
@@ -117,36 +111,11 @@ export class EditorGlobalEventsController extends GlobalEventsController {
     )
   }
 
-  private async addItems(
-    dataTransfer: DataTransfer | null | ItemCreateDto[],
-    point?: ItemDto['position'],
-  ) {
-    try {
-      this.editorStore.dispatch((model) => {
-        model.pendingRequests++
-      })
-      const { items, largeFiles, iaImport } = isArray(dataTransfer)
-        ? { items: dataTransfer, largeFiles: [] }
-        : await this.dataTransferHandler.deserialize(dataTransfer, this.editorStore.get('id'))
-      if (iaImport) {
-        this.editorStore.dispatch(setIAImport(iaImport))
-        return
-      }
-
-      const viewModels = items.map(createItemViewModel)
-      this.editorStore.dispatch(
-        viewModels.length !== 0 && addAndPositionItems(viewModels, { centerAt: point }),
-        items.length === 1 &&
-          setInteractiveElement({ modelId: viewModels[0].dto.id, modelType: 'item' }),
-        largeFiles.length !== 0 &&
-          ((store: WritableDraft<EditableTapestryViewModel>) => {
-            store.largeFiles = largeFiles
-          }),
-      )
-    } finally {
-      this.editorStore.dispatch((model) => {
-        model.pendingRequests--
-      })
-    }
+  private async addItems(dataTransfer: DataTransfer | null, point?: Point) {
+    await insertDataTransfer(
+      this.editorStore.dispatch.bind(this.editorStore),
+      async () => this.dataTransferHandler.deserialize(dataTransfer, this.editorStore.get('id')),
+      point,
+    )
   }
 }

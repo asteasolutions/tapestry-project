@@ -54,14 +54,15 @@ class S3Service {
   ): Promise<string> {
     return this.cache.memoize(
       key,
-      () =>
-        this.getPresignedUrl(
+      async () => ({
+        value: await this.getPresignedUrl(
           new GetObjectCommand({
             Bucket,
             Key: key,
           }),
           expiresIn,
         ),
+      }),
       expiresIn >> 1,
       async (cachedUrl) => {
         try {

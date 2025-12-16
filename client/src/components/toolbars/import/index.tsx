@@ -10,50 +10,19 @@ import { SubmenuIds } from 'tapestry-core-client/src/components/lib/toolbar'
 import { MenuItems, Toolbar } from 'tapestry-core-client/src/components/lib/toolbar/index'
 import { useViewportObstruction } from 'tapestry-core-client/src/components/tapestry/hooks/use-viewport-obstruction'
 import { shortcutLabel } from 'tapestry-core-client/src/lib/keyboard-event'
+import { OneOrMore } from 'tapestry-core/src/utils'
 import { MediaItemSource } from '../../../lib/media'
 import { createActionButtonItem, createTextItem } from '../../../model/data/utils'
 import { useDispatch, useTapestryData } from '../../../pages/tapestry/tapestry-providers'
 import { addAndPositionItems } from '../../../pages/tapestry/view-model/store-commands/items'
-import {
-  setIAImport,
-  setInteractiveElement,
-  setSnackbar,
-} from '../../../pages/tapestry/view-model/store-commands/tapestry'
-import { createItemViewModel } from '../../../pages/tapestry/view-model/utils'
-import {
-  getIAImport,
-  InvalidSourceError,
-  isFileEligible,
-  parseFileTransferData,
-} from '../../../stage/data-transfer-handler'
+import { setSnackbar } from '../../../pages/tapestry/view-model/store-commands/tapestry'
+import { createItemViewModel, insertDataTransfer } from '../../../pages/tapestry/view-model/utils'
+import { DataTransferHandler, InvalidSourceError } from '../../../stage/data-transfer-handler'
 import { MediaCaptureDialog } from '../../media-capture-dialog'
 import { ThemeSelector } from '../../theme-selector'
 import styles from './styles.module.css'
 
-function useAddToTapestry() {
-  const dispatch = useDispatch()
-  const tapestryId = useTapestryData('id')
-  return async (source: MediaItemSource) => {
-    if (source instanceof File && !isFileEligible(source)) {
-      dispatch((store) => {
-        store.largeFiles = [source]
-      })
-      return
-    }
-    const iaImport = typeof source === 'string' ? await getIAImport(source) : undefined
-    if (iaImport) {
-      dispatch(setIAImport(iaImport))
-      return
-    }
-    const items = await parseFileTransferData(source, tapestryId)
-    const viewModels = items.map(createItemViewModel)
-    dispatch(
-      addAndPositionItems(viewModels),
-      viewModels.length === 1 &&
-        setInteractiveElement({ modelId: viewModels[0].dto.id, modelType: 'item' }),
-    )
-  }
-}
+const dataTransferHandler = new DataTransferHandler()
 
 interface GlobalMenuProps {
   className?: string
@@ -80,13 +49,15 @@ export function ImportToolbar({ className }: GlobalMenuProps) {
     KeyR: openMediaCaptureDialog,
   })
 
-  const addToTapestry = useAddToTapestry()
+  const addToTapestry = (source: OneOrMore<MediaItemSource>) =>
+    insertDataTransfer(dispatch, () => dataTransferHandler.deserialize(source, tapestryId))
 
   const items = [
     {
       element: (
         <FilePicker
-          accept="image/*,application/pdf,video/*,application/epub+zip,audio/*"
+          accept="image/*,application/pdf,video/*,application/epub+zip,audio/*,text/*,.webloc,.url"
+          multiple
           onChange={addToTapestry}
         >
           <IconButton aria-label="Import file" icon="upload_file" ref={uploadButtonRef} />
@@ -145,13 +116,9 @@ export function ImportToolbar({ className }: GlobalMenuProps) {
         <IconButton
           icon="text_fields"
           aria-label="Insert text"
-          onClick={() => {
-            const viewModel = createItemViewModel(createTextItem('', tapestryId))
-            dispatch(
-              addAndPositionItems(viewModel),
-              setInteractiveElement({ modelId: viewModel.dto.id, modelType: 'item' }),
-            )
-          }}
+          onClick={() =>
+            dispatch(addAndPositionItems(createItemViewModel(createTextItem('', tapestryId))))
+          }
         />
       ),
       tooltip: { side: 'right', children: <ShortcutLabel text="Text">T</ShortcutLabel> },
@@ -175,13 +142,11 @@ export function ImportToolbar({ className }: GlobalMenuProps) {
         <IconButton
           icon={{ name: 'dashboard_customize', fill: true }}
           aria-label="Add a button"
-          onClick={() => {
-            const viewModel = createItemViewModel(createActionButtonItem('', tapestryId))
+          onClick={() =>
             dispatch(
-              addAndPositionItems(viewModel),
-              setInteractiveElement({ modelId: viewModel.dto.id, modelType: 'item' }),
+              addAndPositionItems(createItemViewModel(createActionButtonItem('', tapestryId))),
             )
-          }}
+          }
         />
       ),
       tooltip: {

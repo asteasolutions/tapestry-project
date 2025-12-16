@@ -87,7 +87,13 @@ export const proxy: RESTResourceImpl<Resources['proxy'], never> = {
                 console.error('Error during WBM search', responseText)
                 throw new ServerError('Unexpected response')
               }
-              return responseText
+              return {
+                value: responseText,
+                overwriteTTL:
+                  // If there are no snapshots we assume the page was just put for indexing.
+                  // Therefore we cache the response for a shorter period (2 minutes)
+                  (JSON.parse(responseText) as string[][]).length === 0 ? 120 : undefined,
+              }
             },
             config.server.wbmResponseCacheDuration,
           )

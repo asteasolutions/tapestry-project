@@ -100,6 +100,12 @@ export function setIAImport(
   }
 }
 
+export function setLargeFiles(files: File[]): StoreMutationCommand<EditableTapestryViewModel> {
+  return (model) => {
+    model.largeFiles = files
+  }
+}
+
 export function addCollaborator(
   id: string,
   user: PublicUserProfileDto,

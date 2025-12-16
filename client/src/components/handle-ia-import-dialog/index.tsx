@@ -1,8 +1,5 @@
 import { useDispatch, useTapestryData } from '../../pages/tapestry/tapestry-providers'
-import {
-  setInteractiveElement,
-  setIAImport,
-} from '../../pages/tapestry/view-model/store-commands/tapestry'
+import { setIAImport } from '../../pages/tapestry/view-model/store-commands/tapestry'
 import { SimpleModal } from 'tapestry-core-client/src/components/lib/modal/index'
 import styles from './styles.module.css'
 import { ImportItemsList } from './import-items-list/index'
@@ -110,12 +107,7 @@ export function HandleIAImportDialog() {
           const viewModels = (await createNewItems(iaImport, selectedItems, tapestryId)).map(
             createItemViewModel,
           )
-
-          dispatch(
-            viewModels.length !== 0 && addAndPositionItems(viewModels),
-            viewModels.length === 1 &&
-              setInteractiveElement({ modelId: viewModels[0].dto.id, modelType: 'item' }),
-          )
+          dispatch(viewModels.length > 0 && addAndPositionItems(viewModels))
 
           onClose()
         },

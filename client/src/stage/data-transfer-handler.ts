@@ -1,7 +1,7 @@
 import { MediaItemSource } from '../lib/media'
 import { createMediaItem, createTextItem, getMediaType } from '../model/data/utils'
 import { ItemCreateDto, ItemDto } from 'tapestry-shared/src/data-transfer/resources/dtos/item'
-import { isHTTPURL } from 'tapestry-core/src/utils'
+import { ensureArray, isHTTPURL, OneOrMore } from 'tapestry-core/src/utils'
 import { mapNotNull } from 'tapestry-core/src/lib/array'
 import { getFile, scan } from 'tapestry-core-client/src/lib/file'
 import { ItemCreateSchema } from 'tapestry-shared/src/data-transfer/resources/schemas/item'
@@ -19,13 +19,13 @@ import { isBlobURL } from 'tapestry-core-client/src/view-model/utils'
 
 export const MAX_FILE_SIZE = 500 * 1000 * 1000 // 500 MB
 
-export function isFileEligible(file: File, maxSize = MAX_FILE_SIZE) {
+function isFileEligible(file: File, maxSize = MAX_FILE_SIZE) {
   return file.size <= maxSize
 }
 
 export class InvalidSourceError extends Error {}
 
-export async function parseFileTransferData(
+async function parseFileTransferData(
   source: MediaItemSource,
   tapestryId: string,
 ): Promise<ItemCreateDto[]> {
@@ -131,7 +131,7 @@ export async function dataTransferToFiles(transfer: DataTransfer) {
   ).flat(2)
 }
 
-export async function getIAImport(stringData: string): Promise<IAImport | undefined> {
+async function getIAImport(stringData: string): Promise<IAImport | undefined> {
   const iaItem = parseInternetArchiveURL(stringData)
 
   if (!iaItem || iaItem.urlType === 'user-list') {
@@ -174,12 +174,14 @@ export type DeserializeResult = {
 
 export class DataTransferHandler {
   async deserialize(
-    dataTransfer: DataTransfer | null,
+    dataTransfer: DataTransfer | OneOrMore<MediaItemSource> | null,
     tapestryId: string,
   ): Promise<DeserializeResult> {
     if (!dataTransfer) {
       return Promise.resolve({ items: [], largeFiles: [] })
     }
+    dataTransfer =
+      dataTransfer instanceof DataTransfer ? dataTransfer : this.toDataTransfer(dataTransfer)
 
     const stringData = getStringTransferData(dataTransfer)
 
@@ -228,5 +230,16 @@ export class DataTransferHandler {
       }
     }
     return result
+  }
+
+  private toDataTransfer(source: OneOrMore<MediaItemSource>) {
+    source = ensureArray(source)
+
+    const dataTransfer = new DataTransfer()
+    const [files, urls] = partition(source, (s) => s instanceof File)
+    dataTransfer.setData('text/uri-list', urls.join('\r\n'))
+    files.forEach((f) => dataTransfer.items.add(f))
+
+    return dataTransfer
   }
 }

@@ -17,7 +17,7 @@ export class RedisCache {
 
   async memoize(
     key: string,
-    generate: () => Promise<string>,
+    generate: () => Promise<{ value: string; overwriteTTL?: number }>,
     ttl: number,
     validateCachedValue = (_value: string) => Promise.resolve(true),
     validationTtl = 0,
@@ -38,8 +38,8 @@ export class RedisCache {
       }
     }
 
-    const newValue = await generate()
-    await redis.set(namespacedKey, newValue, 'EX', ttl)
+    const { value: newValue, overwriteTTL } = await generate()
+    await redis.set(namespacedKey, newValue, 'EX', overwriteTTL ?? ttl)
 
     return newValue
   }
