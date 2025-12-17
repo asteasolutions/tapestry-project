@@ -1,16 +1,15 @@
 .root {
   position: relative;
 
-  .drag-overlay {
+  .overlay {
     position: absolute;
     inset: 0;
     background-color: var(--theme-overlay);
     display: none;
     align-items: center;
     justify-content: center;
-    z-index: 1;
 
-    .drop-area {
+    .drop-hint {
       padding: 50px 90px;
       border-radius: 16px;
       display: flex;
@@ -44,9 +43,7 @@
     }
   }
 
-  &.visible {
-    .drag-overlay {
-      display: flex;
-    }
+  &.visible .overlay {
+    display: flex;
   }
 }

@@ -17,7 +17,7 @@ import {
   SortDirection,
 } from 'tapestry-shared/src/data-transfer/resources/dtos/common'
 import { userSettings } from '../../services/user-settings'
-import { DragArea } from 'tapestry-core-client/src/components/lib/drag-area'
+import { DropArea } from 'tapestry-core-client/src/components/lib/drop-area'
 import { Breakpoint, useResponsive } from '../../providers/responsive-provider'
 import { DashboardHeader } from './header'
 import { TapestryListControls } from './tapestry-list-controls'
@@ -179,9 +179,9 @@ export function Dashboard() {
       <title>Tapestries</title>
       {!smOrLess && header}
 
-      <DragArea
+      <DropArea
         allowDrop={(items) => items.some((i) => i.type === TYPE)}
-        classes={{ root: styles.dragArea }}
+        classes={{ root: styles.dropArea }}
         disabled={!user}
         onDrop={async (e) => {
           const zips = (await dataTransferToFiles(e.dataTransfer)).filter((f) => f.type === TYPE)
@@ -209,7 +209,7 @@ export function Dashboard() {
             )
           }
         />
-      </DragArea>
+      </DropArea>
       {creatingTapestry && <CreateTapestryDialog onCancel={() => setCreatingTapestry(false)} />}
       {imports && <ImportTapestryDialog imports={imports} onClose={resetImports} />}
       <AcceptInvitationDialog />
