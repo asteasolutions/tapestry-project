@@ -12,9 +12,52 @@ import {
 } from 'tapestry-core/src/internet-archive'
 import { MediaItemType, WebpageType } from 'tapestry-core/src/data-format/schemas/item'
 import { getUserListItems } from '../lib/internet-archive'
-import { parseStringTransferData } from './data-transfer-handler'
+import { parseFileTransferData, parseStringTransferData } from './data-transfer-handler'
 import { fileTypeFromBuffer } from 'file-type'
 import { parse } from 'ini'
+
+/**
+ * Tries to extract a link from a url file. This is a shortcut file created on Windows in INI format
+ */
+async function parseUrlFile(source: File) {
+  if (!source.name.endsWith('url')) {
+    return
+  }
+
+  type URLSection = Record<'URL', string> | undefined
+  const url = (parse(await source.text()).InternetShortcut as URLSection)?.URL
+
+  return url
+}
+
+/**
+ * Tries to extract a link from a webloc file. This is a shortcut file created on MacOS in XML format
+ */
+async function parseWeblocFile(source: File) {
+  if (!source.name.endsWith('webloc')) {
+    return
+  }
+
+  const fileType = await fileTypeFromBuffer(await source.arrayBuffer())
+
+  if (fileType?.mime !== 'application/xml') {
+    return
+  }
+
+  const children = new DOMParser()
+    .parseFromString(await source.text(), 'application/xml')
+    .querySelector('dict')?.children
+  if (children?.length !== 2) {
+    return
+  }
+
+  const [{ textContent: type }, { textContent: url }] = children
+  if (type !== 'URL') {
+    return
+  }
+
+  return url
+}
 
 /**
  * An ItemFactory takes a MediaItemSource (File or URL) and tries to produce one or more tapestry items from it.
@@ -91,50 +134,18 @@ const iaCollectionFactory: ItemFactory = async (source, _, tapestryId) => {
   return Promise.all(iaItems.map(async (iaItem) => createIAItem(tapestryId, iaItem)))
 }
 
-const weblocFileFactory: ItemFactory = async (source, _, tapestryId) => {
-  if (!(source instanceof File) || !source.name.endsWith('webloc')) {
+const linkFileFactory: ItemFactory = async (source, _, tapestryId) => {
+  if (!(source instanceof File)) {
     return null
   }
 
-  const fileType = await fileTypeFromBuffer(await source.arrayBuffer())
+  const url = (await parseUrlFile(source)) ?? (await parseWeblocFile(source))
 
-  if (fileType?.mime !== 'application/xml') {
-    return null
-  }
-
-  const children = new DOMParser()
-    .parseFromString(await source.text(), 'application/xml')
-    .querySelector('dict')?.children
-  if (children?.length !== 2) {
-    return null
-  }
-
-  const [{ textContent: type }, { textContent: url }] = children
-  if (type !== 'URL') {
-    return null
-  }
-
-  return (
-    (await iaCollectionFactory(url, _, tapestryId)) ??
-    (await webpageItemFactory(url, _, tapestryId))
-  )
-}
-
-const urlFileFactory: ItemFactory = async (source, _, tapestryId) => {
-  if (!(source instanceof File) || !source.name.endsWith('url')) {
-    return null
-  }
-
-  type URLSection = Record<'URL', string> | undefined
-  const url = (parse(await source.text()).InternetShortcut as URLSection)?.URL
   if (!url) {
     return null
   }
 
-  return (
-    (await iaCollectionFactory(url, _, tapestryId)) ??
-    (await webpageItemFactory(url, _, tapestryId))
-  )
+  return parseFileTransferData(url, tapestryId)
 }
 
 /**
@@ -152,8 +163,7 @@ export const ITEM_FACTORIES: ItemFactory[] = [
   createSimpleMediaItemFactory('pdf', (_, mediaType) => mediaType === 'application/pdf'),
   createSimpleMediaItemFactory('video', (_, mediaType) => !!mediaType?.startsWith('video/')),
   createSimpleMediaItemFactory('audio', (_, mediaType) => !!mediaType?.startsWith('audio/')),
-  weblocFileFactory,
-  urlFileFactory,
+  linkFileFactory,
   textItemFactory,
   htmlFileItemFactory,
   iaCollectionFactory,

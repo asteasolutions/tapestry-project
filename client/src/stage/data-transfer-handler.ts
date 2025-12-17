@@ -25,7 +25,7 @@ function isFileEligible(file: File, maxSize = MAX_FILE_SIZE) {
 
 export class InvalidSourceError extends Error {}
 
-async function parseFileTransferData(
+export async function parseFileTransferData(
   source: MediaItemSource,
   tapestryId: string,
 ): Promise<ItemCreateDto[]> {
