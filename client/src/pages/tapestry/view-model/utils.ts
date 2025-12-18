@@ -1,4 +1,21 @@
+import { WritableDraft } from 'immer'
 import { chunk, zip } from 'lodash-es'
+import {
+  getBoundingRectangle,
+  MULTISELECT_RECTANGLE_PADDING,
+} from 'tapestry-core-client/src/view-model/utils'
+import { Point } from 'tapestry-core/src/data-format/schemas/common'
+import { GroupCreateDto } from 'tapestry-shared/src/data-transfer/resources/dtos/group'
+import {
+  ActionButtonItemDto,
+  ItemCreateDto,
+  TextItemDto,
+} from 'tapestry-shared/src/data-transfer/resources/dtos/item'
+import {
+  PresentationStepCreateDto,
+  PresentationStepDto,
+} from 'tapestry-shared/src/data-transfer/resources/dtos/presentation-step'
+import { RelCreateDto } from 'tapestry-shared/src/data-transfer/resources/dtos/rel'
 import {
   DirectionMask,
   EditableGroupViewModel,
@@ -8,23 +25,11 @@ import {
   ItemUIComponent,
   MultiselectionUIComponent,
   SelectionResizeState,
+  TapestryEditorStore,
 } from '.'
-import {
-  ActionButtonItemDto,
-  ItemCreateDto,
-  TextItemDto,
-} from 'tapestry-shared/src/data-transfer/resources/dtos/item'
-import { RelCreateDto } from 'tapestry-shared/src/data-transfer/resources/dtos/rel'
-import { GroupCreateDto } from 'tapestry-shared/src/data-transfer/resources/dtos/group'
-import {
-  PresentationStepCreateDto,
-  PresentationStepDto,
-} from 'tapestry-shared/src/data-transfer/resources/dtos/presentation-step'
-import { WritableDraft } from 'immer'
-import {
-  getBoundingRectangle,
-  MULTISELECT_RECTANGLE_PADDING,
-} from 'tapestry-core-client/src/view-model/utils'
+import { DeserializeResult } from '../../../stage/data-transfer-handler'
+import { addAndPositionItems } from './store-commands/items'
+import { setIAImport, setLargeFiles, setSnackbar } from './store-commands/tapestry'
 
 export function getMultiselectRectangle(
   selectionItems: EditableItemViewModel[],
@@ -147,4 +152,32 @@ export function reassignPresentationStep(
     [`${targetType}Id`]: targetId,
     [`${targetType === 'item' ? 'group' : 'item'}Id`]: null,
   })
+}
+
+export async function insertDataTransfer(
+  dispatch: TapestryEditorStore['dispatch'],
+  deserialize: () => Promise<DeserializeResult>,
+  point?: Point,
+) {
+  try {
+    dispatch((model) => {
+      model.pendingRequests++
+    })
+    const { items, largeFiles, iaImports } = await deserialize()
+    if (iaImports.length > 0) {
+      dispatch(setIAImport(iaImports))
+    }
+
+    const viewModels = items.map(createItemViewModel)
+    dispatch(
+      viewModels.length !== 0 && addAndPositionItems(viewModels, { centerAt: point }),
+      largeFiles.length !== 0 && setLargeFiles(largeFiles),
+    )
+  } catch {
+    dispatch(setSnackbar({ text: 'Could not import', variant: 'error' }))
+  } finally {
+    dispatch((model) => {
+      model.pendingRequests--
+    })
+  }
 }

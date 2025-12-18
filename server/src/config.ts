@@ -29,6 +29,7 @@ export const config = deepFreeze(
       IA_ACCOUNT_ID: z.string().default(''),
       IA_SECRET: z.string().default(''),
       WBM_RESPONSE_CACHE_DURATION: NullishInt(3600), // one hour in seconds
+      WBM_EMPTY_RESPONSE_CACHE_DURATION: NullishInt(120),
       ASSET_READ_URL_EXPIRES_IN: NullishInt(604_800), // on week in seconds
       ASSET_READ_URL_VALIDATION_EXPIRES_IN: NullishInt(600),
       EXTERNAL_SERVER_URL: z.string(),
@@ -94,6 +95,7 @@ export const config = deepFreeze(
         },
         secureCookie: input.SECURE_COOKIE,
         wbmResponseCacheDuration: input.WBM_RESPONSE_CACHE_DURATION,
+        wbmEmptyResponseCacheDuration: input.WBM_EMPTY_RESPONSE_CACHE_DURATION,
       },
       vault: {
         endpoint: input.VAULT_ADDR,

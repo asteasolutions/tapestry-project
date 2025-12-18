@@ -30,8 +30,8 @@ interface TextItemToolbarOptions {
   onLinkClick?: () => unknown
   canAddLink?: boolean
   itemBackgroundColor: LiteralColor | null | undefined
-  onBackgroundColorChange: (color: LiteralColor) => unknown
-  onColorChange: (color: LiteralColor) => unknown
+  onBackgroundColorChange: (color: LiteralColor, shouldClose: boolean) => unknown
+  onColorChange: (color: LiteralColor, shouldClose: boolean) => unknown
   onToggleMenu: (id: '' | FormattingSubmenu) => unknown
   controls?: { [K in keyof Controls]: boolean }
 }
@@ -195,14 +195,14 @@ export function textItemToolbar({
                       color={color}
                       size={22}
                       aria-label={label}
-                      onClick={() => onColorChange(color)}
+                      onClick={() => onColorChange(color, true)}
                       isSelected={foregroundColor === color.toLowerCase()}
                       tooltip={{ side: 'bottom', children: label }}
                     />
                   ))
                   .concat(
                     <ColorPickerButton
-                      onChange={(color) => onColorChange(color)}
+                      onChange={(color) => onColorChange(color, false)}
                       size={22}
                       color={isCustomForegroundColor ? foregroundColor : undefined}
                       key="custom"
@@ -232,14 +232,14 @@ export function textItemToolbar({
                       color={color}
                       size={22}
                       aria-label={label}
-                      onClick={() => onBackgroundColorChange(color)}
+                      onClick={() => onBackgroundColorChange(color, true)}
                       isSelected={itemBackgroundColor?.toLowerCase() === color.toLowerCase()}
                       tooltip={{ side: 'bottom', children: label }}
                     />
                   ))
                   .concat(
                     <ColorPickerButton
-                      onChange={(color) => onBackgroundColorChange(color)}
+                      onChange={(color) => onBackgroundColorChange(color, false)}
                       size={22}
                       color={isCustomBackgroundColor ? itemBackgroundColor : undefined}
                     />,

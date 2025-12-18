@@ -18,7 +18,7 @@ export class RedisCache {
   async memoize(
     key: string,
     generate: () => Promise<string>,
-    ttl: number,
+    ttl: number | ((value: string) => number),
     validateCachedValue = (_value: string) => Promise.resolve(true),
     validationTtl = 0,
   ) {
@@ -39,7 +39,7 @@ export class RedisCache {
     }
 
     const newValue = await generate()
-    await redis.set(namespacedKey, newValue, 'EX', ttl)
+    await redis.set(namespacedKey, newValue, 'EX', typeof ttl === 'function' ? ttl(newValue) : ttl)
 
     return newValue
   }
