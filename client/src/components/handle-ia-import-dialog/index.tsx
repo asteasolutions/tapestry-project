@@ -96,6 +96,7 @@ export function HandleIAImportDialog() {
     setSelectedItems([])
     if (importIndex === iaImports.length - 1) {
       dispatch(setIAImport([]))
+      setImportIndex(0)
     } else {
       setImportIndex(importIndex + 1)
     }
