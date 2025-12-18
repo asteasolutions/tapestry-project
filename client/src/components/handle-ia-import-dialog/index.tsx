@@ -55,13 +55,22 @@ async function createNewItems(
   )
 }
 
+function getTitle(imports: IAImport[], index: number) {
+  const total = imports.length
+  const title = IA_IMPORT_TITLE_MAP[imports[index].type]
+  return total > 1 ? `(${index + 1} / ${total}) ${title}` : title
+}
+
 export const MAX_SELECTION = 50
 
 export function HandleIAImportDialog() {
-  const { iaImport, id: tapestryId } = useTapestryData(['iaImport', 'id'])
+  const { iaImports, id: tapestryId } = useTapestryData(['iaImports', 'id'])
   const dispatch = useDispatch()
   const [selectedItems, setSelectedItems] = useState<ImportItem[]>([])
   const mdOrLess = useResponsive() <= Breakpoint.MD
+
+  const [importIndex, setImportIndex] = useState(0)
+  const iaImport = iaImports[importIndex] as IAImport | undefined
 
   const { trigger: toggleAll, loading } = useAsyncAction(async ({ signal }, check: boolean) => {
     if (!iaImport) {
@@ -90,7 +99,11 @@ export function HandleIAImportDialog() {
 
   const onClose = () => {
     setSelectedItems([])
-    dispatch(setIAImport(null))
+    if (importIndex === iaImports.length - 1) {
+      dispatch(setIAImport([]))
+    } else {
+      setImportIndex(importIndex + 1)
+    }
   }
 
   const header = <ImportDetails import={iaImport} />
@@ -98,7 +111,7 @@ export function HandleIAImportDialog() {
   return (
     <SimpleModal
       classes={{ root: clsx(styles.modal, IA_IMPORT_CLASS_MAP[iaImport.type]) }}
-      title={IA_IMPORT_TITLE_MAP[iaImport.type]}
+      title={getTitle(iaImports, importIndex)}
       cancel={{ onClick: onClose }}
       confirm={{
         text: `Save selection${selectedItems.length > 0 ? ` (${selectedItems.length})` : ''}`,

@@ -6,15 +6,10 @@ import { mapNotNull } from 'tapestry-core/src/lib/array'
 import { getFile, scan } from 'tapestry-core-client/src/lib/file'
 import { ItemCreateSchema } from 'tapestry-shared/src/data-transfer/resources/schemas/item'
 import { blobUrlToFileMap } from 'tapestry-core-client/src/components/lib/hooks/use-media-source'
-import { ITEM_FACTORIES } from './item-factories'
+import { ITEM_FACTORIES, ItemFactoryResult } from './item-factories'
 import { compact, omit, partition, set } from 'lodash-es'
 import z from 'zod/v4'
 import { IAImport } from '../pages/tapestry/view-model'
-import {
-  parseInternetArchiveURL,
-  getIAItemMetadata,
-  getIAPlaylistEntries,
-} from 'tapestry-core/src/internet-archive'
 import { isBlobURL } from 'tapestry-core-client/src/view-model/utils'
 
 export const MAX_FILE_SIZE = 500 * 1000 * 1000 // 500 MB
@@ -25,10 +20,10 @@ function isFileEligible(file: File, maxSize = MAX_FILE_SIZE) {
 
 export class InvalidSourceError extends Error {}
 
-export async function parseFileTransferData(
+export async function parseMediaSource(
   source: MediaItemSource,
   tapestryId: string,
-): Promise<ItemCreateDto[]> {
+): Promise<ItemFactoryResult> {
   // Make sure the source is either a file or an HTTP URL
   if (!(source instanceof File) && !isHTTPURL(source)) {
     throw new InvalidSourceError()
@@ -43,7 +38,7 @@ export async function parseFileTransferData(
     }
   }
 
-  return []
+  return [[], []]
 }
 
 function tryParseItems(text: string, tapestryId: string): ItemCreateDto[] | undefined {
@@ -61,60 +56,66 @@ function tryParseItems(text: string, tapestryId: string): ItemCreateDto[] | unde
   }
 }
 
-function getStringTransferData(data: DataTransfer) {
+function getStringTransferData(data: DataTransfer): string[] | string {
   // text/uri-list may contain multiple urls, each on separate line.
   // It can also contain comments - lines starting with #
-  const text = data
-    .getData('text/uri-list')
-    .split('\r\n')
-    .find((line) => !line.startsWith('#'))
+  const uriList = compact(
+    data
+      .getData('text/uri-list')
+      .split('\r\n')
+      .filter((line) => !line.startsWith('#')),
+  )
 
-  if (!text) {
-    const htmlText = data.getData('text/html')
-    const plainText = data.getData('text/plain')
-
-    if (isHTTPURL(htmlText)) {
-      return htmlText
-    }
-
-    if (isHTTPURL(plainText)) {
-      return plainText
-    }
-
-    return htmlText || plainText
+  if (uriList.length > 0) {
+    return uriList
   }
 
-  return text
+  const htmlText = data.getData('text/html')
+  const plainText = data.getData('text/plain')
+
+  if (isHTTPURL(htmlText)) {
+    return [htmlText]
+  }
+
+  if (isHTTPURL(plainText)) {
+    return [plainText]
+  }
+
+  return htmlText || plainText
 }
 
 export async function parseStringTransferData(
-  text: string | undefined,
+  text: string[] | string,
   tapestryId: string,
-): Promise<ItemCreateDto[] | undefined> {
+): Promise<ItemFactoryResult> {
   if (!text) {
-    return undefined
+    return [[], []]
+  }
+
+  if (Array.isArray(text)) {
+    return parseSources(text, tapestryId)
   }
 
   const items = tryParseItems(text, tapestryId)
   if (items) {
-    return items
+    return [items, []]
   }
 
   const lines = compact(text.trim().split(/\s*\n\s*/))
   if (lines.every((line) => isHTTPURL(line))) {
-    return (await Promise.all(lines.map((url) => parseFileTransferData(url, tapestryId)))).flat()
+    return parseSources(lines, tapestryId)
   }
 
   if (isHTTPURL(text)) {
-    return parseFileTransferData(text, tapestryId)
+    return parseSources([text], tapestryId)
   }
   if (isBlobURL(text)) {
     const file = blobUrlToFileMap.get(text)
     if (file) {
-      return parseFileTransferData(file, tapestryId)
+      return parseSources([file], tapestryId)
     }
   }
-  return [createTextItem(text, tapestryId)]
+  return [[createTextItem(text, tapestryId)], []]
 }
 
 function sanitizeForCopy(item: ItemDto): Omit<ItemCreateDto, 'tapestryId'> {
@@ -131,45 +132,23 @@ export async function dataTransferToFiles(transfer: DataTransfer) {
   ).flat(2)
 }
 
-async function getIAImport(stringData: string): Promise<IAImport | undefined> {
-  const iaItem = parseInternetArchiveURL(stringData)
-
-  if (!iaItem || iaItem.urlType === 'user-list') {
-    return
+async function parseSources(
+  sources: MediaItemSource[],
+  tapestryId: string,
+): Promise<ItemFactoryResult> {
+  const result: ItemFactoryResult = [[], []]
+  for (const src of sources) {
+    const [items, iaImports] = await parseMediaSource(src, tapestryId)
+    result[0].push(...items)
+    result[1].push(...iaImports)
   }
-  const { id } = iaItem.item
-
-  const metadata = await getIAItemMetadata(id)
-
-  if (metadata?.mediatype === 'collection') {
-    return {
-      type: 'IACollection',
-      metadata,
-      id,
-    }
-  }
-
-  if (metadata?.mediatype === 'movies' || metadata?.mediatype === 'audio') {
-    const playlistEntries = await getIAPlaylistEntries(iaItem.item)
-    if (playlistEntries && playlistEntries.length >= 2) {
-      return {
-        type: 'IAPlaylist',
-        id,
-        metadata,
-        entries: playlistEntries.map((entry) => ({
-          title: entry.title,
-          filename: entry.orig,
-          duration: entry.duration,
-        })),
-      }
-    }
-  }
+  return result
 }
 
 export type DeserializeResult = {
   items: ItemCreateDto[]
   largeFiles: File[]
-  iaImport?: IAImport
+  iaImports: IAImport[]
 }
 
 export class DataTransferHandler {
@@ -178,7 +157,7 @@ export class DataTransferHandler {
     tapestryId: string,
   ): Promise<DeserializeResult> {
     if (!dataTransfer) {
-      return Promise.resolve({ items: [], largeFiles: [] })
+      return Promise.resolve({ items: [], largeFiles: [], iaImports: [] })
     }
     dataTransfer =
       dataTransfer instanceof DataTransfer ? dataTransfer : this.toDataTransfer(dataTransfer)
@@ -187,20 +166,24 @@ export class DataTransferHandler {
 
     // Do not put awaits above this invocation
     const files = await dataTransferToFiles(dataTransfer)
-    const iaImport = await getIAImport(stringData)
 
     const [eligibleFiles, largeFiles] = partition(files, isFileEligible)
-    const fileItems = (
-      await Promise.all(eligibleFiles.map((file) => parseFileTransferData(file, tapestryId)))
-    ).flat(2)
+    let [items, iaImports] = await parseSources(eligibleFiles, tapestryId)
+
+    if (items.length > 0 || iaImports.length > 0) {
+      return {
+        items,
+        iaImports,
+        largeFiles,
+      }
+    }
+
+    ;[items, iaImports] = await parseStringTransferData(stringData, tapestryId)
 
     return {
-      items:
-        fileItems.length === 0 && !iaImport
-          ? ((await parseStringTransferData(stringData, tapestryId)) ?? [])
-          : fileItems,
-      largeFiles,
-      iaImport,
+      items,
+      iaImports,
+      largeFiles: [],
     }
   }
 
@@ -212,6 +195,7 @@ export class DataTransferHandler {
     const result: DeserializeResult = {
       items: [],
       largeFiles: [],
+      iaImports: [],
     }
     for (const item of await navigator.clipboard.read()) {
       let type = item.types.find((t) => t.startsWith('image/'))
@@ -221,12 +205,9 @@ export class DataTransferHandler {
         )
       } else if ((type = item.types.find((t) => t.startsWith('text/')))) {
         const text = await (await item.getType(type)).text()
-        const iaImport = await getIAImport(text)
-        if (iaImport) {
-          result.iaImport = iaImport
-        } else {
-          result.items.push(...((await parseStringTransferData(text, tapestryId)) ?? []))
-        }
+        const [items, iaImports] = await parseStringTransferData(text, tapestryId)
+        result.iaImports.push(...iaImports)
+        result.items.push(...items)
       }
     }
     return result

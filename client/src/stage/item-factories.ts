@@ -1,20 +1,23 @@
 import { isHTTPURL } from 'tapestry-core/src/utils'
 import { MediaItemSource } from '../lib/media'
-import { createMediaItem, createTextItem, getMediaSourceText } from '../model/data/utils'
+import { createMediaItem, getMediaSourceText } from '../model/data/utils'
 import { ItemCreateDto } from 'tapestry-shared/src/data-transfer/resources/dtos/item'
 import { findWebSourceParser } from 'tapestry-core/src/web-sources'
 import {
   iaItemEmbedURL,
-  getNestedIAItems,
   IAMediaType,
   parseInternetArchiveURL,
   IAItem,
+  getIAItemMetadata,
+  getIAPlaylistEntries,
+  getNestedIAItems,
 } from 'tapestry-core/src/internet-archive'
 import { MediaItemType, WebpageType } from 'tapestry-core/src/data-format/schemas/item'
 import { getUserListItems } from '../lib/internet-archive'
-import { parseFileTransferData, parseStringTransferData } from './data-transfer-handler'
+import { parseMediaSource, parseStringTransferData } from './data-transfer-handler'
 import { fileTypeFromBuffer } from 'file-type'
 import { parse } from 'ini'
+import { IAImport } from '../pages/tapestry/view-model'
 
 /**
  * Tries to extract a link from a url file. This is a shortcut file created on Windows in INI format
@@ -63,11 +66,12 @@ async function parseWeblocFile(source: File) {
  * An ItemFactory takes a MediaItemSource (File or URL) and tries to produce one or more tapestry items from it.
  * If a factory doesn't know how to handle a given source, it returns null.
  */
+export type ItemFactoryResult = [ItemCreateDto[], IAImport[]]
 type ItemFactory = (
   source: MediaItemSource,
   mediaType: string | null,
   tapestryId: string,
-) => Promise<ItemCreateDto[] | null>
+) => Promise<ItemFactoryResult | null>
 
 function createSimpleMediaItemFactory(
   itemType: MediaItemType,
@@ -76,7 +80,7 @@ function createSimpleMediaItemFactory(
   return async (source, mediaType, tapestryId) => {
     if (!sourceMatches(source, mediaType)) return null
 
-    return [await createMediaItem(itemType, source, tapestryId)]
+    return [[await createMediaItem(itemType, source, tapestryId)], []]
   }
 }
 
@@ -85,17 +89,13 @@ const textItemFactory: ItemFactory = async (source, mediaType, tapestryId) => {
 
   const sourceAsText = await getMediaSourceText(source)
 
-  return (
-    (await parseStringTransferData(sourceAsText, tapestryId)) ?? [
-      createTextItem(sourceAsText, tapestryId),
-    ]
-  )
+  return await parseStringTransferData(sourceAsText, tapestryId)
 }
 
 const htmlFileItemFactory: ItemFactory = async (source, mediaType, tapestryId) => {
   if (!mediaType?.startsWith('application/xhtml') && mediaType !== 'text/html') return null
 
-  return [await createMediaItem('webpage', source, tapestryId)]
+  return [[await createMediaItem('webpage', source, tapestryId)], []]
 }
 
 const webpageItemFactory: ItemFactory = async (source, _mediaType, tapestryId) => {
@@ -106,7 +106,7 @@ const webpageItemFactory: ItemFactory = async (source, _mediaType, tapestryId) =
   item.webpageType = parser.webpageType
   item.skipSourceResolution = true
 
-  return [item]
+  return [[item], []]
 }
 
 const IA_MEDIA_TYPE_MAP: Partial<Record<IAMediaType, WebpageType>> = {
@@ -126,12 +126,30 @@ const iaCollectionFactory: ItemFactory = async (source, _, tapestryId) => {
   const descriptor = parseInternetArchiveURL(source)
   if (!descriptor) return null
 
-  const iaItems =
-    descriptor.urlType === 'user-list'
-      ? await getUserListItems(source as string)
-      : await getNestedIAItems(descriptor.item)
+  if (descriptor.urlType === 'user-list') {
+    const iaItems = await getUserListItems(source as string)
+    return [await Promise.all(iaItems.map(async (iaItem) => createIAItem(tapestryId, iaItem))), []]
+  }
 
-  return Promise.all(iaItems.map(async (iaItem) => createIAItem(tapestryId, iaItem)))
+  const { id } = descriptor.item
+  const metadata = await getIAItemMetadata(id)
+
+  if (metadata?.mediatype === 'collection') {
+    return [[], [{ type: 'IACollection', metadata, id }]]
+  }
+
+  if (metadata?.mediatype === 'movies' || metadata?.mediatype === 'audio') {
+    const plst = (await getIAPlaylistEntries(descriptor.item)) ?? []
+    if (plst.length > 1) {
+      const entries = plst.map(({ title, orig, duration }) => ({ title, filename: orig, duration }))
+      return [[], [{ type: 'IAPlaylist', id, metadata, entries }]]
+    }
+  }
+
+  const iaItems = await getNestedIAItems(descriptor.item)
+  return [await Promise.all(iaItems.map(async (iaItem) => createIAItem(tapestryId, iaItem))), []]
+
+  return null
 }
 
 const linkFileFactory: ItemFactory = async (source, _, tapestryId) => {
@@ -145,7 +163,7 @@ const linkFileFactory: ItemFactory = async (source, _, tapestryId) => {
     return null
   }
 
-  return parseFileTransferData(url, tapestryId)
+  return parseMediaSource(url, tapestryId)
 }
 
 /**

@@ -163,10 +163,9 @@ export async function insertDataTransfer(
     dispatch((model) => {
       model.pendingRequests++
     })
-    const { items, largeFiles, iaImport } = await deserialize()
-    if (iaImport) {
-      dispatch(setIAImport(iaImport))
-      return
+    const { items, largeFiles, iaImports } = await deserialize()
+    if (iaImports.length > 0) {
+      dispatch(setIAImport(iaImports))
     }
 
     const viewModels = items.map(createItemViewModel)
