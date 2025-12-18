@@ -66,7 +66,7 @@ async function parseWeblocFile(source: File) {
  * An ItemFactory takes a MediaItemSource (File or URL) and tries to produce one or more tapestry items from it.
  * If a factory doesn't know how to handle a given source, it returns null.
  */
-export type ItemFactoryResult = [ItemCreateDto[], IAImport[]]
+export type ItemFactoryResult = { items: ItemCreateDto[]; iaImports: IAImport[] }
 type ItemFactory = (
   source: MediaItemSource,
   mediaType: string | null,
@@ -80,7 +80,7 @@ function createSimpleMediaItemFactory(
   return async (source, mediaType, tapestryId) => {
     if (!sourceMatches(source, mediaType)) return null
 
-    return [[await createMediaItem(itemType, source, tapestryId)], []]
+    return { items: [await createMediaItem(itemType, source, tapestryId)], iaImports: [] }
   }
 }
 
@@ -95,7 +95,7 @@ const textItemFactory: ItemFactory = async (source, mediaType, tapestryId) => {
 const htmlFileItemFactory: ItemFactory = async (source, mediaType, tapestryId) => {
   if (!mediaType?.startsWith('application/xhtml') && mediaType !== 'text/html') return null
 
-  return [[await createMediaItem('webpage', source, tapestryId)], []]
+  return { items: [await createMediaItem('webpage', source, tapestryId)], iaImports: [] }
 }
 
 const webpageItemFactory: ItemFactory = async (source, _mediaType, tapestryId) => {
@@ -106,7 +106,7 @@ const webpageItemFactory: ItemFactory = async (source, _mediaType, tapestryId) =
   item.webpageType = parser.webpageType
   item.skipSourceResolution = true
 
-  return [[item], []]
+  return { items: [item], iaImports: [] }
 }
 
 const IA_MEDIA_TYPE_MAP: Partial<Record<IAMediaType, WebpageType>> = {
@@ -131,25 +131,31 @@ const iaCollectionFactory: ItemFactory = async (source, _, tapestryId) => {
   if (!descriptor) return null
 
   if (descriptor.urlType === 'user-list') {
-    return [await createIAMediaItems(tapestryId, await getUserListItems(source as string)), []]
+    return {
+      items: await createIAMediaItems(tapestryId, await getUserListItems(source as string)),
+      iaImports: [],
+    }
   }
 
   const { id } = descriptor.item
   const metadata = await getIAItemMetadata(id)
 
   if (metadata?.mediatype === 'collection') {
-    return [[], [{ type: 'IACollection', metadata, id }]]
+    return { items: [], iaImports: [{ type: 'IACollection', metadata, id }] }
   }
 
   if (metadata?.mediatype === 'movies' || metadata?.mediatype === 'audio') {
     const plst = (await getIAPlaylistEntries(descriptor.item)) ?? []
     if (plst.length > 1) {
       const entries = plst.map(({ title, orig, duration }) => ({ title, filename: orig, duration }))
-      return [[], [{ type: 'IAPlaylist', id, metadata, entries }]]
+      return { items: [], iaImports: [{ type: 'IAPlaylist', id, metadata, entries }] }
     }
   }
 
-  return [await createIAMediaItems(tapestryId, await getNestedIAItems(descriptor.item)), []]
+  return {
+    items: await createIAMediaItems(tapestryId, await getNestedIAItems(descriptor.item)),
+    iaImports: [],
+  }
 }
 
 const linkFileFactory: ItemFactory = async (source, _, tapestryId) => {

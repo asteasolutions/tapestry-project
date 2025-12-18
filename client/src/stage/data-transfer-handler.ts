@@ -38,7 +38,7 @@ export async function parseMediaSource(
     }
   }
 
-  return [[], []]
+  return { items: [], iaImports: [] }
 }
 
 function tryParseItems(text: string, tapestryId: string): ItemCreateDto[] | undefined {
@@ -89,7 +89,7 @@ export async function parseStringTransferData(
   tapestryId: string,
 ): Promise<ItemFactoryResult> {
   if (!text) {
-    return [[], []]
+    return { items: [], iaImports: [] }
   }
 
   if (Array.isArray(text)) {
@@ -98,7 +98,7 @@ export async function parseStringTransferData(
 
   const items = tryParseItems(text, tapestryId)
   if (items) {
-    return [items, []]
+    return { items, iaImports: [] }
   }
 
   const lines = compact(text.trim().split(/\s*\n\s*/))
@@ -115,7 +115,7 @@ export async function parseStringTransferData(
       return parseSources([file], tapestryId)
     }
   }
-  return [[createTextItem(text, tapestryId)], []]
+  return { items: [createTextItem(text, tapestryId)], iaImports: [] }
 }
 
 function sanitizeForCopy(item: ItemDto): Omit<ItemCreateDto, 'tapestryId'> {
@@ -136,11 +136,11 @@ async function parseSources(
   sources: MediaItemSource[],
   tapestryId: string,
 ): Promise<ItemFactoryResult> {
-  const result: ItemFactoryResult = [[], []]
+  const result: ItemFactoryResult = { items: [], iaImports: [] }
   for (const src of sources) {
-    const [items, iaImports] = await parseMediaSource(src, tapestryId)
-    result[0].push(...items)
-    result[1].push(...iaImports)
+    const { items, iaImports } = await parseMediaSource(src, tapestryId)
+    result.items.push(...items)
+    result.iaImports.push(...iaImports)
   }
   return result
 }
@@ -168,23 +168,13 @@ export class DataTransferHandler {
     const files = await dataTransferToFiles(dataTransfer)
 
     const [eligibleFiles, largeFiles] = partition(files, isFileEligible)
-    let [items, iaImports] = await parseSources(eligibleFiles, tapestryId)
-
+    let { items, iaImports } = await parseSources(eligibleFiles, tapestryId)
     if (items.length > 0 || iaImports.length > 0) {
-      return {
-        items,
-        iaImports,
-        largeFiles,
-      }
+      return { items, iaImports, largeFiles }
     }
 
-    ;[items, iaImports] = await parseStringTransferData(stringData, tapestryId)
-
-    return {
-      items,
-      iaImports,
-      largeFiles: [],
-    }
+    ;({ items, iaImports } = await parseStringTransferData(stringData, tapestryId))
+    return { items, iaImports, largeFiles: [] }
   }
 
   async serialize(items: ItemDto[]) {
@@ -205,7 +195,7 @@ export class DataTransferHandler {
         )
       } else if ((type = item.types.find((t) => t.startsWith('text/')))) {
         const text = await (await item.getType(type)).text()
-        const [items, iaImports] = await parseStringTransferData(text, tapestryId)
+        const { items, iaImports } = await parseStringTransferData(text, tapestryId)
         result.iaImports.push(...iaImports)
         result.items.push(...items)
       }
