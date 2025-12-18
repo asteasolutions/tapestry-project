@@ -1,13 +1,13 @@
-import { DragArea } from 'tapestry-core-client/src/components/lib/drag-area'
+import Logo from 'tapestry-core-client/src/assets/icons/logo.svg?react'
+import { DropArea } from 'tapestry-core-client/src/components/lib/drop-area'
+import { FilePicker } from 'tapestry-core-client/src/components/lib/file-picker'
+import { SvgIcon } from 'tapestry-core-client/src/components/lib/svg-icon'
+import { Text } from 'tapestry-core-client/src/components/lib/text'
 import { Store } from 'tapestry-core-client/src/lib/store'
 import { TapestryViewModel } from 'tapestry-core-client/src/view-model'
 import { TYPE } from 'tapestry-core/src/data-format/export'
-import { Button } from 'tapestry-core-client/src/components/lib/buttons'
-import { FilePicker } from 'tapestry-core-client/src/components/lib/file-picker'
-
 import { ImportService } from './import-service'
 import styles from './styles.module.css'
-import { Text } from 'tapestry-core-client/src/components/lib/text'
 
 interface TapestryImportProps {
   onImport: (store: Store<TapestryViewModel>) => unknown
@@ -24,16 +24,18 @@ export function TapestryImport({ onImport }: TapestryImportProps) {
   }
   return (
     <div className={styles.root}>
-      <Text variant="h4">Drop a tapestry zip here</Text>
+      <div className={styles.header}>
+        <SvgIcon Icon={Logo} width={150} className={styles.logo} />
+        <Text className={styles.title}>Tapestry Viewer</Text>
+      </div>
       <FilePicker accept={TYPE} onChange={handleFile}>
-        <Button variant="clear" className={styles.importButton}>
-          <DragArea
-            alwaysVisible
-            allowDrop={(items) => items.some((i) => i.type === TYPE)}
-            classes={{ root: styles.dragArea, dropArea: styles.dropArea }}
-            onDrop={(e) => handleFile(e.dataTransfer.files[0])}
-          />
-        </Button>
+        <DropArea
+          alwaysVisible
+          allowDrop={(items) => items.some((i) => i.type === TYPE)}
+          onDrop={(e) => handleFile(e.dataTransfer.files[0])}
+          title="Load Tapestry"
+          subtitle="Drop a Tapestry ZIP here"
+        />
       </FilePicker>
     </div>
   )

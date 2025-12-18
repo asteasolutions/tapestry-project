@@ -1,28 +1,77 @@
 import { isHTTPURL } from 'tapestry-core/src/utils'
 import { MediaItemSource } from '../lib/media'
-import { createMediaItem, createTextItem, getMediaSourceText } from '../model/data/utils'
+import { createMediaItem, getMediaSourceText } from '../model/data/utils'
 import { ItemCreateDto } from 'tapestry-shared/src/data-transfer/resources/dtos/item'
 import { findWebSourceParser } from 'tapestry-core/src/web-sources'
 import {
   iaItemEmbedURL,
-  getNestedIAItems,
   IAMediaType,
   parseInternetArchiveURL,
   IAItem,
+  getIAItemMetadata,
+  getIAPlaylistEntries,
+  getNestedIAItems,
 } from 'tapestry-core/src/internet-archive'
 import { MediaItemType, WebpageType } from 'tapestry-core/src/data-format/schemas/item'
 import { getUserListItems } from '../lib/internet-archive'
-import { parseStringTransferData } from './data-transfer-handler'
+import { parseMediaSource, parseStringTransferData } from './data-transfer-handler'
+import { fileTypeFromBuffer } from 'file-type'
+import { parse } from 'ini'
+import { IAImport } from '../pages/tapestry/view-model'
+
+/**
+ * Tries to extract a link from a url file. This is a shortcut file created on Windows in INI format
+ */
+async function parseUrlFile(source: File) {
+  if (!source.name.endsWith('url')) {
+    return
+  }
+
+  type URLSection = Record<'URL', string> | undefined
+  const url = (parse(await source.text()).InternetShortcut as URLSection)?.URL
+
+  return url
+}
+
+/**
+ * Tries to extract a link from a webloc file. This is a shortcut file created on MacOS in XML format
+ */
+async function parseWeblocFile(source: File) {
+  if (!source.name.endsWith('webloc')) {
+    return
+  }
+
+  const fileType = await fileTypeFromBuffer(await source.arrayBuffer())
+
+  if (fileType?.mime !== 'application/xml') {
+    return
+  }
+
+  const children = new DOMParser()
+    .parseFromString(await source.text(), 'application/xml')
+    .querySelector('dict')?.children
+  if (children?.length !== 2) {
+    return
+  }
+
+  const [{ textContent: type }, { textContent: url }] = children
+  if (type !== 'URL') {
+    return
+  }
+
+  return url
+}
 
 /**
  * An ItemFactory takes a MediaItemSource (File or URL) and tries to produce one or more tapestry items from it.
  * If a factory doesn't know how to handle a given source, it returns null.
  */
+export type ItemFactoryResult = { items: ItemCreateDto[]; iaImports: IAImport[] }
 type ItemFactory = (
   source: MediaItemSource,
   mediaType: string | null,
   tapestryId: string,
-) => Promise<ItemCreateDto[] | null>
+) => Promise<ItemFactoryResult | null>
 
 function createSimpleMediaItemFactory(
   itemType: MediaItemType,
@@ -31,7 +80,7 @@ function createSimpleMediaItemFactory(
   return async (source, mediaType, tapestryId) => {
     if (!sourceMatches(source, mediaType)) return null
 
-    return [await createMediaItem(itemType, source, tapestryId)]
+    return { items: [await createMediaItem(itemType, source, tapestryId)], iaImports: [] }
   }
 }
 
@@ -40,17 +89,13 @@ const textItemFactory: ItemFactory = async (source, mediaType, tapestryId) => {
 
   const sourceAsText = await getMediaSourceText(source)
 
-  return (
-    (await parseStringTransferData(sourceAsText, tapestryId)) ?? [
-      createTextItem(sourceAsText, tapestryId),
-    ]
-  )
+  return await parseStringTransferData(sourceAsText, tapestryId)
 }
 
 const htmlFileItemFactory: ItemFactory = async (source, mediaType, tapestryId) => {
   if (!mediaType?.startsWith('application/xhtml') && mediaType !== 'text/html') return null
 
-  return [await createMediaItem('webpage', source, tapestryId)]
+  return { items: [await createMediaItem('webpage', source, tapestryId)], iaImports: [] }
 }
 
 const webpageItemFactory: ItemFactory = async (source, _mediaType, tapestryId) => {
@@ -61,7 +106,7 @@ const webpageItemFactory: ItemFactory = async (source, _mediaType, tapestryId) =
   item.webpageType = parser.webpageType
   item.skipSourceResolution = true
 
-  return [item]
+  return { items: [item], iaImports: [] }
 }
 
 const IA_MEDIA_TYPE_MAP: Partial<Record<IAMediaType, WebpageType>> = {
@@ -69,24 +114,62 @@ const IA_MEDIA_TYPE_MAP: Partial<Record<IAMediaType, WebpageType>> = {
   movies: 'iaVideo',
 }
 
-export async function createIAItem(tapestryId: string, iaItem: IAItem) {
-  const item = await createMediaItem('webpage', iaItemEmbedURL(iaItem), tapestryId)
-  item.webpageType = IA_MEDIA_TYPE_MAP[iaItem.mediaType] ?? null
-  item.skipSourceResolution = true
+export async function createIAMediaItems(tapestryId: string, iaItems: IAItem[]) {
+  return Promise.all(
+    iaItems.map(async (iaItem) => {
+      const item = await createMediaItem('webpage', iaItemEmbedURL(iaItem), tapestryId)
+      item.webpageType = IA_MEDIA_TYPE_MAP[iaItem.mediaType] ?? null
+      item.skipSourceResolution = true
 
-  return item
+      return item
+    }),
+  )
 }
 
 const iaCollectionFactory: ItemFactory = async (source, _, tapestryId) => {
   const descriptor = parseInternetArchiveURL(source)
   if (!descriptor) return null
 
-  const iaItems =
-    descriptor.urlType === 'user-list'
-      ? await getUserListItems(source as string)
-      : await getNestedIAItems(descriptor.item)
+  if (descriptor.urlType === 'user-list') {
+    return {
+      items: await createIAMediaItems(tapestryId, await getUserListItems(source as string)),
+      iaImports: [],
+    }
+  }
 
-  return Promise.all(iaItems.map(async (iaItem) => createIAItem(tapestryId, iaItem)))
+  const { id } = descriptor.item
+  const metadata = await getIAItemMetadata(id)
+
+  if (metadata?.mediatype === 'collection') {
+    return { items: [], iaImports: [{ type: 'IACollection', metadata, id }] }
+  }
+
+  if (metadata?.mediatype === 'movies' || metadata?.mediatype === 'audio') {
+    const plst = (await getIAPlaylistEntries(descriptor.item)) ?? []
+    if (plst.length > 1) {
+      const entries = plst.map(({ title, orig, duration }) => ({ title, filename: orig, duration }))
+      return { items: [], iaImports: [{ type: 'IAPlaylist', id, metadata, entries }] }
+    }
+  }
+
+  return {
+    items: await createIAMediaItems(tapestryId, await getNestedIAItems(descriptor.item)),
+    iaImports: [],
+  }
+}
+
+const linkFileFactory: ItemFactory = async (source, _, tapestryId) => {
+  if (!(source instanceof File)) {
+    return null
+  }
+
+  const url = (await parseUrlFile(source)) ?? (await parseWeblocFile(source))
+
+  if (!url) {
+    return null
+  }
+
+  return parseMediaSource(url, tapestryId)
 }
 
 /**
@@ -104,6 +187,7 @@ export const ITEM_FACTORIES: ItemFactory[] = [
   createSimpleMediaItemFactory('pdf', (_, mediaType) => mediaType === 'application/pdf'),
   createSimpleMediaItemFactory('video', (_, mediaType) => !!mediaType?.startsWith('video/')),
   createSimpleMediaItemFactory('audio', (_, mediaType) => !!mediaType?.startsWith('audio/')),
+  linkFileFactory,
   textItemFactory,
   htmlFileItemFactory,
   iaCollectionFactory,

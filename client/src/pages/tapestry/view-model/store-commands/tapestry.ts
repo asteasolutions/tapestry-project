@@ -93,10 +93,16 @@ export function setIsConfiguringPresentationOrder(
 }
 
 export function setIAImport(
-  iaImport: IAImport | null,
+  iaImports: IAImport[],
 ): StoreMutationCommand<EditableTapestryViewModel> {
   return (model) => {
-    model.iaImport = iaImport
+    model.iaImports = iaImports
+  }
+}
+
+export function setLargeFiles(files: File[]): StoreMutationCommand<EditableTapestryViewModel> {
+  return (model) => {
+    model.largeFiles = files
   }
 }
 

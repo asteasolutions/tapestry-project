@@ -8,6 +8,8 @@ import { TapestryInfoDialog } from 'tapestry-core-client/src/components/tapestry
 import { shortcutLabel } from 'tapestry-core-client/src/lib/keyboard-event'
 import { useTapestryData } from '../../app'
 import styles from './styles.module.css'
+import { SvgIcon } from 'tapestry-core-client/src/components/lib/svg-icon'
+import Logo from 'tapestry-core-client/src/assets/icons/logo.svg?react'
 
 export function TopToolbar() {
   const obstruction = useViewportObstruction({ clear: { top: true, left: true } })
@@ -20,6 +22,14 @@ export function TopToolbar() {
         wrapperRef={obstruction.ref}
         isOpen
         items={[
+          {
+            element: (
+              <div className={styles.logoWrapper}>
+                <SvgIcon Icon={Logo} size={28} className={styles.logo} />
+              </div>
+            ),
+            tooltip: { side: 'bottom', children: 'Go to tapestries', offset: -8 },
+          },
           {
             element: (
               <IconButton

@@ -2,7 +2,7 @@ import { Modal } from 'tapestry-core-client/src/components/lib/modal/index'
 import { SvgIcon } from 'tapestry-core-client/src/components/lib/svg-icon/index'
 import { Text } from 'tapestry-core-client/src/components/lib/text/index'
 import styles from './styles.module.css'
-import Logo from '../../assets/icons/logo.svg?react'
+import Logo from 'tapestry-core-client/src/assets/icons/logo.svg?react'
 import { ReactNode } from 'react'
 import clsx from 'clsx'
 

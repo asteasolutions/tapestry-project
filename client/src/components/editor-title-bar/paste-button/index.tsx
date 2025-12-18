@@ -1,12 +1,7 @@
-import { useDispatch } from '../../../pages/tapestry/tapestry-providers'
-import { addAndPositionItems } from '../../../pages/tapestry/view-model/store-commands/items'
-import {
-  setInteractiveElement,
-  setIAImport,
-} from '../../../pages/tapestry/view-model/store-commands/tapestry'
-import { createItemViewModel } from '../../../pages/tapestry/view-model/utils'
-import { DataTransferHandler } from '../../../stage/data-transfer-handler'
 import { MenuItemButton } from 'tapestry-core-client/src/components/lib/buttons/index'
+import { useDispatch } from '../../../pages/tapestry/tapestry-providers'
+import { DataTransferHandler } from '../../../stage/data-transfer-handler'
+import { insertDataTransfer } from '../../../pages/tapestry/view-model/utils'
 
 interface PasteButtonProps {
   tapestryId: string
@@ -20,19 +15,10 @@ export function PasteButton({ tapestryId, onPaste }: PasteButtonProps) {
     <MenuItemButton
       icon="content_paste"
       onClick={async () => {
-        const deserializeResult = await new DataTransferHandler().pasteClipboard(tapestryId)
+        await insertDataTransfer(dispatch, () =>
+          new DataTransferHandler().pasteClipboard(tapestryId),
+        )
 
-        if (deserializeResult.iaImport) {
-          dispatch(setIAImport(deserializeResult.iaImport))
-        } else if (deserializeResult.items.length > 0) {
-          const viewModels = deserializeResult.items.map(createItemViewModel)
-
-          dispatch(
-            addAndPositionItems(viewModels),
-            viewModels.length === 1 &&
-              setInteractiveElement({ modelId: viewModels[0].dto.id, modelType: 'item' }),
-          )
-        }
         onPaste()
       }}
     >

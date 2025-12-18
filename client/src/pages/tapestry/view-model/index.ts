@@ -188,7 +188,7 @@ export interface EditableTapestryViewModel
   readonly commentThread?: CommentThread
   readonly largeFiles: File[]
   readonly presentationOrderState?: PresentationOrderState | null
-  readonly iaImport?: IAImport | null
+  readonly iaImports: IAImport[]
   readonly pendingRequests: number
   readonly newRelPreview?: EditableRelViewModel | null
   readonly hideEditControls?: boolean

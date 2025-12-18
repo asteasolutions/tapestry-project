@@ -1,28 +1,25 @@
 .root {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  grid-template-rows: auto 1fr;
   height: 100%;
 
-  .import-button {
-    display: block;
-    width: 300px;
-    height: 300px;
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
 
-    .drag-area {
-      height: 100%;
+    .title {
+      font-weight: 600;
+      color: var(--theme-text-primary);
+    }
 
-      :global(> div:first-of-type) {
-        align-items: normal;
-        background-color: transparent;
-      }
-
-      .drop-area {
-        width: 100%;
-        justify-content: center;
-      }
+    .logo {
+      background-color: var(--theme-background-brand-secondary);
+      width: 28px;
+      height: 28px;
+      padding: 10px;
+      border-radius: 8px;
     }
   }
 }

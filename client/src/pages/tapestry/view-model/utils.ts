@@ -4,7 +4,7 @@ import {
   getBoundingRectangle,
   MULTISELECT_RECTANGLE_PADDING,
 } from 'tapestry-core-client/src/view-model/utils'
-import { Identifiable } from 'tapestry-core/src/data-format/schemas/common'
+import { Identifiable, Point } from 'tapestry-core/src/data-format/schemas/common'
 import { GroupCreateDto } from 'tapestry-shared/src/data-transfer/resources/dtos/group'
 import {
   ActionButtonItemDto,
@@ -26,8 +26,12 @@ import {
   ItemUIComponent,
   MultiselectionUIComponent,
   SelectionResizeState,
+  TapestryEditorStore,
 } from '.'
 import { EDITABLE_TAPESTRY_PROPS } from '../../../model/data/utils'
+import { DeserializeResult } from '../../../stage/data-transfer-handler'
+import { addAndPositionItems } from './store-commands/items'
+import { setIAImport, setLargeFiles, setSnackbar } from './store-commands/tapestry'
 
 export function getMultiselectRectangle(
   selectionItems: EditableItemViewModel[],
@@ -204,4 +208,31 @@ export function diffPresentationSteps(from: PresentationStepDto[], to: Presentat
     ...removePatches(from, to, 'presentationSteps'),
     ...addPatches(from, to, 'presentationSteps'),
   ]
+}
+export async function insertDataTransfer(
+  dispatch: TapestryEditorStore['dispatch'],
+  deserialize: () => Promise<DeserializeResult>,
+  point?: Point,
+) {
+  try {
+    dispatch((model) => {
+      model.pendingRequests++
+    })
+    const { items, largeFiles, iaImports } = await deserialize()
+    if (iaImports.length > 0) {
+      dispatch(setIAImport(iaImports))
+    }
+
+    const viewModels = items.map(createItemViewModel)
+    dispatch(
+      viewModels.length !== 0 && addAndPositionItems(viewModels, { centerAt: point }),
+      largeFiles.length !== 0 && setLargeFiles(largeFiles),
+    )
+  } catch {
+    dispatch(setSnackbar({ text: 'Could not import', variant: 'error' }))
+  } finally {
+    dispatch((model) => {
+      model.pendingRequests--
+    })
+  }
 }

@@ -1,17 +1,7 @@
-import { sortBy, max, sum, merge } from 'lodash-es'
-import { tween } from 'tapestry-core-client/src/view-model/tweening'
-import { ItemDto } from 'tapestry-shared/src/data-transfer/resources/dtos/item'
-import { selectItems } from './tapestry'
-import { BaseResourceDto } from 'tapestry-shared/src/data-transfer/resources/dtos/common'
-import { EditableItemViewModel, EditableTapestryViewModel, SelectionDragState } from '..'
+import { Draft } from 'immer'
+import { max, merge, sortBy, sum } from 'lodash-es'
 import { StoreMutationCommand } from 'tapestry-core-client/src/lib/store/index'
-import {
-  getMultiselectRectangle,
-  getGridDimensions,
-  getGridIndices,
-  GridState,
-  reassignPresentationStep,
-} from '../utils'
+import { tween } from 'tapestry-core-client/src/view-model/tweening'
 import {
   getBoundingRectangle,
   getGroupMembers,
@@ -19,7 +9,6 @@ import {
   MULTISELECT_RECTANGLE_PADDING,
   resizeItem,
 } from 'tapestry-core-client/src/view-model/utils'
-import { ensureArray, idMapToArray, isMediaItem, OneOrMore } from 'tapestry-core/src/utils'
 import {
   mul,
   Point,
@@ -29,12 +18,23 @@ import {
   translate,
   vector,
 } from 'tapestry-core/src/lib/geometry'
-import { Draft } from 'immer'
-import { setIsZoomingLocked } from './viewport'
+import { ensureArray, idMapToArray, isMediaItem, OneOrMore } from 'tapestry-core/src/utils'
+import { BaseResourceDto } from 'tapestry-shared/src/data-transfer/resources/dtos/common'
+import { ItemDto } from 'tapestry-shared/src/data-transfer/resources/dtos/item'
+import { EditableItemViewModel, EditableTapestryViewModel, SelectionDragState } from '..'
+import { itemUpload } from '../../../../services/item-upload'
+import {
+  getGridDimensions,
+  getGridIndices,
+  getMultiselectRectangle,
+  GridState,
+  reassignPresentationStep,
+} from '../utils'
 import { deleteGroups, ungroupSelection } from './groups'
 import { deletePresentationSteps } from './presentation-steps'
 import { deleteRels } from './rels'
-import { itemUpload } from '../../../../services/item-upload'
+import { selectItems, setInteractiveElement } from './tapestry'
+import { setIsZoomingLocked } from './viewport'
 
 export function insertItems(
   items: OneOrMore<EditableItemViewModel>,
@@ -86,6 +86,9 @@ export function addAndPositionItems(
     })
 
     store.dispatch(insertItems(items), selectItems(items.map((i) => i.dto.id)))
+    if (items.length === 1) {
+      store.dispatch(setInteractiveElement({ modelId: items[0].dto.id, modelType: 'item' }))
+    }
   }
 }
 

@@ -190,6 +190,7 @@ export function fromTapestryDto(
     pendingRequests: 0,
     userAccess,
     largeFiles: [],
+    iaImports: [],
     collaborators: {},
   }
 

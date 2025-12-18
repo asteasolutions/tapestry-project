@@ -89,7 +89,10 @@ export const proxy: RESTResourceImpl<Resources['proxy'], never> = {
               }
               return responseText
             },
-            config.server.wbmResponseCacheDuration,
+            (response) =>
+              (JSON.parse(response) as string[][]).length === 0
+                ? config.server.wbmEmptyResponseCacheDuration
+                : config.server.wbmResponseCacheDuration,
           )
 
           const [header, ...rows] = JSON.parse(searchResponse) as string[][]

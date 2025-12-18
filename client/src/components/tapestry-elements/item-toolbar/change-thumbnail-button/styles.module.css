@@ -75,64 +75,58 @@
       }
     }
 
-    .file-picker {
-      .drop-area-root {
-        height: 100%;
-        width: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+    .drop-area {
+      display: flex;
+      align-items: center;
+      justify-content: center;
 
-        > div {
+      > div {
+        background-color: transparent;
+
+        .drop-hint {
           background-color: transparent;
-
-          .drop-area {
-            background-color: transparent;
-            padding: 0;
-            border-width: 1px;
-            border-style: dashed;
-            border-radius: 4px;
-            height: 100%;
-            width: 100%;
-            justify-content: center;
-            box-sizing: border-box;
-
-            :global(.typography-body) {
-              font-size: 12px;
-              font-weight: 600;
-            }
-
-            :global(.material-symbols-outlined) {
-              font-size: 28px;
-            }
-
-            img {
-              height: 26px;
-            }
-
-            :hover {
-              border-color: var(--color-primary-400);
-            }
-          }
-        }
-
-        .selected-image-overlay {
-          position: absolute;
-          inset: 1px;
-          border-radius: 3px;
-          background-color: var(--theme-overlay);
-          display: flex;
-          flex-direction: column;
-          align-items: center;
+          padding: 0;
+          border-width: 1px;
+          border-style: dashed;
+          border-radius: 4px;
+          height: 100%;
+          width: 100%;
           justify-content: center;
-          color: var(--theme-text-primary-inverse);
+          box-sizing: border-box;
+
+          :global(.typography-body) {
+            font-size: 12px;
+            font-weight: 600;
+          }
+
+          :global(.material-symbols-outlined) {
+            font-size: 28px;
+          }
+
+          img {
+            height: 26px;
+          }
+
+          :hover {
+            border-color: var(--color-primary-400);
+          }
+
+          &.has-selected > * {
+            display: none;
+          }
         }
       }
 
-      &.has-selected {
-        .drop-area > * {
-          display: none;
-        }
+      .selected-image-overlay {
+        position: absolute;
+        inset: 1px;
+        border-radius: 3px;
+        background-color: var(--theme-overlay);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: var(--theme-text-primary-inverse);
       }
     }
   }

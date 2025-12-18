@@ -243,12 +243,7 @@ export function useEditMoreMenu({
     const viewModels = dtoArray.map((dto) => createItemViewModel(duplicateItem(dto)))
     const boundingRect = getBoundingRectangle(viewModels)
     const centerAt = translate(boundingRect.center, { dx: 20, dy: 20 })
-    dispatch(
-      addAndPositionItems(viewModels, { centerAt, coordinateSystem: 'tapestry' }),
-      viewModels.length === 1
-        ? setInteractiveElement({ modelId: viewModels[0].dto.id, modelType: 'item' })
-        : undefined,
-    )
+    dispatch(addAndPositionItems(viewModels, { centerAt, coordinateSystem: 'tapestry' }))
   }
   const changeThumbnail = () => {
     setDisplayThumbnailDialog(true)
