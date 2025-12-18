@@ -34,7 +34,7 @@ jobs:
           VAULT_LOCAL_CONFIG: ${{ secrets.VAULT_LOCAL_CONFIG }}
           WEBPAGE_LOADER_TIMEOUT: ${{ vars.WEBPAGE_LOADER_TIMEOUT }}
           AWS_S3_BUCKET_NAME: ${{ secrets.AWS_S3_BUCKET_NAME }}
-          DATABASE_URL: postgresql://${{ secrets.DB_USER }}:${{ secrets.DB_PASS }}@db:5432/${{ secrets.DB_NAME }}?schema=public
+          DATABASE_URL: postgresql://${{ secrets.DB_USER }}:${{ secrets.DB_PASS }}@${{ secrets.DB_HOST }}/${{ secrets.DB_NAME }}?schema=public
           DB_HOST: ${{ secrets.DB_HOST }}
           DB_NAME: ${{ secrets.DB_NAME }}
           DB_PASS: ${{ secrets.DB_PASS }}
