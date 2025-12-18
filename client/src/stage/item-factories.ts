@@ -114,12 +114,16 @@ const IA_MEDIA_TYPE_MAP: Partial<Record<IAMediaType, WebpageType>> = {
   movies: 'iaVideo',
 }
 
-export async function createIAItem(tapestryId: string, iaItem: IAItem) {
-  const item = await createMediaItem('webpage', iaItemEmbedURL(iaItem), tapestryId)
-  item.webpageType = IA_MEDIA_TYPE_MAP[iaItem.mediaType] ?? null
-  item.skipSourceResolution = true
+export async function createIAMediaItems(tapestryId: string, iaItems: IAItem[]) {
+  return Promise.all(
+    iaItems.map(async (iaItem) => {
+      const item = await createMediaItem('webpage', iaItemEmbedURL(iaItem), tapestryId)
+      item.webpageType = IA_MEDIA_TYPE_MAP[iaItem.mediaType] ?? null
+      item.skipSourceResolution = true
 
-  return item
+      return item
+    }),
+  )
 }
 
 const iaCollectionFactory: ItemFactory = async (source, _, tapestryId) => {
@@ -127,8 +131,7 @@ const iaCollectionFactory: ItemFactory = async (source, _, tapestryId) => {
   if (!descriptor) return null
 
   if (descriptor.urlType === 'user-list') {
-    const iaItems = await getUserListItems(source as string)
-    return [await Promise.all(iaItems.map(async (iaItem) => createIAItem(tapestryId, iaItem))), []]
+    return [await createIAMediaItems(tapestryId, await getUserListItems(source as string)), []]
   }
 
   const { id } = descriptor.item
@@ -146,10 +149,7 @@ const iaCollectionFactory: ItemFactory = async (source, _, tapestryId) => {
     }
   }
 
-  const iaItems = await getNestedIAItems(descriptor.item)
-  return [await Promise.all(iaItems.map(async (iaItem) => createIAItem(tapestryId, iaItem))), []]
-
-  return null
+  return [await createIAMediaItems(tapestryId, await getNestedIAItems(descriptor.item)), []]
 }
 
 const linkFileFactory: ItemFactory = async (source, _, tapestryId) => {

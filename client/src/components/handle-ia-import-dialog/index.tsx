@@ -1,21 +1,21 @@
-import { useDispatch, useTapestryData } from '../../pages/tapestry/tapestry-providers'
-import { setIAImport } from '../../pages/tapestry/view-model/store-commands/tapestry'
-import { SimpleModal } from 'tapestry-core-client/src/components/lib/modal/index'
-import styles from './styles.module.css'
-import { ImportItemsList } from './import-items-list/index'
-import { useState } from 'react'
-import { ImportDetails } from './import-details/index'
-import { IAImport } from '../../pages/tapestry/view-model/index'
-import { createIAItem } from '../../stage/item-factories'
-import { IAMediaType } from 'tapestry-core/src/internet-archive'
-import { addAndPositionItems } from '../../pages/tapestry/view-model/store-commands/items'
-import { createItemViewModel } from '../../pages/tapestry/view-model/utils'
-import { compact } from 'lodash-es'
-import { Breakpoint, useResponsive } from '../../providers/responsive-provider'
-import { toggleElement } from 'tapestry-core/src/lib/array'
 import clsx from 'clsx'
-import { requestCollectionItems } from './import-items-list/collection-list/index'
+import { compact } from 'lodash-es'
+import { useState } from 'react'
 import { useAsyncAction } from 'tapestry-core-client/src/components/lib/hooks/use-async-action'
+import { SimpleModal } from 'tapestry-core-client/src/components/lib/modal/index'
+import { IAMediaType } from 'tapestry-core/src/internet-archive'
+import { toggleElement } from 'tapestry-core/src/lib/array'
+import { useDispatch, useTapestryData } from '../../pages/tapestry/tapestry-providers'
+import { IAImport } from '../../pages/tapestry/view-model/index'
+import { addAndPositionItems } from '../../pages/tapestry/view-model/store-commands/items'
+import { setIAImport } from '../../pages/tapestry/view-model/store-commands/tapestry'
+import { createItemViewModel } from '../../pages/tapestry/view-model/utils'
+import { Breakpoint, useResponsive } from '../../providers/responsive-provider'
+import { createIAMediaItems } from '../../stage/item-factories'
+import { ImportDetails } from './import-details/index'
+import { requestCollectionItems } from './import-items-list/collection-list/index'
+import { ImportItemsList } from './import-items-list/index'
+import styles from './styles.module.css'
 
 export interface ImportItem {
   id: string
@@ -33,25 +33,20 @@ const IA_IMPORT_CLASS_MAP: Record<IAImport['type'], string> = {
 }
 
 async function createNewItems(
-  { type, id, metadata }: IAImport,
+  { type, id, metadata: { mediatype: mediaType } }: IAImport,
   items: ImportItem[],
   tapestryId: string,
 ) {
   if (type === 'IACollection') {
-    return Promise.all(
-      compact(
-        items.map(({ id, mediaType }) => mediaType && createIAItem(tapestryId, { id, mediaType })),
-      ),
+    return createIAMediaItems(
+      tapestryId,
+      compact(items.map(({ id, mediaType }) => mediaType && { id, mediaType })),
     )
   }
-  return Promise.all(
-    items.map(({ id: filename }) =>
-      createIAItem(tapestryId, {
-        id,
-        mediaType: metadata.mediatype,
-        pathParams: [encodeURIComponent(filename)],
-      }),
-    ),
+
+  return createIAMediaItems(
+    tapestryId,
+    items.map(({ id: file }) => ({ id, mediaType, pathParams: [encodeURIComponent(file)] })),
   )
 }
 
