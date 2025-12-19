@@ -6,7 +6,7 @@ import { iterateParents, matchHighlight, MatchRanges } from 'tapestry-core-clien
 import { TRANSPARENT } from 'tapestry-core-client/src/theme'
 import { Id } from 'tapestry-core/src/data-format/schemas/common'
 import { IdMap } from 'tapestry-core/src/utils'
-import { TextItemDto } from 'tapestry-shared/src/data-transfer/resources/dtos/item'
+import { TextItem } from 'tapestry-core/src/data-format/schemas/item'
 import { useTapestryConfig } from '../..'
 import { GroupViewModel, ItemViewModel } from '../../../../view-model'
 import {
@@ -62,7 +62,7 @@ export function TextItemViewer({
   useImperativeHandle(api, () => editorAPI.current)
 
   const { useStoreData } = useTapestryConfig()
-  const dto = useStoreData(`items.${id}.dto`) as TextItemDto
+  const dto = useStoreData(`items.${id}.dto`) as TextItem
   const { interactiveElement, items, groups, searchTerm } = useStoreData([
     'interactiveElement',
     'items',

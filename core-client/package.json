@@ -52,6 +52,8 @@
     "@tweenjs/tween.js": "^25.0.0",
     "bowser": "^2.12.1",
     "clsx": "^2.1.1",
+    "color": "^5.0.3",
+    "date-fns": "^4.1.0",
     "immer": "^10.1.1",
     "lodash-es": "^4.17.21",
     "pixi.js": "^8.14.1",
@@ -60,6 +62,7 @@
     "react-modal": "^3.16.3",
     "react-pdf": "^10.2.0",
     "react-router": "^7.9.6",
-    "tapestry-core": "^1.0.0"
+    "tapestry-core": "^1.0.0",
+    "video.js": "^8.23.4"
   }
 }
