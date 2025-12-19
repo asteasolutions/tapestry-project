@@ -13,7 +13,7 @@ import { useMediaParams } from 'tapestry-core-client/src/components/tapestry/hoo
 import { Id } from 'tapestry-core/src/data-format/schemas/common'
 import { WebpageType } from 'tapestry-core/src/data-format/schemas/item'
 import { parseWebSource, WEB_SOURCE_PARSERS } from 'tapestry-core/src/web-sources'
-import { WebpageItemDto } from 'tapestry-shared/src/data-transfer/resources/dtos/item'
+import { WebpageItem } from 'tapestry-core/src/data-format/schemas/item'
 import { useTapestryConfig } from '../..'
 import { WebpageLoader } from './loader'
 
@@ -91,7 +91,7 @@ export interface WebpageItemViewerProps {
 
 export function WebpageItemViewer({ id, apiRef, WebFrame = 'iframe' }: WebpageItemViewerProps) {
   const { useStoreData } = useTapestryConfig()
-  const dto = useStoreData(`items.${id}.dto`) as WebpageItemDto
+  const dto = useStoreData(`items.${id}.dto`) as WebpageItem
   const displayWebpage = useStoreData(`items.${id}.hasBeenActive`)
   const [webpageLoaded, setWebpageLoaded] = useState(false)
   const [webpageReloadIndex, setWebpageReloadIndex] = useState(0)
