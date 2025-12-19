@@ -145,7 +145,8 @@ enum WebpageType {
 }
 
 enum ActionType {
-  link
+  internalLink
+  externalLink
 }
 
 model Item {

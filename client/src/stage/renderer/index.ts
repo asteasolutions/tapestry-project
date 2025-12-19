@@ -150,9 +150,7 @@ export class EditorTapestryRenderer extends TapestryRenderer<EditableTapestryEle
           isHoveringDragArea && isHoveredMultiselection(pointerInteraction.target)
         const isHoveringGroup = isHoveringDragArea && isHoveredGroup(pointerInteraction.target)
 
-        if (interactionMode === 'view' && isHoveringInactiveElement) {
-          cursor = 'pointer'
-        } else if (
+        if (
           interactionMode === 'edit' &&
           (isHoveringInactiveElement || isHoveringMultiselection || isHoveringGroup)
         ) {

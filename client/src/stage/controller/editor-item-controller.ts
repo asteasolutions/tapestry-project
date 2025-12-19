@@ -1,4 +1,3 @@
-import { elementIdFromLink } from 'tapestry-core-client/src/components/tapestry/items/text/viewer'
 import { capturesPointerEvents } from 'tapestry-core-client/src/lib/dom'
 import { createEventRegistry } from 'tapestry-core-client/src/lib/events/event-registry'
 import { EventTypes } from 'tapestry-core-client/src/lib/events/typed-events'
@@ -167,15 +166,16 @@ export class EditorItemController extends ItemController {
     attachListeners(this, 'document', document, interactionMode)
   }
 
-  protected tryNavigateToInternalLink(link: string) {
+  protected tryNavigateToInternalState(params: URLSearchParams) {
     const { items, groups } = this.editorStore.get(['items', 'groups'])
-    const id = elementIdFromLink(link, items, groups)
-    if (id) {
+    const focus = params.get('focus')
+    const element = focus && (items[focus] ?? groups[focus])
+    if (element) {
       void router.navigate(
-        { search: new URL(link).search },
+        { search: params.toString() },
         {
           state: { timestamp: Date.now() },
-          replace: new URL(location.href).searchParams.get('focus') === id,
+          replace: new URLSearchParams(location.search).get('focus') === focus,
         },
       )
       return true

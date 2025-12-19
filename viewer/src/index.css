@@ -16,21 +16,41 @@ body,
   font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
-.pixi-container {
-  position: absolute;
-  inset: 0;
+.scene-container {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
 
-  > canvas {
-    display: block;
+  &.scene-cursor {
+    &,
+    * {
+      cursor: var(--scene-cursor) !important;
+    }
   }
-}
 
-.dom-container {
-  position: absolute;
-  inset: 0;
-  transform-origin: 0% 0%;
-  user-select: none;
-  -webkit-user-select: none;
+  .pixi-container {
+    position: absolute;
+    inset: 0;
+
+    > canvas {
+      display: block;
+    }
+  }
+
+  .dom-container {
+    position: absolute;
+    inset: 0;
+    transform-origin: 0% 0%;
+    user-select: none;
+    -webkit-user-select: none;
+
+    /* This is used in order to force the browser (Safari in particular)
+     * to draw a compositing layer for the dom-container. Otherwise when the dom-container
+     * goes out of the viewport Safari starts drawing layers for every single item in the viewport
+     * which causes crashes on iPhones
+     */
+    will-change: transform;
+  }
 }
 
 .zoom-toolbar {

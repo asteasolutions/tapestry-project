@@ -63,6 +63,41 @@
       display: flex;
       justify-content: center;
       position: relative;
+      border: 1px solid transparent;
+
+      &:has(.badge) {
+        border-radius: 8px;
+        border-color: var(--theme-border-subtle);
+      }
+
+      .badge {
+        --size: 14px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+        font-size: 8px;
+        font-weight: 600;
+        position: absolute;
+        top: calc(-0.3 * var(--size));
+        right: calc(-0.3 * var(--size));
+        width: var(--size);
+        height: var(--size);
+        border-radius: 50%;
+        background-color: var(--theme-background-brand-secondary);
+        color: var(--color-neutral-0);
+        box-shadow: var(--box-shadow);
+
+        &:empty::after {
+          content: '';
+          display: block;
+          width: calc(0.3 * var(--size));
+          height: calc(0.3 * var(--size));
+          background-color: var(--color-neutral-0);
+          border-radius: 50%;
+        }
+      }
     }
   }
 }

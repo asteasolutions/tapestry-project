@@ -12,7 +12,7 @@ import {
 import { HexColorSchema } from '../../schemas/common'
 import { commonItemProps, ThumbnailSchema } from '../../schemas/item'
 
-const ActionButtonItemSchema = z.object({
+export const ActionButtonItemSchema = z.object({
   ...commonItemProps.base,
   type: z.literal('actionButton'),
   actionType: z.enum(['link']),
@@ -21,12 +21,12 @@ const ActionButtonItemSchema = z.object({
   backgroundColor: HexColorSchema.nullish(),
 })
 
-const PDFItemSchema = z.object({
+export const PDFItemSchema = z.object({
   ...PDFItemSchemaV4.shape,
   thumbnail: ThumbnailSchema.nullish(),
 })
 
-const MediaItemSchema = z.discriminatedUnion('type', [
+export const MediaItemSchema = z.discriminatedUnion('type', [
   AudioItemSchema,
   BookItemSchema,
   ImageItemSchema,
@@ -35,7 +35,7 @@ const MediaItemSchema = z.discriminatedUnion('type', [
   WebpageItemSchema,
 ])
 
-const ItemSchema = z.discriminatedUnion('type', [
+export const ItemSchema = z.discriminatedUnion('type', [
   ...MediaItemSchema.options,
   TextItemSchema,
   ActionButtonItemSchema,
