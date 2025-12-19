@@ -15,6 +15,7 @@ import {
 import { TapestryStage } from '..'
 import { TapestryStageController } from '../controller'
 import { isRelViewModel } from '../../view-model/utils'
+import { isHoveredElement } from '../utils'
 
 export interface Renderer<T = unknown> {
   render(arg: T): void
@@ -116,7 +117,7 @@ export abstract class TapestryRenderer<
 
   protected determineCursorStyle(): CSSProperties['cursor'] | null {
     let cursor: CSSProperties['cursor'] | null = null
-    const { pointerInteraction, pointerMode } = this.store.get()
+    const { pointerInteraction, pointerMode, interactiveElement } = this.store.get()
 
     if (pointerInteraction) {
       cursor = USER_INTERACTION_CURSOR[pointerInteraction.action]
@@ -124,6 +125,16 @@ export abstract class TapestryRenderer<
 
     if (!cursor && pointerMode !== 'select') {
       cursor = 'grab'
+    }
+
+    if (pointerInteraction?.action === 'hover') {
+      const isHoveringInactiveElement =
+        isHoveredElement(pointerInteraction.target) &&
+        interactiveElement?.modelId !== pointerInteraction.target.modelId
+
+      if (isHoveringInactiveElement) {
+        cursor = 'pointer'
+      }
     }
 
     return cursor

@@ -5,6 +5,7 @@ import { ExportV2, ExportV2Schema } from './v2/index.js'
 import { ExportV3, ExportV3Schema } from './v3/index.js'
 import { ExportV4, ExportV4Schema } from './v4/index.js'
 import { ExportV5, ExportV5Schema } from './v5/index.js'
+import { ExportV6, ExportV6Schema } from './v6/index.js'
 import z from 'zod/v4'
 
 export const ROOT_FILE = 'root.json'
@@ -135,11 +136,46 @@ class ParserV4 extends ExportParser<ExportV5> {
   }
 }
 
-class ParserV5 extends ExportParser<ExportV5> {
+class ParserV5 extends ExportParser<ExportV6> {
   public readonly schema = ExportV5Schema
   public readonly version = 5
 
-  protected parseInternal(tapestry: ExportV5): ExportV5 {
+  protected parseInternal(tapestry: ExportV5): ExportV6 {
+    return {
+      ...tapestry,
+      version: 6,
+      items: tapestry.items?.map((item) => {
+        if (item.type !== 'actionButton') return item
+
+        try {
+          const url = new URL(item.action ?? '')
+          // At this point we don't have a better way of guessing whether the action
+          // is an internal link than making some heuristic checks on the search params
+          if (url.searchParams.has('focus')) {
+            return {
+              ...item,
+              action: url.searchParams.toString(),
+              actionType: 'internalLink',
+            }
+          }
+        } catch (error) {
+          console.warn('Error while parsing Tapestry', error)
+        }
+
+        return {
+          ...item,
+          actionType: 'externalLink',
+        }
+      }),
+    }
+  }
+}
+
+class ParserV6 extends ExportParser<ExportV6> {
+  public readonly schema = ExportV6Schema
+  public readonly version = 6
+
+  protected parseInternal(tapestry: ExportV6): ExportV6 {
     return tapestry
   }
 }
@@ -151,6 +187,7 @@ const PARSERS = [
   new ParserV3(),
   new ParserV4(),
   new ParserV5(),
+  new ParserV6(),
 ] as const
 
 type Last<Type extends readonly unknown[]> = Type extends readonly [...unknown[], infer R]

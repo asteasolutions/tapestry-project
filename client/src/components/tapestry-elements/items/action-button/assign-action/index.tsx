@@ -6,9 +6,11 @@ import { ActionButtonItemDto } from 'tapestry-shared/src/data-transfer/resources
 import { useItemPicker } from '../../../../item-picker/use-item-picker'
 import { useDispatch, useTapestryData } from '../../../../../pages/tapestry/tapestry-providers'
 import { idMapToArray } from 'tapestry-core/src/utils'
-import { useGenerateItemLink } from '../../../../../hooks/use-tapestry-path'
+import { useGenerateItemLink, useTapestryPath } from '../../../../../hooks/use-tapestry-path'
 import styles from './styles.module.css'
 import { updateItem } from '../../../../../pages/tapestry/view-model/store-commands/items'
+import { ActionButtonItem } from 'tapestry-core/src/data-format/schemas/item'
+import { Id } from 'tapestry-core/src/data-format/schemas/common'
 
 interface AssignActionModalProps {
   onClose: () => unknown
@@ -49,6 +51,22 @@ function AssignActionModal({
   )
 }
 
+function determineActionType(
+  url: string | null,
+  tapestryPath: string,
+  tapestryId: Id,
+): ActionButtonItem['actionType'] {
+  return url?.includes(tapestryPath) || url?.includes(`/t/${tapestryId}`)
+    ? 'internalLink'
+    : 'externalLink'
+}
+
+function extractAction(url: string, actionType: ActionButtonItem['actionType']) {
+  if (actionType === 'externalLink') return url
+
+  return new URL(url).searchParams.toString()
+}
+
 interface AssignActionProps {
   dto: ActionButtonItemDto
 }
@@ -56,6 +74,8 @@ interface AssignActionProps {
 export function AssignAction({ dto }: AssignActionProps) {
   const [showModal, setShowModal] = useState(false)
   const [selectedItemUrl, setSelectedItemUrl] = useState<string>()
+  const tapestryPath = useTapestryPath('view')
+  const tapestryId = useTapestryData('id')
 
   const generateLink = useGenerateItemLink()
   const items = useTapestryData('items')
@@ -74,11 +94,7 @@ export function AssignAction({ dto }: AssignActionProps) {
 
   return (
     <>
-      <IconButton
-        icon={dto.action ? 'link' : 'link_off'}
-        aria-label="Assign action"
-        onClick={() => setShowModal(true)}
-      />
+      <IconButton icon="link" aria-label="Assign action" onClick={() => setShowModal(true)} />
       {showModal && !itemPicker.isOpen && (
         <AssignActionModal
           onClose={() => {
@@ -86,9 +102,15 @@ export function AssignAction({ dto }: AssignActionProps) {
             setSelectedItemUrl(undefined)
           }}
           dto={dto}
-          onApply={(action) => {
+          onApply={(url) => {
             setShowModal(false)
-            dispatch(updateItem(dto.id, { dto: { action } }))
+            const actionType = determineActionType(url, tapestryPath, tapestryId)
+            const action = extractAction(url, actionType)
+            dispatch(
+              updateItem(dto.id, {
+                dto: { action, actionType },
+              }),
+            )
           }}
           onSelectItem={() => itemPicker.open()}
           initialAction={selectedItemUrl}

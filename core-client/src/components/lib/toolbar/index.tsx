@@ -5,6 +5,7 @@ import { Tooltip, TooltipProps } from '../tooltip/index.js'
 import { compact } from 'lodash-es'
 import { useOutsideClick } from '../../lib/hooks/use-outside-click.js'
 import { Prev } from 'tapestry-core/src/type-utils'
+import { Text } from '../text'
 
 type Direction = 'row' | 'column'
 type Separator = 'separator'
@@ -20,6 +21,7 @@ export type SubmenuIds<T, D extends number = 10> = [D] extends [never]
 export interface ToolbarElement {
   element: ReactElement
   tooltip?: TooltipProps
+  badge?: string | boolean
 }
 
 export type SimpleMenuItem = ReactElement | ToolbarElement | Separator
@@ -53,12 +55,17 @@ function SimpleMenuItem({ ui }: { ui: SimpleMenuItem }) {
     return <div className="separator" />
   }
 
-  const { element, tooltip } = isToolbarElement(ui) ? ui : { element: ui }
+  const { element, tooltip, badge } = isToolbarElement(ui) ? ui : { element: ui }
 
   return (
     <div className="menu-item-wrapper">
       {element}
       {tooltip && <Tooltip {...tooltip} offset={16 + (tooltip.offset ?? 0)} />}
+      {badge && (
+        <Text component="div" className={styles.badge}>
+          {badge}
+        </Text>
+      )}
     </div>
   )
 }

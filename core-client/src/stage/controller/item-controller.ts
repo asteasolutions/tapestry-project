@@ -205,20 +205,18 @@ export abstract class ItemController implements TapestryStageController {
     this.store.dispatch(setPointerMode('pan'))
   }
 
-  protected abstract tryNavigateToInternalLink(link: string): boolean
+  protected abstract tryNavigateToInternalState(params: URLSearchParams): boolean
 
   protected handleActionItemClick(id: Id) {
     const item = this.store.get(`items.${id}.dto`)
-    if (item?.type === 'actionButton') {
-      // Removed this once we have more action types
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-      if (item.actionType === 'link' && item.action) {
-        const handledInternalNavigation = this.tryNavigateToInternalLink(item.action)
-        if (!handledInternalNavigation && isHTTPURL(item.action)) {
-          window.open(item.action)
-        } else {
-          return false
-        }
+    if (item?.type === 'actionButton' && item.action) {
+      if (item.actionType === 'internalLink') {
+        const params = new URLSearchParams(item.action)
+        return this.tryNavigateToInternalState(params)
+      }
+
+      if (isHTTPURL(item.action)) {
+        window.open(item.action)
         return true
       }
     }

@@ -4,7 +4,7 @@ import { HexColorSchema, IdentifiableSchema, PointSchema, SizeSchema } from './c
 export const KNOWN_WEBPAGE_TYPES = ['youtube', 'vimeo', 'iaWayback', 'iaAudio', 'iaVideo'] as const
 export type WebpageType = (typeof KNOWN_WEBPAGE_TYPES)[number]
 
-export const ACTION_BUTTON_TYPE = ['link'] as const
+export const ACTION_BUTTON_TYPE = ['internalLink', 'externalLink'] as const
 
 export const ThumbnailSchema = z.object({
   source: z.string().describe('The URL of the thumbnail image.'),

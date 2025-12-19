@@ -27,7 +27,7 @@ import { TapestryRenderer } from 'tapestry-core-client/src/stage/renderer'
 import { ViewportController } from 'tapestry-core-client/src/stage/controller/viewport-controller'
 import { ItemController } from 'tapestry-core-client/src/stage/controller/item-controller'
 import { GlobalEventsController } from 'tapestry-core-client/src/stage/controller/global-events-controller'
-import { useSearchParams } from 'react-router'
+import { useNavigate, useSearchParams } from 'react-router'
 import { useAsync } from 'tapestry-core-client/src/components/lib/hooks/use-async'
 import { ImportService } from './components/tapestry-import/import-service'
 import { LoadingSpinner } from 'tapestry-core-client/src/components/lib/loading-spinner'
@@ -47,6 +47,7 @@ export const {
 function Tapestry() {
   const sceneRef = useRef<HTMLDivElement>(null)
   const pixiContainerRef = useRef<HTMLDivElement>(null)
+  const navigate = useNavigate()
 
   const store = useTapestryStore()
 
@@ -75,7 +76,20 @@ function Tapestry() {
         ],
         global: [
           new (class extends ItemController {
-            protected tryNavigateToInternalLink() {
+            protected tryNavigateToInternalState(params: URLSearchParams) {
+              const { items, groups } = store.get(['items', 'groups'])
+              const focus = params.get('focus')
+              const element = focus && (items[focus] ?? groups[focus])
+              if (element) {
+                void navigate(
+                  { search: params.toString() },
+                  {
+                    state: { timestamp: Date.now() },
+                    replace: new URLSearchParams(location.search).get('focus') === focus,
+                  },
+                )
+                return true
+              }
               return false
             }
           })(store, stage),
@@ -87,7 +101,7 @@ function Tapestry() {
   useFocusedElement()
 
   return (
-    <div ref={sceneRef} style={{ position: 'relative', height: '100%', overflow: 'hidden' }}>
+    <div ref={sceneRef} className="scene-container">
       <div ref={pixiContainerRef} className="pixi-container" />
       <TapestryCanvas classes={{ root: 'dom-container' }} />
       <ViewportScrollbars />
