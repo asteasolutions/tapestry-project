@@ -1,13 +1,13 @@
+import Logo from 'tapestry-core-client/src/assets/icons/logo.svg?react'
 import { DropArea } from 'tapestry-core-client/src/components/lib/drop-area'
+import { FilePicker } from 'tapestry-core-client/src/components/lib/file-picker'
+import { SvgIcon } from 'tapestry-core-client/src/components/lib/svg-icon'
+import { Text } from 'tapestry-core-client/src/components/lib/text'
 import { Store } from 'tapestry-core-client/src/lib/store'
 import { TapestryViewModel } from 'tapestry-core-client/src/view-model'
 import { TYPE } from 'tapestry-core/src/data-format/export'
-import { FilePicker } from 'tapestry-core-client/src/components/lib/file-picker'
-import Logo from 'tapestry-core-client/src/assets/icons/logo.svg?react'
 import { ImportService } from './import-service'
 import styles from './styles.module.css'
-import { SvgIcon } from 'tapestry-core-client/src/components/lib/svg-icon'
-import { Text } from 'tapestry-core-client/src/components/lib/text'
 
 interface TapestryImportProps {
   onImport: (store: Store<TapestryViewModel>) => unknown

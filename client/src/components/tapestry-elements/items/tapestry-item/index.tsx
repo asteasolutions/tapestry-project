@@ -41,15 +41,13 @@ export function TapestryItem({ id, children, halo }: TapestryItemProps) {
 
   const isContentInteractive = id === interactiveElement?.modelId
 
+  const item = useObservable(itemUpload).find((i) => i.itemId === dto.id)
+
   const viewportRect = new Rectangle(
     positionAtViewport(viewport, ORIGIN),
     scaleSize(viewport.size, 1 / viewport.transform.scale),
   )
-
   const isVisible = viewportRect.intersects(new Rectangle(dto))
-
-  // @ts-expect-error TS wants us to check for a media item
-  const item = useObservable(itemUpload).find((i) => i.objectUrl === dto.source)
 
   return (
     <BaseTapestryItem

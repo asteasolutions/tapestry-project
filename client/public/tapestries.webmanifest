@@ -1,0 +1,37 @@
+{
+  "short_name": "Tapestries",
+  "name": "Tapestries",
+  "icons": [
+    {
+      "src": "favicon.png",
+      "sizes": "487x487",
+      "type": "image/png"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#f9703e",
+  "screenshots": [
+    {
+      "src": "screenshot-wide.png",
+      "sizes": "1920x968",
+      "type": "image/png",
+      "form_factor": "wide"
+    },
+    {
+      "src": "screenshot-narrow.png",
+      "sizes": "415x790",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ],
+  "file_handlers": [
+    {
+      "action": "/",
+      "accept": {
+        "application/zip": [".zip"]
+      }
+    }
+  ]
+}
