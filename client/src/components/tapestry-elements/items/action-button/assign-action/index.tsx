@@ -51,20 +51,15 @@ function AssignActionModal({
   )
 }
 
-function determineActionType(
-  url: string | null,
-  tapestryPath: string,
-  tapestryId: Id,
-): ActionButtonItem['actionType'] {
-  return url?.includes(tapestryPath) || url?.includes(`/t/${tapestryId}`)
-    ? 'internalLink'
-    : 'externalLink'
-}
+function extractAction(url: string | null, tapestryPath: string, tapestryId: Id) {
+  const actionType: ActionButtonItem['actionType'] =
+    url?.includes(tapestryPath) || url?.includes(`/t/${tapestryId}`)
+      ? 'internalLink'
+      : 'externalLink'
 
-function extractAction(url: string, actionType: ActionButtonItem['actionType']) {
-  if (actionType === 'externalLink') return url
+  const action = actionType === 'externalLink' ? url : new URL(url!).searchParams.toString()
 
-  return new URL(url).searchParams.toString()
+  return { action, actionType }
 }
 
 interface AssignActionProps {
@@ -104,8 +99,7 @@ export function AssignAction({ dto }: AssignActionProps) {
           dto={dto}
           onApply={(url) => {
             setShowModal(false)
-            const actionType = determineActionType(url, tapestryPath, tapestryId)
-            const action = extractAction(url, actionType)
+            const { action, actionType } = extractAction(url, tapestryPath, tapestryId)
             dispatch(
               updateItem(dto.id, {
                 dto: { action, actionType },
