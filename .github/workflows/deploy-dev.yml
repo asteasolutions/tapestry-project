@@ -31,6 +31,8 @@ jobs:
           JOBS_ADMIN_PASSWORD: ${{ secrets.JOBS_ADMIN_PASSWORD }}
           PUPPETEER_ARGS: ${{ vars.PUPPETEER_ARGS }}
           REDIS_PORT: ${{ secrets.REDIS_PORT }}
+          SENTRY_DSN_CLIENT: ${{ secrets.SENTRY_DSN_CLIENT }}
+          SENTRY_DSN_SERVER: ${{ secrets.SENTRY_DSN_SERVER }}
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
           STUN_SERVER: ${{ vars.STUN_SERVER }}
           VAULT_ADDR: ${{ secrets.VAULT_ADDR }}

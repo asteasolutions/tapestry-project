@@ -48,6 +48,7 @@ jobs:
           JOBS_ADMIN_PASSWORD: ${{ secrets.JOBS_ADMIN_PASSWORD }}
           REDIS_HOST: ${{ secrets.REDIS_HOST }}
           REDIS_USE_TLS: ${{ secrets.REDIS_USE_TLS }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN_SERVER }}
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
           VAULT_ADDR: ${{ secrets.VAULT_ADDR }}
           VAULT_ROLE_ID: ${{ secrets.VAULT_ROLE_ID }}
@@ -78,4 +79,6 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - run: ./deployment/docker/build-and-deploy-frontend.sh
-        env: *demo_env
+        env:
+          <<: *demo_env
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN_CLIENT }}

@@ -10,6 +10,7 @@ services:
         VITE_AI_CHAT_EXPIRES_IN: ${AI_CHAT_EXPIRES_IN}
         VITE_WEBPAGE_LOADER_TIMEOUT: ${WEBPAGE_LOADER_TIMEOUT}
         VITE_STUN_SERVER: ${STUN_SERVER}
+        VITE_SENTRY_DSN: ${SENTRY_DSN_CLIENT}
     networks:
       - traefik
     labels:
@@ -46,6 +47,7 @@ services:
       VAULT_ADDR: ${VAULT_ADDR}
       VAULT_ROLE_ID: ${VAULT_ROLE_ID}
       VAULT_SECRET_ID: ${VAULT_SECRET_ID}
+      SENTRY_DSN: ${SENTRY_DSN_SERVER}
     networks:
       - traefik
       - database
