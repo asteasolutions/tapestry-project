@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@asteasolutions/epub-reader": "^1.0.0",
+    "@sentry/react": "^10.33.0",
     "@tweenjs/tween.js": "^25.0.0",
     "@wavesurfer/react": "^1.0.11",
     "@zip.js/zip.js": "^2.7.60",

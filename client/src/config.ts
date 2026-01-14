@@ -13,6 +13,7 @@ const parsedConfig = deepFreeze(
       VITE_WEBPAGE_LOADER_TIMEOUT: NullishInt(3, (schema) => schema.nonnegative()),
       VITE_WBM_SNAPSHOT_POLLING_PERIOD: NullishInt(600), // default: ten minutes
       VITE_STUN_SERVER: z.string(),
+      VITE_SENTRY_DSN: z.string().default(''),
     })
     .transform((input) => ({
       apiUrl: input.VITE_API_URL,
@@ -23,6 +24,7 @@ const parsedConfig = deepFreeze(
       webpageLoaderTimeout: input.VITE_WEBPAGE_LOADER_TIMEOUT,
       wbmSnapshotPollingPeriod: input.VITE_WBM_SNAPSHOT_POLLING_PERIOD,
       stunServer: input.VITE_STUN_SERVER,
+      sentryDsn: input.VITE_SENTRY_DSN,
     }))
     .safeParse(import.meta.env),
 )
