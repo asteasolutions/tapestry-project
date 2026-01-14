@@ -42,6 +42,7 @@
     "@dotenvx/dotenvx": "^1.35.0",
     "@litehex/node-vault": "^1.0.4",
     "@prisma/client": "^6.3.1",
+    "@sentry/node": "^10.33.0",
     "@types/lodash-es": "^4.17.12",
     "@zip.js/zip.js": "^2.7.57",
     "ai": "^5.0.14",

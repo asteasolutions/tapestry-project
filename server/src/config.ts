@@ -52,6 +52,9 @@ export const config = deepFreeze(
       REDIS_PORT: Port(6379),
       REDIS_USE_TLS: checkTrue,
 
+      // Sentry
+      SENTRY_DSN: z.string().default(''),
+
       // Worker
       PUPPETEER_ARGS: z.string().default(''),
       S3_CLEAN_UP_CRON_PATTERN: z.string().default('0 0 * * *'),
@@ -116,6 +119,9 @@ export const config = deepFreeze(
         host: input.REDIS_HOST,
         port: input.REDIS_PORT,
         useTls: input.REDIS_USE_TLS,
+      },
+      sentry: {
+        dsn: input.SENTRY_DSN,
       },
       worker: {
         puppeteerArgs: input.PUPPETEER_ARGS,
