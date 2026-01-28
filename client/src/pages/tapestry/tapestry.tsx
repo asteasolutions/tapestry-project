@@ -41,6 +41,7 @@ import { setInteractionMode, setSnackbar } from './view-model/store-commands/tap
 import { ViewportDebugData } from './viewport-debug-data'
 import { createPixiApp } from 'tapestry-core-client/src/stage'
 import { PropsWithStyle } from 'tapestry-core-client/src/components/lib'
+import { ZOrder } from 'tapestry-core-client/src/components/tapestry'
 
 function useInteractionModeUrlParam() {
   const { username, slug, edit } = useTapestryPathParams()
@@ -101,7 +102,7 @@ export function Tapestry() {
       <title>{documentTitle}</title>
       <div className={styles.sceneContainer} ref={sceneRef}>
         <div ref={pixiContainerRef} className="pixi-container" />
-        <TapestryEditorCanvas className="dom-container" />
+        <TapestryEditorCanvas className="dom-container" style={{ zIndex: ZOrder.default }} />
         <div
           ref={presentationOrderContainerRef}
           className={clsx('pixi-container', { [styles.hidden]: !presentationOrderState })}

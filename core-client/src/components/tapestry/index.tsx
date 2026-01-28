@@ -16,7 +16,34 @@ import { VideoItem } from './items/video/index.js'
 import { WebpageItem } from './items/webpage/index.js'
 import { DefaultMultiselection } from './multiselection/default.js'
 
-export const SELECTION_Z_INDEX = 1
+/**
+ * Enumeration of z-index values for UI components in the Tapestry. These values are meant to be applied
+ * to Tapestry elements (items or rels) as well as other UI components that appear on the Tapestry canvas
+ * such as menu items and user controls.
+ */
+export enum ZOrder {
+  /**
+   * The default z-index displays tapestry elements in the order in which they were added to the DOM tree.
+   * This is the implicit default behavior of the browser, so it should rarely be specified explicitly.
+   */
+  default = 0,
+  /**
+   * The "selection" Z level is meant for selected tapestry items, for example if the user has performed
+   * a multiselection. If the selected items overlap unselected items, the selected ones should appear on top.
+   */
+  selection,
+  /**
+   * The "interaction" level is meant for the interactive tapestry element. It should appear on top of all
+   * other tapestry elements during the period of interaction. However, it should not overlap any menus
+   * or user controls.
+   */
+  interaction,
+  /**
+   * The "controlUi" level is meant for menus and user controls. They should appear on top of all tapestry
+   * elements, regardless of their state.
+   */
+  controlUi,
+}
 
 export interface TapestryElementComponentProps {
   id: Id

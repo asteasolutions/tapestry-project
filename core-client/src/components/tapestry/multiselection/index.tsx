@@ -2,11 +2,11 @@ import styles from './styles.module.css'
 import { computeRestrictedScale } from '../../../view-model/utils'
 import clsx from 'clsx'
 import { idMapToArray } from 'tapestry-core/src/utils'
-import { DOM_CONTAINER_CLASS } from '../../../stage/utils'
+import { cssTransformForLocation, DOM_CONTAINER_CLASS } from '../../../stage/utils'
 import { Rectangle } from 'tapestry-core/src/lib/geometry'
 import { PropsWithChildren, ReactNode } from 'react'
 import { PropsWithStyle } from '../../lib'
-import { useTapestryConfig } from '..'
+import { useTapestryConfig, ZOrder } from '..'
 import { useSingleGroupSelection } from '../../lib/hooks/use-single-group-selection'
 
 export interface MultiselectionProps extends PropsWithStyle<PropsWithChildren> {
@@ -37,9 +37,9 @@ export function Multiselection({ bounds, halo, style, className, children }: Mul
         left: `${left}px`,
         width: `${width}px`,
         height: `${height}px`,
-        ...{
-          '--border-scale': borderScale,
-        },
+        zIndex: ZOrder.selection,
+        ...cssTransformForLocation({ x: left, y: top }, viewport.transform),
+        ...{ '--border-scale': borderScale },
         ...style,
       }}
       data-component-type="multiselection"

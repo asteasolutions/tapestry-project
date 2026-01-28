@@ -1,4 +1,4 @@
-.tapestry-element-container {
+:global(.tapestry-element-locator) {
   pointer-events: auto;
 
   &.inactive,

@@ -2,11 +2,11 @@ import clsx from 'clsx'
 import { orderBy } from 'lodash-es'
 import { useEffect } from 'react'
 import { Rel } from 'tapestry-core/src/data-format/schemas/rel'
-import { Rectangle } from 'tapestry-core/src/lib/geometry'
+import { LinearTransform, Rectangle } from 'tapestry-core/src/lib/geometry'
 import { IdMap, idMapToArray } from 'tapestry-core/src/utils'
 import {
   itemComponentName,
-  SELECTION_Z_INDEX,
+  ZOrder,
   TapestryElementComponent,
   useTapestryConfig,
 } from '../../../components/tapestry'
@@ -22,26 +22,29 @@ import {
 import { PropsWithStyle } from '../../lib'
 import { GroupBackground } from '../group-background'
 import styles from './styles.module.css'
+import { cssTransformForLocation } from '../../../stage/utils'
 
 export interface TapestryCanvasProps extends PropsWithStyle<
   object,
-  'root' | 'itemContainer' | 'relContainer'
+  'root' | 'itemLocator' | 'relLocator'
 > {
   orderByPosition?: boolean
 }
 
-interface TapestryElementContainerProps extends PropsWithStyle {
+interface TapestryElementLocatorProps extends PropsWithStyle {
   id: string
   bounds: Rectangle
   component: TapestryElementComponent
+  transform: LinearTransform
 }
 
-function TapestryElementContainer({
+function TapestryElementLocator({
   id,
   bounds: { top, left, width, height },
   component: Component,
   className,
-}: TapestryElementContainerProps) {
+  transform,
+}: TapestryElementLocatorProps) {
   const { useStoreData } = useTapestryConfig()
   const { interactiveElement, selection, items } = useStoreData([
     'interactiveElement',
@@ -59,14 +62,11 @@ function TapestryElementContainer({
         left: `${left}px`,
         width: `${width}px`,
         height: `${height}px`,
+        ...cssTransformForLocation({ x: left, y: top }, transform),
         // item should be above other selected items in group
-        zIndex: isInteractive
-          ? SELECTION_Z_INDEX + 1
-          : isInSelection
-            ? SELECTION_Z_INDEX
-            : undefined,
+        zIndex: isInteractive ? ZOrder.interaction : isInSelection ? ZOrder.selection : undefined,
       }}
-      className={clsx(styles.tapestryElementContainer, className, {
+      className={clsx('tapestry-element-locator', className, {
         [styles.inactive]: !isInteractive,
       })}
     >
@@ -88,9 +88,9 @@ function getRelBounds(rel: Rel, items: IdMap<ItemViewModel>) {
   return getBounds(rel, { [fromItem.dto.id]: fromItem, [toItem.dto.id]: toItem })
 }
 
-export function TapestryCanvas({ classes, orderByPosition }: TapestryCanvasProps) {
+export function TapestryCanvas({ classes, style, orderByPosition }: TapestryCanvasProps) {
   const { useStoreData, components } = useTapestryConfig()
-  const { translation, scale } = useStoreData('viewport.transform', ['translation', 'scale'])
+  const transform = useStoreData('viewport.transform', ['translation', 'scale'])
   const viewportReady = useStoreData('viewport.ready')
   const { constrainToLayer, action: pointerAction } =
     useStoreData('pointerInteraction', ['constrainToLayer', 'action']) ?? {}
@@ -125,22 +125,20 @@ export function TapestryCanvas({ classes, orderByPosition }: TapestryCanvasProps
     }
 
     return (
-      <TapestryElementContainer
+      <TapestryElementLocator
         key={item.dto.id}
         id={item.dto.id}
         bounds={getBounds(item.dto)}
         component={component}
-        className={classes?.itemContainer}
+        className={classes?.itemLocator}
+        transform={transform}
       />
     )
   }
 
   return (
     <div
-      style={{
-        pointerEvents: constrainToLayer === 'dom' ? 'auto' : 'none',
-        transform: `translate(${translation.dx}px, ${translation.dy}px) scale(${scale})`,
-      }}
+      style={{ pointerEvents: constrainToLayer === 'dom' ? 'auto' : 'none', ...style }}
       className={clsx(
         classes?.root,
         pointerAction && 'pointer-action',
@@ -152,12 +150,13 @@ export function TapestryCanvas({ classes, orderByPosition }: TapestryCanvasProps
         const bounds = getRelBounds(rel.dto, items)
         return (
           bounds && (
-            <TapestryElementContainer
+            <TapestryElementLocator
               key={rel.dto.id}
               id={rel.dto.id}
               bounds={bounds}
               component={components.Rel}
-              className={classes?.relContainer}
+              className={classes?.relLocator}
+              transform={transform}
             />
           )
         )

@@ -1,12 +1,12 @@
 import { memo } from 'react'
 import { Rectangle } from 'tapestry-core/src/lib/geometry'
 import { computeRestrictedScale, MULTISELECT_RECTANGLE_PADDING } from '../../../view-model/utils'
-import { DOM_CONTAINER_CLASS } from '../../../stage/utils'
+import { cssTransformForLocation, DOM_CONTAINER_CLASS } from '../../../stage/utils'
 import styles from './styles.module.css'
 import clsx from 'clsx'
 import { idMapToArray } from 'tapestry-core/src/utils'
 import { getOpaqueColor } from '../../../theme/types'
-import { SELECTION_Z_INDEX, useTapestryConfig } from '..'
+import { useTapestryConfig, ZOrder } from '..'
 
 export interface GroupBackgroundProps {
   id: string
@@ -43,12 +43,13 @@ export const GroupBackground = memo(({ id, membersBounds }: GroupBackgroundProps
         left: `${left}px`,
         width: `${width}px`,
         height: `${height}px`,
+        ...cssTransformForLocation({ x: left, y: top }, viewport.transform),
         ...{
           '--group-background-color': group.dto.hasBackground ? group.dto.color : undefined,
           '--group-border-color': group.dto.hasBorder ? opaqueColor : undefined,
           '--border-scale': borderScale,
         },
-        zIndex: isSelected ? SELECTION_Z_INDEX : undefined,
+        zIndex: isSelected ? ZOrder.selection : undefined,
       }}
       data-component-type="group"
       data-model-id={group.dto.id}

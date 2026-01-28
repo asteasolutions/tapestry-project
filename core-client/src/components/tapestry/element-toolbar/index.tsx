@@ -5,7 +5,7 @@ import { clamp } from 'lodash-es'
 import { useResizeObserver } from '../../lib/hooks/use-resize-observer'
 import { Viewport } from '../../../view-model'
 import { positionAtViewport } from '../../../view-model/utils'
-import { useTapestryConfig } from '..'
+import { useTapestryConfig, ZOrder } from '..'
 
 const TOOLBAR_OFFSET = 30
 const TOOLBAR_MARGIN = 10
@@ -127,7 +127,7 @@ export function ElementToolbar({
         transformOrigin: 'bottom',
         bottom: '100%',
         // toolbar should be displayed above the resize handles
-        zIndex: 3,
+        zIndex: ZOrder.controlUi,
         ...style,
       }}
       wrapperRef={wrapperRef}

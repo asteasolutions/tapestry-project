@@ -1,5 +1,5 @@
 import { Container } from 'pixi.js'
-import { Point } from 'tapestry-core/src/lib/geometry'
+import { LinearTransform, Point } from 'tapestry-core/src/lib/geometry'
 import { isTouchEvent } from '../lib/dom'
 import {
   HoveredItem,
@@ -11,6 +11,7 @@ import {
 import { ViewContainer } from './renderer/tapestry-element-renderer'
 import { get } from 'lodash-es'
 import { TapestryStage } from '.'
+import { CSSProperties } from 'react'
 
 export const DOM_CONTAINER_CLASS = 'tapestry-component'
 export const DOM_CONTAINER_TYPE_DATA_ATTR = 'componentType'
@@ -100,4 +101,15 @@ export function toPoint(event: MouseEvent | WheelEvent | Touch | TouchEvent): Po
   return isTouchEvent(event)
     ? toPoint(event.touches.item(0) ?? event.changedTouches[0])
     : { x: event.clientX, y: event.clientY }
+}
+
+export function cssTransformForLocation(
+  { x, y }: Point,
+  tapestryTransform: LinearTransform,
+): CSSProperties {
+  const { translation, scale } = tapestryTransform
+  return {
+    transformOrigin: `${-x}px ${-y}px`,
+    transform: `translate(${translation.dx}px, ${translation.dy}px) scale(${scale})`,
+  }
 }

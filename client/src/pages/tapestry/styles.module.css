@@ -26,12 +26,8 @@
     user-select: none;
     -webkit-user-select: none;
 
-    /* This is used in order to force the browser (Safari in particular)
-     * to draw a compositing layer for the dom-container. Otherwise when the dom-container
-     * goes out of the viewport Safari starts drawing layers for every single item in the viewport
-     * which causes crashes on iPhones
-     */
-    will-change: transform;
+    /* Disable browser-level panning and pinch-zoom */
+    touch-action: none;
   }
 
   :global(#item-picker) {

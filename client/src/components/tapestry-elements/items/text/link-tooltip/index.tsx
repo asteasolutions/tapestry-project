@@ -5,7 +5,6 @@ import { Icon } from 'tapestry-core-client/src/components/lib/icon/index'
 import { Input } from 'tapestry-core-client/src/components/lib/input/index'
 import { Text } from 'tapestry-core-client/src/components/lib/text/index'
 import { elementIdFromLink } from 'tapestry-core-client/src/components/tapestry/items/text/viewer'
-import { DOM_CONTAINER_CLASS } from 'tapestry-core-client/src/stage/utils'
 import { isHTTPURL } from 'tapestry-core/src/utils'
 import { useTapestryData } from '../../../../../pages/tapestry/tapestry-providers'
 import styles from './styles.module.css'
@@ -43,7 +42,7 @@ export function LinkTooltip({ content, element, onRemove, onApply }: LinkTooltip
   const [text, setText] = useState(content ?? '')
 
   const style = useMemo(() => {
-    const itemRect = element.closest(`.${DOM_CONTAINER_CLASS}`)!.getBoundingClientRect()
+    const itemRect = element.closest('.tapestry-element-locator')!.getBoundingClientRect()
     const elementRect = element.getBoundingClientRect()
     return {
       top: `${(elementRect.bottom - itemRect.top) / scale}px`,
