@@ -12,7 +12,8 @@
     "lint": "tsc --build && eslint src --report-unused-disable-directives --max-warnings 0 && prettier ./src --check",
     "prisma:migrate": "npx prisma migrate deploy",
     "prisma:generate": "npx prisma generate",
-    "prisma:create-migration": "npx prisma migrate dev --name"
+    "prisma:create-migration": "npx prisma migrate dev --name",
+    "prisma:reset": "npx prisma migrate reset"
   },
   "author": "",
   "license": "ISC",

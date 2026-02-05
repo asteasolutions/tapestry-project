@@ -1,6 +1,7 @@
 import { ResourceName } from 'tapestry-shared/src/data-transfer/resources'
 import {
   BatchMutationParams,
+  ResourceIdMaps,
   ResourceLists,
   ResourceRepo,
   ResourceRepoOptions,
@@ -32,7 +33,7 @@ import {
   BaseResourceDto,
   BatchMutationDto,
 } from 'tapestry-shared/src/data-transfer/resources/dtos/common'
-import { isMediaItem, transferProperty } from 'tapestry-core/src/utils'
+import { idMapToArray, isMediaItem, transferProperty } from 'tapestry-core/src/utils'
 import {
   EDITABLE_ACTION_BUTTON_ITEM_PROPS,
   EDITABLE_GROUP_PROPS,
@@ -58,6 +59,7 @@ import { EventTypes } from 'tapestry-core-client/src/lib/events/typed-events'
 import { createEventRegistry } from 'tapestry-core-client/src/lib/events/event-registry'
 import { SOCKET_ID_HEADER } from 'tapestry-shared/src/data-transfer/socket/types'
 import { APIError } from '../../../errors'
+import { Patch, produce } from 'immer'
 
 const TAPESTRY_RESOURCES = [
   'tapestries',
@@ -159,6 +161,10 @@ function createPresentationStepPatch(newStep: PresentationStepDto, oldStep: Pres
   return patch as PresentationStepUpdateDto
 }
 
+export type TapestryRepoValue = ResourceIdMaps<TapestryResourceName, TypeMap>
+export type TapestryResourcePatchPath = [TapestryResourceName, string, ...(string | number)[]]
+export type TapestryResourcePatch = Patch & { path: TapestryResourcePatchPath }
+
 export class TapestryResourcesRepo extends ResourceRepo<TapestryResourceName, TypeMap> {
   constructor(
     private tapestryId: string,
@@ -176,6 +182,15 @@ export class TapestryResourcesRepo extends ResourceRepo<TapestryResourceName, Ty
 
   dispose() {
     detachListeners(this, 'socketManager', this.socketManager)
+  }
+
+  toDto(): TapestryDto {
+    // Combine all repo data in a single TapestryDto
+    return produce(this.value.tapestries[this.tapestryId]!, (t) => {
+      t.items = idMapToArray(this.value.items)
+      t.rels = idMapToArray(this.value.rels)
+      t.groups = idMapToArray(this.value.groups)
+    })
   }
 
   protected async fetch<K extends TapestryResourceName>(

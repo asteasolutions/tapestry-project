@@ -9,6 +9,12 @@ export class APIError extends Error {
   }
 }
 
+export class NoConnectionError extends Error {
+  constructor(public cause?: unknown) {
+    super('No connection error')
+  }
+}
+
 export class UnknownError extends Error {
   constructor(public cause?: unknown) {
     super('Unknown error')

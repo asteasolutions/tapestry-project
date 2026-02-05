@@ -9,11 +9,12 @@ import { scheduleTapestryThumbnailGeneration } from '../resources/tapestries.js'
 import { parseDBItemSource } from '../transformers/item.js'
 import { WEB_SOURCE_PARSERS } from 'tapestry-core/src/web-sources/index.js'
 import { extractVideoFrame, getVideoFPS } from './ffmpeg.js'
+import { isBlobURL } from 'tapestry-core/src/utils.js'
 import { screenshotPage } from './pdf.js'
 
 async function getPDFThumbnail(item: Item) {
   const { source } = await parseDBItemSource(item.source!)
-  if (source.startsWith('blob:')) {
+  if (isBlobURL(source)) {
     return
   }
 
@@ -39,7 +40,7 @@ async function getVideoThumbnail(item: Item): Promise<Buffer | undefined> {
   // Upon initial upload the source is the local blob, so we skip it.
   // After uploading the video to S3 an item update will come with the object key
   // based off of which we will extract the video thumbnail
-  if (source.startsWith('blob:')) {
+  if (isBlobURL(source)) {
     return
   }
   const startFrame = item.startTime ? (await getVideoFPS(source)) * item.startTime : undefined

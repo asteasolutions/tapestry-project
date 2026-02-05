@@ -1,6 +1,6 @@
+import express, { Router } from 'express'
 import { isSentryEnabled } from './sentry-init'
 import * as Sentry from '@sentry/node'
-import express from 'express'
 import http from 'http'
 import bodyParser from 'body-parser'
 import cors from 'cors'
@@ -87,6 +87,7 @@ app.use(
   bindEndpoints(resources.presentationStepBatchMutations, presentationStepBatchMutations),
   bindEndpoints(resources.userSecrets, userSecrets),
   bindEndpoints(resources.tapestryBookmarks, tapestryBookmarks),
+  Router().head('/healthcheck', (_reques, response) => response.sendStatus(200)),
 )
 app.use(express.static(path.join(import.meta.dirname, 'assets')))
 

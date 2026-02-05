@@ -4,7 +4,9 @@ import { api } from './api'
 import { Observable } from 'tapestry-core-client/src/lib/events/observable'
 import { CanceledError, GenericAbortSignal } from 'axios'
 import { SessionCreateDto } from 'tapestry-shared/src/data-transfer/resources/dtos/session'
-import { APIError } from '../errors'
+import { APIError, NoConnectionError } from '../errors'
+import { LocalStorage } from './local-storage'
+import { defer } from 'tapestry-core/src/lib/promise'
 
 export interface AuthServiceState {
   user: UserDto | null
@@ -12,25 +14,9 @@ export interface AuthServiceState {
   pendingRegistration: { usernameSuggestion: string } | undefined
 }
 
-function defer<T = void>() {
-  let resolve: (value: T) => void
-  let reject: (error: Error) => void
-  let state = 'pending' as 'pending' | 'resolved' | 'rejected'
-  const promise = new Promise<T>((res, rej) => {
-    resolve = (value: T) => {
-      res(value)
-      state = 'resolved'
-    }
-    reject = (error: Error) => {
-      rej(error)
-      state = 'rejected'
-    }
-  })
-
-  // @ts-expect-error TS doesn't know that Promise executors are called synchronously
-  // and thinks that resolve and reject are not defined here yet.
-  return { promise, resolve, reject, state }
-}
+const currentUserStorage = new LocalStorage<{ user: UserDto | null; accessToken: string }>(
+  'current-user',
+)
 
 export abstract class AuthService<
   Credentials extends SessionCreateDto = SessionCreateDto,
@@ -75,19 +61,16 @@ export abstract class AuthService<
         { include: loadUser ? ['user'] : undefined },
         { signal },
       )
-
-      const renewAfter = expiresAt - Date.now() - 10_000
-      if (renewAfter > 0) {
-        clearTimeout(this.autoRefreshTimeout)
-        this.autoRefreshTimeout = window.setTimeout(this.refresh.bind(this), renewAfter)
-      }
       api.setAccessToken(accessToken)
       this.accessToken = accessToken
       this.update((state) => {
         state.user = user ?? state.user ?? null
         state.isInitialized = true
+        currentUserStorage.save({ user: state.user, accessToken })
         state.pendingRegistration = undefined
       })
+
+      this.scheduleRefresh(expiresAt)
     } catch (error) {
       if (error instanceof CanceledError) {
         throw error
@@ -104,8 +87,23 @@ export abstract class AuthService<
             }
           }
         }
+
+        if (error instanceof NoConnectionError) {
+          const savedUser = currentUserStorage.current
+          this.accessToken = savedUser?.accessToken
+          api.setAccessToken(this.accessToken ?? null)
+          state.user = savedUser?.user ?? null
+        }
       })
       throw error
+    }
+  }
+
+  private scheduleRefresh(expiration: number) {
+    const renewAfter = expiration - Date.now() - 10_000
+    if (renewAfter > 0) {
+      clearTimeout(this.autoRefreshTimeout)
+      this.autoRefreshTimeout = window.setTimeout(this.refresh.bind(this), renewAfter)
     }
   }
 

@@ -1,33 +1,34 @@
+import { Patch } from 'immer'
 import { compact } from 'lodash-es'
-import { IdMap, idMapToArray, isMediaItem } from 'tapestry-core/src/utils'
-import { MediaItemDto } from 'tapestry-shared/src/data-transfer/resources/dtos/item'
+import { createEventRegistry } from 'tapestry-core-client/src/lib/events/event-registry'
+import { ChangeEvent } from 'tapestry-core-client/src/lib/events/observable'
+import { EventTypes } from 'tapestry-core-client/src/lib/events/typed-events'
 import { Store, StoreMutationCommand } from 'tapestry-core-client/src/lib/store/index'
+import { MediaItem } from 'tapestry-core/src/data-format/schemas/item'
+import { arrayToIdMap, IdMap, idMapToArray } from 'tapestry-core/src/utils'
+import { CommentThreadsDto } from 'tapestry-shared/src/data-transfer/resources/dtos/comment-threads'
 import {
   EditableTapestryViewModel,
   InteractionMode,
   TapestryEditorStore,
   TapestryWithOwner,
 } from '.'
+import { NoConnectionError } from '../../../errors'
+import { PeriodicAction } from '../../../lib/periodic-action'
 import {
   assignCommentThreads,
   EDITABLE_TAPESTRY_PROPS,
   fromTapestryDto,
+  isLocalMediaItem,
   UserAccess,
 } from '../../../model/data/utils'
-import { EventTypes } from 'tapestry-core-client/src/lib/events/typed-events'
-import { createEventRegistry } from 'tapestry-core-client/src/lib/events/event-registry'
-import { ChangeEvent } from 'tapestry-core-client/src/lib/events/observable'
-import { Patch, produce } from 'immer'
-import { PeriodicAction } from '../../../lib/periodic-action'
+import { api, APIChangeData } from '../../../services/api'
+import { DB } from '../../../services/db'
 import { itemUpload } from '../../../services/item-upload'
-import { CommentThreadsDto } from 'tapestry-shared/src/data-transfer/resources/dtos/comment-threads'
-import { TapestryResourceName, TapestryResourcesRepo } from './tapestry-resources-repo'
 import { CommentThreadsRepo } from './comment-threads-repo'
-import { TapestryUndoStack } from './undo-stack/tapestry-undo-stack'
-import { PresentationOrderUndoStack } from './undo-stack/presentation-order-undo-stack'
+import { createGroup, deleteGroups, updateGroup } from './store-commands/groups'
 import { deleteItems, insertItems, updateItem } from './store-commands/items'
 import { addRels, deleteRels, updateRel } from './store-commands/rels'
-import { createGroup, deleteGroups, updateGroup } from './store-commands/groups'
 import {
   addCollaborator,
   removeCollaborator,
@@ -59,6 +60,15 @@ import { userToPublicProfileDto } from 'tapestry-shared/src/utils'
 import { PublicUserProfileDto } from 'tapestry-shared/src/data-transfer/resources/dtos/user'
 import { TapestryDto } from 'tapestry-shared/src/data-transfer/resources/dtos/tapestry'
 import { APIError } from '../../../errors'
+import {
+  TapestryResourceName,
+  TapestryResourcePatch,
+  TapestryResourcePatchPath,
+  TapestryResourcesRepo,
+} from './tapestry-resources-repo'
+import { PresentationOrderUndoStack } from './undo-stack/presentation-order-undo-stack'
+import { TapestryUndoStack } from './undo-stack/tapestry-undo-stack'
+import { diffPresentationSteps, diffTapestryDtos } from './utils'
 
 type TapestryRTCMessage =
   | {
@@ -73,6 +83,7 @@ type TapestryRTCMessage =
 type EventTypesMap = {
   tapestryRepo: EventTypes<TapestryResourcesRepo>
   commentThreadsRepo: EventTypes<CommentThreadsRepo>
+  api: 'change'
   rtcManager: EventTypes<RTCManager<TapestryRTCMessage>>
 }
 
@@ -92,6 +103,8 @@ export class TapestryDataSync {
   private socketManager: SocketManager
   private rtcManager: RTCManager<TapestryRTCMessage>
 
+  private db = new DB()
+
   constructor(
     private tapestryId: string,
     private initialMode: InteractionMode,
@@ -108,11 +121,12 @@ export class TapestryDataSync {
         })
       },
       onAfterPush: (error?: unknown) => {
+        const showSnackbar = !!error && !(error instanceof NoConnectionError)
         this._store?.dispatch(
           (model) => {
             --model.pendingRequests
           },
-          !!error &&
+          showSnackbar &&
             setSnackbar({
               variant: 'error',
               text:
@@ -126,16 +140,8 @@ export class TapestryDataSync {
     this.commentThreadsRepo = new CommentThreadsRepo(tapestryId)
   }
 
-  async init(signal?: AbortSignal) {
-    // Initialize all repos and wait for them to pull their data from the server
-    await Promise.all([this.tapestryRepo.init(signal), this.commentThreadsRepo.init(signal)])
-
-    // Combine all repo data in a single TapestryDto
-    const tapestry = produce(this.tapestryRepo.value.tapestries[this.tapestryId]!, (t) => {
-      t.items = idMapToArray(this.tapestryRepo.value.items)
-      t.rels = idMapToArray(this.tapestryRepo.value.rels)
-      t.groups = idMapToArray(this.tapestryRepo.value.groups)
-    })
+  async init(signal: AbortSignal) {
+    const { tapestry, presentationSteps } = await this.initializeTapestry(signal)
     const commentThreads = this.commentThreadsRepo.value.commentThreads[this.tapestryId]!
 
     // Create a view model from the DTO and initialize the store
@@ -144,7 +150,7 @@ export class TapestryDataSync {
       this.initialMode,
       this.userAccess,
       commentThreads,
-      idMapToArray(this.tapestryRepo.value.presentationSteps),
+      presentationSteps,
     )
     this._store = new Store(tapestryViewModel, [
       {
@@ -157,6 +163,7 @@ export class TapestryDataSync {
       },
     ])
 
+    attachListeners(this, 'api', api)
     attachListeners(this, 'rtcManager', this.rtcManager)
 
     // Attach observers that will synchronize the store with the repos in both directions
@@ -167,11 +174,15 @@ export class TapestryDataSync {
   }
 
   dispose() {
-    this.commentThreadPolling.stop()
+    this.db.disconnect()
+
+    detachListeners(this, 'api', api)
 
     detachListeners(this, 'rtcManager', this.rtcManager)
     this.detachRepoListeners()
     this.detachStoreSubscriber()
+    this.commentThreadPolling.stop()
+
     this.tapestryRepo.dispose()
     this.socketManager.dispose()
     this.rtcManager.dispose()
@@ -204,6 +215,40 @@ export class TapestryDataSync {
     this._store?.unsubscribe(this.onStoreChange)
   }
 
+  private withoutStoreUpdates<T>(callback: () => T extends Promise<unknown> ? never : T) {
+    this.detachStoreSubscriber()
+    callback()
+    this.attachStoreSubscriber()
+  }
+
+  private async initializeTapestry(signal: AbortSignal) {
+    // Initialize all repos and wait for them to pull their data from the server
+    // Even if we are offline we still want to initialize the repos, so they can get initialized with the cached requests
+    await Promise.all([this.tapestryRepo.init(signal), this.commentThreadsRepo.init(signal)])
+
+    const tapestry = this.tapestryRepo.toDto()
+    if (api.value.online === 'offline') {
+      await this.db.connect()
+      const localTapestry = await this.db.get(this.tapestryId)
+      if (localTapestry) {
+        const { groups, items, rels, ...tapestryProps } = localTapestry.tapestry
+        // Update the resource repo with the local version of the tapestry
+        this.tapestryRepo.commit(
+          {
+            tapestries: { [this.tapestryId]: tapestryProps },
+            groups: arrayToIdMap(groups ?? []),
+            items: arrayToIdMap(items ?? []),
+            rels: arrayToIdMap(rels ?? []),
+            presentationSteps: arrayToIdMap(localTapestry.presentationSteps),
+          },
+          { skipPush: true },
+        )
+        return localTapestry
+      }
+    }
+
+    return { tapestry, presentationSteps: idMapToArray(this.tapestryRepo.value.presentationSteps) }
+  }
   @eventListener('rtcManager', 'data-channel-opened')
   protected onDataChannelOpened(event: DataChannelOpened) {
     const user = auth.value.user
@@ -232,27 +277,68 @@ export class TapestryDataSync {
 
   @eventListener('tapestryRepo', 'change')
   protected onTapestryRepoChange({ detail: { patches } }: ChangeEvent<unknown>) {
-    this.detachStoreSubscriber()
-    const storeCommands = this.convertRepoPatchesToStoreCommands(patches)
-    this.store.dispatch(...storeCommands, { source: 'server' })
-    this.attachStoreSubscriber()
+    this.withoutStoreUpdates(() => {
+      const storeCommands = this.convertRepoPatchesToStoreCommands(patches)
+      this.store.dispatch(...storeCommands, { source: 'server' })
+    })
   }
 
   @eventListener('commentThreadsRepo', 'change')
   protected onCommentThreadsRepoChange({
     detail: { value },
   }: ChangeEvent<{ commentThreads: IdMap<CommentThreadsDto> }>) {
-    this.detachStoreSubscriber()
-    this._store?.dispatch(
-      (model) => {
-        assignCommentThreads(model, value.commentThreads[this.tapestryId]!)
-      },
-      { source: 'server' },
-    )
-    this.attachStoreSubscriber()
+    this.withoutStoreUpdates(() => {
+      this._store?.dispatch(
+        (model) => {
+          assignCommentThreads(model, value.commentThreads[this.tapestryId]!)
+        },
+        { source: 'server' },
+      )
+    })
   }
 
-  private onStoreChange = (tapestry: EditableTapestryViewModel, patches: Patch[]) => {
+  @eventListener('api', 'change')
+  protected onOnlineChanged({ detail: { value } }: ChangeEvent<APIChangeData>) {
+    if (value.online === 'pending') {
+      return
+    }
+
+    if (value.online === 'online') {
+      void this.onOnline()
+    } else {
+      void this.onOffline()
+    }
+  }
+
+  protected async onOnline() {
+    const localDto = await this.db.get(this.tapestryId)
+    if (!localDto) {
+      return
+    }
+
+    const repo = new TapestryResourcesRepo(this.tapestryId, this.socketManager)
+    await repo.init()
+    const remoteDto = repo.toDto()
+
+    const tapestryPatches = diffTapestryDtos(remoteDto, localDto.tapestry)
+    const presentationStepPatches = diffPresentationSteps(
+      idMapToArray(repo.value.presentationSteps),
+      localDto.presentationSteps,
+    )
+    repo.commitPatches([...tapestryPatches, ...presentationStepPatches])
+    await this.handleNewMediaItems(tapestryPatches, repo)
+
+    await this.db.delete(this.tapestryId)
+    this.db.disconnect()
+    repo.dispose()
+  }
+
+  protected async onOffline() {
+    await this.db.connect()
+    await this.db.upsert(this.tapestryRepo.value)
+  }
+
+  private onStoreChange = async (tapestry: EditableTapestryViewModel, patches: Patch[]) => {
     this.listenToRemoteEvents(tapestry.interactionMode === 'edit')
     // Handle the special case where the whole view model has been replaced
     // This can happen if someone invokes, for example, storeMutator.update(() => newValue)
@@ -260,8 +346,14 @@ export class TapestryDataSync {
       this.tapestryRepo.commitPatches(this.createTapestryRepoPatches(tapestry))
     } else {
       const repoPatches = this.convertStorePatchesToRepo(patches)
+
       this.tapestryRepo.commitPatches(repoPatches)
-      void this.handleNewMediaItems(repoPatches)
+
+      void this.handleNewMediaItems(repoPatches, this.tapestryRepo)
+
+      if (repoPatches.length > 0 && this.db.connected) {
+        await this.db.patch(repoPatches)
+      }
     }
   }
 
@@ -314,9 +406,9 @@ export class TapestryDataSync {
     ]
   }
 
-  private async handleNewMediaItems(repoPatches: Patch[]) {
-    const items = repoPatches.reduce<MediaItemDto[]>((acc, { op, path, value }) => {
-      if (op === 'add' && path[0] === 'items' && path.length === 2 && isNewMediaItem(value)) {
+  private async handleNewMediaItems(repoPatches: Patch[], repo: TapestryResourcesRepo) {
+    const items = repoPatches.reduce<MediaItem[]>((acc, { op, path, value }) => {
+      if (op === 'add' && path[0] === 'items' && path.length === 2 && isLocalMediaItem(value)) {
         acc.push(value)
       }
       return acc
@@ -325,25 +417,26 @@ export class TapestryDataSync {
     if (items.length === 0) return
 
     const patches = (
-      await Promise.allSettled(items.map((item) => itemUpload.upload(item.source, this.tapestryId)))
-    ).map<Patch>((result, index) =>
-      result.status === 'fulfilled'
-        ? {
-            op: 'replace',
-            path: ['items', items[index].id, 'source'],
-            value: result.value,
-          }
-        : {
-            op: 'remove',
-            path: ['items', items[index].id],
-          },
-    )
-    this.tapestryRepo.commitPatches(patches)
+      await Promise.allSettled(items.map((item) => itemUpload.upload(item, this.tapestryId)))
+    ).reduce<Patch[]>((acc, result, index) => {
+      if (result.status === 'rejected') {
+        if (result.reason instanceof NoConnectionError) {
+          // If the item failed to upload due to connectivity issue do nothing
+          return acc
+        } else {
+          acc.push({ op: 'remove', path: ['items', items[index].id] })
+        }
+      } else {
+        acc.push({ op: 'replace', path: ['items', items[index].id, 'source'], value: result.value })
+      }
+      return acc
+    }, [])
+    repo.commitPatches(patches)
   }
 
-  private convertStorePatchesToRepo(patches: Patch[]) {
+  private convertStorePatchesToRepo(patches: Patch[]): TapestryResourcePatch[] {
     return compact(
-      patches.map((patch): Patch | null => {
+      patches.map((patch) => {
         if ((EDITABLE_TAPESTRY_PROPS as (string | number)[]).includes(patch.path[0])) {
           return { ...patch, path: ['tapestries', this.tapestryId, ...patch.path] }
         }
@@ -357,14 +450,21 @@ export class TapestryDataSync {
 
         if (rest.length === 0) {
           // This is a direct patch on a whole item, e.g. "add" /items/<itemId>
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-          return { op: patch.op, path: [resourceName, id], value: patch.value?.dto }
+          return {
+            op: patch.op,
+            path: [resourceName, id] as TapestryResourcePatchPath,
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+            value: patch.value?.dto,
+          }
         }
 
         if (rest[0] === 'dto') {
           // This is a patch which changes the internal structure of the item or rel.
           // We are only interested in it if it modifies the DTO.
-          return { ...patch, path: [resourceName, id, ...rest.slice(1)] }
+          return {
+            ...patch,
+            path: [resourceName, id, ...rest.slice(1)] as TapestryResourcePatchPath,
+          }
         }
 
         return null
@@ -417,8 +517,4 @@ const patchCommands: Record<TapestryResourceName, PatchCommand> = {
     replace: (id, value) =>
       updatePresentationStep(id, { dto: PresentationStepSchema.parse(value) }),
   },
-}
-
-function isNewMediaItem(value: unknown): value is MediaItemDto {
-  return isMediaItem(value) && value.source.startsWith('blob:')
 }

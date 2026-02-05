@@ -5,9 +5,9 @@ export class LocalStorage<T> {
     localStorage.setItem(this.key, JSON.stringify(data))
   }
 
-  get current(): T | undefined {
+  get current(): T | null {
     const dataStr = localStorage.getItem(this.key)
-    return dataStr ? (JSON.parse(dataStr) as T) : undefined
+    return dataStr ? (JSON.parse(dataStr) as T) : null
   }
 
   delete() {

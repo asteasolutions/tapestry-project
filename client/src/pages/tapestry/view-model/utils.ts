@@ -1,10 +1,10 @@
-import { WritableDraft } from 'immer'
+import { Patch, WritableDraft } from 'immer'
 import { chunk, zip } from 'lodash-es'
 import {
   getBoundingRectangle,
   MULTISELECT_RECTANGLE_PADDING,
 } from 'tapestry-core-client/src/view-model/utils'
-import { Point } from 'tapestry-core/src/data-format/schemas/common'
+import { Identifiable, Point } from 'tapestry-core/src/data-format/schemas/common'
 import { GroupCreateDto } from 'tapestry-shared/src/data-transfer/resources/dtos/group'
 import {
   ActionButtonItemDto,
@@ -16,6 +16,7 @@ import {
   PresentationStepDto,
 } from 'tapestry-shared/src/data-transfer/resources/dtos/presentation-step'
 import { RelCreateDto } from 'tapestry-shared/src/data-transfer/resources/dtos/rel'
+import { TapestryDto } from 'tapestry-shared/src/data-transfer/resources/dtos/tapestry'
 import {
   DirectionMask,
   EditableGroupViewModel,
@@ -27,6 +28,7 @@ import {
   SelectionResizeState,
   TapestryEditorStore,
 } from '.'
+import { EDITABLE_TAPESTRY_PROPS } from '../../../model/data/utils'
 import { DeserializeResult } from '../../../stage/data-transfer-handler'
 import { addAndPositionItems } from './store-commands/items'
 import { setIAImport, setLargeFiles, setSnackbar } from './store-commands/tapestry'
@@ -154,6 +156,59 @@ export function reassignPresentationStep(
   })
 }
 
+type PatchSource = Identifiable[] | undefined | null
+
+const updatePatches = (from: PatchSource, to: PatchSource, path: string) =>
+  to?.reduce<Patch[]>((acc, item) => {
+    if (from?.find((i) => i.id === item.id)) {
+      acc.push({ op: 'replace', path: [path, item.id], value: item })
+    }
+    return acc
+  }, []) ?? []
+
+const removePatches = (from: PatchSource, to: PatchSource, path: string) =>
+  from?.reduce<Patch[]>((acc, item) => {
+    if (!to?.find((i) => i.id === item.id)) {
+      acc.push({ op: 'remove', path: [path, item.id] })
+    }
+    return acc
+  }, []) ?? []
+
+const addPatches = (from: PatchSource, to: PatchSource, path: string) =>
+  to?.reduce<Patch[]>((acc, item) => {
+    if (!from?.find((i) => i.id === item.id)) {
+      acc.push({ op: 'add', path: [path, item.id], value: item })
+    }
+    return acc
+  }, []) ?? []
+
+export function diffTapestryDtos(from: TapestryDto, to: TapestryDto): Patch[] {
+  const tapestryId = from.id
+  const tapestryPatches = EDITABLE_TAPESTRY_PROPS.map(
+    (prop): Patch => ({
+      op: 'replace',
+      path: ['tapestries', tapestryId, prop],
+      value: to[prop],
+    }),
+  )
+
+  return [
+    ...tapestryPatches,
+    ...(['items', 'rels', 'groups'] as const).flatMap((path) => [
+      ...updatePatches(from[path], to[path], path),
+      ...removePatches(from[path], to[path], path),
+      ...addPatches(from[path], to[path], path),
+    ]),
+  ]
+}
+
+export function diffPresentationSteps(from: PresentationStepDto[], to: PresentationStepDto[]) {
+  return [
+    ...updatePatches(from, to, 'presentationSteps'),
+    ...removePatches(from, to, 'presentationSteps'),
+    ...addPatches(from, to, 'presentationSteps'),
+  ]
+}
 export async function insertDataTransfer(
   dispatch: TapestryEditorStore['dispatch'],
   deserialize: () => Promise<DeserializeResult>,
