@@ -1,22 +1,26 @@
 import { Application, ApplicationOptions } from 'pixi.js'
 import { GestureDetector, GestureDetectorOptions } from './gesture-detector'
-import { VIEW_MODEL_ANIMATIONS } from '../view-model/tweening'
-import { Group } from '@tweenjs/tween.js'
+import { Animations, AnimationsState, VIEW_MODEL_ANIMATIONS } from '../view-model/tweening'
+import { ChangeEvent } from '../lib/events/observable'
 
 export class PixiAppWrapper {
   private rafId?: number
-  private animations: Group[] = []
+  readonly animations = new Set<Animations>()
 
   constructor(readonly app: Application) {}
 
-  addAnimations(animations: Group) {
-    if (!this.animations.includes(animations)) {
-      this.animations.push(animations)
-    }
+  addAnimations(animations: Animations) {
+    if (this.animations.has(animations)) return
+
+    this.animations.add(animations)
+    animations.addEventListener('change', this.onAnimationStateChange)
   }
 
-  removeAnimations(animations: Group) {
-    this.animations = this.animations.filter((group) => group !== animations)
+  removeAnimations(animations: Animations) {
+    if (!this.animations.has(animations)) return
+
+    this.animations.delete(animations)
+    animations.removeEventListener('change', this.onAnimationStateChange)
   }
 
   scheduleRedraw() {
@@ -33,11 +37,20 @@ export class PixiAppWrapper {
     this.app.destroy(true, true)
   }
 
+  private onAnimationStateChange = (event: ChangeEvent<AnimationsState>) => {
+    if (!event.detail.value.allStopped) this.scheduleRedraw()
+  }
+
   private drawFrame = () => {
     this.rafId = undefined
 
-    const liveAnimations = this.animations.filter((group) => !group.allStopped())
-    liveAnimations.forEach((group) => group.update())
+    const liveAnimations: Animations[] = []
+    for (const animations of this.animations) {
+      if (!animations.group.allStopped()) {
+        liveAnimations.push(animations)
+      }
+    }
+    liveAnimations.forEach(({ group }) => group.update())
 
     this.app.renderer.render(this.app.stage)
 
