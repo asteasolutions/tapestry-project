@@ -106,7 +106,12 @@ export class GestureDetector extends TypedEventTarget<
     if (this.isActive) return
     this.isActive = true
 
-    attachListeners(this, 'stage', this.stage.pixi.tapestry.stage, isMobile ? 'mobile' : 'desktop')
+    attachListeners(
+      this,
+      'stage',
+      this.stage.pixi.tapestry.app.stage,
+      isMobile ? 'mobile' : 'desktop',
+    )
     attachListeners(this, 'window', window)
     attachListeners(this, 'scene', this.stage.root, isMobile ? 'mobile' : 'desktop')
     this.dragHandler.activate()
@@ -116,7 +121,7 @@ export class GestureDetector extends TypedEventTarget<
     if (!this.isActive) return
     this.isActive = false
 
-    detachListeners(this, 'stage', this.stage.pixi.tapestry.stage)
+    detachListeners(this, 'stage', this.stage.pixi.tapestry.app.stage)
     detachListeners(this, 'window', window)
     detachListeners(this, 'scene', this.stage.root)
     this.dragHandler.deactivate()

@@ -312,7 +312,7 @@ export class EditorItemController extends ItemController {
     const pointerSelection = this.store.get('pointerSelection')
     if (!pointerSelection) return
 
-    const point = this.stage.pixi.tapestry.stage.worldTransform.applyInverse(cursorLocation)
+    const point = this.stage.pixi.tapestry.app.stage.worldTransform.applyInverse(cursorLocation)
     this.editorStore.dispatch(
       setSelectionRect(
         new Rectangle(pointerSelection.rect.position, {
@@ -324,7 +324,7 @@ export class EditorItemController extends ItemController {
   }
 
   private onDragItems(event: DragEvent<HoveredDragTarget>) {
-    const { worldTransform } = this.stage.pixi.tapestry.stage
+    const { worldTransform } = this.stage.pixi.tapestry.app.stage
     const guidelineSpacing = event.detail.originalEvent?.ctrlKey
       ? null
       : this.editorStore.get('viewportGuidelines.spacing')

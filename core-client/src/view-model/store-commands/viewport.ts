@@ -135,6 +135,7 @@ export function transformViewport(
         },
         typeof animate === 'object' ? animate : {},
       )
+      zoomAnimation.update()
     } else {
       updateViewport({ scale: toScale, translation: { dx, dy } })
     }

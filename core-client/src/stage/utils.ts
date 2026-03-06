@@ -82,7 +82,7 @@ export function obtainHoverTarget(
   }
 
   const point = toPoint(event)
-  const pixiElement = stage.pixi.tapestry.renderer.events.rootBoundary.hitTest(point.x, point.y)
+  const pixiElement = stage.pixi.tapestry.app.renderer.events.rootBoundary.hitTest(point.x, point.y)
   const hoveredRel = obtainHoveredPixiTarget(pixiElement)
 
   return hoveredRel ?? hoveredDomElement

@@ -97,7 +97,7 @@ export class EditorTapestryRenderer extends TapestryRenderer<EditableTapestryEle
       viewport: { transform },
       interactionMode,
     } = this.editorStore.get()
-    let grid = this.stage.pixi.tapestry.stage.getChildByLabel('grid') as TilingSprite | null
+    let grid = this.stage.pixi.tapestry.app.stage.getChildByLabel('grid') as TilingSprite | null
     if (!guidelines || interactionMode !== 'edit') {
       grid?.destroy()
       this.guidelineGridTextureProps = null
@@ -106,7 +106,7 @@ export class EditorTapestryRenderer extends TapestryRenderer<EditableTapestryEle
 
     if (!grid) {
       grid = new TilingSprite({ label: 'grid', eventMode: 'none' })
-      this.stage.pixi.tapestry.stage.addChildAt(grid, 0)
+      this.stage.pixi.tapestry.app.stage.addChildAt(grid, 0)
     }
 
     const dotRadius = 1 / Math.min(1, transform.scale * 1.5)
@@ -122,7 +122,7 @@ export class EditorTapestryRenderer extends TapestryRenderer<EditableTapestryEle
         // When spacing becomes too large, we need to build huge textures to display the grid.
         // At this point it's better to hide the grid altogether, it isn't useable at this level anyway.
         // We do this by generating a small dummy texture for the tile
-        grid.texture = this.stage.pixi.tapestry.renderer.generateTexture({
+        grid.texture = this.stage.pixi.tapestry.app.renderer.generateTexture({
           target: new Graphics(),
           frame: new PixiRectangle(0, 0, 1, 1),
         })
@@ -130,7 +130,7 @@ export class EditorTapestryRenderer extends TapestryRenderer<EditableTapestryEle
         const tile = new Graphics()
           .circle(dotRadius, dotRadius, dotRadius)
           .fill({ color: this.theme.color('background.inverse'), alpha: 0.25 })
-        grid.texture = this.stage.pixi.tapestry.renderer.generateTexture({
+        grid.texture = this.stage.pixi.tapestry.app.renderer.generateTexture({
           target: tile,
           frame: new PixiRectangle(0, 0, spacing, spacing),
           resolution: 4,

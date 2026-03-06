@@ -52,7 +52,7 @@ export abstract class TapestryRenderer<
     protected store: Store<TapestryViewModel>,
     protected stage: TapestryStage,
   ) {
-    this.stage.pixi.tapestry.stage.addChild(this.world, this.selected)
+    this.stage.pixi.tapestry.app.stage.addChild(this.world, this.selected)
   }
 
   boundRender = this.render.bind(this)
@@ -93,11 +93,15 @@ export abstract class TapestryRenderer<
     this.updateViewportTransformation()
     this.updatePointer()
     this.updateTheme()
+
+    this.stage.pixi.tapestry.scheduleRedraw()
   }
 
   protected renderSelectionRect() {
     const containerId = 'selection-rect'
-    let container = this.stage.pixi.tapestry.stage.getChildByLabel(containerId) as Graphics | null
+    let container = this.stage.pixi.tapestry.app.stage.getChildByLabel(
+      containerId,
+    ) as Graphics | null
     const pointerSelection = this.store.get('pointerSelection')
 
     if (!pointerSelection) {
@@ -107,7 +111,7 @@ export abstract class TapestryRenderer<
 
     if (!container) {
       container = new Graphics({ label: containerId, eventMode: 'none' })
-      this.stage.pixi.tapestry.stage.addChild(container)
+      this.stage.pixi.tapestry.app.stage.addChild(container)
     }
 
     const { left, top, width, height } = pointerSelection.rect
@@ -122,13 +126,13 @@ export abstract class TapestryRenderer<
 
   protected updateTheme() {
     const canvasBackground = this.store.get('background')
-    this.stage.pixi.tapestry.renderer.background.color = canvasBackground
+    this.stage.pixi.tapestry.app.renderer.background.color = canvasBackground
   }
 
   protected updateViewportTransformation() {
     const { translation, scale } = this.store.get('viewport.transform')
-    this.stage.pixi.tapestry.stage.scale = scale
-    this.stage.pixi.tapestry.stage.position = { x: translation.dx, y: translation.dy }
+    this.stage.pixi.tapestry.app.stage.scale = scale
+    this.stage.pixi.tapestry.app.stage.position = { x: translation.dx, y: translation.dy }
   }
 
   protected determineCursorStyle(): CSSProperties['cursor'] | null {

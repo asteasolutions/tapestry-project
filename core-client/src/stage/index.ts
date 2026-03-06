@@ -1,6 +1,49 @@
 import { Application, ApplicationOptions } from 'pixi.js'
 import { GestureDetector, GestureDetectorOptions } from './gesture-detector'
 import { VIEW_MODEL_ANIMATIONS } from '../view-model/tweening'
+import { Group } from '@tweenjs/tween.js'
+
+export class PixiAppWrapper {
+  private rafId?: number
+  private animations: Group[] = []
+
+  constructor(readonly app: Application) {}
+
+  addAnimations(animations: Group) {
+    if (!this.animations.includes(animations)) {
+      this.animations.push(animations)
+    }
+  }
+
+  removeAnimations(animations: Group) {
+    this.animations = this.animations.filter((group) => group !== animations)
+  }
+
+  scheduleRedraw() {
+    this.rafId ??= requestAnimationFrame(this.drawFrame)
+  }
+
+  destroy() {
+    if (this.rafId) {
+      cancelAnimationFrame(this.rafId)
+      this.rafId = undefined
+    }
+
+    this.app.stage.removeChildren().forEach((c) => c.destroy({ children: true }))
+    this.app.destroy(true, true)
+  }
+
+  private drawFrame = () => {
+    this.rafId = undefined
+
+    const liveAnimations = this.animations.filter((group) => !group.allStopped())
+    liveAnimations.forEach((group) => group.update())
+
+    this.app.renderer.render(this.app.stage)
+
+    if (liveAnimations.length > 0) this.scheduleRedraw()
+  }
+}
 
 /**
  * The "Tapestry Stage" describes the basic structure of DOM containers used to visualize a Tapestry. Typically it
@@ -22,13 +65,13 @@ import { VIEW_MODEL_ANIMATIONS } from '../view-model/tweening'
  */
 export interface TapestryStage<PixiApps extends string = never> {
   root: HTMLDivElement
-  pixi: Record<'tapestry' | PixiApps, Application>
+  pixi: Record<'tapestry' | PixiApps, PixiAppWrapper>
   gestureDetector: GestureDetector
 }
 
 export function createTapestryStage<PixiApps extends string>(
   root: HTMLDivElement,
-  pixi: Record<'tapestry' | PixiApps, Application>,
+  pixi: Record<'tapestry' | PixiApps, PixiAppWrapper>,
   gestureDetectorOptions: GestureDetectorOptions,
 ): TapestryStage<PixiApps> {
   // We have a chicken-and-egg problem here. We can't create the GestureDetector without a TapestryStage, but we
@@ -40,13 +83,11 @@ export function createTapestryStage<PixiApps extends string>(
   // Configure the top-level Pixi container (the "stage") to have the whole plane as a hit area
   // so that we can capture mouse events anywhere in it. Pixi's default behavior is to capture
   // mouse events only on child containers that have actual visual content.
-  Object.values(stage.pixi).forEach((pixiApp) => {
-    pixiApp.stage.hitArea = { contains: () => true }
+  Object.values(stage.pixi).forEach(({ app }) => {
+    app.stage.hitArea = { contains: () => true }
   })
 
-  stage.pixi.tapestry.ticker.add(() => {
-    VIEW_MODEL_ANIMATIONS.update()
-  })
+  stage.pixi.tapestry.addAnimations(VIEW_MODEL_ANIMATIONS)
 
   return stage
 }
@@ -62,14 +103,16 @@ export async function createPixiApp(
     resizeTo: container,
     antialias: true,
     autoDensity: true,
-    resolution: Math.max(2, window.devicePixelRatio),
+    resolution: 2,
     roundPixels: true,
     eventMode: 'passive',
-    sharedTicker: true,
+    // Don't use a ticker, render on demand
+    autoStart: false,
+    sharedTicker: false,
     ...opts,
   })
 
   container.appendChild(app.canvas)
 
-  return app
+  return new PixiAppWrapper(app)
 }

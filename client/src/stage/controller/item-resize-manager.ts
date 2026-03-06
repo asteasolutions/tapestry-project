@@ -340,7 +340,7 @@ export class ItemResizeManager {
       isMultiselect: boolean
     },
   ): Point {
-    const { worldTransform } = this.stage.pixi.tapestry.stage
+    const { worldTransform } = this.stage.pixi.tapestry.app.stage
 
     const currentPointInTapestry = worldTransform.applyInverse(cursorPosition)
     const resizePointCandidate = !opts.isMultiselect

@@ -107,7 +107,7 @@ export class EditorRelController implements TapestryStageController {
     if (!uiComponent?.startsWith('line-highlight')) return
 
     const endpoint = uiComponent.endsWith('from') ? 'from' : 'to'
-    const position = this.stage.pixi.tapestry.stage.worldTransform.applyInverse(
+    const position = this.stage.pixi.tapestry.app.stage.worldTransform.applyInverse(
       event.detail.currentPoint,
     )
 
@@ -153,7 +153,7 @@ export class EditorRelController implements TapestryStageController {
   @eventListener('relDragHandler', 'drag', ['edit'])
   protected onRelDrag(event: DragHandlerDragEvent<HoveredRel>) {
     const { modelId } = event.detail.dragTarget
-    const { worldTransform } = this.stage.pixi.tapestry.stage
+    const { worldTransform } = this.stage.pixi.tapestry.app.stage
 
     const pointerPosition = worldTransform.applyInverse(event.detail.currentPoint)
     this.store.dispatch(

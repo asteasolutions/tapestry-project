@@ -73,21 +73,20 @@ export function Tapestry() {
   useStageInit(sceneRef, {
     gestureDetectorOptions: { scrollGesture: 'pan', dragToPan: store.get('pointerMode') === 'pan' },
     createPixiApps: async () => {
+      const tapestryApp = await createPixiApp(pixiContainerRef.current!, {
+        background: store.get('background'),
+      })
+
       const overlay = new Color(THEMES[store.get('theme')].color('overlay'))
+      const presentationOrderApp = await createPixiApp(presentationOrderContainerRef.current!, {
+        background: overlay.hex(),
+        backgroundAlpha: overlay.alpha(),
+      })
+      presentationOrderApp.app.stage.eventMode = 'static'
+
       return [
-        {
-          name: 'tapestry',
-          app: await createPixiApp(pixiContainerRef.current!, {
-            background: store.get('background'),
-          }),
-        },
-        {
-          name: 'presentationOrder',
-          app: await createPixiApp(presentationOrderContainerRef.current!, {
-            background: overlay.hex(),
-            backgroundAlpha: overlay.alpha(),
-          }),
-        },
+        { name: 'tapestry', app: tapestryApp },
+        { name: 'presentationOrder', app: presentationOrderApp },
       ]
     },
     lifecycleController: (stage) =>

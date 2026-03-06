@@ -66,11 +66,12 @@ export class PresentationOrderRenderer implements Renderer<EditableTapestryViewM
     private stage: TapestryStage<'presentationOrder'>,
   ) {
     this.render(this.store.get())
-    stage.pixi.presentationOrder.stage.on('globalpointermove', (e) => {
+    stage.pixi.presentationOrder.app.stage.on('globalpointermove', (e) => {
       const point = new Rectangle(
-        this.stage.pixi.presentationOrder.stage.worldTransform.applyInverse(e),
+        this.stage.pixi.presentationOrder.app.stage.worldTransform.applyInverse(e),
         { width: 0, height: 0 },
       )
+      let nRedrawn = 0
       Object.entries(this.ui).forEach(([id, ui]) => {
         if (!ui) {
           return
@@ -85,17 +86,21 @@ export class PresentationOrderRenderer implements Renderer<EditableTapestryViewM
           shouldRedraw = true
         }
         if (shouldRedraw) {
+          nRedrawn += 1
           const dragState = this.store.get('presentationOrderState.dragState')
           const presentationSteps = this.store.get('presentationSteps')
           const sequence = getPresentationSequence(mapValues(presentationSteps, (vm) => vm?.dto))
           this.drawOverlay(id, ui.type, sequence, dragState, this.computeScale())
         }
       })
+      if (nRedrawn > 0) {
+        this.stage.pixi.presentationOrder.scheduleRedraw()
+      }
     })
   }
 
   dispose(): void {
-    this.stage.pixi.presentationOrder.stage.removeChildren()
+    this.stage.pixi.presentationOrder.app.stage.removeChildren()
   }
 
   render(_model: EditableTapestryViewModel): void {
@@ -103,6 +108,8 @@ export class PresentationOrderRenderer implements Renderer<EditableTapestryViewM
     this.updateViewportTransform()
     this.drawOverlays()
     this.drawLines()
+
+    this.stage.pixi.presentationOrder.scheduleRedraw()
   }
 
   private createText(options?: TextOptions) {
@@ -139,7 +146,7 @@ export class PresentationOrderRenderer implements Renderer<EditableTapestryViewM
       slot: new Graphics({ label: `${type}_${id}_slot`, eventMode: 'static', zIndex: 2 }),
       text: this.createText({ zIndex: 3 }),
     }
-    this.stage.pixi.presentationOrder.stage.addChild(ui.overlay, ui.slot, ui.text, ui.line)
+    this.stage.pixi.presentationOrder.app.stage.addChild(ui.overlay, ui.slot, ui.text, ui.line)
     this.ui[id] = ui
   }
 
@@ -231,7 +238,7 @@ export class PresentationOrderRenderer implements Renderer<EditableTapestryViewM
       if (!this.draggedStep) {
         const slot = new Graphics({ label: 'dragged-slot', eventMode: 'none', zIndex: 4 })
         const text = this.createText({ zIndex: 5 })
-        this.stage.pixi.presentationOrder.stage.addChild(slot, text)
+        this.stage.pixi.presentationOrder.app.stage.addChild(slot, text)
         this.draggedStep = { slot, text }
       }
 
@@ -302,8 +309,8 @@ export class PresentationOrderRenderer implements Renderer<EditableTapestryViewM
 
   private updateViewportTransform() {
     const { translation, scale } = this.store.get('viewport.transform')
-    this.stage.pixi.presentationOrder.stage.scale = scale
-    this.stage.pixi.presentationOrder.stage.position = { x: translation.dx, y: translation.dy }
+    this.stage.pixi.presentationOrder.app.stage.scale = scale
+    this.stage.pixi.presentationOrder.app.stage.position = { x: translation.dx, y: translation.dy }
   }
 
   private drawOverlay(

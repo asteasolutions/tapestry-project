@@ -154,7 +154,7 @@ export abstract class ItemController implements TapestryStageController {
   protected onSelectionStart(event: DragStartEvent<TapestryStage>) {
     this.stage.gestureDetector.deactivate()
 
-    const point = this.stage.pixi.tapestry.stage.worldTransform.applyInverse(
+    const point = this.stage.pixi.tapestry.app.stage.worldTransform.applyInverse(
       event.detail.currentPoint,
     )
     this.store.dispatch(
@@ -175,7 +175,7 @@ export abstract class ItemController implements TapestryStageController {
     const pointerSelection = this.store.get('pointerSelection')
     if (!pointerSelection) return
 
-    const point = this.stage.pixi.tapestry.stage.worldTransform.applyInverse(
+    const point = this.stage.pixi.tapestry.app.stage.worldTransform.applyInverse(
       event.detail.currentPoint,
     )
     this.store.dispatch(

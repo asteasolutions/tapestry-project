@@ -126,7 +126,7 @@ export class ItemRenderer<I extends ItemViewModel> extends TapestryElementRender
       iconColor: theme.color('background.primary'),
       iconBackgroundColor: theme.color('background.mono'),
       dropShadow: viewModel.dto.dropShadow
-        ? obtainShadowNineSlice(stage.pixi.tapestry.renderer, 8)
+        ? obtainShadowNineSlice(stage.pixi.tapestry.app.renderer, 8)
         : undefined,
     }
   }

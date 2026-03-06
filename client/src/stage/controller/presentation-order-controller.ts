@@ -44,19 +44,22 @@ export class PresentationOrderController implements TapestryStageController {
     private store: TapestryEditorStore,
     private stage: TapestryStage<'presentationOrder'>,
   ) {
-    this.dragHandler = new PixiDragHandler<DragTarget>(this.stage.pixi.presentationOrder.stage, {
-      dragStartThreshold: 1,
-      determineDragTarget: (event) => {
-        const { id, uiComponent } = this.obtainHoveredUIElement(event.target.label) ?? {}
-        if (!id || uiComponent !== 'slot') return null
+    this.dragHandler = new PixiDragHandler<DragTarget>(
+      this.stage.pixi.presentationOrder.app.stage,
+      {
+        dragStartThreshold: 1,
+        determineDragTarget: (event) => {
+          const { id, uiComponent } = this.obtainHoveredUIElement(event.target.label) ?? {}
+          if (!id || uiComponent !== 'slot') return null
 
-        return (
-          idMapToArray(this.store.get('presentationSteps')).find(
-            ({ dto }) => getPresentedModelId(dto) === id,
-          ) ?? null
-        )
+          return (
+            idMapToArray(this.store.get('presentationSteps')).find(
+              ({ dto }) => getPresentedModelId(dto) === id,
+            ) ?? null
+          )
+        },
       },
-    })
+    )
   }
 
   private obtainHoveredUIElement(label?: string):
@@ -79,9 +82,9 @@ export class PresentationOrderController implements TapestryStageController {
   init() {
     this.renderer = new PresentationOrderRenderer(this.store, this.stage)
     attachListeners(this, 'dragHandler', this.dragHandler)
-    attachListeners(this, 'stage', this.stage.pixi.presentationOrder.stage)
+    attachListeners(this, 'stage', this.stage.pixi.presentationOrder.app.stage)
     // This is needed since the presentation canvas is with display: none;
-    this.stage.pixi.presentationOrder.queueResize()
+    this.stage.pixi.presentationOrder.app.queueResize()
     this.dragHandler.activate()
     this.store.subscribe(this.onStoreChange)
   }
@@ -90,7 +93,7 @@ export class PresentationOrderController implements TapestryStageController {
     this.renderer?.dispose()
     this.renderer = null
     detachListeners(this, 'dragHandler', this.dragHandler)
-    detachListeners(this, 'stage', this.stage.pixi.presentationOrder.stage)
+    detachListeners(this, 'stage', this.stage.pixi.presentationOrder.app.stage)
     this.dragHandler.deactivate()
     this.store.unsubscribe(this.onStoreChange)
   }
@@ -135,7 +138,7 @@ export class PresentationOrderController implements TapestryStageController {
   @eventListener('dragHandler', 'dragstart')
   protected onPixiDragStart(event: DragStartEvent<DragTarget>) {
     this.stage.gestureDetector.deactivate()
-    const position = this.stage.pixi.presentationOrder.stage.worldTransform.applyInverse(
+    const position = this.stage.pixi.presentationOrder.app.stage.worldTransform.applyInverse(
       event.detail.currentPoint,
     )
     const sequence = getPresentationSequence(
@@ -171,13 +174,14 @@ export class PresentationOrderController implements TapestryStageController {
 
   @eventListener('dragHandler', 'drag')
   protected onPixiDrag(event: DragEvent<DragTarget>) {
-    const { worldTransform } = this.stage.pixi.presentationOrder.stage
+    const { worldTransform } = this.stage.pixi.presentationOrder.app.stage
     const pointerPosition = worldTransform.applyInverse(event.detail.currentPoint)
 
-    const hoveredElement = this.stage.pixi.presentationOrder.renderer.events.rootBoundary.hitTest(
-      event.detail.currentPoint.x,
-      event.detail.currentPoint.y,
-    )
+    const hoveredElement =
+      this.stage.pixi.presentationOrder.app.renderer.events.rootBoundary.hitTest(
+        event.detail.currentPoint.x,
+        event.detail.currentPoint.y,
+      )
 
     const dropTarget = this.obtainHoveredUIElement(hoveredElement.label)
 

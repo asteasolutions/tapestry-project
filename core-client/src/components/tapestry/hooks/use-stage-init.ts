@@ -1,15 +1,14 @@
 import { RefObject } from 'react'
 import { useAsync } from '../../lib/hooks/use-async'
-import { createTapestryStage, TapestryStage } from '../../../stage'
+import { createTapestryStage, PixiAppWrapper, TapestryStage } from '../../../stage'
 import { TapestryLifecycleController } from '../../../stage/controller'
-import { Application } from 'pixi.js'
 import { usePropRef } from '../../lib/hooks/use-prop-ref'
 import { TapestryViewModel } from '../../../view-model'
 import { GestureDetectorOptions } from '../../../stage/gesture-detector'
 
 type PixiApps<S extends string> =
-  | [{ name: 'tapestry'; app: Application }]
-  | [{ name: 'tapestry'; app: Application }, { name: S; app: Application }]
+  | [{ name: 'tapestry'; app: PixiAppWrapper }]
+  | [{ name: 'tapestry'; app: PixiAppWrapper }, { name: S; app: PixiAppWrapper }]
 
 export function useStageInit<
   T extends TapestryViewModel,
@@ -38,7 +37,7 @@ export function useStageInit<
       const pixiApps = await createPixiApps()
 
       if (cancelled) {
-        pixiApps.forEach(({ app }) => app.destroy(true, true))
+        pixiApps.forEach(({ app }) => app.destroy())
         return
       }
 
@@ -46,7 +45,7 @@ export function useStageInit<
         scene,
         pixiApps.reduce(
           (acc, { app, name }) => ({ ...acc, [name]: app }),
-          {} as Record<'tapestry' | S, Application>,
+          {} as Record<'tapestry' | S, PixiAppWrapper>,
         ),
         gestureDetectorOptions,
       )
@@ -57,14 +56,7 @@ export function useStageInit<
 
       cleanUp(() => {
         controller.dispose()
-        pixiApps.forEach(({ app }) => {
-          // Make sure we clean up the pixi apps properly. Otherwise navigating to the dashboard and then
-          // to another tapestry leads to loss of WebGL context and Pixi doesn't render anything.
-          app.stop()
-          app.ticker.stop()
-          app.stage.removeChildren().forEach((c) => c.destroy({ children: true }))
-          app.destroy(true, true)
-        })
+        pixiApps.forEach(({ app }) => app.destroy())
       })
     },
     [sceneRef, configRef],
