@@ -49,6 +49,7 @@ export async function itemDbToDto(dbItem: Item): Promise<ItemDto> {
     },
     groupId: dbItem.groupId,
     notes: dbItem.notes,
+    scheduledThumbnailProcessing: dbItem.scheduledThumbnailProcessing,
   }
   const { type } = dbItem
 
@@ -127,6 +128,7 @@ const DB_TO_DTO_FIELD_MAP: Record<ItemDBField, string> = {
   backgroundColor: 'backgroundColor',
   source: 'source',
   thumbnailId: 'thumbnailId',
+  scheduledThumbnailProcessing: 'scheduledThumbnailProcessing',
   startTime: 'startTime',
   stopTime: 'stopTime',
   groupId: 'groupId',

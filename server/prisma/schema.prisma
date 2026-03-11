@@ -171,38 +171,44 @@ model ImageAssetRendition {
   height          Int
 }
 
+enum ThumbnailProcessing {
+  derive
+  recreate
+}
+
 model Item {
-  id                     String                    @id @default(uuid())
-  createdAt              DateTime                  @default(now())
-  updatedAt              DateTime                  @updatedAt
-  tapestry               Tapestry                  @relation(fields: [tapestryId], references: [id], onDelete: Cascade)
-  tapestryId             String
-  positionX              Int
-  positionY              Int
-  width                  Int
-  height                 Int
-  type                   ItemType
-  webpageType            WebpageType?
-  title                  String?
-  dropShadow             Boolean
-  text                   String?
-  backgroundColor        String?
-  source                 String?
-  thumbnailId            String?
-  thumbnail              ImageAsset?               @relation("thumbnail", fields: [thumbnailId], references: [id], onDelete: SetNull)
-  startTime              Int?
-  stopTime               Int?
-  groupId                String?
-  group                  Group?                    @relation(fields: [groupId], references: [id], onDelete: SetNull)
-  notes                  String?
-  defaultPage            Int?
-  actionType             ActionType?
-  action                 String?
-  outRels                Rel[]                     @relation("from")
-  inRels                 Rel[]                     @relation("to")
-  comments               Comment[]
-  presentationSteps      PresentationStep[]
-  referencingAttachments AiChatMessageAttachment[]
+  id                           String                    @id @default(uuid())
+  createdAt                    DateTime                  @default(now())
+  updatedAt                    DateTime                  @updatedAt
+  tapestry                     Tapestry                  @relation(fields: [tapestryId], references: [id], onDelete: Cascade)
+  tapestryId                   String
+  positionX                    Int
+  positionY                    Int
+  width                        Int
+  height                       Int
+  type                         ItemType
+  webpageType                  WebpageType?
+  title                        String?
+  dropShadow                   Boolean
+  text                         String?
+  backgroundColor              String?
+  source                       String?
+  thumbnailId                  String?
+  thumbnail                    ImageAsset?               @relation("thumbnail", fields: [thumbnailId], references: [id], onDelete: SetNull)
+  scheduledThumbnailProcessing ThumbnailProcessing?
+  startTime                    Int?
+  stopTime                     Int?
+  groupId                      String?
+  group                        Group?                    @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  notes                        String?
+  defaultPage                  Int?
+  actionType                   ActionType?
+  action                       String?
+  outRels                      Rel[]                     @relation("from")
+  inRels                       Rel[]                     @relation("to")
+  comments                     Comment[]
+  presentationSteps            PresentationStep[]
+  referencingAttachments       AiChatMessageAttachment[]
 }
 
 model PresentationStep {

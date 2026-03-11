@@ -17,6 +17,7 @@ import { Size } from 'tapestry-core/src/data-format/schemas/common.js'
 interface BaseItemDto extends BaseResourceDto {
   tapestry?: TapestryDto | null
   tapestryId: string
+  scheduledThumbnailProcessing?: 'derive' | 'recreate' | null
 }
 
 interface BaseMediaItemDto extends BaseItemDto {

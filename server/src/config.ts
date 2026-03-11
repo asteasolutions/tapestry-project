@@ -62,7 +62,6 @@ export const config = deepFreeze(
       // 5 minute timeout may look too long but some larger tapestries with a lot of iframes load slowly
       // so we better wait for a while in order to take a nicer screenshot.
       TAPESTRY_THUMBNAIL_GENERATION_TIMEOUT: NullishInt(300_000),
-      ITEM_THUMBNAIL_PROCESSING_DELAY: NullishInt(5_000),
 
       // Queue monitoring
       JOBS_ADMIN_NAME: z.string().nullish(),
@@ -128,7 +127,6 @@ export const config = deepFreeze(
         s3CleanupPattern: input.S3_CLEAN_UP_CRON_PATTERN,
         tapestryThumbnailGenerationDelay: input.TAPESTRY_THUMBNAIL_GENERATION_DELAY,
         tapestryThumbnailGenerationTimeout: input.TAPESTRY_THUMBNAIL_GENERATION_TIMEOUT,
-        itemThumbnailProcessingDelay: input.ITEM_THUMBNAIL_PROCESSING_DELAY,
         queueAdminName: input.JOBS_ADMIN_NAME,
         queueAdminPassword: input.JOBS_ADMIN_PASSWORD,
       },

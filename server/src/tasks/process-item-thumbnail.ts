@@ -1,9 +1,8 @@
-import { JobTypeMap } from './index.js'
 import { s3Service, tapestryKey } from '../services/s3-service.js'
 import { ensureTransaction, prisma } from '../db.js'
 import { ImageAssetRendition, Item, Prisma } from '@prisma/client'
 import { scheduleTapestryThumbnailGeneration } from '../resources/tapestries.js'
-import { generatePrimaryThumbnail, ThumbnailRenditionOutput } from './thumbnail-generators/index.js'
+import { ThumbnailRenditionOutput } from './thumbnail-generators/index.js'
 import { generateItemThumbnailRenditionName } from 'tapestry-shared/src/utils.js'
 import { parseDBItemSource } from '../transformers/item.js'
 import { downloadImageToArrayBuffer } from './utils.js'
@@ -80,10 +79,10 @@ function hasRenditionAtLOD(renditions: ImageAssetRendition[], lod: number) {
   )
 }
 
-export async function processItemThumbnail({
-  itemId,
-  forceRegenerate,
-}: JobTypeMap['process-item-thumbnail']) {
+export async function processItemThumbnail(
+  itemId: string,
+  generatePrimaryThumbnail: () => Promise<ThumbnailRenditionOutput | undefined>,
+) {
   const loadItem = () =>
     prisma.item.findUniqueOrThrow({
       where: { id: itemId },
@@ -91,6 +90,9 @@ export async function processItemThumbnail({
     })
 
   let item = await loadItem()
+  if (!item.scheduledThumbnailProcessing) return
+
+  const forceRegenerate = item.scheduledThumbnailProcessing === 'recreate'
 
   // Never regenerate thumbnails if they have not been automatically generated in the first place.
   // In particular, if the user has manually uploaded a custom thumbnail, we should never delete it
@@ -146,4 +148,9 @@ export async function processItemThumbnail({
       )
     }
   }
+
+  await prisma.item.update({
+    where: { id: item.id },
+    data: { scheduledThumbnailProcessing: null },
+  })
 }

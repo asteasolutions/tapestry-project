@@ -3,64 +3,134 @@ import { URL } from 'url'
 import { config } from '../../config.js'
 import { createJWT } from '../../auth/tokens.js'
 import { REFRESH_TOKEN_COOKIE_NAME } from '../../auth/index.js'
-import { ScreenshotConfig, takeScreenshot } from './webpage.js'
-import { Size } from 'tapestry-core/src/data-format/schemas/common.js'
+import { initWebpage, inNewBrowserPage, WebpageConfig } from './webpage.js'
 import { ThumbnailRenditionOutput } from './index.js'
 import { generateThumbnail } from './image.js'
+import { Page, ScreenshotOptions } from 'puppeteer'
+import { Item } from '@prisma/client'
 
-export async function takeTapestryScreenshot(
-  tapestryPath: string,
-  userId: string,
-  options: ScreenshotConfig,
+// Helper function that wraps Puppeteer's page.evaluate to avoid TS errors for missing browser (DOM) types
+async function pageEval<T extends unknown[], R>(
+  page: Page,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  callback: (global: any, ...args: T) => R,
+  ...args: T
 ) {
-  return takeScreenshot(`${config.server.viewerUrl}${tapestryPath}`, {
-    setupContext: (context) =>
-      context.setCookie({
-        domain: new URL(config.server.externalUrl).host,
-        name: REFRESH_TOKEN_COOKIE_NAME,
-        value: createJWT({ userId }, '10m'),
-        expires: -1, // Session cookie
-        httpOnly: true,
-        secure: true,
-      }),
-    ...options,
-  })
+  // @ts-expect-error This will be executed in a browser context
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return
+  const globalHandle = await page.evaluateHandle(() => window)
+  return page.evaluate(callback, globalHandle, ...args)
 }
 
-export async function generateTapestryItemThumbnail(
-  tapestryId: string,
-  itemId: string,
-  ownerId: string,
-  { width, height }: Size,
-): Promise<ThumbnailRenditionOutput | undefined> {
-  const tapestryPath = `/t/${tapestryId}?focus=${itemId}&deopt=1`
-  const elementSelector = `[data-model-id="${itemId}"]`
-  const screenshot = await takeTapestryScreenshot(tapestryPath, ownerId, {
-    // Deactivate the tapestry item first, so that its border disappears
-    interact: async (page) => {
-      // Hide everything else around it
-      await page.evaluate((elementSelector) => {
-        // @ts-expect-error This will be executed in a browser context
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        const global = window
-        // Deactivate the focused element
-        global.postMessage({ type: 'deactivate' })
-        global.document.documentElement.style.background = 'transparent'
-        global.document.body.style.background = 'transparent'
-        global.document
-          .querySelectorAll(`.pixi-container, [data-model-id]:not(${elementSelector})`)
-          .forEach((elem: { style: { display: string } }) => {
-            elem.style.display = 'none'
-          })
-      }, elementSelector)
-    },
-    elementSelector,
+async function takeItemScreenshot(page: Page, item: Item) {
+  await page.setViewport({
     // The browser window should be larger than the required element size in order to accommodate
     // for the tapestry controls around it.
-    width: width + 100,
-    height: height + 300,
-    omitBackground: true,
-    type: 'png',
+    width: item.width + 100,
+    height: item.height + 300,
+    deviceScaleFactor: 2,
   })
-  return generateThumbnail(Buffer.from(screenshot), { maxDim: Math.max(width, height) })
+
+  const elementSelector = `[data-model-id="${item.id}"]`
+  await pageEval(
+    page,
+    async (window, elementSelector, itemId) => {
+      // Waiting for requestAnimationFrame after updating the viewport size
+      // ensures the browser has updated its layout and is ready to draw.
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      await new Promise(window.requestAnimationFrame)
+
+      // Focus and deactivate the element
+      window.postMessage({ type: 'tapestry:focus', itemId, animate: false })
+      window.postMessage({ type: 'tapestry:deactivate' })
+
+      // Hide all other elements to avoid them appearing in the screenshot in case of overlapping transparent items
+      window.document
+        .querySelectorAll(`.pixi-container, [data-model-id]:not(${elementSelector})`)
+        .forEach((elem: { _originalDisplay?: string; style: { display?: string } }) => {
+          elem._originalDisplay = elem.style.display
+          elem.style.display = 'none'
+        })
+    },
+    elementSelector,
+    item.id,
+  )
+
+  try {
+    const elementHandle = await page.waitForSelector(elementSelector, { visible: true })
+    if (!elementHandle) return null
+
+    const screenshot = await elementHandle.screenshot({ type: 'png', omitBackground: true })
+    return generateThumbnail(Buffer.from(screenshot), {
+      maxDim: Math.max(item.width, item.height),
+      optimizeForText: item.type === 'text' || item.type === 'actionButton',
+    })
+  } finally {
+    // Revert hidden item visibility
+    await pageEval(
+      page,
+      (window, elementSelector) => {
+        window.document
+          .querySelectorAll(`.pixi-container, [data-model-id]:not(${elementSelector})`)
+          .forEach((elem: { _originalDisplay?: string; style: { display?: string } }) => {
+            elem.style.display = elem._originalDisplay
+            delete elem._originalDisplay
+          })
+      },
+      elementSelector,
+    )
+  }
+}
+
+export async function* takeTapestryScreenshots(
+  tapestryPath: string,
+  userId: string,
+  site: Omit<WebpageConfig, 'url' | 'setupContext'>,
+  options: ScreenshotOptions,
+) {
+  const url = new URL(tapestryPath, config.server.viewerUrl)
+  url.searchParams.set('deopt', '1')
+  const src = url.toString()
+  const { windowSize, timeout } = site
+  console.log(`Taking screenshots of ${src}...`)
+  yield* inNewBrowserPage(async function* (page, context): AsyncGenerator<
+    ThumbnailRenditionOutput,
+    void,
+    Item | null
+  > {
+    console.log(`>  Taking screenshot with dimensions ${windowSize.width}x${windowSize.height}...`)
+    await initWebpage(page, context, {
+      url: src,
+      windowSize,
+      timeout,
+      setupContext: (context) =>
+        context.setCookie({
+          domain: new URL(config.server.externalUrl).host,
+          name: REFRESH_TOKEN_COOKIE_NAME,
+          value: createJWT({ userId }, '10m'),
+          expires: -1, // Session cookie
+          httpOnly: true,
+          secure: true,
+        }),
+    })
+
+    // First take a screenshot of the whole tapestry
+    const screenshot = await page.screenshot(options)
+    let item = yield await generateThumbnail(Buffer.from(screenshot))
+
+    if (!item) return
+
+    // Remove the page background so that item screenshots can be taken with transparency
+    await pageEval(page, (window) => {
+      window.document.documentElement.style.background = 'transparent'
+      window.document.body.style.background = 'transparent'
+    })
+
+    while (item) {
+      const thumbnail = await takeItemScreenshot(page, item)
+      if (thumbnail) {
+        item = yield thumbnail
+      }
+    }
+  })
 }

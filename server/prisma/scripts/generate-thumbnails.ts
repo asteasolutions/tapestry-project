@@ -1,6 +1,6 @@
 import { ItemType } from '@prisma/client'
 import { prisma } from '../../src/db.js'
-import { scheduleItemThumbnailProcessing } from '../../src/resources/items.js'
+import { scheduleTapestryThumbnailGeneration } from '../../src/resources/tapestries.js'
 
 interface Options {
   tapestryId?: string
@@ -22,7 +22,13 @@ export async function generateThumbnails({
       ...(types ? { type: { in: types } } : {}),
     },
   })
-  for (const item of items) {
-    await scheduleItemThumbnailProcessing(item.id, { skipDelay: true, forceRegenerate })
+
+  await prisma.item.updateMany({
+    where: { id: { in: items.map((item) => item.id) } },
+    data: { scheduledThumbnailProcessing: forceRegenerate ? 'recreate' : 'derive' },
+  })
+
+  for (const id of new Set(items.map((item) => item.tapestryId))) {
+    await scheduleTapestryThumbnailGeneration(id, { skipDelay: true })
   }
 }

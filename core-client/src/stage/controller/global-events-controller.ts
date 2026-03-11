@@ -1,7 +1,11 @@
 import { createEventRegistry } from '../../lib/events/event-registry'
 import { arrowShortcuts, matchesShortcut } from '../../lib/keyboard-event'
 import { Store } from '../../lib/store/index'
-import { panViewport, setDefaultViewport } from '../../view-model/store-commands/viewport'
+import {
+  focusItems,
+  panViewport,
+  setDefaultViewport,
+} from '../../view-model/store-commands/viewport'
 import {
   deselectAll,
   selectAll,
@@ -13,6 +17,7 @@ import { TapestryStageController } from '.'
 import { PointerMode, TapestryViewModel } from '../../view-model'
 import { isMultiselection } from '../../view-model/utils'
 import { obtainHoverTarget } from '../utils'
+import { get } from 'lodash-es'
 
 type EventTypesMap = {
   stage: keyof HTMLElementEventMap
@@ -21,8 +26,21 @@ type EventTypesMap = {
 
 const { eventListener, attachListeners, detachListeners } = createEventRegistry<EventTypesMap>()
 
-interface PostMessageData {
-  type: 'deactivate'
+interface DeactivateMessage {
+  type: 'tapestry:deactivate'
+}
+
+interface FocusMessage {
+  type: 'tapestry:focus'
+  itemId?: string
+  animate?: boolean
+}
+
+type TapestryPostMessageData = DeactivateMessage | FocusMessage
+
+function isTapestryPostMessageData(data: unknown): data is TapestryPostMessageData {
+  const type = get(data, 'type') as string | undefined
+  return !!type && ['tapestry:deactivate', 'tapestry:focus'].includes(type)
 }
 
 export type KeyMapping = Record<string, (event: KeyboardEvent) => void>
@@ -57,11 +75,17 @@ export class GlobalEventsController implements TapestryStageController {
     removeEventListener('message', this.onPostMessage)
   }
 
-  private onPostMessage = (event: MessageEvent<PostMessageData>) => {
-    // Remove this eslint suppression if/when we add more PostMessage types
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    if (event.data?.type === 'deactivate') {
+  private onPostMessage = (event: MessageEvent<unknown>) => {
+    if (!isTapestryPostMessageData(event.data)) return
+
+    if (event.data.type === 'tapestry:deactivate') {
       this.store.dispatch(deselectAll(), setInteractiveElement(null))
+    } else {
+      const { itemId, animate } = event.data
+      this.store.dispatch(
+        focusItems(itemId && [itemId], { addToolbarPadding: true, animate }),
+        itemId ? setInteractiveElement({ modelId: itemId, modelType: 'item' }) : null,
+      )
     }
   }
 

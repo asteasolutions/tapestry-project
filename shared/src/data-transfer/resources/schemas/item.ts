@@ -15,6 +15,7 @@ import { IdentifiableSchema, SizeSchema } from 'tapestry-core/src/data-format/sc
 
 const readonlyProps = {
   tapestryId: z.string(),
+  scheduledThumbnailProcessing: z.enum(['derive', 'recreate']).nullish(),
 }
 
 // XXX: Zod doesn't support applying "omit" or "partial" directly to a discriminated union for now.

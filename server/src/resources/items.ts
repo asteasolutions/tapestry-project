@@ -11,8 +11,6 @@ import {
 import { parseIncludes, parseListFilter } from './utils.js'
 import { serialize } from '../transformers/index.js'
 import { Item, Prisma } from '@prisma/client'
-import { queue } from '../tasks/index.js'
-import { config } from '../config.js'
 import { BadRequestError } from '../errors/index.js'
 import { destroyPresentationSteps } from './presentation-steps.js'
 import {
@@ -63,22 +61,6 @@ function shouldProcessItemThumbnail(item: ItemWithAssets, patch?: ItemUpdateDto)
   }
 
   return false
-}
-
-export function scheduleItemThumbnailProcessing(
-  itemId: string,
-  { forceRegenerate = false, skipDelay = false } = {},
-) {
-  return queue.add(
-    'process-item-thumbnail',
-    { itemId, forceRegenerate },
-    {
-      jobId: itemId,
-      delay: skipDelay ? 0 : config.worker.itemThumbnailProcessingDelay,
-      removeOnComplete: true,
-      removeOnFail: true,
-    },
-  )
 }
 
 export async function canViewItem(
@@ -187,13 +169,19 @@ export async function createItems(
     include: parseItemIncludes(query?.include),
   })) as ItemWithAssets[]
 
-  dbItems
+  const itemIds = dbItems
     .filter((dbItem) => shouldProcessItemThumbnail(dbItem))
-    .forEach((dbItem) => scheduleItemThumbnailProcessing(dbItem.id))
+    .map((item) => item.id)
+
+  await (tx ?? prisma).item.updateMany({
+    where: { id: { in: itemIds } },
+    data: { scheduledThumbnailProcessing: 'derive' },
+  })
 
   const dtos = await serialize('Item', dbItems)
 
   for (const id of new Set(dtos.map((d) => d.tapestryId))) {
+    await scheduleTapestryThumbnailGeneration(id)
     socketServer.notifyTapestryUpdate(
       id,
       context ? socketIdFromRequest(context.rawRequest) : undefined,
@@ -224,7 +212,7 @@ export async function updateItems(
 
         await processThumbnailUpdate(dbItem, update.thumbnail, tx)
         const patch = itemDtoToDb(omit(update, 'thumbnail'), ['id', 'createdAt', 'updatedAt'])
-        const updatedDbItem = (await tx.item.update({
+        let updatedDbItem = (await tx.item.update({
           where: { id },
           data: patch,
           include: parseItemIncludes(query?.include),
@@ -234,9 +222,12 @@ export async function updateItems(
         // for generating a tapestry thumbnail we want to schedule a tapestry thumbnail
         // in the cases where for example we move an item (then the item's thumbnail is not regenerated)
         if (shouldProcessItemThumbnail(updatedDbItem, update)) {
-          void scheduleItemThumbnailProcessing(id, { forceRegenerate: true })
+          updatedDbItem = await prisma.item.update({
+            where: { id },
+            data: { scheduledThumbnailProcessing: 'recreate' },
+            include: parseItemIncludes(query?.include),
+          })
         }
-        void scheduleTapestryThumbnailGeneration(updatedDbItem.tapestryId)
 
         updatedTapestries.add(updatedDbItem.tapestryId)
 
@@ -246,6 +237,7 @@ export async function updateItems(
   )
 
   for (const tapestryId of updatedTapestries) {
+    await scheduleTapestryThumbnailGeneration(tapestryId)
     socketServer.notifyTapestryUpdate(tapestryId, socketIdFromRequest(context.rawRequest))
   }
 
