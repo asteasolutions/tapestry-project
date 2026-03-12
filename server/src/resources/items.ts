@@ -222,7 +222,7 @@ export async function updateItems(
         // for generating a tapestry thumbnail we want to schedule a tapestry thumbnail
         // in the cases where for example we move an item (then the item's thumbnail is not regenerated)
         if (shouldProcessItemThumbnail(updatedDbItem, update)) {
-          updatedDbItem = await prisma.item.update({
+          updatedDbItem = await tx.item.update({
             where: { id },
             data: { scheduledThumbnailProcessing: 'recreate' },
             include: parseItemIncludes(query?.include),
