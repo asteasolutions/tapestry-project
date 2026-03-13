@@ -17,12 +17,13 @@ const INSET = 100
 export async function generateTapestryThumbnails({
   tapestryId,
 }: JobTypeMap['generate-tapestry-thumbnails']) {
-  const itemsToProcess = await prisma.item.findMany({
-    where: { tapestryId: tapestryId, scheduledThumbnailProcessing: { not: null } },
+  const tapestry = await prisma.tapestry.findUniqueOrThrow({
+    where: { id: tapestryId },
+    include: { items: { where: { scheduledThumbnailProcessing: { not: null } } } },
   })
 
   const itemsToScreenshot: Item[] = []
-  for (const item of itemsToProcess) {
+  for (const item of tapestry.items) {
     if (hasInherentThumbnail(item)) {
       try {
         await processItemThumbnail(item.id, () => generatePrimaryThumbnail(item))
@@ -36,8 +37,6 @@ export async function generateTapestryThumbnails({
 
   let thumbnails: ReturnType<typeof takeTapestryScreenshots> | undefined
   try {
-    const tapestry = await prisma.tapestry.findUniqueOrThrow({ where: { id: tapestryId } })
-
     thumbnails = takeTapestryScreenshots(
       `/t/${tapestryId}`,
       tapestry.ownerId,

@@ -31,10 +31,9 @@ async function takeItemScreenshot(page: Page, item: Item) {
     deviceScaleFactor: 2,
   })
 
-  const elementSelector = `[data-model-id="${item.id}"]`
   await pageEval(
     page,
-    async (window, elementSelector, itemId) => {
+    async (window, itemId) => {
       // Waiting for requestAnimationFrame after updating the viewport size
       // ensures the browser has updated its layout and is ready to draw.
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
@@ -45,40 +44,25 @@ async function takeItemScreenshot(page: Page, item: Item) {
       window.postMessage({ type: 'tapestry:deactivate' })
 
       // Hide all other elements to avoid them appearing in the screenshot in case of overlapping transparent items
-      window.document
-        .querySelectorAll(`.pixi-container, [data-model-id]:not(${elementSelector})`)
-        .forEach((elem: { _originalDisplay?: string; style: { display?: string } }) => {
-          elem._originalDisplay = elem.style.display
-          elem.style.display = 'none'
-        })
+      window.postMessage({ type: 'tapestry:hideAllItems', except: itemId })
     },
-    elementSelector,
     item.id,
   )
 
   try {
-    const elementHandle = await page.waitForSelector(elementSelector, { visible: true })
-    if (!elementHandle) return null
+    const element = await page.waitForSelector(`[data-model-id="${item.id}"]`, { visible: true })
+    if (!element) return null
 
-    const screenshot = await elementHandle.screenshot({ type: 'png', omitBackground: true })
+    const screenshot = await element.screenshot({ type: 'png', omitBackground: true })
     return generateThumbnail(Buffer.from(screenshot), {
       maxDim: Math.max(item.width, item.height),
       optimizeForText: item.type === 'text' || item.type === 'actionButton',
     })
   } finally {
     // Revert hidden item visibility
-    await pageEval(
-      page,
-      (window, elementSelector) => {
-        window.document
-          .querySelectorAll(`.pixi-container, [data-model-id]:not(${elementSelector})`)
-          .forEach((elem: { _originalDisplay?: string; style: { display?: string } }) => {
-            elem.style.display = elem._originalDisplay
-            delete elem._originalDisplay
-          })
-      },
-      elementSelector,
-    )
+    await pageEval(page, (window) => {
+      window.postMessage({ type: 'tapestry:showAllItems' })
+    })
   }
 }
 
