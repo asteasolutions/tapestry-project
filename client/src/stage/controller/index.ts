@@ -41,17 +41,17 @@ export class EditorLifecycleController extends TapestryLifecycleController<
     })
   }
 
-  init() {
-    super.init()
+  async init() {
+    await super.init()
     this.store.subscribe('presentationOrderState', this.onPresentationOrderStateChange)
   }
 
-  dispose() {
-    super.dispose()
+  async dispose() {
+    await super.dispose()
     this.store.unsubscribe(this.onPresentationOrderStateChange)
   }
 
   private onPresentationOrderStateChange = (state?: PresentationOrderState | null) => {
-    this.enableMode(state ? 'edit-presentation-order' : 'default')
+    void this.enableMode(state ? 'edit-presentation-order' : 'default')
   }
 }

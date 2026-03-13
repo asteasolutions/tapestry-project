@@ -1,5 +1,5 @@
 import { times } from 'lodash-es'
-import { Graphics, Texture } from 'pixi.js'
+import { Graphics } from 'pixi.js'
 import {
   mul,
   norm,
@@ -10,53 +10,8 @@ import {
   Vector,
   vector,
 } from 'tapestry-core/src/lib/geometry'
-import { IconName } from '../components/lib/icon'
-import { LiteralColor } from '../theme/types'
 
 const EPS = 1e-3
-
-export interface MaterialIconTextureProps {
-  iconName: IconName
-  color?: LiteralColor
-  weight?: number
-  size?: number
-  fontSize?: number
-}
-
-/**
- * Creates a texture from a given Material icon.
- *
- * XXX: Currently only the Outlined variant with FILL 0 of the Material Symbols font is supported. In order to support
- * other font-variation-settings, we need to self-host the fonts and define different @font-faces for the different
- * font variants we want to use, since when drawing a font to a canvas we don't have an option to pass additional
- * font settings except for family, weight, style, and size.
- *
- * TODO: It may be a good idea to extract the necessary icons as SVGs and use them from there since creating a canvas
- * to render each icon is a heavy operation that consumes a lot of memory.
- */
-export function materialIconToTexture({
-  iconName,
-  size = 24,
-  color = '#ffffff',
-  weight = 400,
-  fontSize = size,
-}: MaterialIconTextureProps) {
-  const scale = Math.max(2, window.devicePixelRatio)
-  const canvas = new OffscreenCanvas(size * scale, size * scale)
-  const context = canvas.getContext('2d')!
-  context.scale(scale, scale)
-  context.fillStyle = color
-  context.textAlign = 'center'
-  context.textBaseline = 'middle'
-  context.font = `${weight} ${fontSize}px "Material Symbols Outlined"`
-
-  const metrics = context.measureText(iconName)
-  const offset = (metrics.fontBoundingBoxAscent - metrics.fontBoundingBoxDescent) / 2
-
-  context.fillText(iconName, size / 2, size / 2 + offset)
-
-  return Texture.from({ resource: canvas, resolution: scale })
-}
 
 /**
  * Creates a polyline that approximates a rectangle with rounded corners.

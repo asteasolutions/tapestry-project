@@ -3,8 +3,8 @@ import { TapestryViewModel } from '../../view-model'
 import { TapestryStage } from '..'
 
 export interface TapestryStageController {
-  init(): void
-  dispose(): void
+  init(): void | Promise<void>
+  dispose(): void | Promise<void>
 }
 
 export class TapestryLifecycleController<
@@ -19,17 +19,17 @@ export class TapestryLifecycleController<
     private controllers: Record<Mode | 'default' | 'global', TapestryStageController[]>,
   ) {}
 
-  init() {
+  async init() {
     this.stage.gestureDetector.activate()
-    this.enableMode('default')
+    await this.enableMode('default')
   }
 
-  dispose() {
+  async dispose() {
     this.stage.gestureDetector.deactivate()
-    this.enableMode(undefined)
+    await this.enableMode(undefined)
   }
 
-  protected enableMode(newMode: Mode | 'default' | undefined) {
+  protected async enableMode(newMode: Mode | 'default' | undefined) {
     if (newMode === this.mode) return
 
     const toDispose = [
@@ -41,8 +41,8 @@ export class TapestryLifecycleController<
       ...(newMode ? this.controllers[newMode] : []),
     ]
 
-    toDispose.forEach((ctrl) => ctrl.dispose())
+    for (const ctrl of toDispose) await ctrl.dispose()
     this.mode = newMode
-    toInit.forEach((ctrl) => ctrl.init())
+    for (const ctrl of toInit) await ctrl.init()
   }
 }

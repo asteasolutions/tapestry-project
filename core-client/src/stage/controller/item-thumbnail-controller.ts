@@ -177,9 +177,10 @@ export class ItemThumbnailController implements TapestryStageController {
   }
 
   private findRenditionForSize(renditions: ImageAssetRendition[], { width }: Size, maxLOD: number) {
-    // Find the rendition having the closest width to the current item size, in pixels.
+    // Find the rendition having the closest width to the current item size, in pixels, adjusted by the device
+    // pixel ratio (we want to load higher-resolution images on higher-resolution displays such as retina displays).
     // Thumbnail renditions should have the same aspect ratio as the item, so comparing only width should suffice.
-    const levelOfDetail = Math.min(width, maxLOD)
+    const levelOfDetail = Math.min(width * Math.min(2, window.devicePixelRatio), maxLOD)
     return minBy(renditions, ({ size }) => Math.abs(size.width - levelOfDetail))
   }
 
@@ -216,12 +217,14 @@ export class ItemThumbnailController implements TapestryStageController {
 
   private updateItemSnapshot(itemId: string, snapshot: Texture | null | undefined) {
     const currentSnapshotId = this.store.get(`items.${itemId}.snapshotId`)
-    const currentSnapshot = currentSnapshotId ? snapshotRegistry[currentSnapshotId] : null
-    try {
-      currentSnapshot?.destroy(true)
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.log("Error while destroying texture (it's fine)", error)
+    if (currentSnapshotId && snapshotRegistry[currentSnapshotId]) {
+      try {
+        snapshotRegistry[currentSnapshotId].destroy(true)
+        delete snapshotRegistry[currentSnapshotId]
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.log("Error while destroying texture (it's fine)", error)
+      }
     }
 
     const snapshotId = snapshot ? uniqueId('snapshot') : null

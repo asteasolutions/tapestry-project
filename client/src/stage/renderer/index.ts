@@ -51,10 +51,6 @@ export class EditorTapestryRenderer extends TapestryRenderer<EditableTapestryEle
     super(editorStore.as('base'), stage)
   }
 
-  dispose() {
-    super.dispose()
-  }
-
   protected getItems() {
     return idMapToArray(this.editorStore.get('items'))
   }

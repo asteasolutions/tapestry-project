@@ -40,7 +40,7 @@ const ICONS: Icons = {
       icon: {
         background,
         props: {
-          iconName: 'videocam',
+          iconName: 'videoCam',
           size,
           color,
           fontSize: Math.round(0.6 * size),
@@ -53,7 +53,7 @@ const ICONS: Icons = {
     icon: {
       background,
       props: {
-        iconName: 'play_arrow',
+        iconName: 'playArrow',
         size: roundToPrecision(100 * scale, ICON_SIZE_STEP),
         color,
       },
@@ -66,7 +66,7 @@ const ICONS: Icons = {
       icon: {
         background,
         props: {
-          iconName: 'volume_up',
+          iconName: 'volumeUp',
           size,
           color,
           fontSize: Math.round(0.75 * size),
@@ -81,7 +81,7 @@ const ICONS: Icons = {
       icon: {
         background,
         props: {
-          iconName: 'picture_as_pdf',
+          iconName: 'pdf',
           size,
           color,
           fontSize: Math.round(0.625 * size),

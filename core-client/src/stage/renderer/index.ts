@@ -21,6 +21,7 @@ import { isItemViewModel, isRelViewModel } from '../../view-model/utils'
 import { isHoveredElement } from '../utils'
 import { ItemRenderer } from './item-renderer'
 import { GroupBackgroundRenderer } from './group-background-renderer'
+import { ThumbnailContainer } from './thumbnail-container'
 
 export interface Renderer<T = unknown> {
   render(arg: T): void
@@ -57,14 +58,16 @@ export abstract class TapestryRenderer<
 
   boundRender = this.render.bind(this)
 
-  init() {
+  async init() {
+    await ThumbnailContainer.loadIconTextures()
     this.store.subscribe(this.boundRender)
     this.render()
   }
 
-  dispose() {
+  async dispose() {
     this.store.unsubscribe(this.boundRender)
     this.tapestryElementRenderers.forEach((r) => r.dispose())
+    await ThumbnailContainer.unloadIconTextures()
   }
 
   protected getGroups() {

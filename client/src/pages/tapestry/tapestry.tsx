@@ -1,6 +1,7 @@
 import clsx from 'clsx'
 import Color from 'color'
 import 'pixi.js/math-extras'
+import 'pixi.js/ktx2'
 import { memo, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router'
 

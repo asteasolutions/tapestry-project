@@ -1,9 +1,25 @@
-import { Container, ContainerOptions, Graphics, NineSliceSprite, Sprite, Texture } from 'pixi.js'
+import {
+  Assets,
+  Container,
+  ContainerOptions,
+  Graphics,
+  NineSliceSprite,
+  Sprite,
+  Texture,
+} from 'pixi.js'
 import { ORIGIN, Rectangle, Size } from 'tapestry-core/src/lib/geometry'
 import { ShadowNineSlice } from './shadow-texture-cache'
-import { MaterialIconTextureProps, materialIconToTexture } from '../../lib/pixi'
 import { isEqual } from 'lodash-es'
 import { LiteralColor } from '../../theme/types'
+
+export type IconName = 'pdf' | 'videoCam' | 'playArrow' | 'volumeUp'
+
+export interface ThumbnailIconProps {
+  iconName: IconName
+  color?: LiteralColor
+  size?: number
+  fontSize?: number
+}
 
 export interface ThumbnailContainerState {
   size: Size
@@ -11,44 +27,23 @@ export interface ThumbnailContainerState {
   borderRadius: number
   dropShadow: ShadowNineSlice | null
   icon?: {
-    props: MaterialIconTextureProps
+    props: ThumbnailIconProps
     background?: LiteralColor
   }
 }
 
-interface IconTextureCacheEntry {
-  props: MaterialIconTextureProps
-  texture: Texture
-  refCount: number
+const ICON_TEXTURE_URLS: Record<IconName, URL> = {
+  pdf: new URL('../../assets/textures/picture-as-pdf.ktx2', import.meta.url),
+  videoCam: new URL('../../assets/textures/videocam.ktx2', import.meta.url),
+  playArrow: new URL('../../assets/textures/play-arrow.ktx2', import.meta.url),
+  volumeUp: new URL('../../assets/textures/volume-up.ktx2', import.meta.url),
 }
 
-const iconTextureCache: IconTextureCacheEntry[] = []
-
-function obtainIconTexture(props: MaterialIconTextureProps) {
-  const cacheEntry = iconTextureCache.find((entry) => isEqual(entry.props, props))
-  if (cacheEntry) {
-    cacheEntry.refCount += 1
-    return cacheEntry.texture
-  }
-
-  const texture = materialIconToTexture(props)
-  iconTextureCache.push({ props, texture, refCount: 1 })
-  return texture
-}
-
-function releaseIconTexture(texture: Texture) {
-  const cacheEntryIndex = iconTextureCache.findIndex((entry) => entry.texture === texture)
-  if (cacheEntryIndex >= 0) {
-    const cacheEntry = iconTextureCache[cacheEntryIndex]
-    cacheEntry.refCount -= 1
-    if (cacheEntry.refCount === 0) {
-      cacheEntry.texture.destroy(true)
-      iconTextureCache.splice(cacheEntryIndex, 1)
-    }
-  }
-}
+const DEFAULT_ICON_SIZE = 24
 
 export class ThumbnailContainer extends Container {
+  private static iconTextures?: Record<IconName, Texture>
+
   private state: ThumbnailContainerState
   private shadowSprite?: NineSliceSprite
   private thumbnailContainer = new Container()
@@ -56,7 +51,7 @@ export class ThumbnailContainer extends Container {
   private cornersMask = new Graphics()
   private iconBackground?: Graphics
   private iconSprite?: Sprite
-  private renderedIconProps?: MaterialIconTextureProps
+  private renderedIconProps?: ThumbnailIconProps
   private renderedIconBackgroundProps?: { color: LiteralColor; radius: number }
 
   constructor(
@@ -84,6 +79,24 @@ export class ThumbnailContainer extends Container {
     }
 
     this.update()
+  }
+
+  static async loadIconTextures() {
+    if (this.iconTextures) return
+
+    const textures: Partial<Record<IconName, Texture>> = {}
+    for (const [name, url] of Object.entries(ICON_TEXTURE_URLS)) {
+      textures[name as IconName] = await Assets.load<Texture>(url.href)
+    }
+
+    this.iconTextures = textures as Record<IconName, Texture>
+  }
+
+  static async unloadIconTextures() {
+    if (!this.iconTextures) return
+
+    await Assets.unload(Object.values(ICON_TEXTURE_URLS).map((url) => url.href))
+    this.iconTextures = undefined
   }
 
   private createSprite(texture: Texture) {
@@ -177,7 +190,7 @@ export class ThumbnailContainer extends Container {
 
   private updateIconBackground() {
     const { icon } = this.state
-    const radius = (icon?.props.size ?? 24) / 2
+    const radius = (icon?.props.size ?? DEFAULT_ICON_SIZE) / 2
     const newProps = icon?.background ? { color: icon.background, radius } : undefined
     if (isEqual(newProps, this.renderedIconBackgroundProps)) return
 
@@ -204,14 +217,18 @@ export class ThumbnailContainer extends Container {
     const props = (this.renderedIconProps = this.state.icon?.props)
 
     if (this.iconSprite) {
-      releaseIconTexture(this.iconSprite.texture)
       this.iconSprite.destroy()
       this.iconSprite = undefined
     }
 
-    if (!props) return
+    if (!props || !ThumbnailContainer.iconTextures) return
 
-    this.iconSprite = new Sprite({ texture: obtainIconTexture(props), zIndex: 1 })
+    this.iconSprite = new Sprite({
+      texture: ThumbnailContainer.iconTextures[props.iconName],
+      zIndex: 1,
+    })
+    if (props.color) this.iconSprite.tint = props.color
+    this.iconSprite.setSize(props.fontSize ?? props.size ?? DEFAULT_ICON_SIZE)
     this.thumbnailContainer.addChild(this.iconSprite)
   }
 

@@ -1,5 +1,6 @@
 import { enableMapSet, enablePatches } from 'immer'
 import 'pixi.js/math-extras'
+import 'pixi.js/ktx2'
 import { createContext, useState } from 'react'
 
 import { useResponsiveClass } from 'tapestry-core-client/src/components/lib/hooks/use-responsive-class'

@@ -52,10 +52,10 @@ export function useStageInit<
 
       const controller = lifecycleController(stage)
 
-      controller.init()
+      await controller.init()
 
-      cleanUp(() => {
-        controller.dispose()
+      cleanUp(async () => {
+        await controller.dispose()
         pixiApps.forEach(({ app }) => app.destroy())
       })
     },
