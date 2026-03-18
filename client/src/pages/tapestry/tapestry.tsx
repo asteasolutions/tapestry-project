@@ -20,6 +20,7 @@ import { LargeFileUploadDialog } from '../../components/large-file-upload-dialog
 import { LeaveTapestryDialog } from '../../components/leave-tapestry-dialog'
 import { OfflineIndicator } from '../../components/offline-indicator'
 import { QuickTips } from '../../components/quick-tips'
+import { ArchiveOracleGhostLayer } from '../../components/archive-oracle/ghost-layer'
 import { SidePane } from '../../components/side-pane'
 import { ImportToolbar } from '../../components/toolbars/import'
 import { UndoToolbar } from '../../components/toolbars/undo'
@@ -103,6 +104,7 @@ export function Tapestry() {
       <div className={styles.sceneContainer} ref={sceneRef}>
         <div ref={pixiContainerRef} className="pixi-container" />
         <TapestryEditorCanvas className="dom-container" style={{ zIndex: ZOrder.default }} />
+        <ArchiveOracleGhostLayer />
         <div
           ref={presentationOrderContainerRef}
           className={clsx('pixi-container', { [styles.hidden]: !presentationOrderState })}

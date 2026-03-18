@@ -193,6 +193,13 @@ export function fromTapestryDto(
     largeFiles: [],
     iaImports: [],
     collaborators: {},
+    archiveOracle: {
+      enabled: true,
+      sourceItemId: null,
+      query: '',
+      loading: false,
+      ghosts: [],
+    },
   }
 
   return produce(editableTapestryViewModel, (model) => {

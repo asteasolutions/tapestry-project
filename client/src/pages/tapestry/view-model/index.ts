@@ -3,7 +3,7 @@ import { CommentDto } from 'tapestry-shared/src/data-transfer/resources/dtos/com
 import { Rectangle, Size } from 'tapestry-core/src/lib/geometry'
 import { UserAccess } from '../../../model/data/utils'
 import { PresentationStepDto } from 'tapestry-shared/src/data-transfer/resources/dtos/presentation-step'
-import { IAItemMetadata } from 'tapestry-core/src/internet-archive'
+import { IAItemMetadata, IAMediaType } from 'tapestry-core/src/internet-archive'
 import { Point } from 'tapestry-core/src/data-format/schemas/common'
 import { RelEndpoint } from 'tapestry-core/src/data-format/schemas/rel'
 import {
@@ -23,6 +23,7 @@ import { LiteralColor } from 'tapestry-core-client/src/theme/types'
 import { PublicUserProfileDto } from 'tapestry-shared/src/data-transfer/resources/dtos/user'
 import { IdMap } from 'tapestry-core/src/utils'
 import { RequiredFields } from 'tapestry-core/src/type-utils'
+
 
 export const ITEM_UI_COMPONENTS = [
   'dragHandle',
@@ -165,6 +166,31 @@ export type ActiveCollaborator = RequiredFields<Collaborator, 'cursorPosition'>
 
 export type TapestryWithOwner<T extends Partial<TapestryDto>> = RequiredFields<T, 'owner'>
 
+export interface ArchiveOracleSearchDoc {
+  readonly identifier: string
+  readonly mediatype: IAMediaType
+  readonly title: string
+  readonly creator?: string | undefined
+  readonly publicdate: string
+  readonly downloads: number
+}
+
+export interface ArchiveOracleGhostNode {
+  readonly key: string
+  readonly sourceItemId: string
+  readonly position: Point
+  readonly doc: ArchiveOracleSearchDoc
+}
+
+export interface ArchiveOracleState {
+  readonly enabled: boolean
+  readonly sourceItemId: string | null
+  readonly query: string
+  readonly loading: boolean
+  readonly error?: string
+  readonly ghosts: ArchiveOracleGhostNode[]
+}
+
 export interface EditableTapestryViewModel
   extends
     TapestryViewModel<
@@ -193,6 +219,7 @@ export interface EditableTapestryViewModel
   readonly newRelPreview?: EditableRelViewModel | null
   readonly hideEditControls?: boolean
   readonly collaborators: Readonly<IdMap<Collaborator>>
+  readonly archiveOracle: ArchiveOracleState
 }
 
 export type TapestryEditorStore = Store<EditableTapestryViewModel, { base: TapestryViewModel }>

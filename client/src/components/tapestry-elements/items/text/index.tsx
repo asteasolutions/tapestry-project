@@ -16,12 +16,20 @@ import { TapestryItemProps } from '..'
 import { useDispatch, useTapestryData } from '../../../../pages/tapestry/tapestry-providers'
 import { updateItem } from '../../../../pages/tapestry/view-model/store-commands/items'
 import { userSettings } from '../../../../services/user-settings'
+import { buildArchiveOracleQueryFromHtml } from '../../../archive-oracle/query'
+import { archiveOracleSearch } from '../../../archive-oracle/search'
 import { buildToolbarMenu } from '../../item-toolbar'
 import { useItemToolbar } from '../../item-toolbar/use-item-toolbar'
 import { TapestryItem } from '../tapestry-item'
 import { LinkTooltip, LinkTooltipProps } from './link-tooltip'
 import { ToggleFormatButton, tooltip } from './toggle-format-button'
 import { textItemToolbar } from './toolbar'
+import {
+  clearArchiveOracleGhosts,
+  updateArchiveOracle,
+  setArchiveOracleGhosts,
+} from '../../../../pages/tapestry/view-model/store-commands/archive-oracle'
+
 
 const BACKGROUND_COLORS: Record<LiteralColor, string> = COLOR_PRESETS
 
@@ -44,6 +52,7 @@ export const TextItem = memo(({ id }: TapestryItemProps) => {
   const isEditMode = interactionMode === 'edit'
   const isInteractiveElement = id === interactiveElement?.modelId
   const isEditable = isEditMode && isInteractiveElement
+  const archiveOracleEnabled = useTapestryData('archiveOracle.enabled')
 
   useEffect(() => {
     if (isEditable) {
@@ -57,6 +66,52 @@ export const TextItem = memo(({ id }: TapestryItemProps) => {
       setUnsavedContent(null)
     }
   }, [isEditable, dispatch, id, unsavedContent])
+
+  useEffect(() => {
+    if (!isEditable || !archiveOracleEnabled) {
+      dispatch(clearArchiveOracleGhosts(), updateArchiveOracle({ sourceItemId: null, query: '' }))
+      return
+    }
+
+    const controller = new AbortController()
+    const html = unsavedContent ?? dto.text
+    const { query, plainText } = buildArchiveOracleQueryFromHtml(html)
+
+    if (!query) {
+      dispatch(clearArchiveOracleGhosts(), updateArchiveOracle({ sourceItemId: id, query: '' }))
+      return
+    }
+
+    const timeout = window.setTimeout(() => {
+      dispatch(updateArchiveOracle({ sourceItemId: id, query: plainText, loading: true, error: undefined }))
+      void (async () => {
+        try {
+          const docs = await archiveOracleSearch(query, controller.signal)
+
+          const baseX = dto.position.x + dto.size.width + 40
+          const baseY = dto.position.y
+          const rowH = 140
+          const positions = docs.map((_, idx) => ({ x: baseX, y: baseY + idx * rowH }))
+
+          dispatch(setArchiveOracleGhosts(id, plainText, docs, positions))
+        } catch (e) {
+          if (controller.signal.aborted) return
+          dispatch(
+            updateArchiveOracle({
+              loading: false,
+              error: e instanceof Error ? e.message : 'Archive Oracle search failed',
+            }),
+          )
+        }
+      })()
+    }, 650)
+
+    return () => {
+      window.clearTimeout(timeout)
+      controller.abort()
+    }
+  }, [archiveOracleEnabled, dispatch, dto.position.x, dto.position.y, dto.size.width, dto.text, id, isEditable, unsavedContent])
+
 
   const addLink = (domNode?: HTMLElement) => {
     const editor = editorAPI.current?.editor()
