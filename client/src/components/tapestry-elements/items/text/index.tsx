@@ -30,7 +30,6 @@ import {
   setArchiveOracleGhosts,
 } from '../../../../pages/tapestry/view-model/store-commands/archive-oracle'
 
-
 const BACKGROUND_COLORS: Record<LiteralColor, string> = COLOR_PRESETS
 
 export const FOREGROUND_COLORS = omit(BACKGROUND_COLORS, TRANSPARENT)
@@ -83,7 +82,14 @@ export const TextItem = memo(({ id }: TapestryItemProps) => {
     }
 
     const timeout = window.setTimeout(() => {
-      dispatch(updateArchiveOracle({ sourceItemId: id, query: plainText, loading: true, error: undefined }))
+      dispatch(
+        updateArchiveOracle({
+          sourceItemId: id,
+          query: plainText,
+          loading: true,
+          error: undefined,
+        }),
+      )
       void (async () => {
         try {
           const docs = await archiveOracleSearch(query, controller.signal)
@@ -110,8 +116,17 @@ export const TextItem = memo(({ id }: TapestryItemProps) => {
       window.clearTimeout(timeout)
       controller.abort()
     }
-  }, [archiveOracleEnabled, dispatch, dto.position.x, dto.position.y, dto.size.width, dto.text, id, isEditable, unsavedContent])
-
+  }, [
+    archiveOracleEnabled,
+    dispatch,
+    dto.position.x,
+    dto.position.y,
+    dto.size.width,
+    dto.text,
+    id,
+    isEditable,
+    unsavedContent,
+  ])
 
   const addLink = (domNode?: HTMLElement) => {
     const editor = editorAPI.current?.editor()

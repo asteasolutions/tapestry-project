@@ -22,14 +22,12 @@ export async function archiveOracleSearch(query: string, signal?: AbortSignal) {
     signal,
   )
 
-  return (
-    res?.response.docs.map((d) => ({
-      identifier: d.identifier,
-      mediatype: d.mediatype,
-      title: d.title,
-      creator: d.creator,
-      publicdate: d.publicdate,
-      downloads: d.downloads,
-    })) ?? []
-  ) satisfies ArchiveOracleSearchDoc[]
+  return (res?.response.docs.map((d) => ({
+    identifier: d.identifier,
+    mediatype: d.mediatype,
+    title: d.title,
+    creator: d.creator,
+    publicdate: d.publicdate,
+    downloads: d.downloads,
+  })) ?? []) satisfies ArchiveOracleSearchDoc[]
 }

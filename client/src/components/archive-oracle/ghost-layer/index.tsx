@@ -21,12 +21,12 @@ function formatType(mediatype: string) {
 
 export function ArchiveOracleGhostLayer() {
   const dispatch = useDispatch()
-  const { archiveOracle, viewport, id: tapestryId, interactionMode } = useTapestryData([
-    'archiveOracle',
-    'viewport',
-    'id',
-    'interactionMode',
-  ])
+  const {
+    archiveOracle,
+    viewport,
+    id: tapestryId,
+    interactionMode,
+  } = useTapestryData(['archiveOracle', 'viewport', 'id', 'interactionMode'])
 
   const [solidifyingKey, setSolidifyingKey] = useState<string | null>(null)
 
@@ -37,7 +37,6 @@ export function ArchiveOracleGhostLayer() {
     () => (archiveOracle.enabled ? archiveOracle.ghosts : []),
     [archiveOracle.enabled, archiveOracle.ghosts],
   )
-
 
   const canShow = isEditMode && ghosts.length > 0
 
@@ -64,6 +63,7 @@ export function ArchiveOracleGhostLayer() {
       {ghosts.map((ghost, idx) => {
         const doc = ghost.doc
         const disabled = solidifyingKey === ghost.key
+        const detailsUrl = iaDetailsURL(doc.identifier)
         return (
           <div
             key={ghost.key}
@@ -72,7 +72,7 @@ export function ArchiveOracleGhostLayer() {
             data-ui-component="archiveOracleGhost"
             aria-label="Archive Oracle suggestion"
           >
-            <div className={styles['title-row']}>
+            <div className={styles.titleRow}>
               <div className={styles.title} title={doc.title}>
                 {doc.title}
               </div>
@@ -85,7 +85,7 @@ export function ArchiveOracleGhostLayer() {
             </div>
             <div className={styles.actions}>
               <button
-                className={`${styles.button} ${styles['button-primary']}`}
+                className={`${styles.button} ${styles.buttonPrimary}`}
                 disabled={disabled}
                 onClick={async () => {
                   try {
@@ -99,7 +99,11 @@ export function ArchiveOracleGhostLayer() {
                         centerAt: ghost.position,
                         coordinateSystem: 'tapestry',
                       }),
-                      updateArchiveOracle({ ghosts: ghosts.filter((g) => g.key !== ghost.key) }),
+                    )
+                    dispatch(
+                      updateArchiveOracle({
+                        ghosts: ghosts.filter((g) => g.key !== ghost.key),
+                      }),
                     )
                   } finally {
                     setSolidifyingKey(null)
@@ -108,13 +112,22 @@ export function ArchiveOracleGhostLayer() {
               >
                 Solidify
               </button>
-              <button
+              <a
                 className={styles.button}
-                disabled={disabled}
-                onClick={() => window.open(iaDetailsURL(doc.identifier), '_blank', 'noopener,noreferrer')}
+                href={detailsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-disabled={disabled}
+                onClick={(e) => {
+                  e.stopPropagation()
+
+                  if (disabled) {
+                    e.preventDefault()
+                  }
+                }}
               >
                 Open
-              </button>
+              </a>
               <button
                 className={styles.button}
                 disabled={disabled}

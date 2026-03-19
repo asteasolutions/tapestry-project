@@ -3,8 +3,8 @@ import { uniq } from 'lodash-es'
 const PARSER = new DOMParser()
 
 export function htmlToPlainText(html: string) {
-    const textContent = PARSER.parseFromString(html, 'text/html').body.textContent
-    return textContent.replaceAll(/\s+/g, ' ').trim()
+  const textContent = PARSER.parseFromString(html, 'text/html').body.textContent
+  return textContent.replaceAll(/\s+/g, ' ').trim()
 }
 
 function isUsefulToken(t: string) {

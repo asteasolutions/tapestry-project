@@ -24,7 +24,6 @@ import { PublicUserProfileDto } from 'tapestry-shared/src/data-transfer/resource
 import { IdMap } from 'tapestry-core/src/utils'
 import { RequiredFields } from 'tapestry-core/src/type-utils'
 
-
 export const ITEM_UI_COMPONENTS = [
   'dragHandle',
   'dragArea',

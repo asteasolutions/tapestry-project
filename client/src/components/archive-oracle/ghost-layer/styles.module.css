@@ -1,63 +1,62 @@
 .layer {
-    position: absolute;
-    inset: 0;
-    z-index: 2;
-    pointer-events: none;
-  }
-  
-  .ghost {
-    pointer-events: auto;
-    width: 320px;
-    border-radius: 12px;
-    padding: 10px 12px;
-    background: color-mix(in srgb, #fff 80%, transparent);
-    border: 1px dashed color-mix(in srgb, #6b7280 55%, transparent);
-    box-shadow: 0 10px 25px rgb(0 0 0 / 12%);
-    backdrop-filter: blur(8px);
-  }
-  
-  .title-row {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 10px;
-  }
-  
-  .title {
-    font-weight: 600;
-    font-size: 12px;
-    line-height: 1.2;
-  }
-  
-  .meta {
-    margin-top: 6px;
-    font-size: 11px;
-    opacity: 0.85;
-  }
-  
-  .actions {
-    display: flex;
-    gap: 8px;
-    margin-top: 10px;
-  }
-  
-  .button {
-    pointer-events: auto;
-    border: 1px solid color-mix(in srgb, #111827 20%, transparent);
-    background: color-mix(in srgb, #fff 70%, transparent);
-    border-radius: 10px;
-    padding: 6px 10px;
-    font-size: 11px;
-    cursor: pointer;
-  }
-  
-  .button-primary {
-    background: color-mix(in srgb, #111827 7%, #fff);
-    border-color: color-mix(in srgb, #111827 25%, transparent);
-  }
-  
-  .button:disabled {
-    opacity: 0.5;
-    cursor: default;
-  }
-  
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.ghost {
+  pointer-events: auto;
+  width: 320px;
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: color-mix(in srgb, #fff 80%, transparent);
+  border: 1px dashed color-mix(in srgb, #6b7280 55%, transparent);
+  box-shadow: 0 10px 25px rgb(0 0 0 / 12%);
+  backdrop-filter: blur(8px);
+}
+
+.title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.title {
+  font-weight: 600;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.meta {
+  margin-top: 6px;
+  font-size: 11px;
+  opacity: 0.85;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.button {
+  pointer-events: auto;
+  border: 1px solid color-mix(in srgb, #111827 20%, transparent);
+  background: color-mix(in srgb, #fff 70%, transparent);
+  border-radius: 10px;
+  padding: 6px 10px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.button-primary {
+  background: color-mix(in srgb, #111827 7%, #fff);
+  border-color: color-mix(in srgb, #111827 25%, transparent);
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
