@@ -1,4 +1,7 @@
 import axios from 'axios'
+import { mkdtemp, rm } from 'node:fs/promises'
+import { join } from 'node:path'
+import { tmpdir } from 'node:os'
 import { OEmbed } from 'tapestry-core/src/oembed.js'
 import { Size } from 'tapestry-core/src/lib/geometry'
 import { WEB_SOURCE_PARSERS } from 'tapestry-core/src/web-sources/index.js'
@@ -18,10 +21,16 @@ export async function* inNewBrowserPage<T, R = void, N = void>(
   perform: (page: Page, context: BrowserContext) => AsyncGenerator<T, R, N>,
 ) {
   const start = Date.now()
-  const browser = await puppeteer.launch({ args: config.worker.puppeteerArgs.split(',') })
+  const userDataDir = await mkdtemp(join(tmpdir(), 'pptr-'))
+  const browser = await puppeteer.launch({
+    args: config.worker.puppeteerArgs.split(','),
+    userDataDir,
+  })
   const context = await browser.createBrowserContext()
   const page = await context.newPage()
   await page.setUserAgent({ userAgent: USER_AGENT })
+  await page.setCacheEnabled(false)
+  await page.setBypassServiceWorker(true)
 
   try {
     yield* perform(page, context)
@@ -30,6 +39,11 @@ export async function* inNewBrowserPage<T, R = void, N = void>(
       await browser.close()
     } catch (e) {
       console.debug('Error while closing puppeteer browser context', e)
+    }
+    try {
+      await rm(userDataDir, { recursive: true, force: true })
+    } catch (e) {
+      console.debug(`Error while removing user data dir ${userDataDir}`, e)
     }
     console.log(`Browser session completed in ${Date.now() - start}ms.`)
   }
