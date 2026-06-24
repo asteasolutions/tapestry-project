@@ -29,6 +29,7 @@ import {
 } from '../../pages/tapestry/view-model'
 import {
   getImageItemSize,
+  getIiifItemSize,
   getPDFItemSize,
   getVideoItemSize,
   getWebpageItemSize,
@@ -209,6 +210,7 @@ export const itemSizes = {
   audio: { width: 300, height: 50 },
   book: { width: 700, height: 500 },
   image: getImageItemSize,
+  iiif: getIiifItemSize,
   pdf: getPDFItemSize,
   video: getVideoItemSize,
   webpage: getWebpageItemSize,

@@ -13,6 +13,7 @@ import { ActionButtonItem } from '../../components/tapestry-elements/items/actio
 import { AudioItem } from '../../components/tapestry-elements/items/audio'
 import { BookItem } from '../../components/tapestry-elements/items/book'
 import { ImageItem } from '../../components/tapestry-elements/items/image'
+import { IiifItem } from '../../components/tapestry-elements/items/iiif'
 import { PdfItem } from '../../components/tapestry-elements/items/pdf'
 import { TextItem } from '../../components/tapestry-elements/items/text'
 import { VideoItem } from '../../components/tapestry-elements/items/video'
@@ -80,6 +81,7 @@ export function TapestryLoader({ id, mode }: TapestryLoaderProps) {
         AudioItem,
         BookItem,
         ImageItem,
+        IiifItem,
         PdfItem,
         TextItem,
         VideoItem,

@@ -11,7 +11,9 @@ import {
   getIAItemMetadata,
   getIAPlaylistEntries,
   getNestedIAItems,
+  getIAIIIFManifestURL,
 } from 'tapestry-core/src/internet-archive'
+import { fetchIIIFFirstCanvas } from 'tapestry-core/src/iiif'
 import { MediaItemType, WebpageType } from 'tapestry-core/src/data-format/schemas/item'
 import { getUserListItems } from '../lib/internet-archive'
 import { parseMediaSource, parseStringTransferData } from './data-transfer-handler'
@@ -126,6 +128,41 @@ export async function createIAMediaItems(tapestryId: string, iaItems: IAItem[]) 
   )
 }
 
+/**
+ * Produces a deep-zoomable IIIF image item from either:
+ *  - an Internet Archive item URL pointing at an image-type item (we derive its IIIF manifest), or
+ *  - a direct IIIF Presentation manifest URL.
+ * The manifest is resolved to its first canvas; the IIIF Image API service is stored on the item so the
+ * viewer can render tiles on demand. Returns null for anything that isn't a usable IIIF image so that the
+ * remaining factories (IA collections/playlists, plain webpages) can handle it.
+ */
+const iiifItemFactory: ItemFactory = async (source, mediaType, tapestryId) => {
+  if (typeof source !== 'string' || !isHTTPURL(source)) return null
+
+  let manifestUrl: string
+  const descriptor = parseInternetArchiveURL(source)
+  if (descriptor && descriptor.urlType !== 'user-list') {
+    // Only handle image-type IA items here; let iaCollectionFactory deal with audio/video/collections/etc.
+    if ((await getIAItemMetadata(descriptor.item.id))?.mediatype !== 'image') return null
+    manifestUrl = getIAIIIFManifestURL(descriptor.item.id)
+  } else if (mediaType?.includes('json') || /\/iiif\/|manifest/i.test(source)) {
+    // A directly pasted IIIF manifest URL (any IIIF source, not just Internet Archive).
+    manifestUrl = source
+  } else {
+    return null
+  }
+
+  const canvas = await fetchIIIFFirstCanvas(manifestUrl)
+  if (!canvas) return null
+
+  const item = await createMediaItem('iiif', manifestUrl, tapestryId)
+  item.imageService = canvas.imageService
+  // The client has already resolved the manifest and image service, so the server needn't redo it.
+  item.skipSourceResolution = true
+
+  return { items: [item], iaImports: [] }
+}
+
 const iaCollectionFactory: ItemFactory = async (source, _, tapestryId) => {
   const descriptor = parseInternetArchiveURL(source)
   if (!descriptor) return null
@@ -190,6 +227,7 @@ export const ITEM_FACTORIES: ItemFactory[] = [
   linkFileFactory,
   textItemFactory,
   htmlFileItemFactory,
+  iiifItemFactory,
   iaCollectionFactory,
   webpageItemFactory,
 ]

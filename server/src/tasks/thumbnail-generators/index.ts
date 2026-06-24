@@ -5,6 +5,7 @@ import { generateVideoThumbnail } from './video.js'
 import { generatePDFThumbnail } from './pdf.js'
 import { generateImageThumbnail } from './image.js'
 import { generateWebpageThumbnail, generateYoutubeThumbnail } from './webpage.js'
+import { iiifImageURL } from 'tapestry-core/src/iiif.js'
 
 export interface ThumbnailRenditionOutput {
   data: Buffer<ArrayBufferLike>
@@ -15,7 +16,7 @@ export interface ThumbnailRenditionOutput {
 
 const MIN_THUMBNAIL_SIZE = 600
 
-const ITEM_TYPES_WITH_INHERENT_THUMBNAIL = ['pdf', 'video', 'image', 'webpage'] as const
+const ITEM_TYPES_WITH_INHERENT_THUMBNAIL = ['pdf', 'video', 'image', 'iiif', 'webpage'] as const
 export type ItemTypeWithInherentThumbnail = (typeof ITEM_TYPES_WITH_INHERENT_THUMBNAIL)[number]
 
 export function hasInherentThumbnail(
@@ -27,6 +28,14 @@ export function hasInherentThumbnail(
 export async function generatePrimaryThumbnail(
   item: Item & { type: ItemTypeWithInherentThumbnail },
 ) {
+  if (item.type === 'iiif') {
+    // IIIF images are deep-zoom tiled images; we render a bounded derivative from the IIIF Image API
+    // to use as the (flat) thumbnail. The item's `source` is the manifest URL, not an image.
+    const thumbWidth = Math.max(MIN_THUMBNAIL_SIZE, item.width)
+    const derivativeUrl = iiifImageURL(item.imageService!, { size: `${thumbWidth},` })
+    return generateImageThumbnail(derivativeUrl, { maxDim: thumbWidth })
+  }
+
   if (item.type === 'pdf' || item.type === 'video' || item.type === 'image') {
     const source = (await parseDBItemSource(item.source!)).source
     // We cannot make thumbnails for blob URLs. The thumbnail creation job should be re-triggered

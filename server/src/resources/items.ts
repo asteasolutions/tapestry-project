@@ -21,6 +21,11 @@ import { socketIdFromRequest, socketServer } from '../socket/index.js'
 import { compact, get, groupBy, isEmpty, omit } from 'lodash-es'
 import { findWebSourceParser } from 'tapestry-core/src/web-sources/index.js'
 import { MEDIA_ITEM_TYPES } from 'tapestry-core/src/data-format/schemas/item.js'
+import {
+  getIAIIIFManifestURL,
+  parseInternetArchiveURL,
+} from 'tapestry-core/src/internet-archive.js'
+import { fetchIIIFFirstCanvas } from 'tapestry-core/src/iiif.js'
 import { extractInternallyHostedS3Key } from '../services/s3-service.js'
 import { Path, WithOptional } from 'tapestry-core/src/type-utils.js'
 import { queue } from '../tasks/index.js'
@@ -91,12 +96,36 @@ export async function canEditItem(
 }
 
 async function resolveWebSource(item: ItemCreateDto | ItemUpdateDto) {
+  if (item.type === 'iiif') return resolveIiifSource(item)
   if (item.type !== 'webpage' || !item.source || item.skipSourceResolution) return
 
   const webSourceParser = await findWebSourceParser(item.source)
 
   item.source = webSourceParser.construct(webSourceParser.parse(item.source))
   item.webpageType = webSourceParser.webpageType
+}
+
+/**
+ * Normalizes an IIIF item's source. The client usually resolves the manifest itself (and sets
+ * `skipSourceResolution`), but when an item is created directly via the API we accept either an Internet
+ * Archive item URL (from which we derive the manifest) or a direct manifest URL, and resolve the IIIF
+ * Image API service endpoint from it if one wasn't provided.
+ */
+async function resolveIiifSource(item: (ItemCreateDto | ItemUpdateDto) & { type: 'iiif' }) {
+  if (!item.source || item.skipSourceResolution) return
+
+  const descriptor = parseInternetArchiveURL(item.source)
+  if (descriptor && descriptor.urlType !== 'user-list') {
+    item.source = getIAIIIFManifestURL(descriptor.item.id)
+  }
+
+  if (!item.imageService) {
+    const canvas = await fetchIIIFFirstCanvas(item.source)
+    if (!canvas) {
+      throw new BadRequestError(`Could not resolve a IIIF image from manifest: ${item.source}`)
+    }
+    item.imageService = canvas.imageService
+  }
 }
 
 async function scheduleConvertToPdf(item: ItemWithAssets) {

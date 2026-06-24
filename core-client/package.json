@@ -58,6 +58,7 @@
     "date-fns": "^4.1.0",
     "immer": "^10.1.1",
     "lodash-es": "^4.17.21",
+    "openseadragon": "^5.0.1",
     "pixi.js": "^8.14.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",

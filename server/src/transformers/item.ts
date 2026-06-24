@@ -102,6 +102,15 @@ export async function itemDbToDto(dbItem: Item): Promise<ItemDto> {
     }
   }
 
+  if (type === 'iiif') {
+    return {
+      ...commonProps,
+      type,
+      ...commonMediaItemProps,
+      imageService: dbItem.imageService!,
+    }
+  }
+
   return {
     ...commonProps,
     type,
@@ -122,6 +131,7 @@ const DB_TO_DTO_FIELD_MAP: Record<ItemDBField, string> = {
   height: 'size.height',
   type: 'type',
   webpageType: 'webpageType',
+  imageService: 'imageService',
   title: 'title',
   dropShadow: 'dropShadow',
   text: 'text',
@@ -154,6 +164,7 @@ export function itemDtoToDb<O extends ItemDBField>(
     if (field === 'text' || field === 'backgroundColor') return !isMediaItem
     if (field === 'action' || field === 'actionType') return item.type === 'actionButton'
     if (field === 'source') return isMediaItem
+    if (field === 'imageService') return item.type === 'iiif'
     if (field === 'startTime' || field === 'stopTime')
       return item.type === 'video' || item.type === 'audio'
     if (field === 'defaultPage') return item.type === 'pdf'

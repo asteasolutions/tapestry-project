@@ -106,6 +106,19 @@ export const ImageItemSchema = z.object({
   ...commonItemProps.source,
 })
 
+export const IiifItemSchema = z.object({
+  type: z.literal('iiif').describe('The type of this item.'),
+  ...commonItemProps.base,
+  ...commonItemProps.source,
+  imageService: z
+    .string()
+    .describe(
+      'The base URL of the IIIF Image API service for the displayed canvas (the endpoint that serves ' +
+        '"info.json" and image tiles). The "source" property holds the URL of the IIIF Presentation manifest ' +
+        'this image was resolved from. The image service is used for deep-zoom, tiled rendering of the image.',
+    ),
+})
+
 export const PdfItemSchema = z.object({
   type: z.literal('pdf').describe('The type of this item.'),
   ...commonItemProps.base,
@@ -142,6 +155,7 @@ export const MediaItemSchema = z.discriminatedUnion('type', [
   AudioItemSchema,
   BookItemSchema,
   ImageItemSchema,
+  IiifItemSchema,
   PdfItemSchema,
   VideoItemSchema,
   WebpageItemSchema,
@@ -168,6 +182,7 @@ export type ActionButtonItem = z.infer<typeof ActionButtonItemSchema>
 export type AudioItem = z.infer<typeof AudioItemSchema>
 export type BookItem = z.infer<typeof BookItemSchema>
 export type ImageItem = z.infer<typeof ImageItemSchema>
+export type IiifItem = z.infer<typeof IiifItemSchema>
 export type PdfItem = z.infer<typeof PdfItemSchema>
 export type VideoItem = z.infer<typeof VideoItemSchema>
 export type WebpageItem = z.infer<typeof WebpageItemSchema>

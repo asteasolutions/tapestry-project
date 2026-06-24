@@ -132,6 +132,7 @@ enum ItemType {
   video
   book
   image
+  iiif
   pdf
   webpage
 }
@@ -188,6 +189,7 @@ model Item {
   height                       Int
   type                         ItemType
   webpageType                  WebpageType?
+  imageService                 String?
   title                        String?
   dropShadow                   Boolean
   text                         String?
