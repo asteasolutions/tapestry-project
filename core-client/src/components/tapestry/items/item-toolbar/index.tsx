@@ -25,6 +25,8 @@ export function ItemToolbar({ items = [], tapestryItemId: id, ...props }: ItemTo
     'separator',
     'prev',
     'next',
+    'separator',
+    'deselect',
   ])
 
   if (!isInteractive) {
