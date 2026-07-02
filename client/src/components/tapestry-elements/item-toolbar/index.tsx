@@ -33,6 +33,7 @@ import {
   deleteSelectionItems,
   pasteItemSize,
   removeFromGroup,
+  reorderItems,
   updateItem,
 } from '../../../pages/tapestry/view-model/store-commands/items'
 import {
@@ -250,6 +251,14 @@ export function useEditMoreMenu({
     onSelectSubmenu('')
   }
   const remove = () => dispatch(isMultiselection ? deleteSelectionItems() : deleteItems(dto.id))
+  const bringTo = (to: 'front' | 'back') => {
+    dispatch(
+      reorderItems(
+        dtoArray.map(({ id }) => id),
+        to,
+      ),
+    )
+  }
 
   useKeyboardShortcuts(
     active
@@ -308,6 +317,12 @@ export function useEditMoreMenu({
       >
         Drop shadow
       </MenuItemToggle>,
+      <MenuItemButton onClick={() => bringTo('front')} className={styles.menuItemButton}>
+        <Icon icon="flip_to_front" /> Bring to front
+      </MenuItemButton>,
+      <MenuItemButton onClick={() => bringTo('back')} className={styles.menuItemButton}>
+        <Icon icon="flip_to_back" /> Bring to back
+      </MenuItemButton>,
       <MenuItemButton shortcut="meta + C" onClick={copyItem} className={styles.menuItemButton}>
         Copy
       </MenuItemButton>,

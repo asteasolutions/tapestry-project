@@ -54,6 +54,7 @@ import {
 import { FetchContentTypeProxyDto } from 'tapestry-shared/src/data-transfer/resources/dtos/proxy'
 import { ItemType, MediaItemType } from 'tapestry-core/src/data-format/schemas/item'
 import { viewModelFromTapestry } from 'tapestry-core-client/src/view-model/utils'
+import { DEFAULT_LAYER } from '../../pages/tapestry/view-model/utils'
 
 export const EDITABLE_TAPESTRY_PROPS = [
   'background',
@@ -74,6 +75,7 @@ const BASE_EDITABLE_ITEM_PROPS = [
   'type',
   'groupId',
   'notes',
+  'layer',
 ] as const satisfies (keyof ItemDto & keyof ItemUpdateDto)[]
 
 export const EDITABLE_TEXT_ITEM_PROPS = [
@@ -226,6 +228,7 @@ export function createTextItem(text = '', tapestryId: string): TextItemCreateDto
     position: ORIGIN,
     tapestryId,
     backgroundColor: textItemColor,
+    layer: DEFAULT_LAYER,
   }
 }
 
@@ -239,6 +242,7 @@ export function createActionButtonItem(text = '', tapestryId: string): ActionBut
     backgroundColor: userSettings.getTapestrySettings(tapestryId).textItemColor,
     tapestryId,
     text,
+    layer: DEFAULT_LAYER,
   }
 }
 
@@ -309,7 +313,8 @@ export async function createMediaItem<T extends MediaItemType>(
     dropShadow: true,
     position: ORIGIN,
     tapestryId,
-  } as MediaItemCreateDto & { type: T }
+    layer: DEFAULT_LAYER,
+  } satisfies MediaItemCreateDto as MediaItemCreateDto & { type: T }
 }
 
 // TODO: Handle the scenario where the source is an S3 object and therefore needs to be cloned.

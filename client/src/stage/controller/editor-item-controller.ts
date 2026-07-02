@@ -23,7 +23,7 @@ import {
 } from 'tapestry-core-client/src/view-model'
 import { getSelectionItems, isItemInSelection } from 'tapestry-core-client/src/view-model/utils'
 import { Id } from 'tapestry-core/src/data-format/schemas/common'
-import { Point, Rectangle, translate, vector } from 'tapestry-core/src/lib/geometry'
+import { translate, vector } from 'tapestry-core/src/lib/geometry'
 import { router } from '../../main'
 import { InteractionMode, TapestryEditorStore } from '../../pages/tapestry/view-model'
 import {
@@ -60,12 +60,6 @@ const { eventListener, attachListeners, detachListeners } = createEventRegistry<
   EventTypesMap,
   InteractionMode | 'desktop' | 'mobile'
 >()
-
-function isDraggingItems(
-  event: DragEvent<HoveredDragTarget> | DragEndEvent<HoveredDragTarget>,
-): event is DragEvent<HoveredDragTarget> | DragEndEvent<HoveredDragTarget> {
-  return isHoveredDragTarget(event.detail.dragTarget)
-}
 
 function getDraggedItem(event: DragEvent<HoveredDragTarget> | DragStartEvent<HoveredDragTarget>) {
   const { dragTarget: draggedElement } = event.detail
@@ -302,9 +296,7 @@ export class EditorItemController extends ItemController {
   protected onDragEnd(e: DragEndEvent<HoveredDragTarget | ResizeTarget>) {
     this.stage.gestureDetector.activate()
     this.editorStore.dispatch(
-      isDraggingItems(e)
-        ? setPointerInteraction('hover', e.detail.dragTarget)
-        : setPointerInteraction(null),
+      setPointerInteraction('hover', e.detail.dragTarget),
       setSelectionRect(null),
       updateSelectionItems({ dragState: null }),
       (model) => {
@@ -315,26 +307,9 @@ export class EditorItemController extends ItemController {
 
   @eventListener('dragHandler', 'drag')
   protected onDrag(event: DragEvent<HoveredDragTarget>) {
-    if (this.editorStore.get('interactionMode') === 'edit' && isDraggingItems(event)) {
+    if (this.editorStore.get('interactionMode') === 'edit') {
       this.onDragItems(event)
-    } else {
-      this.onDragSelectionRect(event.detail.currentPoint)
     }
-  }
-
-  private onDragSelectionRect(cursorLocation: Point) {
-    const pointerSelection = this.store.get('pointerSelection')
-    if (!pointerSelection) return
-
-    const point = this.stage.pixi.tapestry.app.stage.worldTransform.applyInverse(cursorLocation)
-    this.editorStore.dispatch(
-      setSelectionRect(
-        new Rectangle(pointerSelection.rect.position, {
-          width: point.x - pointerSelection.rect.position.x,
-          height: point.y - pointerSelection.rect.position.y,
-        }),
-      ),
-    )
   }
 
   private onDragItems(event: DragEvent<HoveredDragTarget>) {

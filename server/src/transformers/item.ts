@@ -50,6 +50,7 @@ export async function itemDbToDto(dbItem: Item): Promise<ItemDto> {
     groupId: dbItem.groupId,
     notes: dbItem.notes,
     scheduledThumbnailProcessing: dbItem.scheduledThumbnailProcessing,
+    layer: dbItem.layer,
   }
   const { type } = dbItem
 
@@ -136,6 +137,7 @@ const DB_TO_DTO_FIELD_MAP: Record<ItemDBField, string> = {
   defaultPage: 'defaultPage',
   actionType: 'actionType',
   action: 'action',
+  layer: 'layer',
 }
 
 export function itemDtoToDb(item: Partial<ItemDto>): Item
