@@ -10,10 +10,12 @@ import {
 } from '../v4'
 import { SizeSchema } from '../../schemas/common'
 import { PDFItemSchemaV5 } from '../v5'
+import { omit } from 'lodash-es'
 
-const omitMask = {
+const mediaItemOmitMask = {
   thumbnail: true,
   customThumbnail: true,
+  internallyHosted: true,
 } as const
 
 const V7Props = {
@@ -42,27 +44,27 @@ export const ActionButtonItemSchemaV7 = z.object({
   ...V7Props,
 })
 export const AudioItemSchemaV7 = z.object({
-  ...AudioItemSchemaV4.omit({ customThumbnail: true }).shape,
+  ...AudioItemSchemaV4.omit(omit(mediaItemOmitMask, 'thumbnail')).shape,
   ...V7Props,
 })
 export const BookItemSchemaV7 = z.object({
-  ...BookItemSchemaV4.omit({ customThumbnail: true }).shape,
+  ...BookItemSchemaV4.omit(omit(mediaItemOmitMask, 'thumbnail')).shape,
   ...V7Props,
 })
 export const ImageItemSchemaV7 = z.object({
-  ...ImageItemSchemaV4.omit({ customThumbnail: true }).shape,
+  ...ImageItemSchemaV4.omit(omit(mediaItemOmitMask, 'thumbnail')).shape,
   ...V7Props,
 })
 export const PDFItemSchemaV7 = z.object({
-  ...PDFItemSchemaV5.omit(omitMask).shape,
+  ...PDFItemSchemaV5.omit(mediaItemOmitMask).shape,
   ...V7Props,
 })
 export const VideoItemSchemaV7 = z.object({
-  ...VideoItemSchemaV4.omit(omitMask).shape,
+  ...VideoItemSchemaV4.omit(mediaItemOmitMask).shape,
   ...V7Props,
 })
 export const WebpageItemSchemaV7 = z.object({
-  ...WebpageItemSchemaV4.omit(omitMask).shape,
+  ...WebpageItemSchemaV4.omit(mediaItemOmitMask).shape,
   ...V7Props,
 })
 
