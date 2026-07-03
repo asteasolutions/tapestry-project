@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Id } from 'tapestry-core/src/data-format/schemas/common'
 import { useTapestryConfig } from '..'
 import { shortcutLabel } from '../../../lib/keyboard-event'
-import { deselectAll } from '../../../view-model/store-commands/tapestry'
+import { deselectAll, selectGroups } from '../../../view-model/store-commands/tapestry'
 import { focusPresentationStep } from '../../../view-model/store-commands/viewport'
 import { getAdjacentPresentationSteps } from '../../../view-model/utils'
 import { IconButton } from '../../lib/buttons/index'
@@ -13,7 +13,7 @@ import { MaybeMenuItem } from '../../lib/toolbar/index'
 import { FocusButton } from '../focus-button'
 import { useFocusElement } from './use-focus-element'
 
-const COMMON_MENU_ITEMS = ['focus', 'info', 'prev', 'next'] as const
+const COMMON_MENU_ITEMS = ['focus', 'info', 'prev', 'next', 'deselect'] as const
 export type CommonMenuItem = (typeof COMMON_MENU_ITEMS)[number]
 
 export function isCommonMenuItem(str: unknown): str is CommonMenuItem {
@@ -33,9 +33,22 @@ export function useItemMenu<const M extends string>(
   const focusElement = useFocusElement()
   const [displayInfo, setDisplayInfo] = useState(false)
 
+  const continuePresentation = (step: 'next' | 'prev') => {
+    if (adjacentPresentationSteps[step]) {
+      dispatch(
+        focusPresentationStep(adjacentPresentationSteps[step].dto, {
+          zoomEffect: 'bounce',
+          duration: 1,
+        }),
+      )
+    }
+  }
+
   useKeyboardShortcuts({
     ...(menu.includes('info') ? { 'meta + KeyI': showInfo } : {}),
     Escape: () => dispatch(deselectAll()),
+    ArrowRight: () => continuePresentation('next'),
+    ArrowLeft: () => continuePresentation('prev'),
   })
 
   function showInfo() {
@@ -65,6 +78,10 @@ export function useItemMenu<const M extends string>(
       }
 
       if (menuItem === 'prev' || menuItem === 'next') {
+        if (!adjacentPresentationSteps.prev && !adjacentPresentationSteps.next) {
+          return null
+        }
+
         const presentation = menuItem as 'prev' | 'next'
         const label = presentation === 'prev' ? 'Previous item' : 'Next item'
         return {
@@ -73,17 +90,30 @@ export function useItemMenu<const M extends string>(
               icon={presentation === 'prev' ? 'arrow_back' : 'arrow_forward'}
               aria-label={label}
               disabled={!adjacentPresentationSteps[presentation]}
+              onClick={() => continuePresentation(presentation)}
+            />
+          ),
+          tooltip: {
+            side: 'bottom',
+            children: (
+              <ShortcutLabel text={label}>{presentation === 'prev' ? '<' : '>'}</ShortcutLabel>
+            ),
+          },
+        }
+      }
+
+      if (menuItem === 'deselect') {
+        return {
+          element: (
+            <IconButton
+              icon="cancel"
+              aria-label="Deselect"
               onClick={() =>
-                dispatch(
-                  focusPresentationStep(adjacentPresentationSteps[presentation]!.dto, {
-                    zoomEffect: 'bounce',
-                    duration: 1,
-                  }),
-                )
+                dispatch(deselectAll(), !!item.groupId && selectGroups([item.groupId]))
               }
             />
           ),
-          tooltip: { side: 'bottom', children: label },
+          tooltip: { side: 'bottom', children: <ShortcutLabel text="Deselect">Esc</ShortcutLabel> },
         }
       }
 

@@ -385,6 +385,8 @@ export function buildToolbarMenu({
         'next',
         'separator',
         'move-handle',
+        'separator',
+        'deselect',
       ]
-    : [...commonItems, 'prev', 'next']
+    : [...commonItems, 'prev', 'next', 'separator', 'deselect']
 }
