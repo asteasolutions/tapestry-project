@@ -96,7 +96,7 @@ export async function* takeTapestryScreenshots(
   tapestryPath: string,
   userId: string,
   site: Omit<WebpageConfig, 'url' | 'setupContext'>,
-  options: ScreenshotOptions,
+  options?: ScreenshotOptions,
 ) {
   const url = new URL(tapestryPath, config.server.viewerUrl)
   url.searchParams.set('deopt', '1')
