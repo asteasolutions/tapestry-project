@@ -3,7 +3,10 @@ import { Id } from 'tapestry-core/src/data-format/schemas/common'
 import { useTapestryConfig } from '..'
 import { shortcutLabel } from '../../../lib/keyboard-event'
 import { deselectAll, selectGroups } from '../../../view-model/store-commands/tapestry'
-import { focusPresentationStep } from '../../../view-model/store-commands/viewport'
+import {
+  defaultBounceAnimation,
+  focusPresentationStep,
+} from '../../../view-model/store-commands/viewport'
 import { getAdjacentPresentationSteps } from '../../../view-model/utils'
 import { IconButton } from '../../lib/buttons/index'
 import { useKeyboardShortcuts } from '../../lib/hooks/use-keyboard-shortcuts'
@@ -35,20 +38,13 @@ export function useItemMenu<const M extends string>(
 
   const continuePresentation = (step: 'next' | 'prev') => {
     if (adjacentPresentationSteps[step]) {
-      dispatch(
-        focusPresentationStep(adjacentPresentationSteps[step].dto, {
-          zoomEffect: 'bounce',
-          duration: 1,
-        }),
-      )
+      dispatch(focusPresentationStep(adjacentPresentationSteps[step].dto, defaultBounceAnimation))
     }
   }
 
   useKeyboardShortcuts({
     ...(menu.includes('info') ? { 'meta + KeyI': showInfo } : {}),
     Escape: () => dispatch(deselectAll()),
-    ArrowRight: () => continuePresentation('next'),
-    ArrowLeft: () => continuePresentation('prev'),
   })
 
   function showInfo() {
@@ -95,9 +91,7 @@ export function useItemMenu<const M extends string>(
           ),
           tooltip: {
             side: 'bottom',
-            children: (
-              <ShortcutLabel text={label}>{presentation === 'prev' ? '<' : '>'}</ShortcutLabel>
-            ),
+            children: label,
           },
         }
       }

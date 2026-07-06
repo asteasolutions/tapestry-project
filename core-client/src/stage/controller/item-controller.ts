@@ -35,6 +35,7 @@ import {
 import { isSingleGroupSelected } from '../../view-model/utils'
 import { isHTTPURL } from 'tapestry-core/src/utils'
 import { Id } from 'tapestry-core/src/data-format/schemas/common'
+import { defaultBounceAnimation, FocusOptions } from '../../view-model/store-commands/viewport'
 
 type EventTypesMap = {
   gesture: EventTypes<GestureDetector>
@@ -205,14 +206,17 @@ export abstract class ItemController implements TapestryStageController {
     this.store.dispatch(setPointerMode('pan'))
   }
 
-  protected abstract tryNavigateToInternalState(params: URLSearchParams): boolean
+  protected abstract tryNavigateToInternalState(
+    params: URLSearchParams,
+    animate: FocusOptions['animate'],
+  ): boolean
 
   protected handleActionItemClick(id: Id) {
     const item = this.store.get(`items.${id}.dto`)
     if (item?.type === 'actionButton' && item.action) {
       if (item.actionType === 'internalLink') {
         const params = new URLSearchParams(item.action)
-        return this.tryNavigateToInternalState(params)
+        return this.tryNavigateToInternalState(params, defaultBounceAnimation)
       }
 
       if (isHTTPURL(item.action)) {

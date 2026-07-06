@@ -11,9 +11,10 @@ export enum CustomKeys {
   Arrows = 'arrows',
   Pan = 'pan',
   Meta = 'meta',
+  Presentation = 'presentation',
 }
 
-interface Action {
+export interface Action {
   name: string
   shortcut: string
 }
@@ -88,6 +89,12 @@ const customKeysMap: Record<string, ReactNode> = {
   ],
   pan: ['Space', 'Drag'],
   meta: [isMac ? '⌘' : 'Ctrl'],
+  presentation: [
+    <Icon className={styles.icon} icon="keyboard_arrow_left" />,
+    <Icon className={styles.icon} icon="keyboard_arrow_right" />,
+    'Home',
+    'End',
+  ],
 } satisfies Record<CustomKeys, ReactNode[]>
 
 function Shortcut({ keys }: ShortcutProps) {

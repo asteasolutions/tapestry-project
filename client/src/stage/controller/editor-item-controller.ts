@@ -49,6 +49,8 @@ import {
 } from '../utils'
 import { ItemResizeManager, ResizeTarget } from './item-resize-manager'
 import { ClickEvent } from 'tapestry-core-client/src/stage/gesture-detector'
+import { FocusLocationState } from 'tapestry-core-client/src/components/tapestry/hooks/use-focus-element'
+import { FocusOptions } from 'tapestry-core-client/src/view-model/store-commands/viewport'
 
 type EventTypesMap = {
   resizeHandler: EventTypes<DomDragHandler>
@@ -180,7 +182,7 @@ export class EditorItemController extends ItemController {
     attachListeners(this, 'document', document, interactionMode)
   }
 
-  protected tryNavigateToInternalState(params: URLSearchParams) {
+  protected tryNavigateToInternalState(params: URLSearchParams, animate: FocusOptions['animate']) {
     const { items, groups } = this.editorStore.get(['items', 'groups'])
     const focus = params.get('focus')
     const element = focus && (items[focus] ?? groups[focus])
@@ -188,7 +190,7 @@ export class EditorItemController extends ItemController {
       void router.navigate(
         { search: params.toString() },
         {
-          state: { timestamp: Date.now() },
+          state: { timestamp: Date.now(), animate } satisfies FocusLocationState,
           replace: new URLSearchParams(location.search).get('focus') === focus,
         },
       )
@@ -218,7 +220,7 @@ export class EditorItemController extends ItemController {
   protected onResizeDrag(event: DragEvent<ResizeTarget>) {
     const { dragTarget, currentPoint, originalEvent } = event.detail
     this.resizeManager.resize(dragTarget, currentPoint, {
-      snapToGrid: !originalEvent?.ctrlKey,
+      snapToGrid: !(originalEvent && isMeta(originalEvent)),
       forceLockAspectRatio: !!originalEvent?.shiftKey,
     })
   }
@@ -339,9 +341,10 @@ export class EditorItemController extends ItemController {
 
   private onDragItems(event: DragEvent<HoveredDragTarget>) {
     const { worldTransform } = this.stage.pixi.tapestry.app.stage
-    const guidelineSpacing = event.detail.originalEvent?.ctrlKey
-      ? null
-      : this.editorStore.get('viewportGuidelines.spacing')
+    const guidelineSpacing =
+      event.detail.originalEvent && isMeta(event.detail.originalEvent)
+        ? null
+        : this.editorStore.get('viewportGuidelines.spacing')
     const previousStagePoint = worldTransform.applyInverse(event.detail.previousPoint)
     const currentStagePoint = worldTransform.applyInverse(event.detail.currentPoint)
     const translation = vector(previousStagePoint, currentStagePoint)

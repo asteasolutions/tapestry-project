@@ -20,6 +20,7 @@ import { idMapToArray } from 'tapestry-core/src/utils'
 import { useTapestryData, useTapestryStore } from '../../app'
 import { SidePane } from '../side-pane'
 import { TopToolbar } from '../top-toolbar'
+import { FocusOptions } from 'tapestry-core-client/src/view-model/store-commands/viewport'
 
 interface TapestryProps {
   onBack: () => unknown
@@ -60,15 +61,18 @@ export function Tapestry({ onBack }: TapestryProps) {
         ],
         global: [
           new (class extends ItemController {
-            protected tryNavigateToInternalState(params: URLSearchParams) {
+            protected tryNavigateToInternalState(
+              params: URLSearchParams,
+              animate: FocusOptions['animate'],
+            ) {
               const { items, groups } = store.get(['items', 'groups'])
               const focus = params.get('focus')
               const element = focus && (items[focus] ?? groups[focus])
-              if (element) {
+              if (element || focus === 'all') {
                 void navigate(
                   { search: params.toString() },
                   {
-                    state: { timestamp: Date.now() },
+                    state: { timestamp: Date.now(), animate },
                     replace: new URLSearchParams(location.search).get('focus') === focus,
                   },
                 )

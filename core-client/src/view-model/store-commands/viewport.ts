@@ -37,6 +37,11 @@ import { clamp, debounce } from 'lodash-es'
 import { selectItems, setInteractiveElement } from './tapestry.js'
 import { PresentationStep } from 'tapestry-core/src/data-format/schemas/presentation-step.js'
 
+export const defaultBounceAnimation: FocusOptions['animate'] = {
+  zoomEffect: 'bounce',
+  duration: 1,
+}
+
 export const CONTINUOUS_ZOOM_SPEED = 3
 const ELEMENT_TOOLBAR_PADDING = 65
 
