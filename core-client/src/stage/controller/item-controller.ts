@@ -48,6 +48,11 @@ const { eventListener, attachListeners, detachListeners } = createEventRegistry<
   'desktop' | 'mobile'
 >()
 
+export interface InternalNavigationState {
+  timestamp: number
+  animate?: FocusOptions['animate']
+}
+
 export abstract class ItemController implements TapestryStageController {
   private selectionHandler!: DomDragHandler
   private longPressDetector: LongPressDetector
@@ -208,7 +213,7 @@ export abstract class ItemController implements TapestryStageController {
 
   protected abstract tryNavigateToInternalState(
     params: URLSearchParams,
-    animate: FocusOptions['animate'],
+    state: Omit<InternalNavigationState, 'timestamp'>,
   ): boolean
 
   protected handleActionItemClick(id: Id) {
@@ -216,7 +221,7 @@ export abstract class ItemController implements TapestryStageController {
     if (item?.type === 'actionButton' && item.action) {
       if (item.actionType === 'internalLink') {
         const params = new URLSearchParams(item.action)
-        return this.tryNavigateToInternalState(params, defaultBounceAnimation)
+        return this.tryNavigateToInternalState(params, { animate: defaultBounceAnimation })
       }
 
       if (isHTTPURL(item.action)) {

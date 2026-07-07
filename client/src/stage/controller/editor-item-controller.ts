@@ -3,7 +3,10 @@ import { createEventRegistry } from 'tapestry-core-client/src/lib/events/event-r
 import { EventTypes } from 'tapestry-core-client/src/lib/events/typed-events'
 import { isMeta } from 'tapestry-core-client/src/lib/keyboard-event'
 import { TapestryStage } from 'tapestry-core-client/src/stage'
-import { ItemController } from 'tapestry-core-client/src/stage/controller/item-controller'
+import {
+  InternalNavigationState,
+  ItemController,
+} from 'tapestry-core-client/src/stage/controller/item-controller'
 import {
   DomDragHandler,
   DragEndEvent,
@@ -49,8 +52,6 @@ import {
 } from '../utils'
 import { ItemResizeManager, ResizeTarget } from './item-resize-manager'
 import { ClickEvent } from 'tapestry-core-client/src/stage/gesture-detector'
-import { FocusLocationState } from 'tapestry-core-client/src/components/tapestry/hooks/use-focus-element'
-import { FocusOptions } from 'tapestry-core-client/src/view-model/store-commands/viewport'
 
 type EventTypesMap = {
   resizeHandler: EventTypes<DomDragHandler>
@@ -182,7 +183,10 @@ export class EditorItemController extends ItemController {
     attachListeners(this, 'document', document, interactionMode)
   }
 
-  protected tryNavigateToInternalState(params: URLSearchParams, animate: FocusOptions['animate']) {
+  protected tryNavigateToInternalState(
+    params: URLSearchParams,
+    state: Omit<InternalNavigationState, 'timestamp'>,
+  ) {
     const { items, groups } = this.editorStore.get(['items', 'groups'])
     const focus = params.get('focus')
     const element = focus && (items[focus] ?? groups[focus])
@@ -190,7 +194,7 @@ export class EditorItemController extends ItemController {
       void router.navigate(
         { search: params.toString() },
         {
-          state: { timestamp: Date.now(), animate } satisfies FocusLocationState,
+          state: { timestamp: Date.now(), ...state } satisfies InternalNavigationState,
           replace: new URLSearchParams(location.search).get('focus') === focus,
         },
       )

@@ -12,7 +12,10 @@ import { useNavigate } from 'react-router'
 import { createPixiApp } from 'tapestry-core-client/src/stage'
 import { TapestryLifecycleController } from 'tapestry-core-client/src/stage/controller'
 import { GlobalEventsController } from 'tapestry-core-client/src/stage/controller/global-events-controller'
-import { ItemController } from 'tapestry-core-client/src/stage/controller/item-controller'
+import {
+  InternalNavigationState,
+  ItemController,
+} from 'tapestry-core-client/src/stage/controller/item-controller'
 import { ViewportController } from 'tapestry-core-client/src/stage/controller/viewport-controller'
 import { ItemThumbnailController } from 'tapestry-core-client/src/stage/controller/item-thumbnail-controller'
 import { TapestryRenderer } from 'tapestry-core-client/src/stage/renderer'
@@ -20,7 +23,6 @@ import { idMapToArray } from 'tapestry-core/src/utils'
 import { useTapestryData, useTapestryStore } from '../../app'
 import { SidePane } from '../side-pane'
 import { TopToolbar } from '../top-toolbar'
-import { FocusOptions } from 'tapestry-core-client/src/view-model/store-commands/viewport'
 
 interface TapestryProps {
   onBack: () => unknown
@@ -63,7 +65,7 @@ export function Tapestry({ onBack }: TapestryProps) {
           new (class extends ItemController {
             protected tryNavigateToInternalState(
               params: URLSearchParams,
-              animate: FocusOptions['animate'],
+              state: Omit<InternalNavigationState, 'timestamp'>,
             ) {
               const { items, groups } = store.get(['items', 'groups'])
               const focus = params.get('focus')
@@ -72,7 +74,7 @@ export function Tapestry({ onBack }: TapestryProps) {
                 void navigate(
                   { search: params.toString() },
                   {
-                    state: { timestamp: Date.now(), animate },
+                    state: { timestamp: Date.now(), ...state } satisfies InternalNavigationState,
                     replace: new URLSearchParams(location.search).get('focus') === focus,
                   },
                 )
