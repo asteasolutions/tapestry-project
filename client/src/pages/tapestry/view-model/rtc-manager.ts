@@ -72,7 +72,7 @@ export class RTCManager<T> extends TypedEventTarget<RTCManagerEvent<T>> {
     this.peerId = event.detail.assignedPeerId
   }
 
-  //  A request message a remote peer for initiating an RTC negotiation is recieved.
+  //  A request message from a remote peer for initiating an RTC negotiation is recieved.
   //  Then starts the exchange of RTC negotiation protocol messages. First the current peer creates an offer
   //  and sends it to the remote peer. The remote peer receives the "negotiation" message and sends an answer to
   //  the current peer. The current peer recieves the second "negotiation" message and accepts the answer.
