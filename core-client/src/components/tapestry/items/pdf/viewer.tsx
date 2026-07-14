@@ -123,7 +123,9 @@ export function PdfItemViewer({ id, onDocumentLoaded, onPageChanged, apiRef }: P
 
   useImperativeHandle(apiRef, () => ({ navigateToPage }))
 
-  useEffect(() => navigateToPage(initialPage, 'instant'), [initialPage, navigateToPage])
+  useEffect(() => {
+    navigateToPage(initialPage, 'instant')
+  }, [initialPage, navigateToPage])
 
   return (
     <>
