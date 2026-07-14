@@ -7,6 +7,11 @@ import { DBSubscriber } from '../socket'
 import { pick } from 'lodash-es'
 import { Item } from '@prisma/client'
 
+const MIN_PDF_PAGE = {
+  width: 600,
+  height: 2000,
+}
+
 const CONVERT_ITEM_PROPS = [
   'positionX',
   'positionY',
@@ -22,7 +27,7 @@ async function convertWebpageToPdf(url: string, options?: PDFOptions) {
   try {
     console.log(`Converting ${url} to pdf...`)
     generator = inNewBrowserPage(async function* (page, context): AsyncGenerator<Uint8Array> {
-      await initWebpage(page, context, { url })
+      await initWebpage(page, context, { url, autoconsent: true })
       console.log('>  Converting to pdf...')
       yield page.pdf(options)
     })
@@ -37,6 +42,7 @@ async function convertWebpageToPdf(url: string, options?: PDFOptions) {
 }
 
 export async function convertToPdf({ itemId }: JobTypeMap['convert-to-pdf']) {
+  let s3Key: string | null = null
   try {
     const item = await prisma.item.findUniqueOrThrow({
       where: { id: itemId },
@@ -47,23 +53,23 @@ export async function convertToPdf({ itemId }: JobTypeMap['convert-to-pdf']) {
     }
 
     const value = await convertWebpageToPdf(item.source, {
-      width: item.width,
-      height: item.height,
+      width: Math.max(item.width, MIN_PDF_PAGE.width),
+      height: Math.max(item.height, MIN_PDF_PAGE.height),
     })
 
-    await prisma.$transaction(async (tx) => {
-      await tx.item.delete({ where: { id: item.id } })
+    s3Key = tapestryKey(item.tapestryId, `${crypto.randomUUID()}.pdf`, true)
+    await s3Service.putObject(s3Key, value, 'application/pdf')
 
-      const s3Key = tapestryKey(item.tapestryId, `${crypto.randomUUID()}.pdf`, true)
+    await prisma.$transaction(async (tx) => {
+      const deletedItem = await tx.item.delete({ where: { id: item.id } })
       await tx.item.create({
         data: {
-          ...pick(item, CONVERT_ITEM_PROPS),
+          ...pick(deletedItem, CONVERT_ITEM_PROPS),
           type: 'pdf',
           source: s3Key,
           scheduledThumbnailProcessing: 'derive',
         },
       })
-      await s3Service.putObject(s3Key, value, 'application/pdf')
     })
 
     await scheduleTapestryThumbnailGeneration(item.tapestryId)
@@ -74,6 +80,9 @@ export async function convertToPdf({ itemId }: JobTypeMap['convert-to-pdf']) {
       deletedIds: { items: [item.id] },
     })
   } catch (error) {
+    if (s3Key) {
+      await s3Service.tryDeleteObject(s3Key)
+    }
     console.error(`Error while converting item ${itemId} to pdf`, error)
   }
 }
