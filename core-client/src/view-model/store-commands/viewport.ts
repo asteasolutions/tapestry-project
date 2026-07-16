@@ -171,7 +171,7 @@ export function setDefaultViewport(animate: boolean): StoreMutationCommand<Tapes
     // of the coordinate system. If MAX_INITIAL_SCALE is 1 the viewport fits around it
     store.dispatch(
       transformViewport(
-        zoomToFit(viewportRect, obstructions, focusRect, minScale, maxScale),
+        zoomToFit(viewportRect, startView ? [] : obstructions, focusRect, minScale, maxScale),
         animate,
       ),
     )
