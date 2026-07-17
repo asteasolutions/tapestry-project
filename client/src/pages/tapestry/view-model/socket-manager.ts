@@ -77,9 +77,11 @@ export class SocketManager extends TypedEventTarget<TapestryUpdated | RTCSignall
   }
 
   activateSignaller() {
-    this.isSignallerActivated = true
-    if (this.connected) {
-      this.subscribeToSignalingService()
+    if (!this.isSignallerActivated) {
+      this.isSignallerActivated = true
+      if (this.connected) {
+        this.subscribeToSignalingService()
+      }
     }
   }
 
