@@ -42,7 +42,6 @@ async function convertWebpageToPdf(url: string, options?: PDFOptions) {
 }
 
 export async function convertToPdf({ itemId }: JobTypeMap['convert-to-pdf']) {
-  let s3Key: string | null = null
   try {
     const item = await prisma.item.findUniqueOrThrow({
       where: { id: itemId },
@@ -57,7 +56,7 @@ export async function convertToPdf({ itemId }: JobTypeMap['convert-to-pdf']) {
       height: Math.max(item.height, MIN_PDF_PAGE.height),
     })
 
-    s3Key = tapestryKey(item.tapestryId, `${crypto.randomUUID()}.pdf`, true)
+    const s3Key = tapestryKey(item.tapestryId, `${crypto.randomUUID()}.pdf`, true)
     await s3Service.putObject(s3Key, value, 'application/pdf')
 
     await prisma.$transaction(async (tx) => {
@@ -80,9 +79,6 @@ export async function convertToPdf({ itemId }: JobTypeMap['convert-to-pdf']) {
       deletedIds: { items: [item.id] },
     })
   } catch (error) {
-    if (s3Key) {
-      await s3Service.tryDeleteObject(s3Key)
-    }
     console.error(`Error while converting item ${itemId} to pdf`, error)
   }
 }

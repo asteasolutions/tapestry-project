@@ -51,15 +51,14 @@ const autoconsentConfig: Partial<Config> = {
   },
 }
 
+interface AutoconsentWindow {
+  autoconsentReceiveMessage?: (msg: BackgroundMessage) => Promise<void>
+}
+
 const sendMessage = async (page: Page, message: BackgroundMessage) =>
   pageEval(
     page,
-    (w, msg) => {
-      const window = w as { autoconsentReceiveMessage?: (msg: BackgroundMessage) => Promise<void> }
-      if (window.autoconsentReceiveMessage) {
-        return window.autoconsentReceiveMessage(msg)
-      }
-    },
+    (window, msg) => (window as AutoconsentWindow).autoconsentReceiveMessage?.(msg),
     message,
   )
 
@@ -70,19 +69,20 @@ export async function attatchAutoconsent(page: Page, timeout: number): Promise<s
     function complete(msg: string, resolve: true): void
     function complete(msg: unknown, resolve: false): void
     function complete(msg: unknown, resolve: boolean) {
-      if (!completed) {
-        completed = true
-        if (resolve) {
-          res(msg as string)
-        } else {
-          rej(
-            msg instanceof Error
-              ? msg
-              : new AutoconsentError(typeof msg === 'string' ? msg : 'Unknown error'),
-          )
-        }
-        clearTimeout(t)
+      if (completed) {
+        return
       }
+      completed = true
+      if (resolve) {
+        res(msg as string)
+      } else {
+        rej(
+          msg instanceof Error
+            ? msg
+            : new AutoconsentError(typeof msg === 'string' ? msg : 'Unknown error'),
+        )
+      }
+      clearTimeout(t)
     }
 
     const t = setTimeout(() => {
@@ -118,7 +118,7 @@ export async function attatchAutoconsent(page: Page, timeout: number): Promise<s
             break
           case 'report':
             if (message.state.lifecycle === 'nothingDetected') {
-              complete('Nothing detected', false)
+              complete('Nothing detected', true)
             }
             break
           default:
