@@ -280,7 +280,6 @@ export class PresentationOrderRenderer implements Renderer<EditableTapestryViewM
         from: { point: from, direction: tangents[index - 1] },
         to: { point: to, direction: tangents[index] && mul(-1, tangents[index]) },
         controlPointOffsetRange: { min: 30, max: 150 },
-        lineWidth: 3,
       })
 
       const id = dto.type === 'item' ? dto.itemId : dto.groupId
