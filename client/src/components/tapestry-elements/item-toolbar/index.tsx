@@ -318,10 +318,12 @@ export function useEditMoreMenu({
         Drop shadow
       </MenuItemToggle>,
       <MenuItemButton onClick={() => bringTo('front')} className={styles.menuItemButton}>
-        <Icon icon="flip_to_front" /> Bring to front
+        Bring to front
+        <Icon className="button-icon" icon="flip_to_front" />
       </MenuItemButton>,
       <MenuItemButton onClick={() => bringTo('back')} className={styles.menuItemButton}>
-        <Icon icon="flip_to_back" /> Bring to back
+        Bring to back
+        <Icon className="button-icon" icon="flip_to_back" />
       </MenuItemButton>,
       <MenuItemButton shortcut="meta + C" onClick={copyItem} className={styles.menuItemButton}>
         Copy

@@ -22,7 +22,6 @@ import { isHoveredElement } from '../utils'
 import { ItemRenderer } from './item-renderer'
 import { GroupBackgroundRenderer } from './group-background-renderer'
 import { ThumbnailContainer } from './thumbnail-container'
-import { sortBy } from 'lodash'
 
 export interface Renderer<T = unknown> {
   render(arg: T): void
@@ -90,8 +89,8 @@ export abstract class TapestryRenderer<
     const interactiveElement = this.store.get('interactiveElement')
     this.getGroups().forEach((group) => this.renderViewModel(group, selection, interactiveElement))
     this.getRels().forEach((rel) => this.renderViewModel(rel, selection, interactiveElement))
-    sortBy(this.getItems(), 'dto.layer').forEach((item, zIndex) =>
-      this.renderViewModel(item, selection, interactiveElement, zIndex),
+    this.getItems().forEach((item) =>
+      this.renderViewModel(item, selection, interactiveElement, item.dto.layer),
     )
 
     this.renderSelectionRect()

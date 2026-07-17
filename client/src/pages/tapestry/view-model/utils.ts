@@ -1,5 +1,5 @@
 import { WritableDraft } from 'immer'
-import { chunk, zip } from 'lodash-es'
+import { chunk, maxBy, zip } from 'lodash-es'
 import {
   getBoundingRectangle,
   MULTISELECT_RECTANGLE_PADDING,
@@ -189,6 +189,5 @@ export async function insertDataTransfer(
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function getMaxLayer(store: Store<EditableTapestryViewModel, any>) {
-  const elements = idMapToArray(store.get('items')).map((element) => element.dto.layer)
-  return elements.length === 0 ? DEFAULT_LAYER : Math.max(...elements)
+  return maxBy(idMapToArray(store.get('items')), 'dto.layer')?.dto.layer ?? DEFAULT_LAYER
 }
