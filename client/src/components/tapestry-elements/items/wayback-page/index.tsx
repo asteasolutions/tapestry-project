@@ -109,7 +109,7 @@ export const WaybackPageItem = memo(({ id }: TapestryItemProps) => {
 
   useEffect(() => setLoading(true), [wbmSource])
 
-  const { conversionStarted, convertToPDFToolbarElement } = useConvertToPDF(id)
+  const { conversionStarted, convertToPDFMenuItem } = useConvertToPDF(id)
 
   const {
     snapshots,
@@ -185,12 +185,11 @@ export const WaybackPageItem = memo(({ id }: TapestryItemProps) => {
             'separator',
             refreshButton,
             'separator',
-            convertToPDFToolbarElement,
-            'separator',
             ...controls,
           ]
         : [refreshButton, 'separator', ...controls]
     },
+    moreMenuItems: [convertToPDFMenuItem],
   })
 
   const missingSnapshotsMessage =
