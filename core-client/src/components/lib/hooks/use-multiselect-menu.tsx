@@ -1,5 +1,9 @@
 import { deselectAll } from '../../../view-model/store-commands/tapestry'
-import { focusItems, focusPresentationStep } from '../../../view-model/store-commands/viewport'
+import {
+  defaultBounceAnimation,
+  focusItems,
+  focusPresentationStep,
+} from '../../../view-model/store-commands/viewport'
 import { getAdjacentPresentationSteps, getSelectionItems } from '../../../view-model/utils'
 import { useTapestryConfig } from '../../tapestry'
 import { FocusButton } from '../../tapestry/focus-button'
@@ -32,20 +36,13 @@ export function useMultiselectMenu<M extends MultiselectMenuItem[]>(
 
   const continuePresentation = (step: 'next' | 'prev') => {
     if (adjacentPresentationSteps && adjacentPresentationSteps[step]) {
-      dispatch(
-        focusPresentationStep(adjacentPresentationSteps[step].dto, {
-          zoomEffect: 'bounce',
-          duration: 1,
-        }),
-      )
+      dispatch(focusPresentationStep(adjacentPresentationSteps[step].dto, defaultBounceAnimation))
     }
   }
 
   useKeyboardShortcuts(
     {
       Escape: () => dispatch(deselectAll()),
-      ArrowRight: () => continuePresentation('next'),
-      ArrowLeft: () => continuePresentation('prev'),
     },
     [dispatch],
   )
@@ -88,7 +85,7 @@ export function useMultiselectMenu<M extends MultiselectMenuItem[]>(
               ),
               tooltip: {
                 side: 'bottom',
-                children: <ShortcutLabel text="Previous item">&lt;</ShortcutLabel>,
+                children: 'Previous item',
               },
             },
             {
@@ -102,7 +99,7 @@ export function useMultiselectMenu<M extends MultiselectMenuItem[]>(
               ),
               tooltip: {
                 side: 'bottom',
-                children: <ShortcutLabel text="Next item">&gt;</ShortcutLabel>,
+                children: 'Next item',
               },
             },
           ]

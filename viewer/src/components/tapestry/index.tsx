@@ -12,7 +12,10 @@ import { useNavigate } from 'react-router'
 import { createPixiApp } from 'tapestry-core-client/src/stage'
 import { TapestryLifecycleController } from 'tapestry-core-client/src/stage/controller'
 import { GlobalEventsController } from 'tapestry-core-client/src/stage/controller/global-events-controller'
-import { ItemController } from 'tapestry-core-client/src/stage/controller/item-controller'
+import {
+  InternalNavigationState,
+  ItemController,
+} from 'tapestry-core-client/src/stage/controller/item-controller'
 import { ViewportController } from 'tapestry-core-client/src/stage/controller/viewport-controller'
 import { ItemThumbnailController } from 'tapestry-core-client/src/stage/controller/item-thumbnail-controller'
 import { TapestryRenderer } from 'tapestry-core-client/src/stage/renderer'
@@ -60,15 +63,18 @@ export function Tapestry({ onBack }: TapestryProps) {
         ],
         global: [
           new (class extends ItemController {
-            protected tryNavigateToInternalState(params: URLSearchParams) {
+            protected tryNavigateToInternalState(
+              params: URLSearchParams,
+              state: Omit<InternalNavigationState, 'timestamp'>,
+            ) {
               const { items, groups } = store.get(['items', 'groups'])
               const focus = params.get('focus')
               const element = focus && (items[focus] ?? groups[focus])
-              if (element) {
+              if (element || focus === 'all') {
                 void navigate(
                   { search: params.toString() },
                   {
-                    state: { timestamp: Date.now() },
+                    state: { timestamp: Date.now(), ...state } satisfies InternalNavigationState,
                     replace: new URLSearchParams(location.search).get('focus') === focus,
                   },
                 )

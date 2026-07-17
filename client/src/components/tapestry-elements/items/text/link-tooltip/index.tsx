@@ -8,13 +8,17 @@ import { elementIdFromLink } from 'tapestry-core-client/src/components/tapestry/
 import { isHTTPURL } from 'tapestry-core/src/utils'
 import { useTapestryData } from '../../../../../pages/tapestry/tapestry-providers'
 import styles from './styles.module.css'
+import { InternalNavigationState } from 'tapestry-core-client/src/stage/controller/item-controller'
 
 function LinkElement({ link }: { link: string }) {
   const { items, groups } = useTapestryData(['items', 'groups'])
   const id = elementIdFromLink(link, items, groups)
 
   return id ? (
-    <Link to={{ search: new URL(link).search.slice(1) }} state={{ timestamp: Date.now() }}>
+    <Link
+      to={{ search: new URL(link).search.slice(1) }}
+      state={{ timestamp: Date.now() } satisfies InternalNavigationState}
+    >
       {link}
     </Link>
   ) : (
