@@ -2,7 +2,7 @@ import { Extension } from '@tiptap/react'
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
-    fontSize: {
+    customFontSize: {
       setFontSize: (size: number) => ReturnType
     }
   }

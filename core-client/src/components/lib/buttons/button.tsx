@@ -6,6 +6,7 @@ import { SvgIcon } from '../svg-icon/index.js'
 import { useClickableContext } from './clickable-context.js'
 import { Tooltip, TooltipProps } from '../tooltip/index.js'
 import { Icon, IconName } from '../icon/index.js'
+import { LoadingSpinner } from '../loading-spinner'
 
 function useRepeatClicks(callback?: () => void) {
   const [isHolding, setIsHolding] = useState(false)
@@ -83,6 +84,7 @@ export type ButtonProps<T extends ButtonComponent = 'button'> = Omit<
   onRepeatClick?: () => void
   tooltip?: TooltipProps
   ref?: RefObject<T>
+  loading?: boolean
 }
 
 export function Button<T extends ButtonComponent = 'button'>({
@@ -97,6 +99,8 @@ export function Button<T extends ButtonComponent = 'button'>({
   onRepeatClick,
   tooltip,
   ref,
+  loading,
+  disabled,
   ...rest
 }: ButtonProps<T>) {
   const clickableContext = useClickableContext()
@@ -136,17 +140,24 @@ export function Button<T extends ButtonComponent = 'button'>({
       onPointerUp: () => releaseButton(false),
       onPointerLeave: () => releaseButton(true),
       ref,
+      disabled: disabled || loading,
       ...rest,
     },
-    !!icon &&
-      (icon instanceof Function ? (
-        <SvgIcon size={22} Icon={icon} />
-      ) : typeof icon === 'string' ? (
-        <Icon icon={icon} className="button-icon" />
-      ) : (
-        <Icon icon={icon.name} className="button-icon" filled={icon.fill} />
-      )),
-    children,
+    ...(loading ? (
+      [<LoadingSpinner size="20px" />]
+    ) : (
+      [
+        !!icon &&
+          (icon instanceof Function ? (
+            <SvgIcon size={22} Icon={icon} />
+          ) : typeof icon === 'string' ? (
+            <Icon icon={icon} className="button-icon" />
+          ) : (
+            <Icon icon={icon.name} className="button-icon" filled={icon.fill} />
+          )),
+        children,
+      ]
+    )),
     tooltip && <Tooltip offset={8} {...tooltip} />,
   )
 }

@@ -1,5 +1,7 @@
-import { OrderedList as TiptapOrderedList } from '@tiptap/extension-ordered-list'
-import { BulletList as TiptapBulletList } from '@tiptap/extension-bullet-list'
+import {
+  OrderedList as TiptapOrderedList,
+  BulletList as TiptapBulletList,
+} from '@tiptap/extension-list'
 import { createSelectionState, getSelectionCommands } from '.'
 
 export const OrderedList = TiptapOrderedList.extend({

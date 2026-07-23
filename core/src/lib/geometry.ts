@@ -205,6 +205,18 @@ export class Rectangle {
   get center() {
     return translate(this.position, { dx: this.size.width / 2, dy: this.size.height / 2 })
   }
+  get topRight() {
+    return { x: this.right, y: this.top }
+  }
+  get bottomRight() {
+    return { x: this.right, y: this.bottom }
+  }
+  get bottomLeft() {
+    return { x: this.left, y: this.bottom }
+  }
+  get topLeft() {
+    return { x: this.left, y: this.top }
+  }
   get width() {
     return Math.abs(this.size.width)
   }

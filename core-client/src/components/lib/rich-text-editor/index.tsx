@@ -1,13 +1,12 @@
-import { BulletListOptions } from '@tiptap/extension-bullet-list'
 import { ColorOptions } from '@tiptap/extension-color'
 import FontFamily, { FontFamilyOptions } from '@tiptap/extension-font-family'
 import Highlight, { HighlightOptions } from '@tiptap/extension-highlight'
 import Link, { LinkOptions } from '@tiptap/extension-link'
-import { OrderedListOptions } from '@tiptap/extension-ordered-list'
-import Placeholder from '@tiptap/extension-placeholder'
+import { BulletListOptions, OrderedListOptions } from '@tiptap/extension-list'
 import TextAlign, { TextAlignOptions } from '@tiptap/extension-text-align'
-import TextStyle, { TextStyleOptions } from '@tiptap/extension-text-style'
+import { TextStyle, TextStyleOptions } from '@tiptap/extension-text-style'
 import Underline, { UnderlineOptions } from '@tiptap/extension-underline'
+import { Placeholder } from '@tiptap/extensions'
 import {
   Editor,
   EditorContent,
@@ -147,7 +146,12 @@ function getExtensions({ placeholder, onCreateLink, controls = {} }: ExtensionOp
     ...(controls.format === false
       ? []
       : (controls.format ?? [
-          StarterKit.configure({ bulletList: false, orderedList: false }),
+          StarterKit.configure({
+            bulletList: false,
+            orderedList: false,
+            link: false,
+            underline: false,
+          }),
           Underline,
           TextStyle,
         ])),
@@ -239,7 +243,7 @@ export function RichTextEditor({
       },
     },
     [isEditable, value],
-  )!
+  )
 
   if (api) {
     api.current = getRichTextEditorApi(editor, eventsRef.current?.onSelectionChanged)
