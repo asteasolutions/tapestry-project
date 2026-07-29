@@ -25,6 +25,8 @@ import { MouseEventHandler, useRef } from 'react'
 import { PropsWithStyle } from '..'
 import { LiteralColor } from '../../../theme/types'
 import { Color } from './color-extension'
+import { CommentBubbleMenu } from './comment-bubble-menu'
+import { Comment, CommentOptions } from './comment-extension'
 import { FontSizeExtension } from './font-size-extension'
 import { BulletList, OrderedList } from './list-extensions'
 import styles from './styles.module.css'
@@ -117,6 +119,7 @@ export interface Controls {
   justification?: false | Extension<TextAlignOptions>
   fontSize?: false | Extension
   fontFamily?: false | Extension<FontFamilyOptions>
+  comment?: false | Mark<CommentOptions>
 }
 
 export interface RichTextEditorProps extends PropsWithStyle {
@@ -172,6 +175,7 @@ function getExtensions({ placeholder, onCreateLink, controls = {} }: ExtensionOp
       : (controls.justification ?? TextAlign.configure({ types: ['heading', 'paragraph'] })),
     controls.fontSize === false ? undefined : (controls.fontSize ?? FontSizeExtension),
     controls.fontFamily === false ? undefined : (controls.fontFamily ?? FontFamily),
+    controls.comment === false ? undefined : (controls.comment ?? Comment),
     ...(placeholder ? [Placeholder.configure({ placeholder, showOnlyWhenEditable: false })] : []),
   ])
 }
@@ -187,10 +191,14 @@ function parseColor(color?: string): LiteralColor | undefined {
   }
 }
 
-export function createSelectionState(editor: Editor): SelectionState {
+export function getSelectionText(editor: Editor): string {
   const { selection, doc } = editor.state
+  return doc.textBetween(selection.from, selection.to)
+}
+
+export function createSelectionState(editor: Editor): SelectionState {
   return {
-    text: doc.textBetween(selection.from, selection.to),
+    text: getSelectionText(editor),
     isBold: editor.isActive('bold'),
     isItalic: editor.isActive('italic'),
     isUnderline: editor.isActive('underline'),
@@ -263,6 +271,7 @@ export function RichTextEditor({
         onPointerDown={(e) => e.stopPropagation()}
         onClick={eventsRef.current?.onClick}
       />
+      {controls?.comment !== false && <CommentBubbleMenu editor={editor} />}
     </div>
   )
 }

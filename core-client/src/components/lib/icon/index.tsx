@@ -57,6 +57,7 @@ const ICONS = [
   'format_align_right',
   'format_bold',
   'format_color_text',
+  'format_ink_highlighter',
   'format_italic',
   'format_list_bulleted',
   'format_list_numbered',

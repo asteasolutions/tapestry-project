@@ -22,6 +22,7 @@ const controls = {
   link: false,
   justification: false,
   list: false,
+  comment: false,
 } satisfies Controls
 
 export const ActionButtonItem = memo(({ id }: TapestryItemProps) => {

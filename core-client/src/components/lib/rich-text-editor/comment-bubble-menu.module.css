@@ -1,0 +1,20 @@
+.root {
+  z-index: 2;
+  width: max-content;
+  background-color: var(--theme-background-primary);
+  box-shadow: var(--box-shadow);
+  border-radius: 8px;
+  padding: 4px;
+
+  .form {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+
+    input::placeholder {
+      font-style: italic;
+    }
+  }
+}
