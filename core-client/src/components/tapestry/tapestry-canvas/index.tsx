@@ -19,12 +19,7 @@ import { cssTransformForLocation } from '../../../stage/utils'
 import { ItemType } from 'tapestry-core/src/data-format/schemas/item'
 import { isMac, isMobile } from '../../../lib/user-agent'
 
-export interface TapestryCanvasProps extends PropsWithStyle<
-  object,
-  'root' | 'itemLocator' | 'relLocator'
-> {
-  orderByPosition?: boolean
-}
+export type TapestryCanvasProps = PropsWithStyle<object, 'root' | 'itemLocator' | 'relLocator'>
 
 interface TapestryElementLocatorProps extends PropsWithStyle {
   id: string
@@ -124,7 +119,7 @@ function getRelBounds(rel: Rel, items: IdMap<ItemViewModel>) {
   return getBounds(rel, { [fromItem.dto.id]: fromItem, [toItem.dto.id]: toItem })
 }
 
-export function TapestryCanvas({ classes, style, orderByPosition }: TapestryCanvasProps) {
+export function TapestryCanvas({ classes, style }: TapestryCanvasProps) {
   const { useStoreData, components } = useTapestryConfig()
   const transform = useStoreData('viewport.transform', ['translation', 'scale'])
   const viewportReady = useStoreData('viewport.ready')
@@ -140,9 +135,7 @@ export function TapestryCanvas({ classes, style, orderByPosition }: TapestryCanv
   }
 
   const itemsArray = idMapToArray(items)
-  const orderedItems = orderByPosition
-    ? orderBy(itemsArray, ['dto.position.y', 'dto.position.x'])
-    : itemsArray
+  const orderedItems = orderBy(itemsArray, 'dto.layer')
 
   function renderItem(item: ItemViewModel) {
     let component: TapestryElementComponent

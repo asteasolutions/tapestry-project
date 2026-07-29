@@ -272,6 +272,11 @@ export function mul(multiplier: number, vector: Vector): Vector {
   }
 }
 
+// angle between the x-axis and v
+export function angleX(v: Vector) {
+  return Math.atan2(v.dy, v.dx)
+}
+
 export function norm(v: Vector) {
   return Math.hypot(v.dx, v.dy)
 }

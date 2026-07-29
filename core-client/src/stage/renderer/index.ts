@@ -89,7 +89,9 @@ export abstract class TapestryRenderer<
     const interactiveElement = this.store.get('interactiveElement')
     this.getGroups().forEach((group) => this.renderViewModel(group, selection, interactiveElement))
     this.getRels().forEach((rel) => this.renderViewModel(rel, selection, interactiveElement))
-    this.getItems().forEach((item) => this.renderViewModel(item, selection, interactiveElement))
+    this.getItems().forEach((item) =>
+      this.renderViewModel(item, selection, interactiveElement, item.dto.layer),
+    )
 
     this.renderSelectionRect()
 
@@ -179,6 +181,7 @@ export abstract class TapestryRenderer<
     viewModel?: E | null,
     selection?: Selection,
     interactiveElement?: TapestryElementRef | null,
+    zIndex?: number,
   ) {
     if (!viewModel) {
       return
@@ -190,6 +193,10 @@ export abstract class TapestryRenderer<
     if (!renderer) {
       renderer = this.createTapestryElementRenderer(viewModel)
       this.tapestryElementRenderers.set(id, renderer)
+    }
+
+    if (zIndex) {
+      renderer.pixiContainer.zIndex = zIndex
     }
 
     const isSelected = this.isSelected(viewModel, selection, interactiveElement)

@@ -55,6 +55,7 @@ export const commonItemProps = {
     thumbnail: ImageAssetSchema.nullish().describe(
       'An image which will be displayed in place of the item in some cases to reduce loading time and network traffic.',
     ),
+    layer: z.int().describe('The layer number of the item'),
   },
   source: {
     source: z

@@ -50,6 +50,8 @@ const ICONS = [
   'fast_rewind',
   'feature_search',
   'file_copy',
+  'flip_to_back',
+  'flip_to_front',
   'format_align_center',
   'format_align_left',
   'format_align_right',

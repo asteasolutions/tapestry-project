@@ -204,6 +204,7 @@ model Item {
   defaultPage                  Int?
   actionType                   ActionType?
   action                       String?
+  layer                        Int                       @default(0)
   outRels                      Rel[]                     @relation("from")
   inRels                       Rel[]                     @relation("to")
   comments                     Comment[]

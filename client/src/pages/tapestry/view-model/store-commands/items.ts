@@ -1,5 +1,5 @@
 import { Draft } from 'immer'
-import { max, merge, sortBy, sum } from 'lodash-es'
+import { max, merge, partition, sortBy, sum } from 'lodash-es'
 import { StoreMutationCommand } from 'tapestry-core-client/src/lib/store/index'
 import { tween } from 'tapestry-core-client/src/view-model/tweening'
 import {
@@ -26,6 +26,7 @@ import { itemUpload } from '../../../../services/item-upload'
 import {
   getGridDimensions,
   getGridIndices,
+  getMaxLayer,
   getMultiselectRectangle,
   GridState,
   reassignPresentationStep,
@@ -81,8 +82,10 @@ export function addAndPositionItems(
         ? translate(centerAtPoint, mul(-1, translation), scale)
         : centerAtPoint
     const move = vector(boundingRect.center, center)
+    let maxLayer = getMaxLayer(store)
     items.forEach((item) => {
       item.dto.position = translate(item.dto.position, move)
+      item.dto.layer = ++maxLayer
     })
 
     store.dispatch(insertItems(items), selectItems(items.map((i) => i.dto.id)))
@@ -351,5 +354,21 @@ export function removeFromGroup(itemId: string): StoreMutationCommand<EditableTa
         }),
       )
     }
+  }
+}
+
+export function reorderItems(
+  ids: OneOrMore<string>,
+  to: 'back' | 'front',
+): StoreMutationCommand<EditableTapestryViewModel> {
+  return (_, { store }) => {
+    const itemIds = new Set(ensureArray(ids))
+
+    const [frontItems, backItems] = partition(idMapToArray(store.get(`items`)), (i) =>
+      to === 'front' ? itemIds.has(i.dto.id) : !itemIds.has(i.dto.id),
+    )
+
+    const allItems = [...sortBy(backItems, ['layer']), ...sortBy(frontItems, ['layer'])]
+    store.dispatch(...allItems.map((item, layer) => updateItem(item.dto.id, { dto: { layer } })))
   }
 }

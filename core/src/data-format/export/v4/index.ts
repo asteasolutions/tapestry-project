@@ -25,35 +25,35 @@ const ItemNotesSchema = z.object({ notes: z.string().nullish() })
 const NullishTitleSchema = z.object({ title: z.string().nullish() })
 const CustomThumbnailSchema = z.object({ customThumbnail: z.string().nullish() })
 
-export const TextItemSchema = z.object({
+export const TextItemSchemaV4 = z.object({
   ...TextItemSchemaV3.shape,
   ...ItemGroupIdSchema.shape,
   ...ItemNotesSchema.shape,
   ...NullishTitleSchema.shape,
   ...CustomThumbnailSchema.shape,
 })
-export const AudioItemSchema = z.object({
+export const AudioItemSchemaV4 = z.object({
   ...AudioItemSchemaV3.shape,
   ...ItemGroupIdSchema.shape,
   ...ItemNotesSchema.shape,
   ...NullishTitleSchema.shape,
   ...CustomThumbnailSchema.shape,
 })
-export const BookItemSchema = z.object({
+export const BookItemSchemaV4 = z.object({
   ...BookItemSchemaV3.shape,
   ...ItemGroupIdSchema.shape,
   ...ItemNotesSchema.shape,
   ...NullishTitleSchema.shape,
   ...CustomThumbnailSchema.shape,
 })
-export const ImageItemSchema = z.object({
+export const ImageItemSchemaV4 = z.object({
   ...ImageItemSchemaV3.shape,
   ...ItemGroupIdSchema.shape,
   ...ItemNotesSchema.shape,
   ...NullishTitleSchema.shape,
   ...CustomThumbnailSchema.shape,
 })
-export const PDFItemSchema = z.object({
+export const PDFItemSchemaV4 = z.object({
   ...PDFItemSchemaV3.shape,
   ...ItemGroupIdSchema.shape,
   ...ItemNotesSchema.shape,
@@ -61,7 +61,7 @@ export const PDFItemSchema = z.object({
   ...CustomThumbnailSchema.shape,
   defaultPage: z.int().nullish(),
 })
-export const VideoItemSchema = z.object({
+export const VideoItemSchemaV4 = z.object({
   ...VideoItemSchemaV3.shape,
   ...ItemGroupIdSchema.shape,
   ...ItemNotesSchema.shape,
@@ -69,7 +69,7 @@ export const VideoItemSchema = z.object({
   thumbnail: ThumbnailSchema.nullish(),
   ...CustomThumbnailSchema.shape,
 })
-export const WebpageItemSchema = z.object({
+export const WebpageItemSchemaV4 = z.object({
   ...WebpageItemSchemaV3.shape,
   ...ItemGroupIdSchema.shape,
   ...ItemNotesSchema.shape,
@@ -80,15 +80,15 @@ export const WebpageItemSchema = z.object({
 })
 
 export const MediaItemSchema = z.discriminatedUnion('type', [
-  AudioItemSchema,
-  BookItemSchema,
-  ImageItemSchema,
-  PDFItemSchema,
-  VideoItemSchema,
-  WebpageItemSchema,
+  AudioItemSchemaV4,
+  BookItemSchemaV4,
+  ImageItemSchemaV4,
+  PDFItemSchemaV4,
+  VideoItemSchemaV4,
+  WebpageItemSchemaV4,
 ])
 
-const ItemSchema = z.discriminatedUnion('type', [...MediaItemSchema.options, TextItemSchema])
+const ItemSchema = z.discriminatedUnion('type', [...MediaItemSchema.options, TextItemSchemaV4])
 
 export const RelSchema = z.object({
   ...RelSchemaV3.shape,

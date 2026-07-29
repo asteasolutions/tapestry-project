@@ -1,5 +1,9 @@
-import { selectItem } from '../../../view-model/store-commands/tapestry'
-import { focusItems, focusPresentationStep } from '../../../view-model/store-commands/viewport'
+import { deselectAll } from '../../../view-model/store-commands/tapestry'
+import {
+  defaultBounceAnimation,
+  focusItems,
+  focusPresentationStep,
+} from '../../../view-model/store-commands/viewport'
 import { getAdjacentPresentationSteps, getSelectionItems } from '../../../view-model/utils'
 import { useTapestryConfig } from '../../tapestry'
 import { FocusButton } from '../../tapestry/focus-button'
@@ -9,7 +13,7 @@ import { ShortcutLabel } from '../shortcut-label'
 import { MaybeMenuItem, MenuItems } from '../toolbar'
 import { useKeyboardShortcuts } from './use-keyboard-shortcuts'
 
-type CommonMenuItem = 'focus' | 'presentation'
+type CommonMenuItem = 'focus' | 'presentation' | 'deselect'
 export type MultiselectMenuItem = MaybeMenuItem | CommonMenuItem
 
 export function useMultiselectMenu<M extends MultiselectMenuItem[]>(
@@ -30,9 +34,15 @@ export function useMultiselectMenu<M extends MultiselectMenuItem[]>(
   const adjacentPresentationSteps =
     groupId && getAdjacentPresentationSteps(groupId, presentationSteps)
 
+  const continuePresentation = (step: 'next' | 'prev') => {
+    if (adjacentPresentationSteps && adjacentPresentationSteps[step]) {
+      dispatch(focusPresentationStep(adjacentPresentationSteps[step].dto, defaultBounceAnimation))
+    }
+  }
+
   useKeyboardShortcuts(
     {
-      Escape: () => dispatch(selectItem(null)),
+      Escape: () => dispatch(deselectAll()),
     },
     [dispatch],
   )
@@ -61,7 +71,8 @@ export function useMultiselectMenu<M extends MultiselectMenuItem[]>(
     }
 
     if (menuItem === 'presentation') {
-      return adjacentPresentationSteps
+      return adjacentPresentationSteps &&
+        (adjacentPresentationSteps.next || adjacentPresentationSteps.prev)
         ? [
             {
               element: (
@@ -69,17 +80,13 @@ export function useMultiselectMenu<M extends MultiselectMenuItem[]>(
                   icon="arrow_back"
                   aria-label="Previous item"
                   disabled={!adjacentPresentationSteps.prev}
-                  onClick={() =>
-                    dispatch(
-                      focusPresentationStep(adjacentPresentationSteps.prev!.dto, {
-                        zoomEffect: 'bounce',
-                        duration: 1,
-                      }),
-                    )
-                  }
+                  onClick={() => continuePresentation('prev')}
                 />
               ),
-              tooltip: { side: 'bottom', children: 'Previous item' },
+              tooltip: {
+                side: 'bottom',
+                children: 'Previous item',
+              },
             },
             {
               element: (
@@ -87,20 +94,25 @@ export function useMultiselectMenu<M extends MultiselectMenuItem[]>(
                   icon="arrow_forward"
                   aria-label="Next item"
                   disabled={!adjacentPresentationSteps.next}
-                  onClick={() =>
-                    dispatch(
-                      focusPresentationStep(adjacentPresentationSteps.next!.dto, {
-                        zoomEffect: 'bounce',
-                        duration: 1,
-                      }),
-                    )
-                  }
+                  onClick={() => continuePresentation('next')}
                 />
               ),
-              tooltip: { side: 'bottom', children: 'Next item' },
+              tooltip: {
+                side: 'bottom',
+                children: 'Next item',
+              },
             },
           ]
         : null
+    }
+
+    if (menuItem === 'deselect') {
+      return {
+        element: (
+          <IconButton icon="cancel" aria-label="Deselect" onClick={() => dispatch(deselectAll())} />
+        ),
+        tooltip: { side: 'bottom', children: <ShortcutLabel text="Deselect">Esc</ShortcutLabel> },
+      }
     }
 
     return menuItem

@@ -12,7 +12,22 @@ import { config } from '../config'
 import puppeteer, { BrowserContext, Page } from 'puppeteer'
 import { Size } from 'tapestry-core/src/lib/geometry'
 import { WithOptional } from 'tapestry-core/src/type-utils'
+import { attatchAutoconsent, AutoconsentError } from './autoconsent'
 
+const AUTOCONSENT_TIMEOUT = 20_000
+
+// Helper function that wraps Puppeteer's page.evaluate to avoid TS errors for missing browser (DOM) types
+export async function pageEval<T extends unknown[], R>(
+  page: Page,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  callback: (global: any, ...args: T) => R,
+  ...args: T
+) {
+  // @ts-expect-error This will be executed in a browser context
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return
+  const globalHandle = await page.evaluateHandle(() => window)
+  return page.evaluate(callback, globalHandle, ...args)
+}
 export interface DownloadOpts {
   timeoutMs?: number
   maxBytes?: number
@@ -166,23 +181,40 @@ export interface WebpageConfig {
   url: string
   windowSize: Size
   timeout?: number
+  autoconsent?: boolean
   setupContext?: (context: BrowserContext) => Promise<void>
 }
 
 export async function initWebpage(
   page: Page,
   context: BrowserContext,
-  { url, windowSize, setupContext, timeout }: WithOptional<WebpageConfig, 'windowSize'>,
+  {
+    url,
+    windowSize,
+    setupContext,
+    timeout,
+    autoconsent,
+  }: WithOptional<WebpageConfig, 'windowSize'>,
 ) {
   console.log('>  Setting up context...')
   await setupContext?.(context)
+
   if (windowSize) {
     console.log('>  Configuring viewport...')
     await page.setViewport({ ...windowSize, deviceScaleFactor: 2 })
   }
   console.log(`>  Navigating to ${url}...`)
   await page.goto(url, { timeout: 120_000 })
+
   try {
+    let autoconsentPromise: Promise<string | void> | undefined
+    if (autoconsent) {
+      autoconsentPromise = attatchAutoconsent(page, AUTOCONSENT_TIMEOUT)
+        .then((res) => console.log(`Autoconsent completed: ${res}`))
+        .catch((e) =>
+          console.log(`Autoconsent failed: ${e instanceof AutoconsentError ? e.message : e}`),
+        )
+    }
     console.log(`>  Waiting for network idle...`)
     await page.waitForNetworkIdle({
       idleTime: 3000,
@@ -193,6 +225,11 @@ export async function initWebpage(
     // @ts-expect-error The following expression will be evaluated in the browser context
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-member-access
     await page.evaluate(() => document.fonts.ready)
+
+    if (autoconsent) {
+      console.log(`>  Waiting for autoconsent`)
+      await autoconsentPromise
+    }
   } catch (error) {
     console.warn('Error while waiting for the page to load. Proceeding anyway', error)
   }

@@ -48,7 +48,6 @@ export class SocketManager extends TypedEventTarget<TapestryUpdated | RTCSignall
       'rtc-signaling-message',
       this.tapestryId,
       (request: RTCSignalingMessage) => {
-        this.isSignallerActivated = true
         this.dispatchEvent('signaller-connected', { assignedPeerId: request.senderId })
         this.socket.on('rtc-signaling-message', (message) => this.onSignallerMessage(message))
       },
@@ -79,7 +78,10 @@ export class SocketManager extends TypedEventTarget<TapestryUpdated | RTCSignall
 
   activateSignaller() {
     if (!this.isSignallerActivated) {
-      this.subscribeToSignalingService()
+      this.isSignallerActivated = true
+      if (this.connected) {
+        this.subscribeToSignalingService()
+      }
     }
   }
 
