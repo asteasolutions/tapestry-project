@@ -305,6 +305,26 @@ export function focusGroup(
   }
 }
 
+export function focusRel(id: string): StoreMutationCommand<TapestryViewModel> {
+  return (_, { store }) => {
+    const rel = store.get('rels')[id]
+    if (!rel) return
+
+    store.dispatch(focusItems([rel.dto.from.itemId, rel.dto.to.itemId]))
+  }
+}
+
+export function focusMultiselection(): StoreMutationCommand<TapestryViewModel> {
+  return (_, { store }) => {
+    const { itemIds, groupIds } = store.get('selection', ['itemIds', 'groupIds'])
+    const items = idMapToArray(store.get('items'))
+      .filter((i) => itemIds.has(i.dto.id) || (i.dto.groupId && groupIds.has(i.dto.groupId)))
+      .map((i) => i.dto.id)
+
+    store.dispatch(focusItems(items))
+  }
+}
+
 export function focusPresentationStep(
   step: PresentationStep,
   animate?: FocusOptions['animate'],

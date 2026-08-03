@@ -165,13 +165,16 @@ export function itemsFocusRect<I extends ItemViewModel>(
 }
 
 export function zoomToCenter(tapestry: TapestryViewModel, step: number) {
+  const { width, height } = tapestry.viewport.size
+  return zoomToPoint(tapestry, step, { x: width / 2, y: height / 2 })
+}
+
+export function zoomToPoint(tapestry: TapestryViewModel, step: number, point: Point) {
   const {
-    size: { height, width },
     transform: { scale, translation },
   } = tapestry.viewport
-  const center = { x: width / 2, y: height / 2 }
   const minScale = getMinScale(tapestry.viewport, idMapToArray(tapestry.items))
-  return scaleBy(scale, translation, step, center, minScale, MAX_SCALE)
+  return scaleBy(scale, translation, step, point, minScale, MAX_SCALE)
 }
 
 export function zoomToFit(
