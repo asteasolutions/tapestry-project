@@ -224,8 +224,10 @@ export function getTheme(tapestry: TapestryViewModel) {
   return THEMES[tapestry.theme]
 }
 
-const MIN_ZOOM_CONTENT_RATIO = 0.5
-const MAX_MIN_SCALE = 0.5
+//This coefficient restricts the maximum zoom-out by requiring the content's box
+//to occupy at least 75% of the viewports dimensions
+const MIN_ZOOM_CONTENT_RATIO = 0.75
+const MAX_MIN_SCALE = 0.75
 export function getMinScale<I extends ItemViewModel>(viewport: Viewport, items: I[]) {
   const boundingRect = getBoundingRectangle(items)
   const widthRatio = (MIN_ZOOM_CONTENT_RATIO * viewport.size.width) / boundingRect.width
@@ -236,7 +238,7 @@ export function getMinScale<I extends ItemViewModel>(viewport: Viewport, items: 
   return Math.min(scale, widthRatio, heightRatio, MAX_MIN_SCALE)
 }
 
-const TRANSLATION_RANGE_PADDING: Vector = { dx: 20, dy: 20 }
+const TRANSLATION_RANGE_PADDING: Vector = { dx: 100, dy: 100 }
 export function getTranslationRange(tapestry: TapestryViewModel): [Vector, Vector] {
   const {
     transform: { scale, translation },
