@@ -4,7 +4,7 @@ import { HexColorSchema, IdentifiableSchema, PointSchema, SizeSchema } from './c
 export const KNOWN_WEBPAGE_TYPES = ['youtube', 'vimeo', 'iaWayback', 'iaAudio', 'iaVideo'] as const
 export type WebpageType = (typeof KNOWN_WEBPAGE_TYPES)[number]
 
-export const ACTION_BUTTON_TYPE = ['internalLink', 'externalLink'] as const
+export const ACTION_TYPE = ['internalLink', 'externalLink'] as const
 
 export const ImageAssetRenditionSchema = z.object({
   source: z.string().describe('The URL of the image.'),
@@ -66,6 +66,13 @@ export const commonItemProps = {
     startTime: z.number().nullish().describe('Optional start time for audio or video content.'),
     stopTime: z.number().nullish().describe('Optional stop time for audio or video content.'),
   },
+  action: {
+    actionType: z
+      .enum(ACTION_TYPE)
+      .nullish()
+      .describe('The type of action that the item performs.'),
+    action: z.string().nullish().describe('The action associated with the item.'),
+  },
 }
 
 export const TextItemSchema = z.object({
@@ -80,8 +87,7 @@ export const TextItemSchema = z.object({
 export const ActionButtonItemSchema = z.object({
   ...commonItemProps.base,
   type: z.literal('actionButton').describe('The type of this item.'),
-  actionType: z.enum(ACTION_BUTTON_TYPE).describe('The type of action that the button performs.'),
-  action: z.string().nullish().describe('The action associated with the button.'),
+  ...commonItemProps.action,
   text: z.string().describe('The HTML content of this button.'),
   backgroundColor: HexColorSchema.nullish().describe(
     'An optional background color on top of which the HTML-formatted text will be displayed.',
@@ -105,6 +111,7 @@ export const ImageItemSchema = z.object({
   type: z.literal('image').describe('The type of this item.'),
   ...commonItemProps.base,
   ...commonItemProps.source,
+  ...commonItemProps.action,
 })
 
 export const PdfItemSchema = z.object({

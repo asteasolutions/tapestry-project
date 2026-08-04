@@ -218,7 +218,7 @@ export abstract class ItemController implements TapestryStageController {
 
   protected handleActionItemClick(id: Id) {
     const item = this.store.get(`items.${id}.dto`)
-    if (item?.type === 'actionButton' && item.action) {
+    if ((item?.type === 'actionButton' || item?.type === 'image') && item.action) {
       if (item.actionType === 'internalLink') {
         const params = new URLSearchParams(item.action)
         return this.tryNavigateToInternalState(params, { animate: defaultBounceAnimation })

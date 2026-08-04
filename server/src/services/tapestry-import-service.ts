@@ -260,7 +260,7 @@ export class TapestryImportService {
                   backgroundColor: isMediaItem(i) ? undefined : i.backgroundColor,
                   text: isMedia ? undefined : i.text,
 
-                  ...(i.type === 'actionButton'
+                  ...(i.type === 'actionButton' || i.type === 'image'
                     ? actionMap(itemIdMap, groupIdMap, i.action, i.actionType)
                     : {}),
 

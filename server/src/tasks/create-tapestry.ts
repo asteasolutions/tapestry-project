@@ -169,7 +169,7 @@ async function cloneItems(
         'actionType',
       ]),
       id: itemIdMap[item.id],
-      ...(item.type === 'actionButton'
+      ...(item.type === 'actionButton' || item.type === 'image'
         ? actionMap(itemIdMap, groupIdMap, item.action, item.actionType)
         : {}),
       groupId: groupIdMap[item.groupId ?? ''],

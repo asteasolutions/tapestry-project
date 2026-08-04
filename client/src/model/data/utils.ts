@@ -101,6 +101,8 @@ export const EDITABLE_MEDIA_ITEM_PROPS = [
   'stopTime',
   'webpageType',
   'defaultPage',
+  'action',
+  'actionType',
 ] as const satisfies (KeysOfUnion<MediaItemDto> & KeysOfUnion<MediaItemUpdateDto>)[]
 export type EditableMediaItemProps = (typeof EDITABLE_MEDIA_ITEM_PROPS)[number]
 
@@ -235,7 +237,6 @@ export function createTextItem(text = '', tapestryId: string): TextItemCreateDto
 export function createActionButtonItem(text = '', tapestryId: string): ActionButtonItemCreateDto {
   return {
     type: 'actionButton',
-    actionType: 'externalLink',
     dropShadow: false,
     position: ORIGIN,
     size: itemSizes.actionButton,
