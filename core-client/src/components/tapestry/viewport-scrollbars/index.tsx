@@ -6,7 +6,7 @@ import { useTapestryConfig } from '..'
 import { getScrollbarPositions } from '../../../../src/view-model/utils'
 import styles from './styles.module.css'
 
-const SCROLLBAR_DISAPPEAR_DELAY = 500
+const SCROLLBAR_DISAPPEAR_DELAY = 500https://github.com/asteasolutions/tapestry-project/pull/90/commits
 
 export function ViewportScrollbars() {
   const { useStoreData } = useTapestryConfig()
@@ -28,6 +28,7 @@ export function ViewportScrollbars() {
     return () => clearTimeout(timer)
   }, [viewport.lastUpdateTimestamp])
 
+  // Avoid heavy scrollbar position re-calculation in case the scrollbars are not visible
   if (isVisible) {
     scrollbarPositionsRef.current = getScrollbarPositions(viewport, idMapToArray(items))
   }
