@@ -54,10 +54,17 @@ import { Easing } from '@tweenjs/tween.js'
 import { CONTINUOUS_ZOOM_SPEED } from './store-commands/viewport.js'
 
 const CONTENT_FIT_PADDING = 16
+export const DEFAULT_VIEWPORT_LIMITS = {
+  minZoomContentRatio: MIN_ZOOM_RATIO_VIEW_MODE,
+  maxOutsideRatio: MAX_OUTSIDE_RATIO_VIEW_MODE,
+}
 
 export function viewModelFromTapestry(
   tapestry: Tapestry,
   presentationSteps: PresentationStep[],
+  viewportLimits: Partial<
+    Pick<Viewport, 'minZoomContentRatio' | 'maxOutsideRatio'>
+  > = DEFAULT_VIEWPORT_LIMITS,
 ): TapestryViewModel {
   const presentationStepViewModels = presentationSteps.map((dto) => ({ dto }))
   return {
@@ -76,8 +83,9 @@ export function viewModelFromTapestry(
     },
     viewport: {
       transform: IDENTITY_TRANSFORM,
-      minZoomContentRatio: MIN_ZOOM_RATIO_VIEW_MODE,
-      maxOutsideRatio: MAX_OUTSIDE_RATIO_VIEW_MODE,
+      minZoomContentRatio:
+        viewportLimits.minZoomContentRatio ?? DEFAULT_VIEWPORT_LIMITS.minZoomContentRatio,
+      maxOutsideRatio: viewportLimits.maxOutsideRatio ?? DEFAULT_VIEWPORT_LIMITS.maxOutsideRatio,
       size: {
         width: 0,
         height: 0,

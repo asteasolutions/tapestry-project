@@ -18,7 +18,7 @@ export const MAX_RESTRICTED_SCALE = 1.5
 export const ZOOM_STEP = 0.1
 export const MAX_INITIAL_SCALE = 1
 export const MIN_ZOOM_RATIO_EDIT_MODE = 0.5
-export const MAX_OUTSIDE_RATIO_EDIT_MODE = 0.9
+export const MAX_OUTSIDE_RATIO_EDIT_MODE = 0.95
 export const MIN_ZOOM_RATIO_VIEW_MODE = 0.75
 export const MAX_OUTSIDE_RATIO_VIEW_MODE = 0.55
 

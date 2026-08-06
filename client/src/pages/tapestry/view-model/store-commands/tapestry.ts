@@ -56,7 +56,20 @@ export function setInteractionMode(
   mode: InteractionMode,
 ): StoreMutationCommand<EditableTapestryViewModel> {
   return (_, { store }) => {
-    if (mode === store.get('interactionMode')) return
+    const minZoomContentRatio =
+      mode === 'edit' ? MIN_ZOOM_RATIO_EDIT_MODE : MIN_ZOOM_RATIO_VIEW_MODE
+    const maxOutsideRatio =
+      mode === 'edit' ? MAX_OUTSIDE_RATIO_EDIT_MODE : MAX_OUTSIDE_RATIO_VIEW_MODE
+
+    const currentViewport = store.get('viewport')
+    const currentMode = store.get('interactionMode')
+
+    const isAlreadyUpdated =
+      currentMode === mode &&
+      currentViewport.minZoomContentRatio === minZoomContentRatio &&
+      currentViewport.maxOutsideRatio === maxOutsideRatio
+
+    if (isAlreadyUpdated) return
 
     store.dispatch(
       selectItem(null),
@@ -64,10 +77,8 @@ export function setInteractionMode(
         model.interactionMode = mode
         model.viewport = {
           ...model.viewport,
-          maxOutsideRatio:
-            mode === 'edit' ? MAX_OUTSIDE_RATIO_EDIT_MODE : MAX_OUTSIDE_RATIO_VIEW_MODE,
-          minZoomContentRatio:
-            mode === 'edit' ? MIN_ZOOM_RATIO_EDIT_MODE : MIN_ZOOM_RATIO_VIEW_MODE,
+          minZoomContentRatio,
+          maxOutsideRatio,
         }
         model.disableOptimizations = mode === 'edit'
       },
