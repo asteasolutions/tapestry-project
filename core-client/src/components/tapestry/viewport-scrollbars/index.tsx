@@ -6,7 +6,7 @@ import { useTapestryConfig } from '..'
 import { getScrollbarPositions } from '../../../../src/view-model/utils'
 import styles from './styles.module.css'
 
-const SCROLLBAR_DISAPPEAR_DELAY = 500https://github.com/asteasolutions/tapestry-project/pull/90/commits
+const SCROLLBAR_DISAPPEAR_DELAY = 500
 
 export function ViewportScrollbars() {
   const { useStoreData } = useTapestryConfig()
