@@ -262,7 +262,7 @@ export class GestureDetector extends TypedEventTarget<
             hoverTarget: obtainHoverTarget(this.stage, event),
             originalEvent: event,
           })
-        }, 200)
+        }, 250)
       }
     }
 

@@ -5,8 +5,6 @@ import {
   LinearTransform,
   Vector,
   Size,
-  coordMax,
-  coordMin,
   add,
   Rectangle,
   neg,
@@ -14,6 +12,7 @@ import {
   mul,
   IDENTITY_TRANSFORM,
   ORIGIN,
+  clampCoords,
 } from 'tapestry-core/src/lib/geometry.js'
 import { StoreMutationCommand } from '../../lib/store/index.js'
 import {
@@ -24,6 +23,8 @@ import {
   getMinScale,
   getGroupMembers,
   getZoomParameters,
+  getBoundingRectangle,
+  getSelectionItems,
 } from '../utils.js'
 import { idMapToArray, pickById } from 'tapestry-core/src/utils.js'
 import {
@@ -316,12 +317,8 @@ export function focusRel(id: string): StoreMutationCommand<TapestryViewModel> {
 
 export function focusMultiselection(): StoreMutationCommand<TapestryViewModel> {
   return (_, { store }) => {
-    const { itemIds, groupIds } = store.get('selection', ['itemIds', 'groupIds'])
-    const items = idMapToArray(store.get('items'))
-      .filter((i) => itemIds.has(i.dto.id) || (i.dto.groupId && groupIds.has(i.dto.groupId)))
-      .map((i) => i.dto.id)
-
-    store.dispatch(focusItems(items))
+    const items = getSelectionItems(store.get()).map((i) => i.dto.id)
+    store.dispatch(focusItems(items, { addToolbarPadding: true }))
   }
 }
 
@@ -347,8 +344,9 @@ export function panViewport({
 }: Partial<Vector>): StoreMutationCommand<TapestryViewModel> {
   return (_, { store }) => {
     const translation = add(store.get('viewport.transform.translation'), { dx, dy })
-    const [min, max] = getTranslationRange(store.get())
-    const clippedTranslation = coordMax(min, coordMin(translation, max))
+    const { viewport, items } = store.get(['viewport', 'items'])
+    const [min, max] = getTranslationRange(viewport, getBoundingRectangle(idMapToArray(items)))
+    const clippedTranslation = clampCoords(translation, min, max)
 
     store.dispatch(transformViewport({ translation: clippedTranslation }))
   }

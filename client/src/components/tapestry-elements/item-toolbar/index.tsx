@@ -258,7 +258,7 @@ export function useEditMoreMenu({
         to,
       ),
       setSnackbar({
-        text: 'Z-order updated (deselect the item to see the change)',
+        text: 'Layer updated (deselect the item to see the change)',
         duration: 3,
       }),
     )

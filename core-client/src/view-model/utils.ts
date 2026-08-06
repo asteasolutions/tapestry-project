@@ -1,6 +1,7 @@
 import { clamp } from 'lodash-es'
 import {
   add,
+  clampCoords,
   coordMax,
   coordMin,
   IDENTITY_TRANSFORM,
@@ -169,12 +170,31 @@ export function zoomToCenter(tapestry: TapestryViewModel, step: number) {
   return zoomToPoint(tapestry, step, { x: width / 2, y: height / 2 })
 }
 
-export function zoomToPoint(tapestry: TapestryViewModel, step: number, point: Point) {
+export function zoomToPoint(
+  tapestry: TapestryViewModel,
+  step: number,
+  point: Point,
+): LinearTransform {
   const {
     transform: { scale, translation },
   } = tapestry.viewport
   const minScale = getMinScale(tapestry.viewport, idMapToArray(tapestry.items))
-  return scaleBy(scale, translation, step, point, minScale, MAX_SCALE)
+  const result = scaleBy(scale, translation, step, point, minScale, MAX_SCALE)
+
+  const [min, max] = getTranslationRange(
+    {
+      size: tapestry.viewport.size,
+      transform: {
+        scale: result.scale,
+        translation: mul(result.scale < 1 ? result.scale : 1 / result.scale, translation),
+      },
+    },
+    getBoundingRectangle(idMapToArray(tapestry.items)),
+  )
+  return {
+    ...result,
+    translation: clampCoords(result.translation, min, max),
+  }
 }
 
 export function zoomToFit(
@@ -240,14 +260,14 @@ export function getMinScale<I extends ItemViewModel>(viewport: Viewport, items: 
 }
 
 const TRANSLATION_RANGE_PADDING: Vector = { dx: 20, dy: 20 }
-export function getTranslationRange(tapestry: TapestryViewModel): [Vector, Vector] {
-  const {
-    transform: { scale, translation },
-    size: { width, height },
-  } = tapestry.viewport
+export function getTranslationRange(
+  { transform, size }: Pick<Viewport, 'size' | 'transform'>,
+  boundingRect: Rectangle,
+): [Vector, Vector] {
+  const { scale, translation } = transform
+  const { width, height } = size
   const viewportOffset = { dx: width, dy: height }
 
-  const boundingRect = getBoundingRectangle(idMapToArray(tapestry.items))
   const topLeftOffset = { dx: boundingRect.left, dy: boundingRect.top }
   const bottomRightOffset = { dx: boundingRect.right, dy: boundingRect.bottom }
 
