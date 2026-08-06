@@ -146,6 +146,8 @@ export const WebpageItemSchema = z.object({
     ),
 })
 
+export const ACTION_ITEM_TYPES = ['image', 'actionButton'] as const satisfies ItemType[]
+
 export const MediaItemSchema = z.discriminatedUnion('type', [
   AudioItemSchema,
   BookItemSchema,
@@ -184,3 +186,4 @@ export type Item = z.infer<typeof ItemSchema>
 
 export type ItemType = Item['type']
 export type MediaItemType = MediaItem['type']
+export type ActionItemType = (typeof ACTION_ITEM_TYPES)[number]

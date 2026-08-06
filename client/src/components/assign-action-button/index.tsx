@@ -6,20 +6,17 @@ import {
 } from 'tapestry-core-client/src/components/lib/buttons'
 import { Input } from 'tapestry-core-client/src/components/lib/input'
 import { Modal } from 'tapestry-core-client/src/components/lib/modal'
-import {
-  ActionButtonItemDto,
-  ImageItemDto,
-} from 'tapestry-shared/src/data-transfer/resources/dtos/item'
+import { ItemDto } from 'tapestry-shared/src/data-transfer/resources/dtos/item'
 import { useItemPicker } from '../item-picker/use-item-picker'
 import { useDispatch, useTapestryData } from '../../pages/tapestry/tapestry-providers'
 import { idMapToArray } from 'tapestry-core/src/utils'
 import { useGenerateItemLink, useTapestryPath } from '../../hooks/use-tapestry-path'
 import styles from './styles.module.css'
 import { updateItem } from '../../pages/tapestry/view-model/store-commands/items'
-import { ActionButtonItem } from 'tapestry-core/src/data-format/schemas/item'
+import { ActionButtonItem, ActionItemType } from 'tapestry-core/src/data-format/schemas/item'
 import { Id } from 'tapestry-core/src/data-format/schemas/common'
 
-type ActionItemDto = ActionButtonItemDto | ImageItemDto
+type ActionItemDto = Extract<ItemDto, { type: ActionItemType }>
 
 interface AssignActionModalProps {
   onClose: () => unknown
