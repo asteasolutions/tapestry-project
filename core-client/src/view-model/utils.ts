@@ -238,7 +238,8 @@ export function getMinScale<I extends ItemViewModel>(viewport: Viewport, items: 
   return Math.min(scale, widthRatio, heightRatio, MAX_MIN_SCALE)
 }
 
-const TRANSLATION_RANGE_PADDING: Vector = { dx: 100, dy: 100 }
+const MAX_OUTSIDE_RATIO = 0.55
+const MIN_VISIBLE_RATIO = 1 - MAX_OUTSIDE_RATIO
 export function getTranslationRange(tapestry: TapestryViewModel): [Vector, Vector] {
   const {
     transform: { scale, translation },
@@ -250,11 +251,14 @@ export function getTranslationRange(tapestry: TapestryViewModel): [Vector, Vecto
   const topLeftOffset = { dx: boundingRect.left, dy: boundingRect.top }
   const bottomRightOffset = { dx: boundingRect.right, dy: boundingRect.bottom }
 
-  const minTranslation: Vector = add(neg(mul(scale, bottomRightOffset)), TRANSLATION_RANGE_PADDING)
-  const maxTranslation = add(
-    viewportOffset,
+  const minTranslation: Vector = add(
+    neg(mul(scale, bottomRightOffset)),
+    mul(MIN_VISIBLE_RATIO, viewportOffset),
+  )
+
+  const maxTranslation: Vector = add(
+    mul(MAX_OUTSIDE_RATIO, viewportOffset),
     neg(mul(scale, topLeftOffset)),
-    neg(TRANSLATION_RANGE_PADDING),
   )
 
   return [coordMin(minTranslation, translation), coordMax(maxTranslation, translation)]
@@ -280,8 +284,8 @@ export function getScrollbarPositions<I extends ItemViewModel>(
     height: viewportSize.height / scale,
   }
   const canvasPadding: Vector = {
-    dx: viewportSizeOnTapestry.width - TRANSLATION_RANGE_PADDING.dx / scale,
-    dy: viewportSizeOnTapestry.height - TRANSLATION_RANGE_PADDING.dy / scale,
+    dx: viewportSizeOnTapestry.width * MAX_OUTSIDE_RATIO,
+    dy: viewportSizeOnTapestry.height * MAX_OUTSIDE_RATIO,
   }
   const canvasSize: Size = {
     width: tapestryBoundingBox.width + 2 * canvasPadding.dx,
