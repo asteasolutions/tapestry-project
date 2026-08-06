@@ -9,6 +9,12 @@ import { idMapToArray } from 'tapestry-core/src/utils'
 import { COLLABORATOR_COLORS } from 'tapestry-core-client/src/theme'
 import { PublicUserProfileDto } from 'tapestry-shared/src/data-transfer/resources/dtos/user'
 import * as baseCommands from 'tapestry-core-client/src/view-model/store-commands/tapestry'
+import {
+  MAX_OUTSIDE_RATIO_EDIT_MODE,
+  MAX_OUTSIDE_RATIO_VIEW_MODE,
+  MIN_ZOOM_RATIO_EDIT_MODE,
+  MIN_ZOOM_RATIO_VIEW_MODE,
+} from 'tapestry-core-client/src/view-model'
 
 export const addViewportObstruction = convertCommand(baseCommands.addViewportObstruction)
 export const deselectAll = convertCommand(baseCommands.deselectAll)
@@ -56,6 +62,13 @@ export function setInteractionMode(
       selectItem(null),
       (model) => {
         model.interactionMode = mode
+        model.viewport = {
+          ...model.viewport,
+          maxOutsideRatio:
+            mode === 'edit' ? MAX_OUTSIDE_RATIO_EDIT_MODE : MAX_OUTSIDE_RATIO_VIEW_MODE,
+          minZoomContentRatio:
+            mode === 'edit' ? MIN_ZOOM_RATIO_EDIT_MODE : MIN_ZOOM_RATIO_VIEW_MODE,
+        }
         model.disableOptimizations = mode === 'edit'
       },
       setSnackbar(`You are in ${mode === 'edit' ? 'Author' : 'Viewer'} mode`),
