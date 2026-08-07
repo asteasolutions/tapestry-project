@@ -52,7 +52,8 @@ import { Easing } from '@tweenjs/tween.js'
 import { CONTINUOUS_ZOOM_SPEED } from './store-commands/viewport.js'
 
 const CONTENT_FIT_PADDING = 16
-export const DEFAULT_VIEWPORT_LIMITS = {
+export type ViewportLimits = Pick<Viewport, 'minZoomContentRatio' | 'maxTranslationRatio'>
+export const DEFAULT_VIEWPORT_LIMITS: ViewportLimits = {
   minZoomContentRatio: 0.75,
   maxTranslationRatio: 0.55,
 }
@@ -60,7 +61,7 @@ export const DEFAULT_VIEWPORT_LIMITS = {
 export function viewModelFromTapestry(
   tapestry: Tapestry,
   presentationSteps: PresentationStep[],
-  viewportLimits?: Partial<Pick<Viewport, 'minZoomContentRatio' | 'maxTranslationRatio'>>,
+  viewportLimits?: ViewportLimits,
 ): TapestryViewModel {
   const presentationStepViewModels = presentationSteps.map((dto) => ({ dto }))
   return {
@@ -249,7 +250,6 @@ export function getTranslationRange(tapestry: TapestryViewModel): [Vector, Vecto
     maxTranslationRatio,
   } = tapestry.viewport
 
-  const minTanslationRatio = 1 - maxTranslationRatio
   const viewportOffset = { dx: width, dy: height }
 
   const boundingRect = getBoundingRectangle(idMapToArray(tapestry.items))
@@ -258,7 +258,7 @@ export function getTranslationRange(tapestry: TapestryViewModel): [Vector, Vecto
 
   const minTranslation: Vector = add(
     neg(mul(scale, bottomRightOffset)),
-    mul(minTanslationRatio, viewportOffset),
+    mul(1 - maxTranslationRatio, viewportOffset),
   )
 
   const maxTranslation: Vector = add(

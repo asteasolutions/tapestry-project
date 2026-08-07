@@ -61,21 +61,14 @@ export function setInteractionMode(
   return (_, { store }) => {
     if (mode === store.get('interactionMode')) return
 
-    const minZoomContentRatio =
-      mode === 'edit'
-        ? EDIT_VIEWPORT_LIMITS.minZoomContentRatio
-        : DEFAULT_VIEWPORT_LIMITS.minZoomContentRatio
-    const maxTranslationRatio =
-      mode === 'edit'
-        ? EDIT_VIEWPORT_LIMITS.maxTranslationRatio
-        : DEFAULT_VIEWPORT_LIMITS.maxTranslationRatio
-
     store.dispatch(
       selectItem(null),
       (model) => {
         model.interactionMode = mode
-        model.viewport.minZoomContentRatio = minZoomContentRatio
-        model.viewport.maxTranslationRatio = maxTranslationRatio
+        model.viewport = {
+          ...model.viewport,
+          ...(mode === 'edit' ? EDIT_VIEWPORT_LIMITS : DEFAULT_VIEWPORT_LIMITS),
+        }
         model.disableOptimizations = mode === 'edit'
       },
       setSnackbar(`You are in ${mode === 'edit' ? 'Author' : 'Viewer'} mode`),

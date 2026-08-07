@@ -171,16 +171,7 @@ export function fromTapestryDto(
 ): EditableTapestryViewModel {
   const presentationStepViewModels = presentationSteps.map((dto) => ({ dto }))
 
-  const viewportLimits = {
-    minZoomContentRatio:
-      mode === 'edit'
-        ? EDIT_VIEWPORT_LIMITS.minZoomContentRatio
-        : DEFAULT_VIEWPORT_LIMITS.minZoomContentRatio,
-    maxTranslationRatio:
-      mode === 'edit'
-        ? EDIT_VIEWPORT_LIMITS.maxTranslationRatio
-        : DEFAULT_VIEWPORT_LIMITS.maxTranslationRatio,
-  }
+  const viewportLimits = mode === 'edit' ? EDIT_VIEWPORT_LIMITS : DEFAULT_VIEWPORT_LIMITS
 
   const baseViewModel = viewModelFromTapestry(
     {

@@ -25,15 +25,13 @@ export interface Viewport {
   readonly lastUpdateTimestamp?: number
   readonly ready: boolean
   readonly isZoomingLocked?: boolean
-  //Minimum ratio of the content box that must remain visible inside the viewport when zoomed out.
-  //- View Mode: 0.75 (requires 75% of content visible)
-  //- Edit Mode: 0.50 (requires 50% of content visible)
+  //Minimum ratio of the viewport, which should be filled with content when zoomed out.
+  //- Example value: 0.75 (requires 75% of content visible)
   readonly minZoomContentRatio: number
 
   //Maximum fraction of the viewport dimensions allowed to overflow outside the content bounds when panning.
   //Restricts how far the canvas can be translated relative to the screen.
-  //- View Mode: 0.55 (Max 55% off-canvas - guarantees at least 45% of the screen covers content)
-  //- Edit Mode: 0.95 (Max 95% off-canvas - provides maximum reach for elements near the edges)
+  //- Example value: 0.55 (Max 55% off-canvas - guarantees at least 45% of the screen covers content)
   readonly maxTranslationRatio: number
 }
 
