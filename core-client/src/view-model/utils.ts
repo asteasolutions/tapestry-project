@@ -1,8 +1,7 @@
 import { clamp } from 'lodash-es'
 import {
   add,
-  coordMax,
-  coordMin,
+  clampCoords,
   IDENTITY_TRANSFORM,
   linearMap,
   LinearTransform,
@@ -173,13 +172,31 @@ export function itemsFocusRect<I extends ItemViewModel>(
 }
 
 export function zoomToCenter(tapestry: TapestryViewModel, step: number) {
+  const { width, height } = tapestry.viewport.size
+  return zoomToPoint(tapestry, step, { x: width / 2, y: height / 2 })
+}
+
+export function zoomToPoint(
+  tapestry: TapestryViewModel,
+  step: number,
+  point: Point,
+): LinearTransform {
   const {
-    size: { height, width },
     transform: { scale, translation },
   } = tapestry.viewport
-  const center = { x: width / 2, y: height / 2 }
   const minScale = getMinScale(tapestry.viewport, idMapToArray(tapestry.items))
-  return scaleBy(scale, translation, step, center, minScale, MAX_SCALE)
+  const result = scaleBy(scale, translation, step, point, minScale, MAX_SCALE)
+
+  const [min, max] = getTranslationRange(
+    tapestry.viewport.size,
+    result.scale,
+    getBoundingRectangle(idMapToArray(tapestry.items)),
+    tapestry.viewport.maxTranslationRatio,
+  )
+  return {
+    ...result,
+    translation: clampCoords(result.translation, min, max),
+  }
 }
 
 export function zoomToFit(
@@ -243,16 +260,14 @@ export function getMinScale<I extends ItemViewModel>(viewport: Viewport, items: 
   return Math.min(scale, widthRatio, heightRatio, MAX_MIN_SCALE)
 }
 
-export function getTranslationRange(tapestry: TapestryViewModel): [Vector, Vector] {
-  const {
-    transform: { scale, translation },
-    size: { width, height },
-    maxTranslationRatio,
-  } = tapestry.viewport
-
+export function getTranslationRange(
+  { width, height }: Size,
+  scale: number,
+  boundingRect: Rectangle,
+  maxTranslationRatio: number,
+): [Vector, Vector] {
   const viewportOffset = { dx: width, dy: height }
 
-  const boundingRect = getBoundingRectangle(idMapToArray(tapestry.items))
   const topLeftOffset = { dx: boundingRect.left, dy: boundingRect.top }
   const bottomRightOffset = { dx: boundingRect.right, dy: boundingRect.bottom }
 
@@ -266,7 +281,7 @@ export function getTranslationRange(tapestry: TapestryViewModel): [Vector, Vecto
     neg(mul(scale, topLeftOffset)),
   )
 
-  return [coordMin(minTranslation, translation), coordMax(maxTranslation, translation)]
+  return [minTranslation, maxTranslation]
 }
 
 export interface ScrollbarPosition {
