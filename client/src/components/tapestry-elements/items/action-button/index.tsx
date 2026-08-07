@@ -15,7 +15,7 @@ import { useItemToolbar } from '../../item-toolbar/use-item-toolbar'
 import { TapestryItem } from '../tapestry-item'
 import { ToggleFormatButton, tooltip } from '../text/toggle-format-button'
 import { textItemToolbar } from '../text/toolbar'
-import { AssignAction } from './assign-action'
+import { AssignActionButton } from '../../../assign-action-button'
 import { buildToolbarMenu } from '../../item-toolbar'
 
 const controls = {
@@ -100,7 +100,7 @@ export const ActionButtonItem = memo(({ id }: TapestryItemProps) => {
             },
             'separator',
             {
-              element: <AssignAction dto={dto} />,
+              element: <AssignActionButton dto={dto} />,
               tooltip: { side: 'bottom', children: 'Assign action' },
               badge: !dto.action,
             },
