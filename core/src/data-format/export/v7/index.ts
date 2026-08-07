@@ -35,13 +35,19 @@ const V7Props = {
   layer: z.int().default(0),
 }
 
+const actionProps = {
+  actionType: z.enum(['internalLink', 'externalLink']).nullish(),
+  action: z.string().nullish(),
+}
+
 export const TextItemSchemaV7 = z.object({
   ...TextItemSchemaV4.omit({ customThumbnail: true }).shape,
   ...V7Props,
 })
 export const ActionButtonItemSchemaV7 = z.object({
-  ...ActionButtonItemSchemaV6.omit({ thumbnail: true }).shape,
+  ...ActionButtonItemSchemaV6.omit({ thumbnail: true, actionType: true }).shape,
   ...V7Props,
+  actionType: actionProps.actionType,
 })
 export const AudioItemSchemaV7 = z.object({
   ...AudioItemSchemaV4.omit(omit(mediaItemOmitMask, 'thumbnail')).shape,
@@ -54,6 +60,7 @@ export const BookItemSchemaV7 = z.object({
 export const ImageItemSchemaV7 = z.object({
   ...ImageItemSchemaV4.omit(omit(mediaItemOmitMask, 'thumbnail')).shape,
   ...V7Props,
+  ...actionProps,
 })
 export const PDFItemSchemaV7 = z.object({
   ...PDFItemSchemaV5.omit(mediaItemOmitMask).shape,

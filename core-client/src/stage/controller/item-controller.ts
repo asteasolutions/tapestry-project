@@ -33,7 +33,7 @@ import {
   toggleItemSelection,
 } from '../../view-model/store-commands/tapestry'
 import { isSingleGroupSelected } from '../../view-model/utils'
-import { isHTTPURL } from 'tapestry-core/src/utils'
+import { hasActionType, isHTTPURL } from 'tapestry-core/src/utils'
 import { Id } from 'tapestry-core/src/data-format/schemas/common'
 import { defaultBounceAnimation, FocusOptions } from '../../view-model/store-commands/viewport'
 
@@ -218,7 +218,7 @@ export abstract class ItemController implements TapestryStageController {
 
   protected handleActionItemClick(id: Id) {
     const item = this.store.get(`items.${id}.dto`)
-    if (item?.type === 'actionButton' && item.action) {
+    if (item && hasActionType(item) && item.action) {
       if (item.actionType === 'internalLink') {
         const params = new URLSearchParams(item.action)
         return this.tryNavigateToInternalState(params, { animate: defaultBounceAnimation })
