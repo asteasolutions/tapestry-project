@@ -1,32 +1,24 @@
 import clsx from 'clsx'
 import { clamp } from 'lodash-es'
-import { useEffect, useRef, useState } from 'react'
+import { useRef } from 'react'
 import { idMapToArray } from 'tapestry-core/src/utils'
 import { useTapestryConfig } from '..'
 import { getScrollbarPositions } from '../../../../src/view-model/utils'
 import styles from './styles.module.css'
+import { useRecentlyChanged } from '../hooks/use-recently-changed'
 
 const SCROLLBAR_DISAPPEAR_DELAY = 500
 
 export function ViewportScrollbars() {
   const { useStoreData } = useTapestryConfig()
   const { viewport, items } = useStoreData(['viewport', 'items'])
-  const [isVisible, setIsVisible] = useState(false)
 
   const scrollbarPositionsRef = useRef<ReturnType<typeof getScrollbarPositions>>({
     horizontal: { offset: 0, size: 0 },
     vertical: { offset: 0, size: 0 },
   })
 
-  useEffect(() => {
-    setIsVisible(true)
-
-    const timer = setTimeout(() => {
-      setIsVisible(false)
-    }, SCROLLBAR_DISAPPEAR_DELAY)
-
-    return () => clearTimeout(timer)
-  }, [viewport.lastUpdateTimestamp])
+  const isVisible = useRecentlyChanged(viewport.lastUpdateTimestamp, SCROLLBAR_DISAPPEAR_DELAY)
 
   // Avoid heavy scrollbar position re-calculation in case the scrollbars are not visible
   if (isVisible) {
