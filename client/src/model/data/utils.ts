@@ -23,6 +23,7 @@ import {
   TapestryAssetUrlCreateDto,
 } from 'tapestry-shared/src/data-transfer/resources/dtos/asset-url'
 import {
+  EDIT_VIEWPORT_LIMITS,
   EditableTapestryViewModel,
   InteractionMode,
   TapestryWithOwner,
@@ -53,7 +54,10 @@ import {
 } from 'tapestry-shared/src/data-transfer/resources/dtos/presentation-step'
 import { FetchContentTypeProxyDto } from 'tapestry-shared/src/data-transfer/resources/dtos/proxy'
 import { ItemType, MediaItemType } from 'tapestry-core/src/data-format/schemas/item'
-import { viewModelFromTapestry } from 'tapestry-core-client/src/view-model/utils'
+import {
+  DEFAULT_VIEWPORT_LIMITS,
+  viewModelFromTapestry,
+} from 'tapestry-core-client/src/view-model/utils'
 import { DEFAULT_LAYER } from '../../pages/tapestry/view-model/utils'
 
 export const EDITABLE_TAPESTRY_PROPS = [
@@ -169,6 +173,8 @@ export function fromTapestryDto(
 ): EditableTapestryViewModel {
   const presentationStepViewModels = presentationSteps.map((dto) => ({ dto }))
 
+  const viewportLimits = mode === 'edit' ? EDIT_VIEWPORT_LIMITS : DEFAULT_VIEWPORT_LIMITS
+
   const baseViewModel = viewModelFromTapestry(
     {
       ...tapestry,
@@ -178,6 +184,7 @@ export function fromTapestryDto(
       groups: [],
     },
     [],
+    viewportLimits,
   )
   const editableTapestryViewModel: EditableTapestryViewModel = {
     ...baseViewModel,

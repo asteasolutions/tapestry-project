@@ -23,6 +23,12 @@ import { LiteralColor } from 'tapestry-core-client/src/theme/types'
 import { PublicUserProfileDto } from 'tapestry-shared/src/data-transfer/resources/dtos/user'
 import { IdMap } from 'tapestry-core/src/utils'
 import { RequiredFields } from 'tapestry-core/src/type-utils'
+import { ViewportLimits } from 'tapestry-core-client/src/view-model/utils'
+
+export const EDIT_VIEWPORT_LIMITS: ViewportLimits = {
+  minZoomContentRatio: 0.5,
+  maxTranslationRatio: 0.95,
+}
 
 export const ITEM_UI_COMPONENTS = [
   'dragHandle',

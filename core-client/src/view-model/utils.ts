@@ -52,10 +52,16 @@ import { Easing } from '@tweenjs/tween.js'
 import { CONTINUOUS_ZOOM_SPEED } from './store-commands/viewport.js'
 
 const CONTENT_FIT_PADDING = 16
+export type ViewportLimits = Pick<Viewport, 'minZoomContentRatio' | 'maxTranslationRatio'>
+export const DEFAULT_VIEWPORT_LIMITS: ViewportLimits = {
+  minZoomContentRatio: 0.75,
+  maxTranslationRatio: 0.55,
+}
 
 export function viewModelFromTapestry(
   tapestry: Tapestry,
   presentationSteps: PresentationStep[],
+  viewportLimits?: ViewportLimits,
 ): TapestryViewModel {
   const presentationStepViewModels = presentationSteps.map((dto) => ({ dto }))
   return {
@@ -74,6 +80,8 @@ export function viewModelFromTapestry(
     },
     viewport: {
       transform: IDENTITY_TRANSFORM,
+      ...DEFAULT_VIEWPORT_LIMITS,
+      ...viewportLimits,
       size: {
         width: 0,
         height: 0,
@@ -224,35 +232,38 @@ export function getTheme(tapestry: TapestryViewModel) {
   return THEMES[tapestry.theme]
 }
 
-const MIN_ZOOM_CONTENT_RATIO = 0.5
 const MAX_MIN_SCALE = 0.5
 export function getMinScale<I extends ItemViewModel>(viewport: Viewport, items: I[]) {
   const boundingRect = getBoundingRectangle(items)
-  const widthRatio = (MIN_ZOOM_CONTENT_RATIO * viewport.size.width) / boundingRect.width
-  const heightRatio = (MIN_ZOOM_CONTENT_RATIO * viewport.size.height) / boundingRect.height
+  const widthRatio = (viewport.minZoomContentRatio * viewport.size.width) / boundingRect.width
+  const heightRatio = (viewport.minZoomContentRatio * viewport.size.height) / boundingRect.height
   // Since the minimal scale is dynamic, it may become larger than the current scale of the tapestry.
   // In this case take the current scale to be the minimum to avoid jumps while zooming smoothly.
   const { scale } = viewport.transform
   return Math.min(scale, widthRatio, heightRatio, MAX_MIN_SCALE)
 }
 
-const TRANSLATION_RANGE_PADDING: Vector = { dx: 20, dy: 20 }
 export function getTranslationRange(tapestry: TapestryViewModel): [Vector, Vector] {
   const {
     transform: { scale, translation },
     size: { width, height },
+    maxTranslationRatio,
   } = tapestry.viewport
+
   const viewportOffset = { dx: width, dy: height }
 
   const boundingRect = getBoundingRectangle(idMapToArray(tapestry.items))
   const topLeftOffset = { dx: boundingRect.left, dy: boundingRect.top }
   const bottomRightOffset = { dx: boundingRect.right, dy: boundingRect.bottom }
 
-  const minTranslation: Vector = add(neg(mul(scale, bottomRightOffset)), TRANSLATION_RANGE_PADDING)
-  const maxTranslation = add(
-    viewportOffset,
+  const minTranslation: Vector = add(
+    neg(mul(scale, bottomRightOffset)),
+    mul(1 - maxTranslationRatio, viewportOffset),
+  )
+
+  const maxTranslation: Vector = add(
+    mul(maxTranslationRatio, viewportOffset),
     neg(mul(scale, topLeftOffset)),
-    neg(TRANSLATION_RANGE_PADDING),
   )
 
   return [coordMin(minTranslation, translation), coordMax(maxTranslation, translation)]
@@ -278,8 +289,8 @@ export function getScrollbarPositions<I extends ItemViewModel>(
     height: viewportSize.height / scale,
   }
   const canvasPadding: Vector = {
-    dx: viewportSizeOnTapestry.width - TRANSLATION_RANGE_PADDING.dx / scale,
-    dy: viewportSizeOnTapestry.height - TRANSLATION_RANGE_PADDING.dy / scale,
+    dx: viewportSizeOnTapestry.width * viewport.maxTranslationRatio,
+    dy: viewportSizeOnTapestry.height * viewport.maxTranslationRatio,
   }
   const canvasSize: Size = {
     width: tapestryBoundingBox.width + 2 * canvasPadding.dx,
