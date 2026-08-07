@@ -26,7 +26,7 @@ export type ZoomEndEvent = TypedEvent<'zoomend'>
 export type PanEvent = TypedEvent<'pan', { translation: Vector; method: PanMethod }>
 export type PanEndEvent = TypedEvent<'panend'>
 export type ClickEvent = TypedEvent<
-  'click',
+  'click' | 'double-click',
   {
     hoverTarget: HoverTarget | null
     originalEvent: PointerEvent | TouchEvent
@@ -233,6 +233,8 @@ export class GestureDetector extends TypedEventTarget<
     }
   }
 
+  private firstClickTimeout?: number
+
   @eventListener('scene', 'touchend', ['mobile'])
   @eventListener('scene', 'pointerup', ['desktop'])
   protected onPointerUp(event: PointerEvent | TouchEvent) {
@@ -245,10 +247,23 @@ export class GestureDetector extends TypedEventTarget<
       !capturesPointerEvents(event.target as HTMLElement)
     ) {
       // It's a click!
-      this.dispatchEvent('click', {
-        hoverTarget: obtainHoverTarget(this.stage, event),
-        originalEvent: event,
-      })
+
+      if (this.firstClickTimeout) {
+        clearTimeout(this.firstClickTimeout)
+        this.firstClickTimeout = undefined
+        this.dispatchEvent('double-click', {
+          hoverTarget: obtainHoverTarget(this.stage, event),
+          originalEvent: event,
+        })
+      } else {
+        this.firstClickTimeout = window.setTimeout(() => {
+          this.firstClickTimeout = undefined
+          this.dispatchEvent('click', {
+            hoverTarget: obtainHoverTarget(this.stage, event),
+            originalEvent: event,
+          })
+        }, 250)
+      }
     }
 
     this.maybeClick = null

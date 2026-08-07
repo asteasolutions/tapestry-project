@@ -1,10 +1,19 @@
 import { omit, sample } from 'lodash-es'
 import { ORIGIN, Point, Rectangle, scaleSize } from 'tapestry-core/src/lib/geometry'
 import { TapestryDto } from 'tapestry-shared/src/data-transfer/resources/dtos/tapestry'
-import { EditableTapestryViewModel, InteractionMode, IAImport, convertCommand } from '..'
+import {
+  EditableTapestryViewModel,
+  InteractionMode,
+  IAImport,
+  convertCommand,
+  EDIT_VIEWPORT_LIMITS,
+} from '..'
 import { StoreMutationCommand } from 'tapestry-core-client/src/lib/store/index'
 import { EditableTapestryProps } from '../../../../model/data/utils'
-import { positionAtViewport } from 'tapestry-core-client/src/view-model/utils'
+import {
+  DEFAULT_VIEWPORT_LIMITS,
+  positionAtViewport,
+} from 'tapestry-core-client/src/view-model/utils'
 import { idMapToArray } from 'tapestry-core/src/utils'
 import { COLLABORATOR_COLORS } from 'tapestry-core-client/src/theme'
 import { PublicUserProfileDto } from 'tapestry-shared/src/data-transfer/resources/dtos/user'
@@ -56,6 +65,10 @@ export function setInteractionMode(
       selectItem(null),
       (model) => {
         model.interactionMode = mode
+        model.viewport = {
+          ...model.viewport,
+          ...(mode === 'edit' ? EDIT_VIEWPORT_LIMITS : DEFAULT_VIEWPORT_LIMITS),
+        }
         model.disableOptimizations = mode === 'edit'
       },
       setSnackbar(`You are in ${mode === 'edit' ? 'Author' : 'Viewer'} mode`),

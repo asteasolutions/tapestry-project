@@ -1,4 +1,4 @@
-import { isMac } from './user-agent.js'
+import { isMac, metaKey } from './user-agent.js'
 
 export function isMeta(e: KeyboardEvent | MouseEvent | TouchEvent) {
   return isMac ? e.metaKey : e.ctrlKey
@@ -15,7 +15,7 @@ export function shortcutLabel(shortcutString: string) {
       const [key, ...modifiers] = shortcut.split(/\s\+\s/).reverse()
       const res = []
       if (modifiers.some((m) => m === 'meta')) {
-        res.push(isMac ? '⌘' : 'Ctrl')
+        res.push(metaKey)
       }
       if (modifiers.some((m) => m === 'ctrl')) {
         res.push(isMac ? '⌃' : 'Ctrl')

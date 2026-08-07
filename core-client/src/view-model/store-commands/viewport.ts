@@ -5,8 +5,6 @@ import {
   LinearTransform,
   Vector,
   Size,
-  coordMax,
-  coordMin,
   add,
   Rectangle,
   neg,
@@ -14,6 +12,7 @@ import {
   mul,
   IDENTITY_TRANSFORM,
   ORIGIN,
+  clampCoords,
 } from 'tapestry-core/src/lib/geometry.js'
 import { StoreMutationCommand } from '../../lib/store/index.js'
 import {
@@ -24,6 +23,8 @@ import {
   getMinScale,
   getGroupMembers,
   getZoomParameters,
+  getBoundingRectangle,
+  getSelectionItems,
 } from '../utils.js'
 import { idMapToArray, pickById } from 'tapestry-core/src/utils.js'
 import {
@@ -305,6 +306,22 @@ export function focusGroup(
   }
 }
 
+export function focusRel(id: string): StoreMutationCommand<TapestryViewModel> {
+  return (_, { store }) => {
+    const rel = store.get('rels')[id]
+    if (!rel) return
+
+    store.dispatch(focusItems([rel.dto.from.itemId, rel.dto.to.itemId]))
+  }
+}
+
+export function focusMultiselection(): StoreMutationCommand<TapestryViewModel> {
+  return (_, { store }) => {
+    const items = getSelectionItems(store.get()).map((i) => i.dto.id)
+    store.dispatch(focusItems(items, { addToolbarPadding: true }))
+  }
+}
+
 export function focusPresentationStep(
   step: PresentationStep,
   animate?: FocusOptions['animate'],
@@ -327,8 +344,21 @@ export function panViewport({
 }: Partial<Vector>): StoreMutationCommand<TapestryViewModel> {
   return (_, { store }) => {
     const translation = add(store.get('viewport.transform.translation'), { dx, dy })
-    const [min, max] = getTranslationRange(store.get())
-    const clippedTranslation = coordMax(min, coordMin(translation, max))
+    const {
+      viewport: {
+        size,
+        transform: { scale },
+        maxTranslationRatio,
+      },
+      items,
+    } = store.get(['viewport', 'items'])
+    const [min, max] = getTranslationRange(
+      size,
+      scale,
+      getBoundingRectangle(idMapToArray(items)),
+      maxTranslationRatio,
+    )
+    const clippedTranslation = clampCoords(translation, min, max)
 
     store.dispatch(transformViewport({ translation: clippedTranslation }))
   }

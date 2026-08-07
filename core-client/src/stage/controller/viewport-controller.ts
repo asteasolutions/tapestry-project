@@ -1,5 +1,3 @@
-import { scaleBy } from 'tapestry-core/src/lib/geometry'
-import { idMapToArray } from 'tapestry-core/src/utils'
 import { GestureDetector, PanEvent, ZoomEvent } from '../gesture-detector'
 import { createEventRegistry } from '../../lib/events/event-registry'
 import { EventTypes } from '../../lib/events/typed-events'
@@ -11,8 +9,8 @@ import {
   setDefaultViewport,
   transformViewport,
 } from '../../view-model/store-commands/viewport'
-import { MAX_SCALE, TapestryViewModel } from '../../view-model'
-import { getMinScale } from '../../view-model/utils'
+import { TapestryViewModel } from '../../view-model'
+import { zoomToPoint } from '../../view-model/utils'
 import { setPointerInteraction, setPointerMode } from '../../view-model/store-commands/tapestry'
 import { TapestryStageController } from '.'
 import { TapestryStage } from '..'
@@ -62,11 +60,10 @@ export class ViewportController implements TapestryStageController {
 
   @eventListener('gesture', 'zoom')
   protected onZoom({ detail: { deltaScale, anchorPoint } }: ZoomEvent) {
-    const { viewport, items } = this.store.get(['viewport', 'items'])
-    const { scale, translation } = viewport.transform
-    const minScale = getMinScale(viewport, idMapToArray(items))
-    const transformed = scaleBy(scale, translation, deltaScale, anchorPoint, minScale, MAX_SCALE)
-    const action = transformed.scale < scale ? 'zoom-out' : 'zoom-in'
+    const tapestry = this.store.get()
+    const transformed = zoomToPoint(tapestry, deltaScale, anchorPoint)
+
+    const action = transformed.scale < tapestry.viewport.transform.scale ? 'zoom-out' : 'zoom-in'
 
     this.store.dispatch(setPointerInteraction(action, null, 'dom'), transformViewport(transformed))
   }

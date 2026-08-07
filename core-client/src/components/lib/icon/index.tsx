@@ -125,6 +125,7 @@ const ICONS = [
   'table_convert',
   'text_fields',
   'toc',
+  'touch_double',
   'trackpad_input_2',
   'travel_explore',
   'undo',

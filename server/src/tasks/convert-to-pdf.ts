@@ -54,6 +54,7 @@ export async function convertToPdf({ itemId }: JobTypeMap['convert-to-pdf']) {
     const value = await convertWebpageToPdf(item.source, {
       width: Math.max(item.width, MIN_PDF_PAGE.width),
       height: Math.max(item.height, MIN_PDF_PAGE.height),
+      margin: { right: 20, left: 20 },
     })
 
     const s3Key = tapestryKey(item.tapestryId, `${crypto.randomUUID()}.pdf`, true)

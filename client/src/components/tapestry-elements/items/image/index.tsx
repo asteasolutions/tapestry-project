@@ -6,12 +6,26 @@ import { useTapestryData } from '../../../../pages/tapestry/tapestry-providers'
 import { buildToolbarMenu } from '../../item-toolbar'
 import { useItemToolbar } from '../../item-toolbar/use-item-toolbar'
 import { TapestryItem } from '../tapestry-item'
+import { AssignActionButton } from '../../../assign-action-button'
 
 export const ImageItem = memo(({ id }: TapestryItemProps) => {
   const isEdit = useTapestryData('interactionMode') === 'edit'
   const dto = useTapestryData(`items.${id}.dto`) as ImageItemDto
 
-  const { toolbar } = useItemToolbar(id, { items: buildToolbarMenu({ dto, isEdit }) })
+  const { toolbar } = useItemToolbar(id, {
+    items: [
+      ...(isEdit
+        ? ([
+            {
+              element: <AssignActionButton dto={dto} icon="left_click" />,
+              tooltip: { side: 'bottom', children: 'Assign action' },
+            },
+            'separator',
+          ] as const)
+        : []),
+      ...buildToolbarMenu({ dto, isEdit }),
+    ],
+  })
 
   return (
     <TapestryItem id={id} halo={toolbar}>

@@ -4,7 +4,7 @@ import { Icon } from '../../../../../src/components/lib/icon/index'
 import { SearchInput } from '../../../../../src/components/lib/search-input/index'
 import { Text } from '../../../../../src/components/lib/text/index'
 import { shortcutLabel } from '../../../../../src/lib/keyboard-event'
-import { isMac } from '../../../../../src/lib/user-agent'
+import { metaKey } from '../../../../../src/lib/user-agent'
 import styles from './styles.module.css'
 
 export enum CustomKeys {
@@ -88,7 +88,7 @@ const customKeysMap: Record<string, ReactNode> = {
     <Icon className={styles.icon} icon="keyboard_arrow_right" />,
   ],
   pan: ['Space', 'Drag'],
-  meta: [isMac ? '⌘' : 'Ctrl'],
+  meta: [metaKey],
   presentation: [
     <Icon className={styles.icon} icon="keyboard_arrow_left" />,
     <Icon className={styles.icon} icon="keyboard_arrow_right" />,
