@@ -1,20 +1,23 @@
 import { omit, sample } from 'lodash-es'
 import { ORIGIN, Point, Rectangle, scaleSize } from 'tapestry-core/src/lib/geometry'
 import { TapestryDto } from 'tapestry-shared/src/data-transfer/resources/dtos/tapestry'
-import { EditableTapestryViewModel, InteractionMode, IAImport, convertCommand } from '..'
+import {
+  EditableTapestryViewModel,
+  InteractionMode,
+  IAImport,
+  convertCommand,
+  EDIT_VIEWPORT_LIMITS,
+} from '..'
 import { StoreMutationCommand } from 'tapestry-core-client/src/lib/store/index'
 import { EditableTapestryProps } from '../../../../model/data/utils'
-import { positionAtViewport } from 'tapestry-core-client/src/view-model/utils'
+import {
+  DEFAULT_VIEWPORT_LIMITS,
+  positionAtViewport,
+} from 'tapestry-core-client/src/view-model/utils'
 import { idMapToArray } from 'tapestry-core/src/utils'
 import { COLLABORATOR_COLORS } from 'tapestry-core-client/src/theme'
 import { PublicUserProfileDto } from 'tapestry-shared/src/data-transfer/resources/dtos/user'
 import * as baseCommands from 'tapestry-core-client/src/view-model/store-commands/tapestry'
-import {
-  MAX_OUTSIDE_RATIO_EDIT_MODE,
-  MAX_OUTSIDE_RATIO_VIEW_MODE,
-  MIN_ZOOM_RATIO_EDIT_MODE,
-  MIN_ZOOM_RATIO_VIEW_MODE,
-} from 'tapestry-core-client/src/view-model'
 
 export const addViewportObstruction = convertCommand(baseCommands.addViewportObstruction)
 export const deselectAll = convertCommand(baseCommands.deselectAll)
@@ -56,30 +59,23 @@ export function setInteractionMode(
   mode: InteractionMode,
 ): StoreMutationCommand<EditableTapestryViewModel> {
   return (_, { store }) => {
+    if (mode === store.get('interactionMode')) return
+
     const minZoomContentRatio =
-      mode === 'edit' ? MIN_ZOOM_RATIO_EDIT_MODE : MIN_ZOOM_RATIO_VIEW_MODE
-    const maxOutsideRatio =
-      mode === 'edit' ? MAX_OUTSIDE_RATIO_EDIT_MODE : MAX_OUTSIDE_RATIO_VIEW_MODE
-
-    const currentViewport = store.get('viewport')
-    const currentMode = store.get('interactionMode')
-
-    const isAlreadyUpdated =
-      currentMode === mode &&
-      currentViewport.minZoomContentRatio === minZoomContentRatio &&
-      currentViewport.maxOutsideRatio === maxOutsideRatio
-
-    if (isAlreadyUpdated) return
+      mode === 'edit'
+        ? EDIT_VIEWPORT_LIMITS.minZoomContentRatio
+        : DEFAULT_VIEWPORT_LIMITS.minZoomContentRatio
+    const maxTranslationRatio =
+      mode === 'edit'
+        ? EDIT_VIEWPORT_LIMITS.maxTranslationRatio
+        : DEFAULT_VIEWPORT_LIMITS.maxTranslationRatio
 
     store.dispatch(
       selectItem(null),
       (model) => {
         model.interactionMode = mode
-        model.viewport = {
-          ...model.viewport,
-          minZoomContentRatio,
-          maxOutsideRatio,
-        }
+        model.viewport.minZoomContentRatio = minZoomContentRatio
+        model.viewport.maxTranslationRatio = maxTranslationRatio
         model.disableOptimizations = mode === 'edit'
       },
       setSnackbar(`You are in ${mode === 'edit' ? 'Author' : 'Viewer'} mode`),

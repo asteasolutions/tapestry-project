@@ -24,6 +24,11 @@ import { PublicUserProfileDto } from 'tapestry-shared/src/data-transfer/resource
 import { IdMap } from 'tapestry-core/src/utils'
 import { RequiredFields } from 'tapestry-core/src/type-utils'
 
+export const EDIT_VIEWPORT_LIMITS = {
+  minZoomContentRatio: 0.5,
+  maxTranslationRatio: 0.95,
+}
+
 export const ITEM_UI_COMPONENTS = [
   'dragHandle',
   'dragArea',

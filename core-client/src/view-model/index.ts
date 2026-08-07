@@ -17,10 +17,6 @@ export const MIN_RESTRICTED_SCALE = 0.5
 export const MAX_RESTRICTED_SCALE = 1.5
 export const ZOOM_STEP = 0.1
 export const MAX_INITIAL_SCALE = 1
-export const MIN_ZOOM_RATIO_EDIT_MODE = 0.5
-export const MAX_OUTSIDE_RATIO_EDIT_MODE = 0.95
-export const MIN_ZOOM_RATIO_VIEW_MODE = 0.75
-export const MAX_OUTSIDE_RATIO_VIEW_MODE = 0.55
 
 export interface Viewport {
   readonly transform: LinearTransform
@@ -29,8 +25,16 @@ export interface Viewport {
   readonly lastUpdateTimestamp?: number
   readonly ready: boolean
   readonly isZoomingLocked?: boolean
+  //Minimum ratio of the content box that must remain visible inside the viewport when zoomed out.
+  //- View Mode: 0.75 (requires 75% of content visible)
+  //- Edit Mode: 0.50 (requires 50% of content visible)
   readonly minZoomContentRatio: number
-  readonly maxOutsideRatio: number
+
+  //Maximum fraction of the viewport dimensions allowed to overflow outside the content bounds when panning.
+  //Restricts how far the canvas can be translated relative to the screen.
+  //- View Mode: 0.55 (Max 55% off-canvas - guarantees at least 45% of the screen covers content)
+  //- Edit Mode: 0.95 (Max 95% off-canvas - provides maximum reach for elements near the edges)
+  readonly maxTranslationRatio: number
 }
 
 export type PointerMode = 'pan' | 'select'
