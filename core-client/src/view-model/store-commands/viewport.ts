@@ -348,10 +348,16 @@ export function panViewport({
       viewport: {
         size,
         transform: { scale },
+        maxTranslationRatio,
       },
       items,
     } = store.get(['viewport', 'items'])
-    const [min, max] = getTranslationRange(size, scale, getBoundingRectangle(idMapToArray(items)))
+    const [min, max] = getTranslationRange(
+      size,
+      scale,
+      getBoundingRectangle(idMapToArray(items)),
+      maxTranslationRatio,
+    )
     const clippedTranslation = clampCoords(translation, min, max)
 
     store.dispatch(transformViewport({ translation: clippedTranslation }))
