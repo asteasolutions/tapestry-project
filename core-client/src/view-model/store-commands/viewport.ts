@@ -344,8 +344,14 @@ export function panViewport({
 }: Partial<Vector>): StoreMutationCommand<TapestryViewModel> {
   return (_, { store }) => {
     const translation = add(store.get('viewport.transform.translation'), { dx, dy })
-    const { viewport, items } = store.get(['viewport', 'items'])
-    const [min, max] = getTranslationRange(viewport, getBoundingRectangle(idMapToArray(items)))
+    const {
+      viewport: {
+        size,
+        transform: { scale },
+      },
+      items,
+    } = store.get(['viewport', 'items'])
+    const [min, max] = getTranslationRange(size, scale, getBoundingRectangle(idMapToArray(items)))
     const clippedTranslation = clampCoords(translation, min, max)
 
     store.dispatch(transformViewport({ translation: clippedTranslation }))

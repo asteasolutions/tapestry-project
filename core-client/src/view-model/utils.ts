@@ -2,8 +2,6 @@ import { clamp } from 'lodash-es'
 import {
   add,
   clampCoords,
-  coordMax,
-  coordMin,
   IDENTITY_TRANSFORM,
   linearMap,
   LinearTransform,
@@ -182,13 +180,8 @@ export function zoomToPoint(
   const result = scaleBy(scale, translation, step, point, minScale, MAX_SCALE)
 
   const [min, max] = getTranslationRange(
-    {
-      size: tapestry.viewport.size,
-      transform: {
-        scale: result.scale,
-        translation: mul(result.scale < 1 ? result.scale : 1 / result.scale, translation),
-      },
-    },
+    tapestry.viewport.size,
+    result.scale,
     getBoundingRectangle(idMapToArray(tapestry.items)),
   )
   return {
@@ -261,11 +254,10 @@ export function getMinScale<I extends ItemViewModel>(viewport: Viewport, items: 
 
 const TRANSLATION_RANGE_PADDING: Vector = { dx: 20, dy: 20 }
 export function getTranslationRange(
-  { transform, size }: Pick<Viewport, 'size' | 'transform'>,
+  { width, height }: Size,
+  scale: number,
   boundingRect: Rectangle,
 ): [Vector, Vector] {
-  const { scale, translation } = transform
-  const { width, height } = size
   const viewportOffset = { dx: width, dy: height }
 
   const topLeftOffset = { dx: boundingRect.left, dy: boundingRect.top }
@@ -278,7 +270,7 @@ export function getTranslationRange(
     neg(TRANSLATION_RANGE_PADDING),
   )
 
-  return [coordMin(minTranslation, translation), coordMax(maxTranslation, translation)]
+  return [minTranslation, maxTranslation]
 }
 
 export interface ScrollbarPosition {
