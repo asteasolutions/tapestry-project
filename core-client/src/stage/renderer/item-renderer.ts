@@ -37,57 +37,61 @@ type Icons = Record<
 const ICON_SIZE_STEP = 10
 const ICONS: Icons = {
   videoWebpage: (color, background, scale) => {
-    const size = roundToPrecision(100 * scale, ICON_SIZE_STEP)
+    const size = roundToPrecision(130 * scale, ICON_SIZE_STEP)
     return {
-      minSize: 220,
+      minSize: 120,
       icon: {
         background,
         props: {
           iconName: 'videoCam',
           size,
           color,
-          fontSize: Math.round(0.6 * size),
+          fontSize: Math.round(0.3 * size),
         },
       },
     }
   },
-  video: (color, background, scale) => ({
-    minSize: 220,
-    icon: {
-      background,
-      props: {
-        iconName: 'playArrow',
-        size: roundToPrecision(100 * scale, ICON_SIZE_STEP),
-        color,
-      },
-    },
-  }),
-  audio: (color, background, scale) => {
-    const size = roundToPrecision(100 * scale, ICON_SIZE_STEP)
+  video: (color, background, scale) => {
+    const size = roundToPrecision(130 * scale, ICON_SIZE_STEP)
     return {
-      minSize: 220,
+      minSize: 120,
+      icon: {
+        background,
+        props: {
+          iconName: 'videoCam',
+          size,
+          color,
+          fontSize: Math.round(0.3 * size),
+        },
+      },
+    }
+  },
+  audio: (color, background, scale) => {
+    const size = roundToPrecision(130 * scale, ICON_SIZE_STEP)
+    return {
+      minSize: 120,
       icon: {
         background,
         props: {
           iconName: 'volumeUp',
           size,
           color,
-          fontSize: Math.round(0.75 * size),
+          fontSize: Math.round(0.37 * size),
         },
       },
     }
   },
   pdf: (color, background, scale) => {
-    const size = roundToPrecision(80 * scale, ICON_SIZE_STEP)
+    const size = roundToPrecision(100 * scale, ICON_SIZE_STEP)
     return {
-      minSize: 200,
+      minSize: 100,
       icon: {
         background,
         props: {
           iconName: 'pdf',
           size,
           color,
-          fontSize: Math.round(0.625 * size),
+          fontSize: Math.round(0.3 * size),
         },
       },
     }
