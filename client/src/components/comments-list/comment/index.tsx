@@ -15,6 +15,7 @@ import { resource } from '../../../services/rest-resources'
 import { MessageInput } from '../../message-input'
 import { useTapestryData } from '../../../pages/tapestry/tapestry-providers'
 import { Tooltip } from 'tapestry-core-client/src/components/lib/tooltip/index'
+import { RichTextEditor } from 'tapestry-core-client/src/components/lib/rich-text-editor'
 
 interface CommentProps {
   comment: CommentDto
@@ -25,27 +26,30 @@ interface CommentProps {
 
 function CommentContent({ createdAt, updatedAt, deletedAt, text }: CommentDto) {
   const lastUpdate = isEqual(updatedAt, createdAt) ? undefined : updatedAt
+
+  if (deletedAt) {
+    return (
+      <Text component="div" variant="bodySm" className={styles.commentText}>
+        <em>[Deleted]</em>
+      </Text>
+    )
+  }
+
   return (
     <Text component="div" variant="bodySm" className={styles.commentText}>
-      {deletedAt ? (
-        <em>[Deleted]</em>
-      ) : lastUpdate ? (
-        <>
-          {text}{' '}
-          <Text variant="bodyXs" className={styles.editLabel}>
-            (edited)
-            <Tooltip side="top" offset={4}>
-              {intlFormat(lastUpdate, {
-                day: 'numeric',
-                month: 'short',
-                hour: 'numeric',
-                minute: 'numeric',
-              })}
-            </Tooltip>
-          </Text>
-        </>
-      ) : (
-        text
+      <RichTextEditor value={text} isEditable={false} style={{ padding: 0, margin: 0 }} />
+      {lastUpdate && (
+        <Text variant="bodyXs" className={styles.editLabel}>
+          (edited)
+          <Tooltip side="top" offset={4}>
+            {intlFormat(lastUpdate, {
+              day: 'numeric',
+              month: 'short',
+              hour: 'numeric',
+              minute: 'numeric',
+            })}
+          </Tooltip>
+        </Text>
       )}
     </Text>
   )
