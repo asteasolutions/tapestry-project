@@ -13,7 +13,14 @@ const HEIGHT = Math.floor(WIDTH * (10 / 21))
 
 export async function generateTapestryThumbnails({
   tapestryId,
+  generateAll,
 }: JobTypeMap['generate-tapestry-thumbnails']) {
+  if (generateAll) {
+    await prisma.item.updateMany({
+      where: { tapestryId },
+      data: { scheduledThumbnailProcessing: generateAll },
+    })
+  }
   const tapestry = await prisma.tapestry.findUniqueOrThrow({
     where: { id: tapestryId },
     include: { items: { where: { scheduledThumbnailProcessing: { not: null } } } },
