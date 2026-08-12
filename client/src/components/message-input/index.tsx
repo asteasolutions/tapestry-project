@@ -1,11 +1,10 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { useSession } from '../../layouts/session'
 import { Button } from 'tapestry-core-client/src/components/lib/buttons/index'
 import { useAsyncAction } from 'tapestry-core-client/src/components/lib/hooks/use-async-action'
-import { Avatar } from '../avatar'
 import styles from './styles.module.css'
 import { ReactNode, useRef, useState } from 'react'
 import { JoinTapestriesModal } from '../join-tapestries-modal'
-// import { Textarea } from '../textarea'
 import clsx from 'clsx'
 import {
   RichTextEditor,
@@ -27,13 +26,11 @@ export interface MessageInputProps {
   startAdornment?: ReactNode
   endAdornment?: ReactNode
 }
-const noop = (_a?: unknown, _b?: unknown) => {
-  /*errpor*/
-}
+
+const TRAILING_EMPTY_PARAGRAPHS_REGEX = /(<p><br><\/p>)+$/
 
 export function MessageInput({
   onSubmit,
-  // onPaste,
   disabled,
   placeholder,
   signInButtonText,
@@ -79,11 +76,12 @@ export function MessageInput({
 
   const menuItems = textItemToolbar({
     selection: selectionState,
+    tapestryId: '',
     editorAPI: editorApiRef,
     itemBackgroundColor: null,
-    onBackgroundColorChange: noop,
-    onColorChange: noop,
-    onToggleMenu: noop,
+    onBackgroundColorChange: () => {},
+    onColorChange: () => {},
+    onToggleMenu: () => {},
     onLinkClick: handleCreateLink,
     canAddLink: selectionState?.isLink,
     controls: {
@@ -98,7 +96,9 @@ export function MessageInput({
     const plainText = editorApiRef.current?.text().trim()
     if (!plainText) return
 
-    await onSubmit(input)
+    const cleanedInput = plainText.replace(TRAILING_EMPTY_PARAGRAPHS_REGEX, '')
+
+    await onSubmit(cleanedInput)
 
     setInput('')
     editorApiRef.current?.editor().commands.clearContent()
@@ -110,7 +110,6 @@ export function MessageInput({
     <div className={clsx(styles.root, className)}>
       {user ? (
         <>
-          <Avatar user={user} />
           {/* XXX: Start and end adornments are currently not very dynamic. Some specific dimensions for them are
           assumed and if, for example, the adornments are much larger or smaller than 32px, they may look bad or overlap
           other content. If we want to extend the "adornment" abstraction, we need to figure out how to fix this. */}
@@ -126,60 +125,90 @@ export function MessageInput({
                 element={addLinkProps.element}
                 content={addLinkProps.content}
                 onRemove={() => {
-                  editorApiRef.current?.link('')
+                  const editor = editorApiRef.current?.editor()
+                  if (editor) {
+                    editor.commands.focus()
+                    editorApiRef.current?.link('')
+                  }
                   setAddLinkProps(undefined)
                 }}
-                onApply={(url: string) => {
-                  editorApiRef.current?.link(url)
+                onApply={(url: string, text?: string) => {
+                  const api = editorApiRef.current
+                  const editor = api?.editor()
+
+                  if (editor) {
+                    editor.commands.focus()
+                    const selectedText = api!.selectionText()
+
+                    const isInternal =
+                      url.startsWith('/') ||
+                      url.startsWith('#') ||
+                      url.includes(window.location.origin)
+                    const target = isInternal ? '_self' : '_blank'
+
+                    if (text && text !== selectedText) {
+                      editor
+                        .chain()
+                        .focus()
+                        .insertContent(`<a href="${url}" target="${target}">${text}</a>`)
+                        .run()
+                    } else {
+                      editor.chain().focus().setLink({ href: url, target }).run()
+                    }
+                  }
+
                   setAddLinkProps(undefined)
                 }}
               />
             )}
+
             {startAdornment && <div className={styles.startAdornment}>{startAdornment}</div>}
 
             {isEditorReady && (
-              <Toolbar className={styles.editorToolbar} isOpen={true} items={menuItems} />
+              <div className={styles.editorToolbar}>
+                <Toolbar isOpen={true} items={menuItems} />
+                <div>
+                  {endAdornment}
+                  <Button
+                    variant="primary"
+                    icon={{ name: 'send', fill: true }}
+                    aria-label="Send"
+                    disabled={isDisabled}
+                    tooltip={{ side: 'bottom', children: 'Send' }}
+                    onClick={submitMessage}
+                  />
+                </div>
+              </div>
             )}
-            <div className={styles.messageInput}>
-              <RichTextEditor
-                value={value ?? ''}
-                isEditable={!isDisabled}
-                api={editorApiRef}
-                placeholder={placeholder}
-                controls={{
-                  color: false,
-                  justification: false,
-                  fontFamily: false,
-                  fontSize: false,
-                }}
-                events={{
-                  onCreate: () => setIsEditorReady(true),
-                  onChange: setInput,
-                  onSelectionChanged: setSelectionState,
-                  onCreateLink: () => {
-                    handleCreateLink()
-                    return true
-                  },
-                  onKeyDown: (e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault()
-                      void submitMessage()
-                    }
-                  },
-                }}
-              />
-            </div>
-            <div className={styles.buttons}>
-              {endAdornment}
-              <Button
-                variant="primary"
-                icon={{ name: 'send', fill: true }}
-                aria-label="Send"
-                disabled={isDisabled}
-                tooltip={{ side: 'bottom', children: 'Send' }}
-                onClick={submitMessage}
-              />
-            </div>
+
+            <RichTextEditor
+              className={styles.messageInput}
+              value={value ?? ''}
+              isEditable={!isDisabled}
+              api={editorApiRef}
+              placeholder={placeholder}
+              controls={{
+                color: false,
+                justification: false,
+                fontFamily: false,
+                fontSize: false,
+              }}
+              events={{
+                onCreate: () => setIsEditorReady(true),
+                onChange: setInput,
+                onSelectionChanged: setSelectionState,
+                onCreateLink: () => {
+                  handleCreateLink()
+                  return true
+                },
+                onKeyDown: (e) => {
+                  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                    e.preventDefault()
+                    void submitMessage()
+                  }
+                },
+              }}
+            />
           </div>
         </>
       ) : (

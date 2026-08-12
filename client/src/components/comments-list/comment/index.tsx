@@ -37,7 +37,7 @@ function CommentContent({ createdAt, updatedAt, deletedAt, text }: CommentDto) {
 
   return (
     <Text component="div" variant="bodySm" className={styles.commentText}>
-      <RichTextEditor value={text} isEditable={false} style={{ padding: 0, margin: 0 }} />
+      <RichTextEditor value={text} isEditable={false} />
       {lastUpdate && (
         <Text variant="bodyXs" className={styles.editLabel}>
           (edited)

@@ -26,7 +26,7 @@ export type FormattingSubmenu = 'text-color' | 'text-background'
 export interface TextItemToolbarOptions {
   selection: SelectionState | undefined
   editorAPI: React.RefObject<RichTextEditorApi | undefined>
-  tapestryId?: string
+  tapestryId: string
   onLinkClick?: () => unknown
   canAddLink?: boolean
   itemBackgroundColor: LiteralColor | null | undefined
@@ -74,7 +74,7 @@ export function textItemToolbar({
             <FontSizeInput
               value={selection?.fontSize ?? DEFAULT_FONT_SIZE}
               onChange={(fontSize) => {
-                userSettings.updateTapestrySettings(tapestryId!, { fontSize })
+                userSettings.updateTapestrySettings(tapestryId, { fontSize })
                 editorAPI.current?.fontSize(fontSize)
               }}
               onMenuOpen={() => onToggleMenu('')}
