@@ -1,6 +1,7 @@
 import { Queue, QueueBaseOptions } from 'bullmq'
 import { config } from '../config.js'
 import { redis } from '../services/redis.js'
+import { ItemDto } from 'tapestry-shared/src/data-transfer/resources/dtos/item.js'
 
 export const QUEUE_NAME = 'tasks'
 
@@ -12,6 +13,7 @@ export const BULLMQ_REDIS_BASE_OPTIONS: QueueBaseOptions = {
 export interface JobTypeMap {
   'generate-tapestry-thumbnails': {
     tapestryId: string
+    generateAll?: ItemDto['scheduledThumbnailProcessing']
   }
   's3-cleanup': void
   'create-tapestry': {
