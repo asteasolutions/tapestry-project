@@ -104,7 +104,8 @@ export function MessageInput({
     editorApiRef.current?.editor().commands.clearContent()
   })
 
-  const isDisabled = !!disabled || isSubmitting
+  const hasContent = !!editorApiRef.current?.text().trim()
+  const isDisabled = !!disabled || isSubmitting || !hasContent
 
   return (
     <div className={clsx(styles.root, className)}>
@@ -184,7 +185,7 @@ export function MessageInput({
             <RichTextEditor
               className={styles.messageInput}
               value={value ?? ''}
-              isEditable={!isDisabled}
+              isEditable={true}
               api={editorApiRef}
               placeholder={placeholder}
               controls={{
