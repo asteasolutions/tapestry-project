@@ -1,10 +1,10 @@
-import { getCopyName, IdMap, idMapToArray, isHTTPURL, mapIds } from 'tapestry-core/src/utils.js'
+import { getCopyName, IdMap, isHTTPURL, mapIds } from 'tapestry-core/src/utils.js'
 import { JobTypeMap } from './index.js'
 import { prisma } from '../db.js'
 import { generateItemKey, s3Service, tapestryKey } from '../services/s3-service.js'
 import { Prisma, PrismaClient, TapestryCreateJob } from '@prisma/client'
 import { ITXClientDenyList } from '@prisma/client/runtime/library'
-import { omit, fromPairs, zip, sumBy, compact } from 'lodash-es'
+import { omit, sumBy, compact } from 'lodash-es'
 import { actionMap, TapestryImportService } from '../services/tapestry-import-service.js'
 import { ACTION_ITEM_TYPES } from 'tapestry-core/src/data-format/schemas/item.js'
 
@@ -71,15 +71,18 @@ async function forkTapestry(job: TapestryCreateJob) {
           }
         }
 
-        const thumbnanilIds = compact(tapestry.items.map((i) => i.thumbnailId))
-        const thumbnailIdMap = fromPairs(thumbnanilIds.map((id) => [id, crypto.randomUUID()]))
-        await cloneImageAssets(thumbnailIdMap, tx)
-
-        const itemIdMap = mapIds(
-          tapestry.items,
-          tapestry.items.map(() => ({ id: crypto.randomUUID() })),
+        const thumbnailIdMap = await cloneImageAssets(
+          compact(tapestry.items.map((i) => i.thumbnailId)),
+          tx,
         )
-        await cloneItems(tapestry.items, newTapestryId, tx, itemIdMap, groupIdMap, thumbnailIdMap)
+
+        const itemIdMap = await cloneItems(
+          tapestry.items,
+          newTapestryId,
+          tx,
+          groupIdMap,
+          thumbnailIdMap,
+        )
 
         await cloneRels(tapestry.rels, newTapestryId, tx, itemIdMap)
 
@@ -152,36 +155,48 @@ async function cloneGroups(
     select: { id: true },
   })
 
-  return fromPairs(zip(groups, newGroups).map(([dto, db]) => [dto!.id, db!.id]))
+  return mapIds(groups, newGroups)
 }
 
 async function cloneImageAssets(
-  imageAssetIdMap: IdMap<string>,
+  imageAssetIds: string[],
   tx: Omit<PrismaClient, ITXClientDenyList>,
-) {
-  await tx.imageAsset.createMany({ data: idMapToArray(imageAssetIdMap).map((id) => ({ id })) })
-
-  const currentRenditions = await tx.imageAssetRendition.findMany({
-    where: { assetId: { in: Object.keys(imageAssetIdMap) } },
+): Promise<IdMap<string>> {
+  const newImageAssetIds = await tx.imageAsset.createManyAndReturn({
+    data: imageAssetIds.map(() => ({})),
+    select: { id: true },
   })
 
+  const imageAssetIdMap = mapIds(
+    imageAssetIds.map((id) => ({ id })),
+    newImageAssetIds,
+  )
+  const currentRenditions = await tx.imageAssetRendition.findMany({
+    where: { assetId: { in: imageAssetIds } },
+  })
   await tx.imageAssetRendition.createMany({
     data: currentRenditions.map((rendition) => ({
       ...omit(rendition, ['id', 'createdAt', 'updatedAt', 'assetId']),
-      assetId: imageAssetIdMap[rendition.assetId]!,
+      assetId: imageAssetIdMap[rendition.assetId],
     })),
   })
+
+  return imageAssetIdMap
 }
 
 async function cloneItems(
   items: Prisma.ItemGetPayload<null>[],
   newTapestryId: string,
   tx: Omit<PrismaClient, ITXClientDenyList>,
-  itemIdMap: IdMap<string>,
   groupIdMap: IdMap<string>,
   thumbnailIdMap: IdMap<string>,
 ): Promise<IdMap<string>> {
-  const newItems = await tx.item.createManyAndReturn({
+  const itemIdMap = mapIds(
+    items,
+    items.map(() => ({ id: crypto.randomUUID() })),
+  )
+
+  await tx.item.createMany({
     data: items.map((item) => ({
       ...omit(item, [
         'id',
@@ -201,10 +216,9 @@ async function cloneItems(
       tapestryId: newTapestryId,
       thumbnailId: thumbnailIdMap[item.thumbnailId ?? ''],
     })),
-    select: { id: true },
   })
 
-  return fromPairs(zip(items, newItems).map(([dto, db]) => [dto!.id, db!.id]))
+  return itemIdMap
 }
 
 async function cloneRels(
