@@ -3,12 +3,11 @@ import styles from './styles.module.css'
 import { Avatar } from '../avatar'
 import cursor from '../../assets/icons/cursor.svg?react'
 import { ActiveCollaborator } from '../../pages/tapestry/view-model'
-import { useEffect, useState } from 'react'
 import { SvgIcon } from 'tapestry-core-client/src/components/lib/svg-icon'
 import { idMapToArray } from 'tapestry-core/src/utils'
-import { isEqual } from 'lodash-es'
 import { CURSOR_BROADCAST_PERIOD } from '../../stage/utils'
 import { Viewport } from 'tapestry-core-client/src/view-model'
+import { useRecentlyChanged } from 'tapestry-core-client/src/components/tapestry/hooks/use-recently-changed'
 
 const MAX_INACTIVITY_PERIOD = 15_000
 
@@ -18,18 +17,7 @@ interface CollaboratorCursorProps {
 }
 
 function CollaboratorCursor({ collaborator, viewport }: CollaboratorCursorProps) {
-  const [prevCursorPosition, setPrevCursorPosition] = useState(collaborator.cursorPosition)
-  const [hidden, setHidden] = useState(false)
-
-  useEffect(() => {
-    const timeout = window.setTimeout(() => setHidden(true), MAX_INACTIVITY_PERIOD)
-    return () => clearTimeout(timeout)
-  }, [prevCursorPosition])
-
-  if (!isEqual(prevCursorPosition, collaborator.cursorPosition)) {
-    setPrevCursorPosition(collaborator.cursorPosition)
-    setHidden(false)
-  }
+  const hidden = !useRecentlyChanged(collaborator.cursorPosition, MAX_INACTIVITY_PERIOD)
 
   if (hidden) {
     return null
