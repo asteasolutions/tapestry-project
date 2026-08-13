@@ -27,7 +27,7 @@ export interface MessageInputProps {
   endAdornment?: ReactNode
 }
 
-const TRAILING_EMPTY_PARAGRAPHS_REGEX = /(<p><br><\/p>)+$/
+const TRAILING_EMPTY_PARAGRAPHS_REGEX = /(<p>(\s|<br\s*\/?>)*<\/p>)+$/gi
 
 export function MessageInput({
   onSubmit,
@@ -96,10 +96,9 @@ export function MessageInput({
     const plainText = editorApiRef.current?.text().trim()
     if (!plainText) return
 
-    const cleanedInput = plainText.replace(TRAILING_EMPTY_PARAGRAPHS_REGEX, '')
+    const cleanedInput = input.replace(TRAILING_EMPTY_PARAGRAPHS_REGEX, '')
 
     await onSubmit(cleanedInput)
-
     setInput('')
     editorApiRef.current?.editor().commands.clearContent()
   })
