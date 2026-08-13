@@ -1,11 +1,7 @@
 import { useState } from 'react'
-import {
-  Button,
-  IconButton,
-  IconButtonProps,
-} from 'tapestry-core-client/src/components/lib/buttons'
+import { IconButton, IconButtonProps } from 'tapestry-core-client/src/components/lib/buttons'
 import { Input } from 'tapestry-core-client/src/components/lib/input'
-import { Modal } from 'tapestry-core-client/src/components/lib/modal'
+import { SimpleModal } from 'tapestry-core-client/src/components/lib/modal'
 import { ItemDto } from 'tapestry-shared/src/data-transfer/resources/dtos/item'
 import { useItemPicker } from '../item-picker/use-item-picker'
 import { useDispatch, useTapestryData } from '../../pages/tapestry/tapestry-providers'
@@ -56,7 +52,16 @@ export function AssignActionModal({
   const canApply = action.trim().length > 0 && (!showTextField || text.trim().length > 0)
 
   return (
-    <Modal onClose={() => onClose()} title="Assign action" classes={{ root: styles.modal }}>
+    <SimpleModal
+      title="Assign action"
+      classes={{ root: styles.modal }}
+      cancel={{ onClick: () => onClose() }}
+      confirm={{
+        text: 'Apply',
+        disabled: !canApply,
+        onClick: () => onApply(action, text || undefined),
+      }}
+    >
       <div className={styles.inputContainer}>
         <div className={styles.actionContainer}>
           {showTextField && (
@@ -66,23 +71,22 @@ export function AssignActionModal({
               placeholder="Input link name"
             />
           )}
-          <Input
-            value={action}
-            onChange={(e) => setAction(e.target.value)}
-            placeholder="Input a link or select an item"
-          />
-          <IconButton
-            icon="left_click"
-            aria-label="Attach items"
-            tooltip={{ side: 'bottom', children: 'Attach items' }}
-            onClick={() => onSelectItem()}
-          />
+          <div className={styles.attachItems}>
+            <Input
+              value={action}
+              onChange={(e) => setAction(e.target.value)}
+              placeholder="Input a link or select an item"
+            />
+            <IconButton
+              icon="left_click"
+              aria-label="Attach items"
+              tooltip={{ side: 'bottom', children: 'Attach items' }}
+              onClick={() => onSelectItem()}
+            />
+          </div>
         </div>
-        <Button disabled={!canApply} onClick={() => onApply(action, text || undefined)}>
-          Apply
-        </Button>
       </div>
-    </Modal>
+    </SimpleModal>
   )
 }
 

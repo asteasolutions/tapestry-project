@@ -7,24 +7,31 @@
 
   .input-container {
     display: flex;
+    flex-direction: column;
     gap: 20px;
 
-    .action-container {
+    .attach-items {
       position: relative;
       display: flex;
-      gap: 10px;
+      padding-bottom: 6px;
 
       > input {
-        padding-right: 40px;
-        min-width: 250px;
+        width: 100%;
+        padding-right: 50px;
       }
 
       > button {
         position: absolute;
-        right: 12px;
+        right: 10px;
         top: 50%;
-        transform: translateY(-50%);
+        transform: translateY(-60%);
       }
     }
+  }
+
+  .action-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
   }
 }
