@@ -13,7 +13,11 @@ import {
 } from 'tapestry-core-client/src/components/lib/rich-text-editor'
 import { textItemToolbar } from '../tapestry-elements/items/text/toolbar'
 import { Toolbar } from 'tapestry-core-client/src/components/lib/toolbar'
-import { LinkTooltip, LinkTooltipProps } from '../tapestry-elements/items/text/link-tooltip'
+import { useGenerateItemLink, useTapestryPath } from '../../hooks/use-tapestry-path'
+import { useTapestryData } from '../../pages/tapestry/tapestry-providers'
+import { useItemPicker } from '../item-picker/use-item-picker'
+import { idMapToArray } from 'tapestry-core/src/utils'
+import { AssignActionModal, extractAction } from '../assign-action-button'
 
 export interface MessageInputProps {
   onSubmit: (text: string) => unknown
@@ -45,33 +49,44 @@ export function MessageInput({
 
   const [selectionState, setSelectionState] = useState<SelectionState | undefined>(undefined)
   const [isEditorReady, setIsEditorReady] = useState(false)
-  const [addLinkProps, setAddLinkProps] = useState<
-    Pick<LinkTooltipProps, 'element' | 'content'> | undefined
-  >(undefined)
   const editorApiRef = useRef<RichTextEditorApi | undefined>(undefined)
 
-  const handleCreateLink = (domNode?: HTMLElement) => {
-    const editor = editorApiRef.current?.editor()
-    if (!editor) return
+  const [showModal, setShowModal] = useState(false)
+  const [linkAction, setLinkAction] = useState('')
+  const [linkText, setLinkText] = useState('')
 
+  const tapestryId = useTapestryData('id')
+  const tapestryPath = useTapestryPath('view')
+
+  const generateLink = useGenerateItemLink()
+  const items = useTapestryData('items')
+
+  const itemPicker = useItemPicker({
+    onItemsChanged: ([id]) => {
+      itemPicker.close()
+      const item = idMapToArray(items).find((i) => i.dto.id === id)
+      if (item) {
+        setLinkAction(generateLink(id))
+      }
+    },
+    isSelectable: (item) => item.dto.type !== 'actionButton',
+  })
+
+  const closeLinkModal = () => {
+    setShowModal(false)
+    setLinkAction('')
+    setLinkText('')
+  }
+
+  const handleCreateLink = () => {
     if (selectionState?.isLink) {
       editorApiRef.current?.link('')
-      setAddLinkProps(undefined)
       return
     }
-
-    const selectionStartDOMNode = editor.view.domAtPos(editor.state.selection.from).node
-    const anchorElement =
-      selectionStartDOMNode instanceof HTMLElement
-        ? selectionStartDOMNode
-        : selectionStartDOMNode.parentElement
-
-    if (!anchorElement) return
-
-    setAddLinkProps({
-      content: editorApiRef.current?.selectionText(),
-      element: domNode ?? anchorElement,
-    })
+    const selected = editorApiRef.current?.selectionText() ?? ''
+    setLinkText(selected)
+    setLinkAction('')
+    setShowModal(true)
   }
 
   const menuItems = textItemToolbar({
@@ -120,48 +135,6 @@ export function MessageInput({
             })}
             data-value={input}
           >
-            {addLinkProps && (
-              <LinkTooltip
-                element={addLinkProps.element}
-                content={addLinkProps.content}
-                onRemove={() => {
-                  const editor = editorApiRef.current?.editor()
-                  if (editor) {
-                    editor.commands.focus()
-                    editorApiRef.current?.link('')
-                  }
-                  setAddLinkProps(undefined)
-                }}
-                onApply={(url: string, text?: string) => {
-                  const api = editorApiRef.current
-                  const editor = api?.editor()
-
-                  if (editor) {
-                    editor.commands.focus()
-                    const selectedText = api!.selectionText()
-
-                    const isInternal =
-                      url.startsWith('/') ||
-                      url.startsWith('#') ||
-                      url.includes(window.location.origin)
-                    const target = isInternal ? '_self' : '_blank'
-
-                    if (text && text !== selectedText) {
-                      editor
-                        .chain()
-                        .focus()
-                        .insertContent(`<a href="${url}" target="${target}">${text}</a>`)
-                        .run()
-                    } else {
-                      editor.chain().focus().setLink({ href: url, target }).run()
-                    }
-                  }
-
-                  setAddLinkProps(undefined)
-                }}
-              />
-            )}
-
             {startAdornment && <div className={styles.startAdornment}>{startAdornment}</div>}
 
             {isEditorReady && (
@@ -209,6 +182,41 @@ export function MessageInput({
                 },
               }}
             />
+
+            {showModal && !itemPicker.isOpen && (
+              <AssignActionModal
+                onClose={closeLinkModal}
+                action={linkAction}
+                onActionChange={setLinkAction}
+                text={linkText}
+                onTextChange={setLinkText}
+                onApply={(url, text) => {
+                  const { action, actionType } = extractAction(url, tapestryPath, tapestryId)
+                  if (!action) return
+
+                  const href = actionType === 'internalLink' ? `${tapestryPath}?${action}` : action
+                  const editor = editorApiRef.current?.editor()
+                  if (!editor) return
+
+                  const linkTextFinal = text?.trim() || url
+                  const { from } = editor.state.selection
+
+                  editor
+                    .chain()
+                    .focus()
+                    .insertContent(linkTextFinal)
+                    .setTextSelection({ from, to: from + linkTextFinal.length })
+                    .command(({ commands }) => commands.setLink({ href }))
+                    .setTextSelection(from + linkTextFinal.length)
+                    .run()
+
+                  closeLinkModal()
+                }}
+                onSelectItem={() => itemPicker.open()}
+                showTextField={true}
+              />
+            )}
+            {itemPicker.ui}
           </div>
         </>
       ) : (

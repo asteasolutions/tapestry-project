@@ -16,6 +16,8 @@ import { MessageInput } from '../../message-input'
 import { useTapestryData } from '../../../pages/tapestry/tapestry-providers'
 import { Tooltip } from 'tapestry-core-client/src/components/lib/tooltip/index'
 import { RichTextEditor } from 'tapestry-core-client/src/components/lib/rich-text-editor'
+import { useNavigate } from 'react-router'
+import { useTapestryPath } from '../../../hooks/use-tapestry-path'
 
 interface CommentProps {
   comment: CommentDto
@@ -26,6 +28,8 @@ interface CommentProps {
 
 function CommentContent({ createdAt, updatedAt, deletedAt, text }: CommentDto) {
   const lastUpdate = isEqual(updatedAt, createdAt) ? undefined : updatedAt
+  const navigate = useNavigate()
+  const tapestryPath = useTapestryPath('view')
 
   if (deletedAt) {
     return (
@@ -35,8 +39,22 @@ function CommentContent({ createdAt, updatedAt, deletedAt, text }: CommentDto) {
     )
   }
 
+  const handleLinkClick = async (e: React.MouseEvent<HTMLDivElement>) => {
+    const anchor = (e.target as HTMLElement).closest('a')
+    if (!anchor) return
+
+    const href = anchor.getAttribute('href')
+    if (!href) return
+
+    const isInternal = href.startsWith(tapestryPath)
+    if (isInternal) {
+      e.preventDefault()
+      await navigate(href)
+    }
+  }
+
   return (
-    <Text component="div" variant="bodySm" className={styles.commentText}>
+    <Text onClick={handleLinkClick} component="div" variant="bodySm" className={styles.commentText}>
       <RichTextEditor value={text} isEditable={false} />
       {lastUpdate && (
         <Text variant="bodyXs" className={styles.editLabel}>

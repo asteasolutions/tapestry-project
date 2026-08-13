@@ -20,25 +20,52 @@ type ActionItemDto = Extract<ItemDto, { type: ActionItemType }>
 
 interface AssignActionModalProps {
   onClose: () => unknown
-  dto: ActionItemDto
+  dto?: ActionItemDto
   onSelectItem: () => unknown
-  onApply: (action: string) => unknown
+  onApply: (action: string, text?: string) => unknown
+  showTextField?: boolean
   initialAction?: string
+  initialText?: string
+  action?: string
+  onActionChange?: (value: string) => unknown
+  text?: string
+  onTextChange?: (value: string) => unknown
 }
 
-function AssignActionModal({
+export function AssignActionModal({
   onClose,
   dto,
   onSelectItem,
   onApply,
   initialAction,
+  initialText,
+  showTextField = false,
+  action: controlledAction,
+  onActionChange,
+  text: controlledText,
+  onTextChange,
 }: AssignActionModalProps) {
-  const [action, setAction] = useState(initialAction ?? dto.action ?? '')
+  const [localAction, setLocalAction] = useState(initialAction ?? dto?.action ?? '')
+  const [localText, setLocalText] = useState(initialText ?? '')
+
+  const action = controlledAction ?? localAction
+  const text = controlledText ?? localText
+  const setAction = onActionChange ?? setLocalAction
+  const setText = onTextChange ?? setLocalText
+
+  const canApply = action.trim().length > 0 && (!showTextField || text.trim().length > 0)
 
   return (
     <Modal onClose={() => onClose()} title="Assign action" classes={{ root: styles.modal }}>
       <div className={styles.inputContainer}>
         <div className={styles.actionContainer}>
+          {showTextField && (
+            <Input
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder="Input link name"
+            />
+          )}
           <Input
             value={action}
             onChange={(e) => setAction(e.target.value)}
@@ -51,13 +78,15 @@ function AssignActionModal({
             onClick={() => onSelectItem()}
           />
         </div>
-        <Button onClick={() => onApply(action)}>Apply</Button>
+        <Button disabled={!canApply} onClick={() => onApply(action, text || undefined)}>
+          Apply
+        </Button>
       </div>
     </Modal>
   )
 }
 
-function extractAction(url: string | null, tapestryPath: string, tapestryId: Id) {
+export function extractAction(url: string | null, tapestryPath: string, tapestryId: Id) {
   if (!url) {
     return {
       action: null,

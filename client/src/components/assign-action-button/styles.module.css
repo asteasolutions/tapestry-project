@@ -11,6 +11,8 @@
 
     .action-container {
       position: relative;
+      display: flex;
+      gap: 10px;
 
       > input {
         padding-right: 40px;
