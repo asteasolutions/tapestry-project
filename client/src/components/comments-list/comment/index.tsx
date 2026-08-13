@@ -22,6 +22,9 @@ import { useTapestryPath } from '../../../hooks/use-tapestry-path'
 interface CommentProps {
   comment: CommentDto
   tapestryAuthorId: string
+  isEditing: boolean
+  onEditStart: () => void
+  onEditEnd: () => void
   onDelete?: () => void
   onEdit?: (newComment: CommentDto) => void
 }
@@ -73,7 +76,15 @@ function CommentContent({ createdAt, updatedAt, deletedAt, text }: CommentDto) {
   )
 }
 
-export function Comment({ comment, tapestryAuthorId, onDelete, onEdit }: CommentProps) {
+export function Comment({
+  comment,
+  tapestryAuthorId,
+  isEditing,
+  onEditStart,
+  onEditEnd,
+  onDelete,
+  onEdit,
+}: CommentProps) {
   const { user } = useSession()
 
   const isDeleted = !!comment.deletedAt
@@ -84,7 +95,6 @@ export function Comment({ comment, tapestryAuthorId, onDelete, onEdit }: Comment
   const { id } = comment
 
   const [showEditControls, setShowEditControls] = useState(false)
-  const [editing, setEditing] = useState(false)
   const [deleting, setDeleting] = useState(false)
 
   const { trigger: deleteComment, loading: deleteInProgress } = useAsyncAction(
@@ -97,7 +107,7 @@ export function Comment({ comment, tapestryAuthorId, onDelete, onEdit }: Comment
 
   const { trigger: editComment } = useAsyncAction(async ({ signal }, text: string) => {
     const newComment = await resource('comments').update({ id }, { text }, undefined, { signal })
-    setEditing(false)
+    onEditEnd()
     onEdit?.(newComment)
   })
 
@@ -120,7 +130,7 @@ export function Comment({ comment, tapestryAuthorId, onDelete, onEdit }: Comment
                 size="small"
                 icon="edit"
                 aria-label="Edit comment"
-                onClick={() => setEditing(!editing)}
+                onClick={() => (isEditing ? onEditEnd() : onEditStart())}
                 tooltip={{ side: 'bottom', children: 'Edit' }}
               />
             )}
@@ -143,7 +153,7 @@ export function Comment({ comment, tapestryAuthorId, onDelete, onEdit }: Comment
           </span>
         )}
       </div>
-      {editing ? (
+      {isEditing ? (
         <MessageInput onSubmit={editComment} className={styles.editComment} value={comment.text} />
       ) : (
         <CommentContent {...comment} />

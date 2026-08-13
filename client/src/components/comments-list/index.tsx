@@ -24,6 +24,8 @@ export const CommentsList = memo(({ contextType, contextId, className }: Comment
   const { id: tapestryId, ownerId } = useTapestryData(['id', 'ownerId'])
   const { reloadCommentThreads } = useTapestryDataSyncCommands()
   const [commentsLoader, setCommentsLoader] = useState<LazyListLoader<CommentDto> | null>()
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null)
+
   const loadComments = useCallback<LazyListRequestItems<CommentDto>>(
     (skip, limit, signal) =>
       resource('comments').list(
@@ -54,9 +56,13 @@ export const CommentsList = memo(({ contextType, contextId, className }: Comment
           <Comment
             comment={comment}
             tapestryAuthorId={ownerId}
+            isEditing={editingCommentId === comment.id}
+            onEditStart={() => setEditingCommentId(comment.id)}
+            onEditEnd={() => setEditingCommentId(null)}
             onDelete={() => {
               void commentsLoader?.reload()
               reloadCommentThreads()
+              if (editingCommentId === comment.id) setEditingCommentId(null)
             }}
             onEdit={() => commentsLoader?.reload()}
           />
