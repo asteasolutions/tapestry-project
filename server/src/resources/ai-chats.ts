@@ -4,8 +4,8 @@ import { RESTResourceImpl } from './base-resource.js'
 import { canViewTapestry } from './tapestries.js'
 import { parseIncludes, parseListFilter } from './utils.js'
 import { serialize } from '../transformers/index.js'
-import { AiChat, Prisma } from '@prisma/client'
 import { ConflictError } from '../errors/index.js'
+import { AiChat, Prisma } from '../../prisma/generated/prisma/client.js'
 
 export async function isAIChatOwner(userId: string, aiChatOrId: AiChat | string) {
   const aiChat =

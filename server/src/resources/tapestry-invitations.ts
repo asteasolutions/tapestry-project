@@ -2,8 +2,8 @@ import { Resources } from 'tapestry-shared/src/data-transfer/resources/index.js'
 import { prisma } from '../db.js'
 import { RESTResourceImpl } from './base-resource.js'
 import { parseIncludes, parseListFilter } from './utils.js'
-import { Prisma } from '@prisma/client'
 import { serialize } from '../transformers/index.js'
+import { Prisma } from '../../prisma/generated/prisma/client.js'
 
 async function ownsInvitation(invitationId: string, userId: string) {
   return !!(await prisma.tapestryInvitation.findUnique({

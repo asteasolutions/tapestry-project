@@ -6,7 +6,6 @@ import { canEditTapestry, canListTapestryElements, canViewTapestry } from './tap
 import { scheduleTapestryThumbnailGeneration } from '../tasks/utils.js'
 import { parseIncludes, parseListFilter } from './utils.js'
 import { serialize } from '../transformers/index.js'
-import { Item, Prisma } from '@prisma/client'
 import { BadRequestError } from '../errors/index.js'
 import { destroyPresentationSteps } from './presentation-steps.js'
 import {
@@ -24,6 +23,7 @@ import { MEDIA_ITEM_TYPES } from 'tapestry-core/src/data-format/schemas/item.js'
 import { extractInternallyHostedS3Key } from '../services/s3-service.js'
 import { Path, WithOptional } from 'tapestry-core/src/type-utils.js'
 import { queue } from '../tasks/index.js'
+import { Item, Prisma } from '../../prisma/generated/prisma/client.js'
 
 type ItemWithRequiredAssets = Prisma.ItemGetPayload<{
   include: { thumbnail: { include: { renditions: true } } }

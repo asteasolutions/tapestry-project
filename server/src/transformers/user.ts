@@ -1,5 +1,5 @@
-import { Prisma } from '@prisma/client'
 import { UserDto } from 'tapestry-shared/src/data-transfer/resources/dtos/user.js'
+import { Prisma } from '../../prisma/generated/prisma/client'
 
 //eslint-disable-next-line @typescript-eslint/require-await
 export async function userDbToDto(dbUser: Prisma.UserGetPayload<null>): Promise<UserDto> {

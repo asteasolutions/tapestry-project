@@ -6,7 +6,7 @@ import { generateObject } from 'ai'
 import { z } from 'zod/v4'
 import { generate } from '../seed.js'
 import { serializeMessageForAi } from '../../resources/ai-chat-messages.js'
-import { Prisma } from '@prisma/client'
+import { Prisma } from '../../../prisma/generated/prisma/client.js'
 
 beforeAll(setupTestSuite)
 

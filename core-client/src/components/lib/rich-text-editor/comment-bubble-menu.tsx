@@ -25,7 +25,7 @@ export function CommentBubbleMenu({ editor }: CommentBubbleMenuProps) {
       editor={editor}
       className={styles.root}
       data-captures-pointer-events
-      appendTo={editor.$doc.element.closest('.tapestry-component') ?? undefined}
+      appendTo={editor.$doc.element.closest<HTMLElement>('.tapestry-component') ?? undefined}
       style={{ transform: 'scale(calc(1 / var(--scale)))' }}
       options={{
         placement: 'right-end',

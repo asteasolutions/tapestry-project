@@ -1,8 +1,8 @@
-import { Prisma } from '@prisma/client'
 import { get, set } from 'lodash-es'
 import { HexColor } from 'tapestry-core/src/data-format/schemas/common.js'
 import { TapestryDto } from 'tapestry-shared/src/data-transfer/resources/dtos/tapestry.js'
 import { extractInternallyHostedS3Key, s3Service } from '../services/s3-service.js'
+import { Prisma } from '../../prisma/generated/prisma/client.js'
 
 export async function tapestryDbToDto(
   dbTapestry: Prisma.TapestryGetPayload<null>,

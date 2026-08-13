@@ -1,5 +1,3 @@
-import { Prisma } from '@prisma/client'
-import { GetResult } from '@prisma/client/runtime/library'
 import { TapestryDto } from 'tapestry-shared/src/data-transfer/resources/dtos/tapestry.js'
 import {
   UserDto,
@@ -34,6 +32,9 @@ import {
   ImageAssetDto,
   ImageAssetRenditionDto,
 } from 'tapestry-shared/src/data-transfer/resources/dtos/image-assets.js'
+import { GetResult } from '@prisma/client/runtime/client'
+import { Prisma } from '../../prisma/generated/prisma/client.js'
+import { getPrismaDatamodel } from '../db.js'
 
 interface DtoMap {
   Tapestry: { default: TapestryDto }
@@ -131,7 +132,7 @@ export async function serialize<M extends Prisma.ModelName, V extends keyof DtoM
   const serializer = MODEL_SERIALIZERS[modelName][view ?? 'default']
   const dto = (await serializer(instance)) as DtoMap[M][V]
 
-  const model = Prisma.dmmf.datamodel.models.find((m) => m.name === modelName)!
+  const model = getPrismaDatamodel().datamodel.models.find((m) => m.name === modelName)!
   const relations = model.fields.filter((f) => f.kind === 'object' && f.type in MODEL_SERIALIZERS)
   // We operate under the assumption that relations in the database have the same
   // names as relations in DTOs. If this were not true, we would have to implement

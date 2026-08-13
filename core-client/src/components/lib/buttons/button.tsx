@@ -143,21 +143,19 @@ export function Button<T extends ButtonComponent = 'button'>({
       disabled: disabled || loading,
       ...rest,
     },
-    ...(loading ? (
-      [<LoadingSpinner size="20px" />]
-    ) : (
-      [
-        !!icon &&
-          (icon instanceof Function ? (
-            <SvgIcon size={22} Icon={icon} />
-          ) : typeof icon === 'string' ? (
-            <Icon icon={icon} className="button-icon" />
-          ) : (
-            <Icon icon={icon.name} className="button-icon" filled={icon.fill} />
-          )),
-        children,
-      ]
-    )),
+    ...(loading
+      ? [<LoadingSpinner size="20px" />]
+      : [
+          !!icon &&
+            (icon instanceof Function ? (
+              <SvgIcon size={22} Icon={icon} />
+            ) : typeof icon === 'string' ? (
+              <Icon icon={icon} className="button-icon" />
+            ) : (
+              <Icon icon={icon.name} className="button-icon" filled={icon.fill} />
+            )),
+          children,
+        ]),
     tooltip && <Tooltip offset={8} {...tooltip} />,
   )
 }

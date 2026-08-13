@@ -1,4 +1,3 @@
-import { Prisma } from '@prisma/client'
 import { get, isEmpty, set } from 'lodash-es'
 import {
   BaseResourceDto,
@@ -10,10 +9,11 @@ import {
 } from 'tapestry-shared/src/data-transfer/resources/dtos/common.js'
 import { RESTEndpoints, IO } from 'tapestry-shared/src/data-transfer/resources/types.js'
 import { AccessPolicy } from './base-resource.js'
-import { isNotFoundError } from '../db.js'
+import { getPrismaDatamodel, isNotFoundError } from '../db.js'
 import { OneOrMore, ExtractType, ensureArray } from 'tapestry-core/src/utils.js'
 import { BadRequestError, toAPIError, toErrorDto } from '../errors/index.js'
 import { ErrorResponseDto } from 'tapestry-shared/src/data-transfer/resources/dtos/errors.js'
+import { Prisma } from '../../prisma/generated/prisma/client.js'
 
 function toDbOp(op: FilterOp, value: string | string[]) {
   return {
@@ -119,7 +119,7 @@ function processIncludes<M extends Prisma.ModelName>(
 function processIncludes<M extends Prisma.ModelName>(modelName: M, normalizedIncludes: Includes) {
   if (isEmpty(normalizedIncludes)) return true
 
-  const model = Prisma.dmmf.datamodel.models.find((m) => m.name === modelName)
+  const model = getPrismaDatamodel().datamodel.models.find((m) => m.name === modelName)
   if (!model) throw new Error(`Unknown model name ${modelName}`)
 
   const result: Record<string, unknown> = {}

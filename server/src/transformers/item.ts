@@ -1,4 +1,3 @@
-import { ImageAssetRendition, Item } from '@prisma/client'
 import { get, set } from 'lodash-es'
 import { HexColor } from 'tapestry-core/src/data-format/schemas/common.js'
 import { ItemDto } from 'tapestry-shared/src/data-transfer/resources/dtos/item.js'
@@ -6,6 +5,7 @@ import { extractInternallyHostedS3Key, s3Service } from '../services/s3-service.
 import { isHTTPURL } from 'tapestry-core/src/utils.js'
 import { ACTION_ITEM_TYPES, MEDIA_ITEM_TYPES } from 'tapestry-core/src/data-format/schemas/item.js'
 import { ImageAssetRenditionDto } from 'tapestry-shared/src/data-transfer/resources/dtos/image-assets.js'
+import { ImageAssetRendition, Item } from '../../prisma/generated/prisma/client.js'
 
 export async function parseDBItemSource(source: string) {
   const internallyHosted = !isHTTPURL(source) && !source.startsWith('blob:')

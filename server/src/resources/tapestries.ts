@@ -1,6 +1,5 @@
 import { Resources } from 'tapestry-shared/src/data-transfer/resources/index.js'
 import { prisma } from '../db.js'
-import { Prisma, Tapestry } from '@prisma/client'
 import { RequestContext, RESTResourceImpl } from './base-resource.js'
 import { tapestryDtoToDb } from '../transformers/tapestry.js'
 import { checkOpSupport, CustomFilters, parseIncludes, parseListFilter } from './utils.js'
@@ -17,6 +16,7 @@ import { ListParamsOutputDto } from 'tapestry-shared/src/data-transfer/resources
 import { createItems } from './items.js'
 import { createRels } from './rels.js'
 import { socketIdFromRequest, socketServer } from '../socket/index.js'
+import { Prisma, Tapestry } from '../../prisma/generated/prisma/client.js'
 
 function sharedWithFilters(userId: string): Prisma.TapestryWhereInput[] {
   return [

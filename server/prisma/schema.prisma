@@ -1,13 +1,13 @@
 // Prisma schema docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider        = "prisma-client-js"
+  provider        = "prisma-client"
   previewFeatures = ["postgresqlExtensions"]
+  output          = "./generated/prisma"
 }
 
 datasource db {
   provider   = "postgresql"
-  url        = env("DATABASE_URL")
   extensions = [citext]
 }
 

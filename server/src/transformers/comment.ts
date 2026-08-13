@@ -1,6 +1,6 @@
-import { Comment } from '@prisma/client'
 import { get, set } from 'lodash-es'
 import { CommentDto } from 'tapestry-shared/src/data-transfer/resources/dtos/comment.js'
+import { Comment } from '../../prisma/generated/prisma/client'
 
 //eslint-disable-next-line @typescript-eslint/require-await
 export async function commentDbToDto(dbComment: Comment): Promise<CommentDto> {

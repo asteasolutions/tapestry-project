@@ -5,7 +5,7 @@ import { canViewTapestry } from './tapestries.js'
 import { max } from 'lodash-es'
 import { serialize } from '../transformers/index.js'
 import { CommentThreadDto } from 'tapestry-shared/src/data-transfer/resources/dtos/comment-threads.js'
-import { Prisma } from '@prisma/client'
+import { Prisma } from '../../prisma/generated/prisma/client.js'
 
 async function loadCommentThreads<T extends 'tapestry' | 'item' | 'rel'>(
   tapestryId: string,

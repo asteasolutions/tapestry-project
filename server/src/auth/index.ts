@@ -1,8 +1,8 @@
 import { Request } from 'express'
 import { RegisterJWTData, verifySessionJWT } from './tokens.js'
 import { prisma } from '../db.js'
-import { Prisma } from '@prisma/client'
 import { UserDoesNotExistError } from '../errors/index.js'
+import { Prisma } from '../../prisma/generated/prisma/client.js'
 
 export const REFRESH_TOKEN_COOKIE_NAME = 'refreshToken'
 export const REGISTRATION_TOKEN_COOKIE_NAME = 'registrationToken'

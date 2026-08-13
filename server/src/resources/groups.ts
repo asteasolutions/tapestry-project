@@ -5,7 +5,6 @@ import { canEditTapestry, canListTapestryElements, canViewTapestry } from './tap
 import { scheduleTapestryThumbnailGeneration } from '../tasks/utils.js'
 import { parseIncludes, parseListFilter } from './utils.js'
 import { serialize } from '../transformers/index.js'
-import { Group, Prisma } from '@prisma/client'
 import {
   GroupCreateDto,
   GroupDto,
@@ -16,6 +15,7 @@ import { ensureArray, OneOrMore } from 'tapestry-core/src/utils.js'
 import { destroyPresentationSteps } from './presentation-steps.js'
 import { socketIdFromRequest, socketServer } from '../socket/index.js'
 import { groupBy } from 'lodash-es'
+import { Group, Prisma } from '../../prisma/generated/prisma/client.js'
 
 export function shouldGroupRegenerateTapestryThumbnail(group: Group, patch?: Partial<Group>) {
   if (!patch) return group.color && (group.hasBackground || group.hasBorder)

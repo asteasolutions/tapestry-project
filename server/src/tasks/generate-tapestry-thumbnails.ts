@@ -3,9 +3,9 @@ import { config } from '../config.js'
 import { s3Service, tapestryKey } from '../services/s3-service.js'
 import { prisma } from '../db.js'
 import { takeTapestryScreenshots } from './thumbnail-generators/tapestry.js'
-import { Item } from '@prisma/client'
 import { generatePrimaryThumbnail, hasInherentThumbnail } from './thumbnail-generators/index.js'
 import { processItemThumbnail } from './process-item-thumbnail.js'
+import { Item } from '../../prisma/generated/prisma/client.js'
 
 // 6 times the dimensions of the thumbnail as displayed in the UI
 const WIDTH = 6 * 375

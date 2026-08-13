@@ -4,10 +4,10 @@
     "declaration": true,
     "declarationMap": true,
     "outDir": "dist",
-    "rootDir": "src",
+    "rootDir": ".",
     "target": "ESNext",
     "module": "ESNext",
-    "moduleResolution": "Node",
+    "moduleResolution": "bundler",
     "esModuleInterop": true,
     "skipLibCheck": true,
     "lib": ["ESNext"],
@@ -22,5 +22,5 @@
     { "path": "../core" },
     { "path": "../shared" }
   ],
-  "include": ["src"]
+  "include": ["src", "prisma/generated"]
 }

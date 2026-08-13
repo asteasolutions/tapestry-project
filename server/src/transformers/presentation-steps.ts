@@ -1,10 +1,10 @@
-import { Prisma } from '@prisma/client'
 import { omit } from 'lodash-es'
 import {
   PresentationStepCreateDto,
   PresentationStepDto,
   PresentationStepUpdateDto,
 } from 'tapestry-shared/src/data-transfer/resources/dtos/presentation-step.js'
+import { Prisma } from '../../prisma/generated/prisma/client'
 
 //eslint-disable-next-line @typescript-eslint/require-await
 export async function presentationStepDbToDto(

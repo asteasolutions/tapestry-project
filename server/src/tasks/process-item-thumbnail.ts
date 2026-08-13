@@ -1,12 +1,12 @@
 import { s3Service, tapestryKey } from '../services/s3-service.js'
 import { ensureTransaction, prisma } from '../db.js'
-import { ImageAssetRendition, Item, Prisma } from '@prisma/client'
 import { ThumbnailRenditionOutput } from './thumbnail-generators/index.js'
 import { generateItemThumbnailRenditionName } from 'tapestry-shared/src/utils.js'
 import { parseDBItemSource } from '../transformers/item.js'
 import { downloadImageToArrayBuffer, scheduleTapestryThumbnailGeneration } from './utils.js'
 import { generateThumbnail } from './thumbnail-generators/image.js'
 import sharp from 'sharp'
+import { ImageAssetRendition, Item, Prisma } from '../../prisma/generated/prisma/client.js'
 
 async function storeThumbnailRendition(
   item: Item,

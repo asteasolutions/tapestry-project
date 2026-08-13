@@ -6,7 +6,7 @@ import { parseIncludes, parseListFilter } from './utils.js'
 import { serialize } from '../transformers/index.js'
 import { commentDtoToDb } from '../transformers/comment.js'
 import { BadRequestError } from '../errors/index.js'
-import { Prisma } from '@prisma/client'
+import { Prisma } from '../../prisma/generated/prisma/client.js'
 
 async function canViewComment(userId: string | null, commentId: string) {
   const comment = await prisma.comment.findUniqueOrThrow({

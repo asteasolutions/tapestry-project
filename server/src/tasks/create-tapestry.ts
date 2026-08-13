@@ -2,11 +2,10 @@ import { getCopyName, IdMap, isHTTPURL, mapIds } from 'tapestry-core/src/utils.j
 import { JobTypeMap } from './index.js'
 import { prisma } from '../db.js'
 import { generateItemKey, s3Service, tapestryKey } from '../services/s3-service.js'
-import { Prisma, PrismaClient, TapestryCreateJob } from '@prisma/client'
-import { ITXClientDenyList } from '@prisma/client/runtime/library'
 import { omit, fromPairs, zip, sumBy } from 'lodash-es'
 import { actionMap, TapestryImportService } from '../services/tapestry-import-service.js'
 import { ACTION_ITEM_TYPES } from 'tapestry-core/src/data-format/schemas/item.js'
+import { Prisma, TapestryCreateJob } from '../../prisma/generated/prisma/client.js'
 
 export async function createTapestry({ tapestryCreateJobId }: JobTypeMap['create-tapestry']) {
   const job = await prisma.tapestryCreateJob.findFirstOrThrow({
@@ -104,7 +103,7 @@ async function cloneTapestry(
   title: string | null,
   description: string | null,
   userId: string,
-  tx: Omit<PrismaClient, ITXClientDenyList>,
+  tx: Prisma.TransactionClient,
 ): Promise<string> {
   const tapestryId = crypto.randomUUID()
 
@@ -138,7 +137,7 @@ async function cloneTapestry(
 async function cloneGroups(
   groups: Prisma.GroupGetPayload<null>[],
   newTapestryId: string,
-  tx: Omit<PrismaClient, ITXClientDenyList>,
+  tx: Prisma.TransactionClient,
 ) {
   const newGroups = await tx.group.createManyAndReturn({
     data: groups.map((group) => ({
@@ -154,7 +153,7 @@ async function cloneGroups(
 async function cloneItems(
   items: Prisma.ItemGetPayload<null>[],
   newTapestryId: string,
-  tx: Omit<PrismaClient, ITXClientDenyList>,
+  tx: Prisma.TransactionClient,
   itemIdMap: IdMap<string>,
   groupIdMap: IdMap<string>,
 ): Promise<IdMap<string>> {
@@ -185,7 +184,7 @@ async function cloneItems(
 async function cloneRels(
   rels: Prisma.RelGetPayload<null>[],
   newTapestryId: string,
-  tx: Omit<PrismaClient, ITXClientDenyList>,
+  tx: Prisma.TransactionClient,
   itemIdMap: IdMap<string>,
 ) {
   await tx.rel.createMany({

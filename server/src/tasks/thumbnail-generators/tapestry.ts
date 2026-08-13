@@ -6,9 +6,9 @@ import { REFRESH_TOKEN_COOKIE_NAME } from '../../auth/index.js'
 import { ThumbnailRenditionOutput } from './index.js'
 import { generateThumbnail } from './image.js'
 import { Page, ScreenshotOptions } from 'puppeteer'
-import { Item } from '@prisma/client'
 import { innerFit } from 'tapestry-core/src/lib/geometry.js'
 import { initWebpage, inNewBrowserPage, pageEval, WebpageConfig } from '../utils.js'
+import { Item } from '../../../prisma/generated/prisma/client.js'
 
 const MAX_ITEM_SIZE = 2000
 

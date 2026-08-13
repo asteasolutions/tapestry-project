@@ -4,7 +4,7 @@ import { prisma } from '../db.js'
 import { serialize } from '../transformers/index.js'
 import { canViewTapestry } from './tapestries.js'
 import { parseIncludes, parseListFilter } from './utils.js'
-import { Prisma } from '@prisma/client'
+import { Prisma } from '../../prisma/generated/prisma/client.js'
 
 async function ownsBookmark(userId: string, bookmarkId: string) {
   const bookmark = await prisma.tapestryBookmark.findUniqueOrThrow({ where: { id: bookmarkId } })

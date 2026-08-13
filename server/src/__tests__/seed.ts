@@ -1,5 +1,5 @@
-import { Prisma, User } from '@prisma/client'
-import { prisma } from '../db.js'
+import { Prisma, User } from '../../prisma/generated/prisma/client'
+import { getPrismaDatamodel, prisma } from '../db.js'
 import { faker } from '@faker-js/faker'
 import { camelCase, set, times } from 'lodash-es'
 
@@ -29,8 +29,9 @@ export function generate<M extends Prisma.ModelName>(
   overloads?: Partial<Prisma.TypeMap['model'][M]['operations']['create']['args']['data']>,
 ): Promise<ReturnType<(typeof prisma)[Uncapitalize<M>]['create']>> {
   const payload = { ...overloads }
-  const model = Prisma.dmmf.datamodel.models.find((model) => model.name === modelName)
 
+  const { models, enums } = getPrismaDatamodel().datamodel
+  const model = models.find((model) => model.name === modelName)
   if (!model) throw new Error(`Unknown model ${modelName}`)
 
   for (const field of model.fields) {
@@ -39,7 +40,7 @@ export function generate<M extends Prisma.ModelName>(
       if (generator) {
         set(payload, field.name, generator(field.name))
       } else {
-        const enumModel = Prisma.dmmf.datamodel.enums.find((e) => e.name === field.type)
+        const enumModel = enums.find((e) => e.name === field.type)
         if (enumModel) {
           set(payload, field.name, faker.helpers.arrayElement(enumModel.values).name)
         }

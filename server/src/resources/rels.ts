@@ -6,7 +6,6 @@ import { canEditTapestry, canListTapestryElements, canViewTapestry } from './tap
 import { scheduleTapestryThumbnailGeneration } from '../tasks/utils.js'
 import { parseIncludes, parseListFilter } from './utils.js'
 import { serialize } from '../transformers/index.js'
-import { Prisma } from '@prisma/client'
 import {
   RelCreateDto,
   RelDto,
@@ -16,6 +15,7 @@ import { ReadParamsDto } from 'tapestry-shared/src/data-transfer/resources/dtos/
 import { ensureArray, OneOrMore } from 'tapestry-core/src/utils.js'
 import { socketIdFromRequest, socketServer } from '../socket/index.js'
 import { groupBy } from 'lodash-es'
+import { Prisma } from '../../prisma/generated/prisma/client.js'
 
 export async function canViewRel(
   userId: string | null,

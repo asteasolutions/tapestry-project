@@ -19,13 +19,14 @@ import {
   parseRootJson,
   CurrentExport,
 } from 'tapestry-core/src/data-format/export/index.js'
-import { ActionType, Prisma, TapestryCreateJob } from '@prisma/client'
 import { determineWebpageType } from 'tapestry-core/src/web-sources/index.js'
 import { IdMap, idMapToArray, hasActionType, mapIds } from 'tapestry-core/src/utils.js'
 import { fileTypeFromBuffer, FileTypeResult } from 'file-type'
 import { Item } from 'tapestry-core/src/data-format/schemas/item.js'
 import { generateItemThumbnailRenditionName } from 'tapestry-shared/src/utils.js'
 import { generateThumbnails } from '../tasks/utils.js'
+import { ActionType } from '../../prisma/generated/prisma/enums.js'
+import { Prisma, TapestryCreateJob } from '../../prisma/generated/prisma/client.js'
 
 class ImportError extends BadRequestError {
   constructor(

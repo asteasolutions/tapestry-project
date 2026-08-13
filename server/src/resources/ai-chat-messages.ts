@@ -3,13 +3,13 @@ import { ensureTransaction, prisma } from '../db.js'
 import { RESTResourceImpl } from './base-resource.js'
 import { parseIncludes, parseListFilter } from './utils.js'
 import { serialize } from '../transformers/index.js'
-import { Prisma } from '@prisma/client'
 import { isAIChatOwner } from './ai-chats.js'
 import { AIChatContext, generateChatMessage } from '../ai/index.js'
 import { compact, omit } from 'lodash-es'
 import { ConflictError } from '../errors/index.js'
 import { FilePart, ImagePart, UserContent, UserModelMessage } from 'ai'
 import { parseDBItemSource } from '../transformers/item.js'
+import { Prisma } from '../../prisma/generated/prisma/client.js'
 
 async function createAIChatMessage<const T extends Prisma.AiChatMessageCreateArgs>(
   args: Prisma.SelectSubset<T, Prisma.AiChatMessageCreateArgs>,
