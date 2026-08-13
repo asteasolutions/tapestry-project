@@ -40,7 +40,7 @@
       &::placeholder {
         color: var(--theme-text-tertiary);
       }
-
+      /* stylelint-disable-next-line selector-class-pattern */
       :global(.ProseMirror),
       p {
         padding: 0 !important;
@@ -59,7 +59,7 @@
       overflow: hidden auto;
       scrollbar-width: none;
       white-space: pre-wrap;
-      word-wrap: break-word;
+      word-wrap: word-break;
     }
 
     &.with-end-adornment {
