@@ -112,7 +112,7 @@ export function TapestryList({
       style={{ '--column-count': columnCount } as React.CSSProperties}
       loadingEdgeProximity={10}
       requestItems={loadTapestries}
-      segmentLength={columnCount}
+      segmentLength={columnCount > 1 ? columnCount : undefined}
       onLoaderInitialized={(loader) => {
         setTapestryLoader(loader)
         onLoaderInitialized?.(loader)
