@@ -45,7 +45,6 @@
       p {
         padding: 0 !important;
         margin: 0 !important;
-        word-break: break-word;
         overflow-wrap: anywhere;
       }
     }
