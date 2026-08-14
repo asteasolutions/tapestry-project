@@ -49,8 +49,7 @@
       font-style: normal;
     }
   }
-  /* stylelint-disable-next-line selector-class-pattern */
-  :global(.ProseMirror),
+  :global(.tiptap),
   p {
     padding: 0 !important;
     margin: 0 !important;

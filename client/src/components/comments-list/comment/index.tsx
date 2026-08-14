@@ -153,7 +153,12 @@ export function Comment({
         )}
       </div>
       {isEditing ? (
-        <MessageInput onSubmit={editComment} className={styles.editComment} value={comment.text} />
+        <MessageInput
+          placeholder="Add comment"
+          onSubmit={editComment}
+          className={styles.editComment}
+          value={comment.text}
+        />
       ) : (
         <CommentContent {...comment} />
       )}

@@ -76,6 +76,7 @@ export const CommentsList = memo(({ contextType, contextId, className }: Comment
         loadingIndicator={<LoadingLogoIcon className={styles.loadingIndicator} />}
       />
       <MessageInput
+        placeholder="Add comment"
         onSubmit={async (text) => {
           await resource('comments').create({ tapestryId, contextType, contextId, text })
           void commentsLoader?.reload()
