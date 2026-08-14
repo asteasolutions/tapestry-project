@@ -49,6 +49,7 @@
       font-style: normal;
     }
   }
+
   :global(.tiptap),
   p {
     padding: 0 !important;
