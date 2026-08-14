@@ -29,20 +29,11 @@ export function AddLinkModal({
   initialLink,
   initialText,
   showTextField = false,
-  link: controlledLink,
-  onLinkChange,
-  text: controlledText,
-  onTextChange,
   excludeItemId,
   title = 'Add link',
 }: AddLinkModalProps) {
-  const [localLink, setLocalLink] = useState(initialLink ?? '')
-  const [localText, setLocalText] = useState(initialText ?? '')
-
-  const link = controlledLink ?? localLink
-  const text = controlledText ?? localText
-  const setLink = onLinkChange ?? setLocalLink
-  const setText = onTextChange ?? setLocalText
+  const [link, setLink] = useState(initialLink ?? '')
+  const [text, setText] = useState(initialText ?? '')
 
   const generateLink = useGenerateItemLink()
   const items = useTapestryData('items')

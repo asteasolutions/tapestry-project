@@ -51,15 +51,10 @@ export function MessageInput({
   const editorApiRef = useRef<RichTextEditorApi | undefined>(undefined)
 
   const [showModal, setShowModal] = useState(false)
-  const [linkState, setLinkState] = useState({ link: '', text: '' })
+  const [initialLinkText, setInitialLinkText] = useState('')
 
   const tapestryId = useTapestryData('id')
   const tapestryPath = useTapestryPath('view')
-
-  const closeLinkModal = () => {
-    setShowModal(false)
-    setLinkState({ link: '', text: '' })
-  }
 
   const handleCreateLink = () => {
     if (selectionState?.isLink) {
@@ -67,7 +62,7 @@ export function MessageInput({
       return
     }
     const selected = editorApiRef.current?.selectionText() ?? ''
-    setLinkState({ link: '', text: selected })
+    setInitialLinkText(selected)
     setShowModal(true)
   }
 
@@ -167,11 +162,8 @@ export function MessageInput({
 
             {showModal && (
               <AddLinkModal
-                onClose={closeLinkModal}
-                link={linkState.link}
-                onLinkChange={(value) => setLinkState((prev) => ({ ...prev, link: value }))}
-                text={linkState.text}
-                onTextChange={(value) => setLinkState((prev) => ({ ...prev, text: value }))}
+                onClose={() => setShowModal(false)}
+                initialText={initialLinkText}
                 onApply={(url, text) => {
                   const { action, actionType } = extractAction(url, tapestryPath, tapestryId)
                   if (!action) return
@@ -192,7 +184,7 @@ export function MessageInput({
                     .setTextSelection(from + linkTextFinal.length)
                     .run()
 
-                  closeLinkModal()
+                  setShowModal(false)
                 }}
                 showTextField={true}
               />
