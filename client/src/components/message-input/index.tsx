@@ -13,11 +13,10 @@ import {
 } from 'tapestry-core-client/src/components/lib/rich-text-editor'
 import { textItemToolbar } from '../tapestry-elements/items/text/toolbar'
 import { Toolbar } from 'tapestry-core-client/src/components/lib/toolbar'
-import { useGenerateItemLink, useTapestryPath } from '../../hooks/use-tapestry-path'
+import { useTapestryPath } from '../../hooks/use-tapestry-path'
 import { useTapestryData } from '../../pages/tapestry/tapestry-providers'
-import { useItemPicker } from '../item-picker/use-item-picker'
-import { idMapToArray } from 'tapestry-core/src/utils'
-import { AssignActionModal, extractAction } from '../assign-action-button'
+import { extractAction } from '../assign-action-button'
+import { AddLinkModal } from '../add-link-modal'
 
 export interface MessageInputProps {
   onSubmit: (text: string) => unknown
@@ -56,20 +55,6 @@ export function MessageInput({
 
   const tapestryId = useTapestryData('id')
   const tapestryPath = useTapestryPath('view')
-
-  const generateLink = useGenerateItemLink()
-  const items = useTapestryData('items')
-
-  const itemPicker = useItemPicker({
-    onItemsChanged: ([id]) => {
-      itemPicker.close()
-      const item = idMapToArray(items).find((i) => i.dto.id === id)
-      if (item) {
-        setLinkState((prev) => ({ ...prev, link: generateLink(id) }))
-      }
-    },
-    isSelectable: (item) => item.dto.type !== 'actionButton',
-  })
 
   const closeLinkModal = () => {
     setShowModal(false)
@@ -180,11 +165,11 @@ export function MessageInput({
               }}
             />
 
-            {showModal && !itemPicker.isOpen && (
-              <AssignActionModal
+            {showModal && (
+              <AddLinkModal
                 onClose={closeLinkModal}
-                action={linkState.link}
-                onActionChange={(value) => setLinkState((prev) => ({ ...prev, link: value }))}
+                link={linkState.link}
+                onLinkChange={(value) => setLinkState((prev) => ({ ...prev, link: value }))}
                 text={linkState.text}
                 onTextChange={(value) => setLinkState((prev) => ({ ...prev, text: value }))}
                 onApply={(url, text) => {
@@ -209,11 +194,9 @@ export function MessageInput({
 
                   closeLinkModal()
                 }}
-                onSelectItem={() => itemPicker.open()}
                 showTextField={true}
               />
             )}
-            {itemPicker.ui}
           </div>
         </>
       ) : (
