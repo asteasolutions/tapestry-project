@@ -41,11 +41,12 @@
         color: var(--theme-text-tertiary);
       }
 
-      :global(.tiptap),
-      p {
-        padding: 0 !important;
-        margin: 0 !important;
-        overflow-wrap: anywhere;
+      :global(.tiptap) {
+        &,
+        p {
+          padding: 0 !important;
+          margin: 0 !important;
+        }
       }
     }
 
