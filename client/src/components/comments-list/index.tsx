@@ -57,8 +57,7 @@ export const CommentsList = memo(({ contextType, contextId, className }: Comment
             comment={comment}
             tapestryAuthorId={ownerId}
             isEditing={editingCommentId === comment.id}
-            onEditStart={() => setEditingCommentId(comment.id)}
-            onEditEnd={() => setEditingCommentId(null)}
+            setEditing={(value) => setEditingCommentId(value ? comment.id : null)}
             onDelete={() => {
               void commentsLoader?.reload()
               reloadCommentThreads()

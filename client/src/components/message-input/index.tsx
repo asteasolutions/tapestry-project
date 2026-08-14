@@ -52,8 +52,7 @@ export function MessageInput({
   const editorApiRef = useRef<RichTextEditorApi | undefined>(undefined)
 
   const [showModal, setShowModal] = useState(false)
-  const [linkAction, setLinkAction] = useState('')
-  const [linkText, setLinkText] = useState('')
+  const [linkState, setLinkState] = useState({ link: '', text: '' })
 
   const tapestryId = useTapestryData('id')
   const tapestryPath = useTapestryPath('view')
@@ -66,7 +65,7 @@ export function MessageInput({
       itemPicker.close()
       const item = idMapToArray(items).find((i) => i.dto.id === id)
       if (item) {
-        setLinkAction(generateLink(id))
+        setLinkState((prev) => ({ ...prev, link: generateLink(id) }))
       }
     },
     isSelectable: (item) => item.dto.type !== 'actionButton',
@@ -74,8 +73,7 @@ export function MessageInput({
 
   const closeLinkModal = () => {
     setShowModal(false)
-    setLinkAction('')
-    setLinkText('')
+    setLinkState({ link: '', text: '' })
   }
 
   const handleCreateLink = () => {
@@ -84,8 +82,7 @@ export function MessageInput({
       return
     }
     const selected = editorApiRef.current?.selectionText() ?? ''
-    setLinkText(selected)
-    setLinkAction('')
+    setLinkState({ link: '', text: selected })
     setShowModal(true)
   }
 
@@ -186,15 +183,15 @@ export function MessageInput({
             {showModal && !itemPicker.isOpen && (
               <AssignActionModal
                 onClose={closeLinkModal}
-                action={linkAction}
-                onActionChange={setLinkAction}
-                text={linkText}
-                onTextChange={setLinkText}
+                action={linkState.link}
+                onActionChange={(value) => setLinkState((prev) => ({ ...prev, link: value }))}
+                text={linkState.text}
+                onTextChange={(value) => setLinkState((prev) => ({ ...prev, text: value }))}
                 onApply={(url, text) => {
                   const { action, actionType } = extractAction(url, tapestryPath, tapestryId)
                   if (!action) return
 
-                  const href = actionType === 'internalLink' ? `${tapestryPath}?${action}` : action
+                  const href = actionType === 'internalLink' ? `?${action}` : url
                   const editor = editorApiRef.current?.editor()
                   if (!editor) return
 

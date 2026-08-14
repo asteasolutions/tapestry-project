@@ -23,8 +23,7 @@ interface CommentProps {
   comment: CommentDto
   tapestryAuthorId: string
   isEditing: boolean
-  onEditStart: () => void
-  onEditEnd: () => void
+  setEditing: (value: boolean) => void
   onDelete?: () => void
   onEdit?: (newComment: CommentDto) => void
 }
@@ -49,10 +48,11 @@ function CommentContent({ createdAt, updatedAt, deletedAt, text }: CommentDto) {
     const href = anchor.getAttribute('href')
     if (!href) return
 
-    const isInternal = href.startsWith(tapestryPath)
+    const isInternal = href.startsWith('?')
+
     if (isInternal) {
       e.preventDefault()
-      await navigate(href)
+      await navigate(`${tapestryPath}${href}`)
     }
   }
 
@@ -80,8 +80,7 @@ export function Comment({
   comment,
   tapestryAuthorId,
   isEditing,
-  onEditStart,
-  onEditEnd,
+  setEditing,
   onDelete,
   onEdit,
 }: CommentProps) {
@@ -107,11 +106,11 @@ export function Comment({
 
   const { trigger: editComment } = useAsyncAction(async ({ signal }, text: string) => {
     const newComment = await resource('comments').update({ id }, { text }, undefined, { signal })
-    onEditEnd()
+    setEditing(false)
     onEdit?.(newComment)
   })
 
-  const showingEditControls = showEditControls && canModify
+  const showingEditControls = (showEditControls || isEditing) && canModify
 
   return (
     <div
@@ -130,7 +129,7 @@ export function Comment({
                 size="small"
                 icon="edit"
                 aria-label="Edit comment"
-                onClick={() => (isEditing ? onEditEnd() : onEditStart())}
+                onClick={() => setEditing(!isEditing)}
                 tooltip={{ side: 'bottom', children: 'Edit' }}
               />
             )}

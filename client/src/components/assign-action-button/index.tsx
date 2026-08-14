@@ -67,6 +67,7 @@ export function AssignActionModal({
           {showTextField && (
             <Input
               value={text}
+              label={'Text'}
               onChange={(e) => setText(e.target.value)}
               placeholder="Input link name"
             />
@@ -74,6 +75,7 @@ export function AssignActionModal({
           <div className={styles.attachItems}>
             <Input
               value={action}
+              label={'Link'}
               onChange={(e) => setAction(e.target.value)}
               placeholder="Input a link or select an item"
             />

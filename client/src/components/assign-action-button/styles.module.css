@@ -12,11 +12,9 @@
 
     .attach-items {
       position: relative;
-      display: flex;
       padding-bottom: 6px;
 
-      > input {
-        width: 100%;
+      input {
         padding-right: 50px;
       }
 
@@ -24,7 +22,7 @@
         position: absolute;
         right: 10px;
         top: 50%;
-        transform: translateY(-60%);
+        transform: translateY(-15%);
       }
     }
   }
