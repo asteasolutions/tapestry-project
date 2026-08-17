@@ -59,7 +59,7 @@
       overflow: hidden auto;
       scrollbar-width: none;
       white-space: pre-wrap;
-      overflow-wrap: anywhere;
+      word-break: break-all;
     }
 
     &.with-end-adornment {
