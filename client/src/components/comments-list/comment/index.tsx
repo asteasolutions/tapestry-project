@@ -31,7 +31,8 @@ interface CommentProps {
 function CommentContent({ createdAt, updatedAt, deletedAt, text }: CommentDto) {
   const lastUpdate = isEqual(updatedAt, createdAt) ? undefined : updatedAt
   const navigate = useNavigate()
-  const tapestryPath = useTapestryPath('view')
+  const interactionMode = useTapestryData('interactionMode')
+  const tapestryPath = useTapestryPath(interactionMode)
 
   if (deletedAt) {
     return (

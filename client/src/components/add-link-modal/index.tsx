@@ -9,16 +9,12 @@ import { useGenerateItemLink } from '../../hooks/use-tapestry-path'
 import styles from './style.module.css'
 import { Id } from 'tapestry-core/src/data-format/schemas/common'
 
-export interface AddLinkModalProps {
+interface AddLinkModalProps {
   onClose: () => unknown
   onApply: (link: string, text?: string) => unknown
   showTextField?: boolean
   initialLink?: string
   initialText?: string
-  link?: string
-  onLinkChange?: (value: string) => unknown
-  text?: string
-  onTextChange?: (value: string) => unknown
   excludeItemId?: Id
   title?: string
 }
