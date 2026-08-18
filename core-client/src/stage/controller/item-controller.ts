@@ -71,6 +71,11 @@ export abstract class ItemController implements TapestryStageController {
   private selectionHandler!: DomDragHandler
   private longPressDetector: LongPressDetector
 
+  private lastFocusState: {
+    modelId: string
+    previousTransform: TapestryViewModel['viewport']['transform']
+  } | null = null
+
   constructor(
     protected store: Store<TapestryViewModel>,
     protected stage: TapestryStage,
@@ -127,16 +132,56 @@ export abstract class ItemController implements TapestryStageController {
       return
     }
 
+    const currentModelId = 'modelId' in hoverTarget ? hoverTarget.modelId : hoverTarget.type
+    const currentTransform = {
+      translation: { ...tapestry.viewport.transform.translation },
+      scale: tapestry.viewport.transform.scale,
+    }
+
+    if (this.lastFocusState?.modelId === currentModelId) {
+      const targetTransform = this.lastFocusState.previousTransform
+      this.lastFocusState = null
+
+      this.store.dispatch(
+        transformViewport(
+          { translation: { ...targetTransform.translation }, scale: targetTransform.scale },
+          getZoomParameters(currentTransform.scale, targetTransform.scale, false).animate,
+        ),
+      )
+      return
+    }
+
+    const previousTransform = currentTransform
+
     switch (hoverTarget.type) {
       case 'item':
-        return this.store.dispatch(focusItems([hoverTarget.modelId]))
+        this.store.dispatch(focusItems([hoverTarget.modelId]))
+        break
       case 'rel':
-        return this.store.dispatch(focusRel(hoverTarget.modelId))
+        this.store.dispatch(focusRel(hoverTarget.modelId))
+        break
       case 'group':
-        return this.store.dispatch(focusGroup(hoverTarget.modelId))
+        this.store.dispatch(focusGroup(hoverTarget.modelId))
+        break
       case 'multiselection':
-        return this.store.dispatch(focusMultiselection())
+        this.store.dispatch(focusMultiselection())
+        break
+      default:
+        this.lastFocusState = null
+        return
     }
+
+    this.lastFocusState = { modelId: currentModelId, previousTransform }
+  }
+
+  @eventListener('gesture', 'pan')
+  protected onGesturePan() {
+    this.lastFocusState = null
+  }
+
+  @eventListener('gesture', 'zoom')
+  protected onGestureZoom() {
+    this.lastFocusState = null
   }
 
   @eventListener('gesture', 'click')
