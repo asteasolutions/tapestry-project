@@ -42,28 +42,32 @@ function CommentContent({ createdAt, updatedAt, deletedAt, text }: CommentDto) {
     )
   }
 
-  const handleLinkClick = async (e: React.MouseEvent<HTMLDivElement>) => {
-    const anchor = (e.target as HTMLElement).closest('a')
-    if (!anchor) return
-
-    const href = anchor.getAttribute('href')
-    if (!href) return
-
-    const isInternal = href.startsWith('?')
-
-    if (isInternal) {
-      e.preventDefault()
-
-      await navigate(`${tapestryPath}${href}`, {
-        replace: false,
-        state: { timestamp: Date.now() },
-      })
-    }
-  }
-
   return (
-    <Text onClick={handleLinkClick} component="div" variant="bodySm" className={styles.commentText}>
-      <RichTextEditor value={text} isEditable={false} />
+    <Text component="div" variant="bodySm" className={styles.commentText}>
+      <RichTextEditor
+        events={{
+          onClick: async (e: React.MouseEvent<HTMLDivElement>) => {
+            const anchor = (e.target as HTMLElement).closest('a')
+            if (!anchor) return
+
+            const href = anchor.getAttribute('href')
+            if (!href) return
+
+            const isInternal = href.startsWith('?')
+
+            if (isInternal) {
+              e.preventDefault()
+
+              await navigate(`${tapestryPath}${href}`, {
+                replace: false,
+                state: { timestamp: Date.now() },
+              })
+            }
+          },
+        }}
+        value={text}
+        isEditable={false}
+      />
       {lastUpdate && (
         <Text variant="bodyXs" className={styles.editLabel}>
           (edited)

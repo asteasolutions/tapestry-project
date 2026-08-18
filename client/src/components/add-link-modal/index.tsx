@@ -64,25 +64,25 @@ export function AddLinkModal({
               {showTextField && (
                 <Input
                   value={text}
-                  label={'Text'}
+                  label="Text"
                   onChange={(e) => setText(e.target.value)}
                   placeholder="Input text (optional)"
                 />
               )}
-              <div className={styles.attachItems}>
-                <Input
-                  value={link}
-                  label={'Link'}
-                  onChange={(e) => setLink(e.target.value)}
-                  placeholder="Input a link or select an item"
-                />
-                <IconButton
-                  icon="left_click"
-                  aria-label="Attach items"
-                  tooltip={{ side: 'bottom', children: 'Attach items' }}
-                  onClick={() => itemPicker.open()}
-                />
-              </div>
+              <Input
+                value={link}
+                label="Link"
+                onChange={(e) => setLink(e.target.value)}
+                placeholder="Input a link or select an item"
+                endAdornment={
+                  <IconButton
+                    icon="left_click"
+                    aria-label="Attach items"
+                    tooltip={{ side: 'bottom', children: 'Attach items' }}
+                    onClick={() => itemPicker.open()}
+                  />
+                }
+              />
             </div>
           </div>
         </SimpleModal>

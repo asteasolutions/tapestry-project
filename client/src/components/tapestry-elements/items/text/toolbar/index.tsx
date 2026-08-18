@@ -23,7 +23,7 @@ const FOREGROUND_COLORS = OPAQUE_COLOR_PRESETS
 
 export type FormattingSubmenu = 'text-color' | 'text-background'
 
-export interface TextItemToolbarOptions {
+interface TextItemToolbarOptions {
   selection: SelectionState | undefined
   editorAPI: React.RefObject<RichTextEditorApi | undefined>
   tapestryId: string
