@@ -15,6 +15,7 @@ import { createIAMediaItems } from '../../stage/item-factories'
 import { ImportDetails } from './import-details/index'
 import { requestCollectionItems } from './import-items-list/collection-list/index'
 import { ImportItemsList } from './import-items-list/index'
+import { requestSearchItems } from './import-items-list/search-list/index'
 import styles from './styles.module.css'
 
 export interface ImportItem {
@@ -25,28 +26,31 @@ export interface ImportItem {
 const IA_IMPORT_TITLE_MAP: Record<IAImport['type'], string> = {
   IACollection: 'Choose collection items',
   IAPlaylist: 'Choose playlist items',
+  IASearchCollection: 'Choose search result items',
 }
 
 const IA_IMPORT_CLASS_MAP: Record<IAImport['type'], string> = {
   IACollection: styles.collectionList,
   IAPlaylist: styles.playlist,
+  IASearchCollection: styles.collectionList,
 }
 
-async function createNewItems(
-  { type, id, metadata: { mediatype: mediaType } }: IAImport,
-  items: ImportItem[],
-  tapestryId: string,
-) {
-  if (type === 'IACollection') {
+async function createNewItems(iaImport: IAImport, items: ImportItem[], tapestryId: string) {
+  if (iaImport.type === 'IACollection' || iaImport.type === 'IASearchCollection') {
     return createIAMediaItems(
       tapestryId,
       compact(items.map(({ id, mediaType }) => mediaType && { id, mediaType })),
     )
   }
 
+  const { id, metadata } = iaImport
   return createIAMediaItems(
     tapestryId,
-    items.map(({ id: file }) => ({ id, mediaType, pathParams: [encodeURIComponent(file)] })),
+    items.map(({ id: file }) => ({
+      id,
+      mediaType: metadata.mediatype,
+      pathParams: [encodeURIComponent(file)],
+    })),
   )
 }
 
@@ -78,6 +82,13 @@ export function HandleIAImportDialog() {
 
     if (iaImport.type === 'IAPlaylist') {
       setSelectedItems(iaImport.entries.slice(0, MAX_SELECTION).map((e) => ({ id: e.filename })))
+    } else if (iaImport.type === 'IASearchCollection') {
+      setSelectedItems(
+        (await requestSearchItems(iaImport.query, 0, MAX_SELECTION, signal)).data.map((i) => ({
+          id: i.id,
+          mediaType: i.mediatype,
+        })),
+      )
     } else {
       setSelectedItems(
         (await requestCollectionItems(iaImport.id, 0, MAX_SELECTION, signal)).data.map((i) => ({

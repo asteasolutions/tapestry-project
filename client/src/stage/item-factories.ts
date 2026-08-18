@@ -7,6 +7,8 @@ import {
   iaItemEmbedURL,
   IAMediaType,
   parseInternetArchiveURL,
+  parseIASearchURL,
+  fetchIASearchCount,
   IAItem,
   getIAItemMetadata,
   getIAPlaylistEntries,
@@ -158,6 +160,18 @@ const iaCollectionFactory: ItemFactory = async (source, _, tapestryId) => {
   }
 }
 
+const iaSearchCollectionFactory: ItemFactory = async (source, _mediaType, _tapestryId) => {
+  if (typeof source !== 'string' || !isHTTPURL(source)) return null
+
+  const parsed = parseIASearchURL(source)
+  if (!parsed) return null
+
+  const total = await fetchIASearchCount(parsed.query)
+  if (total === undefined) return null
+
+  return { items: [], iaImports: [{ type: 'IASearchCollection', query: parsed.query, total }] }
+}
+
 const linkFileFactory: ItemFactory = async (source, _, tapestryId) => {
   if (!(source instanceof File)) {
     return null
@@ -191,5 +205,6 @@ export const ITEM_FACTORIES: ItemFactory[] = [
   textItemFactory,
   htmlFileItemFactory,
   iaCollectionFactory,
+  iaSearchCollectionFactory,
   webpageItemFactory,
 ]

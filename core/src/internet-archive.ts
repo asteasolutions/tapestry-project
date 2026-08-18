@@ -115,6 +115,27 @@ export async function iaAdvancedSearch<F extends IAAdvancedSearchFieldsQuery>(
   }
 }
 
+export function parseIASearchURL(source: unknown): { query: string } | null {
+  if (typeof source !== 'string' || source === '') return null
+
+  try {
+    const url = new URL(source)
+    const query = url.searchParams.get('query')
+    if (url.host !== IA_HOST || url.pathname.replace(/^\/?/, '') !== 'search' || !query) {
+      return null
+    }
+    return { query }
+  } catch (error) {
+    console.warn(error)
+    return null
+  }
+}
+
+export async function fetchIASearchCount(query: string) {
+  const response = await iaAdvancedSearch({ q: query, pageSize: 1 })
+  return response?.response.numFound
+}
+
 export function parseInternetArchiveURL(source: unknown): IAUrlDescriptor | null {
   if (typeof source !== 'string' || source === '') return null
 

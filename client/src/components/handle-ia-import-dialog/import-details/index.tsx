@@ -11,14 +11,35 @@ interface ImportDetailsProps {
   import: IAImport
 }
 
-export function ImportDetails({ import: { id, metadata } }: ImportDetailsProps) {
+export function ImportDetails({ import: iaImport }: ImportDetailsProps) {
+  const mdOrLess = useResponsive() <= Breakpoint.MD
+  const textVariant = mdOrLess ? 'bodyXs' : undefined
+
+  if (iaImport.type === 'IASearchCollection') {
+    return (
+      <div className={styles.root}>
+        <div className={styles.header}>
+          <div className={styles.metadataContainer}>
+            <Text variant={mdOrLess ? 'bodySm' : 'h6'} lineClamp={2} style={{ fontWeight: 'bold' }}>
+              Search results
+            </Text>
+            <Text variant={textVariant} lineClamp={2}>
+              {iaImport.total} results
+            </Text>
+          </div>
+        </div>
+        <Text variant={textVariant} component="div">
+          {iaImport.query}
+        </Text>
+      </div>
+    )
+  }
+
+  const { id, metadata } = iaImport
   const description = parser.parseFromString(
     metadata.summary ?? metadata.description ?? '',
     'text/html',
   ).documentElement.textContent
-
-  const mdOrLess = useResponsive() <= Breakpoint.MD
-  const textVariant = mdOrLess ? 'bodyXs' : undefined
 
   const isCollection = metadata.mediatype === 'collection'
 
