@@ -53,7 +53,11 @@ function CommentContent({ createdAt, updatedAt, deletedAt, text }: CommentDto) {
 
     if (isInternal) {
       e.preventDefault()
-      await navigate(`${tapestryPath}${href}`)
+
+      await navigate(`${tapestryPath}${href}`, {
+        replace: false,
+        state: { timestamp: Date.now() },
+      })
     }
   }
 
