@@ -74,7 +74,51 @@ export abstract class ItemController implements TapestryStageController {
   private lastFocusState: {
     modelId: string
     previousTransform: TapestryViewModel['viewport']['transform']
+    targetTransform: TapestryViewModel['viewport']['transform']
   } | null = null
+
+  private transformsMatch(
+    a: TapestryViewModel['viewport']['transform'],
+    b: TapestryViewModel['viewport']['transform'],
+    translationEpsilon = 0.5,
+    scaleEpsilon = 0.001,
+  ) {
+    return (
+      Math.abs(a.translation.dx - b.translation.dx) < translationEpsilon &&
+      Math.abs(a.translation.dy - b.translation.dy) < translationEpsilon &&
+      Math.abs(a.scale - b.scale) < scaleEpsilon
+    )
+  }
+
+  //This polls the transform once per frame and waits until it stops changing
+  //between two consecutive frames (i.e. the tween has finished), then records
+  //that as the real `targetTransform` for the current focus state. Without
+  //this, double-clicking the same item a second time to restore the previous
+  //viewport would compare against a stale/incorrect target and never match.
+  private waitForTransformToSettle(modelId: string) {
+    let last = {
+      translation: { ...this.store.get('viewport.transform.translation') },
+      scale: this.store.get('viewport.transform.scale'),
+    }
+
+    const check = () => {
+      if (this.lastFocusState?.modelId !== modelId) return
+
+      const current = {
+        translation: { ...this.store.get('viewport.transform.translation') },
+        scale: this.store.get('viewport.transform.scale'),
+      }
+
+      if (this.transformsMatch(current, last, 0.01, 0.0001)) {
+        this.lastFocusState.targetTransform = current
+        return
+      }
+
+      last = current
+      requestAnimationFrame(check)
+    }
+    requestAnimationFrame(check)
+  }
 
   constructor(
     protected store: Store<TapestryViewModel>,
@@ -138,7 +182,10 @@ export abstract class ItemController implements TapestryStageController {
       scale: tapestry.viewport.transform.scale,
     }
 
-    if (this.lastFocusState?.modelId === currentModelId) {
+    if (
+      this.lastFocusState?.modelId === currentModelId &&
+      this.transformsMatch(currentTransform, this.lastFocusState.targetTransform)
+    ) {
       const targetTransform = this.lastFocusState.previousTransform
       this.lastFocusState = null
 
@@ -171,17 +218,12 @@ export abstract class ItemController implements TapestryStageController {
         return
     }
 
-    this.lastFocusState = { modelId: currentModelId, previousTransform }
-  }
-
-  @eventListener('gesture', 'pan')
-  protected onGesturePan() {
-    this.lastFocusState = null
-  }
-
-  @eventListener('gesture', 'zoom')
-  protected onGestureZoom() {
-    this.lastFocusState = null
+    this.lastFocusState = {
+      modelId: currentModelId,
+      previousTransform,
+      targetTransform: previousTransform,
+    }
+    this.waitForTransformToSettle(currentModelId)
   }
 
   @eventListener('gesture', 'click')
