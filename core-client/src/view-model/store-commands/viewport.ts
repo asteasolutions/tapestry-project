@@ -25,6 +25,7 @@ import {
   getZoomParameters,
   getBoundingRectangle,
   getSelectionItems,
+  transformsMatch,
 } from '../utils.js'
 import { idMapToArray, pickById } from 'tapestry-core/src/utils.js'
 import {
@@ -255,10 +256,12 @@ export function zoomTo(
 export interface FocusOptions {
   addToolbarPadding?: boolean
   animate?: boolean | ViewportAnimationOptions
+  previousTransform?: LinearTransform
 }
+
 export function focusItems(
   itemIds?: Iterable<string>,
-  { addToolbarPadding = false, animate = true }: FocusOptions = {},
+  { addToolbarPadding = false, animate = true, previousTransform }: FocusOptions = {},
 ): StoreMutationCommand<TapestryViewModel> {
   return (_, { store }) => {
     const { viewport, items: allItemsMap } = store.get()
@@ -275,50 +278,54 @@ export function focusItems(
       : viewport.size
     const viewportRect = new Rectangle(viewportOrigin, viewportSize)
     const centralAnchor = { x: viewport.size.width / 2, y: viewport.size.height / 2 }
-    store.dispatch(
-      transformViewport(
-        zoomToFit(
-          viewportRect,
-          idMapToArray(viewport.obstructions),
-          focusRect,
-          minScale,
-          MAX_SCALE,
-          centralAnchor,
-        ),
-        animate,
-      ),
+    const transformed = zoomToFit(
+      viewportRect,
+      idMapToArray(viewport.obstructions),
+      focusRect,
+      minScale,
+      MAX_SCALE,
+      centralAnchor,
     )
+
+    const shouldRestore = previousTransform && transformsMatch(transformed, viewport.transform)
+
+    store.dispatch(transformViewport(shouldRestore ? previousTransform : transformed, animate))
   }
 }
 
 export function focusGroup(
   id: string,
-  animate?: FocusOptions['animate'],
+  options: Pick<FocusOptions, 'animate' | 'previousTransform'> = {},
 ): StoreMutationCommand<TapestryViewModel> {
   return (_, { store }) => {
     const groupItemIds = getGroupMembers(id, idMapToArray(store.get('items'))).map(
       (item) => item.dto.id,
     )
     store.dispatch(
-      focusItems(groupItemIds, { addToolbarPadding: true, animate }),
+      focusItems(groupItemIds, { addToolbarPadding: true, ...options }),
       selectItems(groupItemIds),
     )
   }
 }
 
-export function focusRel(id: string): StoreMutationCommand<TapestryViewModel> {
+export function focusRel(
+  id: string,
+  options: Pick<FocusOptions, 'previousTransform'> = {},
+): StoreMutationCommand<TapestryViewModel> {
   return (_, { store }) => {
     const rel = store.get('rels')[id]
     if (!rel) return
 
-    store.dispatch(focusItems([rel.dto.from.itemId, rel.dto.to.itemId]))
+    store.dispatch(focusItems([rel.dto.from.itemId, rel.dto.to.itemId], options))
   }
 }
 
-export function focusMultiselection(): StoreMutationCommand<TapestryViewModel> {
+export function focusMultiselection(
+  options: Pick<FocusOptions, 'previousTransform'> = {},
+): StoreMutationCommand<TapestryViewModel> {
   return (_, { store }) => {
     const items = getSelectionItems(store.get()).map((i) => i.dto.id)
-    store.dispatch(focusItems(items, { addToolbarPadding: true }))
+    store.dispatch(focusItems(items, { addToolbarPadding: true, ...options }))
   }
 }
 
@@ -333,7 +340,7 @@ export function focusPresentationStep(
         setInteractiveElement({ modelType: 'item', modelId: step.itemId }),
       )
     } else {
-      store.dispatch(focusGroup(step.groupId, animate))
+      store.dispatch(focusGroup(step.groupId, { animate }))
     }
   }
 }

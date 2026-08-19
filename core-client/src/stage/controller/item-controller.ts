@@ -1,4 +1,4 @@
-import { Rectangle } from 'tapestry-core/src/lib/geometry'
+import { LinearTransform, Rectangle } from 'tapestry-core/src/lib/geometry'
 import { isMeta } from '../../lib/keyboard-event'
 import { createEventRegistry } from '../../lib/events/event-registry'
 import { EventTypes } from '../../lib/events/typed-events'
@@ -70,55 +70,7 @@ export interface InternalNavigationState {
 export abstract class ItemController implements TapestryStageController {
   private selectionHandler!: DomDragHandler
   private longPressDetector: LongPressDetector
-
-  private lastFocusState: {
-    modelId: string
-    previousTransform: TapestryViewModel['viewport']['transform']
-    targetTransform: TapestryViewModel['viewport']['transform']
-  } | null = null
-
-  private transformsMatch(
-    a: TapestryViewModel['viewport']['transform'],
-    b: TapestryViewModel['viewport']['transform'],
-    translationEpsilon = 0.5,
-    scaleEpsilon = 0.001,
-  ) {
-    return (
-      Math.abs(a.translation.dx - b.translation.dx) < translationEpsilon &&
-      Math.abs(a.translation.dy - b.translation.dy) < translationEpsilon &&
-      Math.abs(a.scale - b.scale) < scaleEpsilon
-    )
-  }
-
-  //This polls the transform once per frame and waits until it stops changing
-  //between two consecutive frames (i.e. the tween has finished), then records
-  //that as the real `targetTransform` for the current focus state. Without
-  //this, double-clicking the same item a second time to restore the previous
-  //viewport would compare against a stale/incorrect target and never match.
-  private waitForTransformToSettle(modelId: string) {
-    let last = {
-      translation: { ...this.store.get('viewport.transform.translation') },
-      scale: this.store.get('viewport.transform.scale'),
-    }
-
-    const check = () => {
-      if (this.lastFocusState?.modelId !== modelId) return
-
-      const current = {
-        translation: { ...this.store.get('viewport.transform.translation') },
-        scale: this.store.get('viewport.transform.scale'),
-      }
-
-      if (this.transformsMatch(current, last, 0.01, 0.0001)) {
-        this.lastFocusState.targetTransform = current
-        return
-      }
-
-      last = current
-      requestAnimationFrame(check)
-    }
-    requestAnimationFrame(check)
-  }
+  private previousTransform: LinearTransform | null = null
 
   constructor(
     protected store: Store<TapestryViewModel>,
@@ -163,10 +115,21 @@ export abstract class ItemController implements TapestryStageController {
     const zoomOut = isMeta(originalEvent)
     // If the user is holding the meta key down we will always zoom out,
     // irrespective of whether they are pointing at an item/rel/group/multiselection
-    if (!hoverTarget || zoomOut) {
+    if (!hoverTarget && zoomOut) {
       const { zoomStep, animate } = getZoomParameters(
         tapestry.viewport.transform.scale,
-        zoomOut ? getMinScale(tapestry.viewport, idMapToArray(tapestry.items)) : MAX_SCALE,
+        getMinScale(tapestry.viewport, idMapToArray(tapestry.items)),
+        false,
+      )
+      const transformed = zoomToPoint(tapestry, zoomStep * 10, toPoint(originalEvent))
+      this.store.dispatch(transformViewport(transformed, animate))
+      return
+    }
+
+    if (!hoverTarget) {
+      const { zoomStep, animate } = getZoomParameters(
+        tapestry.viewport.transform.scale,
+        MAX_SCALE,
         false,
       )
 
@@ -176,54 +139,30 @@ export abstract class ItemController implements TapestryStageController {
       return
     }
 
-    const currentModelId = 'modelId' in hoverTarget ? hoverTarget.modelId : hoverTarget.type
-    const currentTransform = {
+    const currentTransform: LinearTransform = {
       translation: { ...tapestry.viewport.transform.translation },
       scale: tapestry.viewport.transform.scale,
     }
-
-    if (
-      this.lastFocusState?.modelId === currentModelId &&
-      this.transformsMatch(currentTransform, this.lastFocusState.targetTransform)
-    ) {
-      const targetTransform = this.lastFocusState.previousTransform
-      this.lastFocusState = null
-
-      this.store.dispatch(
-        transformViewport(
-          { translation: { ...targetTransform.translation }, scale: targetTransform.scale },
-          getZoomParameters(currentTransform.scale, targetTransform.scale, false).animate,
-        ),
-      )
-      return
-    }
-
-    const previousTransform = currentTransform
+    const previousTransform = this.previousTransform ?? undefined
 
     switch (hoverTarget.type) {
       case 'item':
-        this.store.dispatch(focusItems([hoverTarget.modelId]))
+        this.store.dispatch(focusItems([hoverTarget.modelId], { previousTransform }))
         break
       case 'rel':
-        this.store.dispatch(focusRel(hoverTarget.modelId))
+        this.store.dispatch(focusRel(hoverTarget.modelId, { previousTransform }))
         break
       case 'group':
-        this.store.dispatch(focusGroup(hoverTarget.modelId))
+        this.store.dispatch(focusGroup(hoverTarget.modelId, { previousTransform }))
         break
       case 'multiselection':
-        this.store.dispatch(focusMultiselection())
+        this.store.dispatch(focusMultiselection({ previousTransform }))
         break
       default:
-        this.lastFocusState = null
         return
     }
 
-    this.lastFocusState = {
-      modelId: currentModelId,
-      previousTransform,
-      targetTransform: previousTransform,
-    }
-    this.waitForTransformToSettle(currentModelId)
+    this.previousTransform = currentTransform
   }
 
   @eventListener('gesture', 'click')
