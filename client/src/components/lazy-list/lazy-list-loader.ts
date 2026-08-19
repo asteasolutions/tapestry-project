@@ -97,9 +97,11 @@ export class LazyListLoader<T> extends Observable<ListResponseDto<T> & { state: 
   }
 
   private roundToSegment(value: number, round: 'up' | 'down', segmentLength: number) {
-    return round === 'up'
-      ? Math.trunc((value + segmentLength - 1) / segmentLength) * segmentLength
-      : Math.trunc(value / segmentLength) * segmentLength
+    return (
+      (Math.floor(value / segmentLength) +
+        (round === 'up' && value % segmentLength !== 0 ? 1 : 0)) *
+      segmentLength
+    )
   }
 
   /**
@@ -109,7 +111,7 @@ export class LazyListLoader<T> extends Observable<ListResponseDto<T> & { state: 
    */
   setRequestItems(requestItems: LazyListRequestItems<T>, segmentLength?: number) {
     if (segmentLength) {
-      this.requestItems = async (skip: number, limit: number, signal: AbortSignal) => {
+      this.requestItems = async (skip, limit, signal) => {
         const roundedSkip = this.roundToSegment(skip, 'down', segmentLength)
         return requestItems(
           roundedSkip,
