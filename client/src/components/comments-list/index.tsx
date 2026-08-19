@@ -74,6 +74,7 @@ export const CommentsList = memo(({ contextType, contextId, className }: Comment
           </div>
         }
         loadingIndicator={<LoadingLogoIcon className={styles.loadingIndicator} />}
+        autoScrollFirstElements
       />
       <MessageInput
         placeholder="Add comment"
