@@ -43,7 +43,7 @@ function CommentContent({ createdAt, updatedAt, deletedAt, text }: CommentDto) {
   }
 
   return (
-    <Text component="div" variant="bodySm" className={styles.commentText}>
+    <div className={styles.commentText}>
       <RichTextEditor
         events={{
           onClick: async (e: React.MouseEvent<HTMLDivElement>) => {
@@ -81,7 +81,7 @@ function CommentContent({ createdAt, updatedAt, deletedAt, text }: CommentDto) {
           </Tooltip>
         </Text>
       )}
-    </Text>
+    </div>
   )
 }
 

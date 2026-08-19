@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-empty-function */
 import { useSession } from '../../layouts/session'
 import { Button } from 'tapestry-core-client/src/components/lib/buttons/index'
 import { useAsyncAction } from 'tapestry-core-client/src/components/lib/hooks/use-async-action'
@@ -11,12 +10,14 @@ import {
   RichTextEditorApi,
   SelectionState,
 } from 'tapestry-core-client/src/components/lib/rich-text-editor'
-import { textItemToolbar } from '../tapestry-elements/items/text/toolbar'
+import { richTextEditorToolbar } from '../tapestry-elements/items/text/toolbar'
 import { Toolbar } from 'tapestry-core-client/src/components/lib/toolbar'
 import { useTapestryPath } from '../../hooks/use-tapestry-path'
 import { useTapestryData } from '../../pages/tapestry/tapestry-providers'
 import { extractAction } from '../assign-action-button'
 import { AddLinkModal } from '../add-link-modal'
+import { noop } from 'lodash'
+import { isMeta } from 'tapestry-core-client/src/lib/keyboard-event'
 
 export interface MessageInputProps {
   onSubmit: (text: string) => unknown
@@ -66,14 +67,18 @@ export function MessageInput({
     setShowModal(true)
   }
 
-  const menuItems = textItemToolbar({
+  //TODO: We should change the types of the hook so that
+  //if a respective controls flag is false the property here
+  //cannot be passed, i.e. we passed controls.color === false,
+  //so it doesn't make sense to pass an onColorChange at all
+  const menuItems = richTextEditorToolbar({
     selection: selectionState,
-    tapestryId: '',
+    tapestryId: tapestryId,
     editorAPI: editorApiRef,
     itemBackgroundColor: null,
-    onBackgroundColorChange: () => {},
-    onColorChange: () => {},
-    onToggleMenu: () => {},
+    onBackgroundColorChange: noop,
+    onColorChange: noop,
+    onToggleMenu: noop,
     onLinkClick: handleCreateLink,
     canAddLink: selectionState?.isLink,
     controls: {
@@ -152,7 +157,7 @@ export function MessageInput({
                   return true
                 },
                 onKeyDown: (e) => {
-                  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                  if (e.key === 'Enter' && isMeta(e.nativeEvent)) {
                     e.preventDefault()
                     void submitMessage()
                   }
