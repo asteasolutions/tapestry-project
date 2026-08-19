@@ -21,7 +21,7 @@ import { useItemToolbar } from '../../item-toolbar/use-item-toolbar'
 import { TapestryItem } from '../tapestry-item'
 import { LinkTooltip, LinkTooltipProps } from './link-tooltip'
 import { ToggleFormatButton, tooltip } from './toggle-format-button'
-import { textItemToolbar } from './toolbar'
+import { richTextEditorToolbar } from './toolbar'
 
 const BACKGROUND_COLORS: Record<LiteralColor, string> = COLOR_PRESETS
 
@@ -82,7 +82,7 @@ export const TextItem = memo(({ id }: TapestryItemProps) => {
 
   const [showFormatToolbar, setShowFormatToolbar] = useState(false)
 
-  const formattingControls = textItemToolbar({
+  const formattingControls = richTextEditorToolbar({
     editorAPI,
     selection,
     tapestryId,
