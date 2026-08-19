@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { IconButton } from 'tapestry-core-client/src/components/lib/buttons'
 import { Input } from 'tapestry-core-client/src/components/lib/input'
+import { InputWithAdornment } from 'tapestry-core-client/src/components/lib/input-with-adornment'
 import { SimpleModal } from 'tapestry-core-client/src/components/lib/modal'
 import { useItemPicker } from '../item-picker/use-item-picker'
 import { useTapestryData } from '../../pages/tapestry/tapestry-providers'
@@ -69,7 +70,7 @@ export function AddLinkModal({
                   placeholder="Input text (optional)"
                 />
               )}
-              <Input
+              <InputWithAdornment
                 value={link}
                 label="Link"
                 onChange={(e) => setLink(e.target.value)}

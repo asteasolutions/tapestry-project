@@ -1,5 +1,4 @@
 .root {
-  width: 100%;
   border-radius: 8px;
   border: 1px solid var(--theme-border-primary);
   padding: 8px;
@@ -16,28 +15,6 @@
   &:disabled {
     opacity: 0.25;
   }
-}
-
-.input-container {
-  position: relative;
-  display: flex;
-  align-items: center;
-
-  &:has(.end-adornment) {
-    padding-bottom: 6px;
-  }
-
-  &:has(.end-adornment) .root {
-    padding-right: 50px;
-  }
-}
-
-.end-adornment {
-  position: absolute;
-  right: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .input-label {

@@ -11,7 +11,6 @@ export interface InputProps extends ComponentProps<'input'> {
   error?: string
   ref?: RefObject<HTMLInputElement | null>
   name?: string
-  endAdornment?: React.ReactNode
 }
 
 export function Input({
@@ -21,28 +20,24 @@ export function Input({
   error,
   name,
   ref,
-  endAdornment,
   ...props
 }: InputProps) {
   const input = (
     <>
-      <div className={styles.inputContainer}>
-        <input
-          ref={ref}
-          className={clsx(styles.root, typographyClassName(typography), className, {
-            [styles.invalidInput]: error,
-          })}
-          name={name}
-          {...props}
-          onKeyDown={(e) => {
-            props.onKeyDown?.(e)
-            e.stopPropagation()
-          }}
-          onPaste={(e) => e.stopPropagation()}
-          onCopy={(e) => e.stopPropagation()}
-        />
-        {endAdornment && <div className={styles.endAdornment}>{endAdornment}</div>}
-      </div>
+      <input
+        ref={ref}
+        className={clsx(styles.root, typographyClassName(typography), className, {
+          [styles.invalidInput]: error,
+        })}
+        name={name}
+        {...props}
+        onKeyDown={(e) => {
+          props.onKeyDown?.(e)
+          e.stopPropagation()
+        }}
+        onPaste={(e) => e.stopPropagation()}
+        onCopy={(e) => e.stopPropagation()}
+      />
       {error && (
         <Text variant="bodySm" textType="error">
           {error}
