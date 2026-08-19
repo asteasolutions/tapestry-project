@@ -113,23 +113,13 @@ export abstract class ItemController implements TapestryStageController {
   protected onDoubleClickItem({ detail: { hoverTarget, originalEvent } }: ClickEvent) {
     const tapestry = this.store.get()
     const zoomOut = isMeta(originalEvent)
-    // If the user is holding the meta key down we will always zoom out,
-    // irrespective of whether they are pointing at an item/rel/group/multiselection
-    if (!hoverTarget && zoomOut) {
-      const { zoomStep, animate } = getZoomParameters(
-        tapestry.viewport.transform.scale,
-        getMinScale(tapestry.viewport, idMapToArray(tapestry.items)),
-        false,
-      )
-      const transformed = zoomToPoint(tapestry, zoomStep * 10, toPoint(originalEvent))
-      this.store.dispatch(transformViewport(transformed, animate))
-      return
-    }
-
+    // Double-clicking on empty canvas zooms in, unless the meta key is held, in
+    // which case it zooms out. Double-clicking on an item/rel/group/multiselection
+    // always focuses that target (see below), regardless of the meta key.
     if (!hoverTarget) {
       const { zoomStep, animate } = getZoomParameters(
         tapestry.viewport.transform.scale,
-        MAX_SCALE,
+        zoomOut ? getMinScale(tapestry.viewport, idMapToArray(tapestry.items)) : MAX_SCALE,
         false,
       )
 
@@ -139,10 +129,7 @@ export abstract class ItemController implements TapestryStageController {
       return
     }
 
-    const currentTransform: LinearTransform = {
-      translation: { ...tapestry.viewport.transform.translation },
-      scale: tapestry.viewport.transform.scale,
-    }
+    const currentTransform = structuredClone(tapestry.viewport.transform)
     const previousTransform = this.previousTransform ?? undefined
 
     switch (hoverTarget.type) {

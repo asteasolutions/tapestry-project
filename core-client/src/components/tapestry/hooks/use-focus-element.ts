@@ -48,7 +48,7 @@ export function useFocusedElement() {
         setInteractiveElement({ modelId, modelType: 'item' }),
       )
     } else if (groups[modelId]) {
-      dispatch(focusGroup(modelId, animate))
+      dispatch(focusGroup(modelId, { animate }))
     } else if (modelId === 'all') {
       dispatch(focusItems(Object.keys(items), { animate }))
     }
