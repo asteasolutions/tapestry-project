@@ -427,16 +427,3 @@ export function getZoomParameters(fromScale: number, toScale: number, continuous
       : true,
   }
 }
-
-export function transformsMatch(
-  a: LinearTransform,
-  b: LinearTransform,
-  translationEpsilon = 0.5,
-  scaleEpsilon = 0.001,
-): boolean {
-  return (
-    Math.abs(a.translation.dx - b.translation.dx) < translationEpsilon &&
-    Math.abs(a.translation.dy - b.translation.dy) < translationEpsilon &&
-    Math.abs(a.scale - b.scale) < scaleEpsilon
-  )
-}

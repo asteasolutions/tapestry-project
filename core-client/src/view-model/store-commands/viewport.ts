@@ -25,7 +25,6 @@ import {
   getZoomParameters,
   getBoundingRectangle,
   getSelectionItems,
-  transformsMatch,
 } from '../utils.js'
 import { idMapToArray, pickById } from 'tapestry-core/src/utils.js'
 import {
@@ -141,11 +140,14 @@ export function transformViewport(
           } else {
             const s = newScale / fromScale
             const translationProgress = progress === 1 ? 1 : clamp(position.step(progress), 0, 1)
-            newTranslation = add(
-              mul(s, fromTranslation),
-              mul(1 - s, vector(center)),
-              neg(mul(translationProgress * newScale, absoluteTranslation)),
-            )
+            newTranslation =
+              progress === 1
+                ? { dx, dy }
+                : add(
+                    mul(s, fromTranslation),
+                    mul(1 - s, vector(center)),
+                    neg(mul(translationProgress * newScale, absoluteTranslation)),
+                  )
           }
 
           updateViewport({ scale: newScale, translation: newTranslation })
@@ -287,7 +289,11 @@ export function focusItems(
       centralAnchor,
     )
 
-    const shouldRestore = previousTransform && transformsMatch(transformed, viewport.transform)
+    const shouldRestore =
+      previousTransform !== undefined &&
+      transformed.translation.dx === viewport.transform.translation.dx &&
+      transformed.translation.dy === viewport.transform.translation.dy &&
+      transformed.scale === viewport.transform.scale
 
     store.dispatch(transformViewport(shouldRestore ? previousTransform : transformed, animate))
   }

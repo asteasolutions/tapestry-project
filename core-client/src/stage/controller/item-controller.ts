@@ -70,7 +70,7 @@ export interface InternalNavigationState {
 export abstract class ItemController implements TapestryStageController {
   private selectionHandler!: DomDragHandler
   private longPressDetector: LongPressDetector
-  private previousTransform: LinearTransform | null = null
+  private previousTransform?: LinearTransform
 
   constructor(
     protected store: Store<TapestryViewModel>,
@@ -130,7 +130,7 @@ export abstract class ItemController implements TapestryStageController {
     }
 
     const currentTransform = structuredClone(tapestry.viewport.transform)
-    const previousTransform = this.previousTransform ?? undefined
+    const previousTransform = this.previousTransform
 
     switch (hoverTarget.type) {
       case 'item':
@@ -145,8 +145,6 @@ export abstract class ItemController implements TapestryStageController {
       case 'multiselection':
         this.store.dispatch(focusMultiselection({ previousTransform }))
         break
-      default:
-        return
     }
 
     this.previousTransform = currentTransform
