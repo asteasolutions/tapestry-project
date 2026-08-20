@@ -115,7 +115,7 @@ export async function iaAdvancedSearch<F extends IAAdvancedSearchFieldsQuery>(
   }
 }
 
-export function parseIASearchURL(source: unknown): { query: string } | null {
+export function parseIASearchURLQuery(source: unknown): string | null {
   if (typeof source !== 'string' || source === '') return null
 
   try {
@@ -124,15 +124,25 @@ export function parseIASearchURL(source: unknown): { query: string } | null {
     if (url.host !== IA_HOST || url.pathname.replace(/^\/?/, '') !== 'search' || !query) {
       return null
     }
-    return { query }
+    return query
   } catch (error) {
     console.warn(error)
     return null
   }
 }
 
+/**
+ * A "collection" is itself just another search result (`mediatype: collection`), never an
+ * importable item - every IA search query this module builds (the raw search-URL case and the
+ * literal `collection:<id>` case alike) needs to exclude it, or the count and the list disagree
+ * about what's actually importable.
+ */
+export function excludeIACollections(query: string) {
+  return `(${query}) AND NOT mediatype:collection`
+}
+
 export async function fetchIASearchCount(query: string) {
-  const response = await iaAdvancedSearch({ q: query, pageSize: 1 })
+  const response = await iaAdvancedSearch({ q: excludeIACollections(query), pageSize: 1 })
   return response?.response.numFound
 }
 

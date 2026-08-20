@@ -1,6 +1,7 @@
 import clsx from 'clsx'
 import { intlFormat } from 'date-fns'
 import {
+  excludeIACollections,
   iaAdvancedSearch,
   getIAItemThumbnailURL,
   IAMediaType,
@@ -12,7 +13,7 @@ import { Icon } from 'tapestry-core-client/src/components/lib/icon/index'
 import { LazyList } from '../../../lazy-list'
 import { LoadingLogoIcon } from '../../../loading-logo-icon'
 import { Text } from 'tapestry-core-client/src/components/lib/text/index'
-import styles from '../collection-list/styles.module.css'
+import styles from './styles.module.css'
 import { useMemo, useState } from 'react'
 import { partial } from 'lodash-es'
 import { MAX_SELECTION } from '../..'
@@ -22,7 +23,7 @@ import { SelectAll } from '../select-all'
 
 function getSearchOpts(query: string) {
   return {
-    q: query,
+    q: excludeIACollections(query),
     fields: {
       identifier: true,
       mediatype: true,
@@ -90,18 +91,22 @@ export async function requestSearchItems(
   }
 }
 
-interface IASearchCollectionListProps extends Omit<ImportItemsListProps, 'iaImport'> {
+interface IASearchListProps extends Omit<ImportItemsListProps, 'iaImport'> {
   query: string
+  /** Shown when the query returns no results - callers with a more specific case (e.g. "this
+   * collection") should pass their own wording rather than the generic search-result default. */
+  emptyPlaceholder?: string
 }
 
-export function IASearchCollectionList({
+export function IASearchList({
   onSelect,
   onToggleAll,
   toggling,
   query,
   selectedItems,
   header,
-}: IASearchCollectionListProps) {
+  emptyPlaceholder = 'No results for this search',
+}: IASearchListProps) {
   const mdOrLess = useResponsive() <= Breakpoint.MD
   const textVariant = mdOrLess ? 'bodyXs' : undefined
   const lineClamp = mdOrLess ? 1 : 2
@@ -223,7 +228,7 @@ export function IASearchCollectionList({
             </div>
           )
         }}
-        emptyPlaceholder={<Text>No results for this search</Text>}
+        emptyPlaceholder={<Text>{emptyPlaceholder}</Text>}
         loadingIndicator={<LoadingLogoIcon className={styles.loadingIndicator} />}
       />
     </div>

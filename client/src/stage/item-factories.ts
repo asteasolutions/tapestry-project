@@ -7,7 +7,7 @@ import {
   iaItemEmbedURL,
   IAMediaType,
   parseInternetArchiveURL,
-  parseIASearchURL,
+  parseIASearchURLQuery,
   fetchIASearchCount,
   IAItem,
   getIAItemMetadata,
@@ -128,13 +128,29 @@ export async function createIAMediaItems(tapestryId: string, iaItems: IAItem[]) 
   )
 }
 
-const iaCollectionFactory: ItemFactory = async (source, _, tapestryId) => {
+/**
+ * Handles every Internet Archive URL shape in one place: a search-results page
+ * (`archive.org/search?query=...`) or an item/collection/playlist/user-list page
+ * (`archive.org/details/...`, `/embed/...`). The two shapes are mutually exclusive by
+ * construction (different paths), so trying the search parser first and falling through
+ * costs nothing on the common (non-search) case.
+ */
+const iaFactory: ItemFactory = async (source, _mediaType, tapestryId) => {
+  if (typeof source !== 'string' || !isHTTPURL(source)) return null
+
+  const searchQuery = parseIASearchURLQuery(source)
+  if (searchQuery) {
+    const total = await fetchIASearchCount(searchQuery)
+    if (total === undefined) return null
+    return { items: [], iaImports: [{ type: 'IASearchCollection', query: searchQuery, total }] }
+  }
+
   const descriptor = parseInternetArchiveURL(source)
   if (!descriptor) return null
 
   if (descriptor.urlType === 'user-list') {
     return {
-      items: await createIAMediaItems(tapestryId, await getUserListItems(source as string)),
+      items: await createIAMediaItems(tapestryId, await getUserListItems(source)),
       iaImports: [],
     }
   }
@@ -158,18 +174,6 @@ const iaCollectionFactory: ItemFactory = async (source, _, tapestryId) => {
     items: await createIAMediaItems(tapestryId, await getNestedIAItems(descriptor.item)),
     iaImports: [],
   }
-}
-
-const iaSearchCollectionFactory: ItemFactory = async (source, _mediaType, _tapestryId) => {
-  if (typeof source !== 'string' || !isHTTPURL(source)) return null
-
-  const parsed = parseIASearchURL(source)
-  if (!parsed) return null
-
-  const total = await fetchIASearchCount(parsed.query)
-  if (total === undefined) return null
-
-  return { items: [], iaImports: [{ type: 'IASearchCollection', query: parsed.query, total }] }
 }
 
 const linkFileFactory: ItemFactory = async (source, _, tapestryId) => {
@@ -204,7 +208,6 @@ export const ITEM_FACTORIES: ItemFactory[] = [
   linkFileFactory,
   textItemFactory,
   htmlFileItemFactory,
-  iaCollectionFactory,
-  iaSearchCollectionFactory,
+  iaFactory,
   webpageItemFactory,
 ]

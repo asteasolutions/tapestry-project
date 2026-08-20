@@ -13,7 +13,6 @@ import { createItemViewModel } from '../../pages/tapestry/view-model/utils'
 import { Breakpoint, useResponsive } from '../../providers/responsive-provider'
 import { createIAMediaItems } from '../../stage/item-factories'
 import { ImportDetails } from './import-details/index'
-import { requestCollectionItems } from './import-items-list/collection-list/index'
 import { ImportItemsList } from './import-items-list/index'
 import { requestSearchItems } from './import-items-list/search-list/index'
 import styles from './styles.module.css'
@@ -82,16 +81,11 @@ export function HandleIAImportDialog() {
 
     if (iaImport.type === 'IAPlaylist') {
       setSelectedItems(iaImport.entries.slice(0, MAX_SELECTION).map((e) => ({ id: e.filename })))
-    } else if (iaImport.type === 'IASearchCollection') {
-      setSelectedItems(
-        (await requestSearchItems(iaImport.query, 0, MAX_SELECTION, signal)).data.map((i) => ({
-          id: i.id,
-          mediaType: i.mediatype,
-        })),
-      )
     } else {
+      const query =
+        iaImport.type === 'IASearchCollection' ? iaImport.query : `collection:${iaImport.id}`
       setSelectedItems(
-        (await requestCollectionItems(iaImport.id, 0, MAX_SELECTION, signal)).data.map((i) => ({
+        (await requestSearchItems(query, 0, MAX_SELECTION, signal)).data.map((i) => ({
           id: i.id,
           mediaType: i.mediatype,
         })),
