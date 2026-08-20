@@ -4,40 +4,62 @@
   align-items: center;
   justify-content: center;
   gap: 12px;
-  margin: 20px 20px 33px;
+  margin: 20px 15px 33px;
 
   .message-input-wrapper {
     flex: 1;
-    display: grid;
+    display: flex;
+    flex-direction: column;
     position: relative;
+    background-color: var(--theme-background-neutral);
+    border: 1px solid var(--theme-background-neutral);
+    border-radius: 4px;
 
-    &::after {
-      /* Space at the end prevents jumpy behavior */
-      content: attr(data-value) ' ';
-      visibility: hidden;
+    &:focus-within {
+      border: 1px solid var(--theme-text-primary);
+    }
+
+    .editor-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      border-radius: 4px 4px 0 0;
+      padding-right: 8px;
+      background-color: var(--theme-background-primary);
+
+      :global(.wrapper) {
+        box-shadow: none;
+        border-radius: 0;
+      }
     }
 
     .message-input {
-      background-color: var(--theme-background-neutral);
       color: var(--theme-text-primary);
-      border-radius: 4px;
 
       &::placeholder {
         color: var(--theme-text-tertiary);
+      }
+
+      :global(.tiptap) {
+        &,
+        p {
+          padding: 0 !important;
+          margin: 0 !important;
+        }
       }
     }
 
     &::after,
     .message-input {
       border: 0;
-      padding: 12px 48px 12px 16px;
+      padding: 12px 16px;
       font: inherit;
-      grid-area: 1 / 1 / 2 / 2;
       max-height: 5em;
       overflow: hidden auto;
       scrollbar-width: none;
       white-space: pre-wrap;
-      word-wrap: break-word;
+      word-break: break-all;
     }
 
     &.with-end-adornment {
@@ -67,12 +89,5 @@
         padding-left: var(--start-adornment-width);
       }
     }
-  }
-
-  .buttons {
-    position: absolute;
-    right: 8px;
-    display: flex;
-    gap: 8px;
   }
 }

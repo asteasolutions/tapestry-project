@@ -36,7 +36,7 @@ interface TextItemToolbarOptions {
   controls?: { [K in keyof Controls]: boolean }
 }
 
-export function textItemToolbar({
+export function richTextEditorToolbar({
   selection,
   editorAPI,
   tapestryId,

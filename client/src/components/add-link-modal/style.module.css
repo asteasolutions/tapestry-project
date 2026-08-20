@@ -1,0 +1,19 @@
+.modal {
+  /* The additional selector is used in order to have greater specificity than the modal's selectors */
+  :global(&.modal),
+  :global(.modal-content) {
+    overflow: visible;
+  }
+
+  .input-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .action-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+}

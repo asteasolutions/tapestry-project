@@ -96,8 +96,32 @@ export class LazyListLoader<T> extends Observable<ListResponseDto<T> & { state: 
     }
   }
 
-  setRequestItems(requestItems: LazyListRequestItems<T>) {
-    this.requestItems = requestItems
+  private roundToSegment(value: number, round: 'up' | 'down', segmentLength: number) {
+    return (
+      (Math.floor(value / segmentLength) +
+        (round === 'up' && value % segmentLength !== 0 ? 1 : 0)) *
+      segmentLength
+    )
+  }
+
+  /**
+   * segmentLength splits the items into segments so that data.length and skip are always
+   * a multiple of segmentLength when possible.
+   * This is useful for grid like lists where a segment corresponds to one row
+   */
+  setRequestItems(requestItems: LazyListRequestItems<T>, segmentLength?: number) {
+    if (segmentLength) {
+      this.requestItems = async (skip, limit, signal) => {
+        const roundedSkip = this.roundToSegment(skip, 'down', segmentLength)
+        return requestItems(
+          roundedSkip,
+          this.roundToSegment(limit + skip - roundedSkip, 'up', segmentLength),
+          signal,
+        )
+      }
+    } else {
+      this.requestItems = requestItems
+    }
     this.stop()
     this.killSwitch ??= new AbortController()
     return this.enqueueRequest(this.doReload, 'initial-load')
@@ -164,7 +188,11 @@ export class LazyListLoader<T> extends Observable<ListResponseDto<T> & { state: 
         await this.doReload(signal)
       } else {
         this.update((value) => {
-          value.data.push(...(response.data as Draft<T>[]))
+          value.data.push(
+            ...(response.data.slice(
+              Math.max(0, response.skip - skip - items.length),
+            ) as Draft<T>[]),
+          )
         })
       }
     }, 'load-more')
@@ -190,7 +218,7 @@ export class LazyListLoader<T> extends Observable<ListResponseDto<T> & { state: 
         await this.doReload(signal)
       } else {
         this.update((value) => {
-          value.data.unshift(...(response.data as Draft<T>[]))
+          value.data.unshift(...(response.data.slice(0, skip - response.skip) as Draft<T>[]))
           value.skip = response.skip
         })
       }

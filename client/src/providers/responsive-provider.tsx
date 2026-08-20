@@ -9,7 +9,7 @@ export enum Breakpoint {
   XL = Infinity,
 }
 
-function breakpointForWidth(width: Breakpoint) {
+export function breakpointForWidth(width: Breakpoint) {
   if (width <= Breakpoint.XS) {
     return Breakpoint.XS
   }

@@ -1,4 +1,3 @@
-import { fileURLToPath } from 'node:url'
 import { readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { Page } from 'puppeteer'
@@ -9,23 +8,20 @@ import {
   ContentScriptMessage,
   RuleBundle,
 } from '@duckduckgo/autoconsent'
+import { createRequire } from 'node:module'
 
 export class AutoconsentError extends Error {}
 
+const requireResolve = createRequire(import.meta.url).resolve
+
 export const autoconsentScript = readFileSync(
-  resolve(
-    dirname(fileURLToPath(import.meta.resolve('@duckduckgo/autoconsent'))),
-    'autoconsent.playwright.js',
-  ),
+  resolve(dirname(requireResolve('@duckduckgo/autoconsent')), 'autoconsent.playwright.js'),
   'utf8',
 )
 
 // Load the rule bundles shipped with the package
-const rules = JSON.parse(
-  readFileSync(
-    fileURLToPath(import.meta.resolve('@duckduckgo/autoconsent/rules/rules.json')),
-    'utf8',
-  ),
+export const rules = JSON.parse(
+  readFileSync(requireResolve('@duckduckgo/autoconsent/rules/rules.json'), 'utf8'),
 ) as RuleBundle
 
 // See https://github.com/duckduckgo/autoconsent/blob/main/docs/api.md

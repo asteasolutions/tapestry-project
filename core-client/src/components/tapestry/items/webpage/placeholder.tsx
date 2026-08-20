@@ -1,6 +1,6 @@
 import { WebpageItem as WebpageItemDto } from 'tapestry-core/src/data-format/schemas/item'
 import { ItemPlaceholder } from '../../item-placeholder'
-import { VideoPlayOverlay } from '../../video-play-overlay'
+import { IconOverlay } from '../../video-play-overlay'
 import styles from './styles.module.css'
 import { getPrimaryThumbnail } from '../../../../view-model/utils'
 
@@ -16,7 +16,7 @@ export function WebpagePlaceholder({
 
   return (
     <div className={styles.placeholder}>
-      {showVideoPlayOverlay && <VideoPlayOverlay itemSize={size} type="videocam" />}
+      {showVideoPlayOverlay && <IconOverlay itemSize={size} icon="videocam" />}
       <ItemPlaceholder icon="hourglass_top" thumbnailSrc={getPrimaryThumbnail(thumbnail)}>
         Generating thumbnail...
       </ItemPlaceholder>

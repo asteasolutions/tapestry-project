@@ -2,7 +2,7 @@ import { times } from 'lodash-es'
 import { LazyList } from '../../../components/lazy-list'
 import { SkeletonLoader } from '../skeleton-loader'
 import { TapestryCard } from '../tapestry-card'
-import { ReactNode, useCallback, useState } from 'react'
+import { ReactNode, useCallback, useEffect, useState } from 'react'
 import {
   LazyListLoader,
   LazyListRequestItems,
@@ -14,9 +14,39 @@ import { ListParamsInputDto } from 'tapestry-shared/src/data-transfer/resources/
 import { useSession } from '../../../layouts/session'
 import { NoTapestriesPlaceholder } from './no-tapestries-placeholder'
 import { TapestryWithOwner } from '../../tapestry/view-model'
+import { Breakpoint, breakpointForWidth } from '../../../providers/responsive-provider'
 
 export interface TapestryListItem extends TapestryWithOwner<TapestryDto> {
   isBookmarked: boolean
+}
+
+// For simplicity this includes the gaps
+const XL_MIN_COLUMN_WIDTH = 380
+
+function useTapestryListColumnCount() {
+  const determineColumnCount = () => {
+    switch (breakpointForWidth(window.innerWidth)) {
+      case Breakpoint.XL:
+        return Math.trunc(window.innerWidth / XL_MIN_COLUMN_WIDTH)
+      case Breakpoint.LG:
+        return 3
+      case Breakpoint.MD:
+        return 2
+      case Breakpoint.SM:
+      case Breakpoint.XS:
+        return 1
+    }
+  }
+
+  const [columnCount, setColumnCount] = useState(determineColumnCount())
+
+  useEffect(() => {
+    const onWindowResize = () => setColumnCount(determineColumnCount())
+    window.addEventListener('resize', onWindowResize)
+    return () => window.removeEventListener('resize', onWindowResize)
+  }, [])
+
+  return columnCount
 }
 
 interface TapestryListProps {
@@ -73,12 +103,16 @@ export function TapestryList({
     [filter, orderBy, allBookmarked, userId],
   )
 
+  const columnCount = useTapestryListColumnCount()
+
   return (
     <LazyList
       header={header}
       className={styles.root}
+      style={{ '--column-count': columnCount } as React.CSSProperties}
       loadingEdgeProximity={10}
       requestItems={loadTapestries}
+      segmentLength={columnCount > 1 ? columnCount : undefined}
       onLoaderInitialized={(loader) => {
         setTapestryLoader(loader)
         onLoaderInitialized?.(loader)

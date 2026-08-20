@@ -1,63 +1,16 @@
 import { useState } from 'react'
-import {
-  Button,
-  IconButton,
-  IconButtonProps,
-} from 'tapestry-core-client/src/components/lib/buttons'
-import { Input } from 'tapestry-core-client/src/components/lib/input'
-import { Modal } from 'tapestry-core-client/src/components/lib/modal'
+import { IconButton, IconButtonProps } from 'tapestry-core-client/src/components/lib/buttons'
 import { ItemDto } from 'tapestry-shared/src/data-transfer/resources/dtos/item'
-import { useItemPicker } from '../item-picker/use-item-picker'
 import { useDispatch, useTapestryData } from '../../pages/tapestry/tapestry-providers'
-import { idMapToArray } from 'tapestry-core/src/utils'
-import { useGenerateItemLink, useTapestryPath } from '../../hooks/use-tapestry-path'
-import styles from './styles.module.css'
+import { useTapestryPath } from '../../hooks/use-tapestry-path'
 import { updateItem } from '../../pages/tapestry/view-model/store-commands/items'
 import { ActionButtonItem, ActionItemType } from 'tapestry-core/src/data-format/schemas/item'
 import { Id } from 'tapestry-core/src/data-format/schemas/common'
+import { AddLinkModal } from '../add-link-modal'
 
 type ActionItemDto = Extract<ItemDto, { type: ActionItemType }>
 
-interface AssignActionModalProps {
-  onClose: () => unknown
-  dto: ActionItemDto
-  onSelectItem: () => unknown
-  onApply: (action: string) => unknown
-  initialAction?: string
-}
-
-function AssignActionModal({
-  onClose,
-  dto,
-  onSelectItem,
-  onApply,
-  initialAction,
-}: AssignActionModalProps) {
-  const [action, setAction] = useState(initialAction ?? dto.action ?? '')
-
-  return (
-    <Modal onClose={() => onClose()} title="Assign action" classes={{ root: styles.modal }}>
-      <div className={styles.inputContainer}>
-        <div className={styles.actionContainer}>
-          <Input
-            value={action}
-            onChange={(e) => setAction(e.target.value)}
-            placeholder="Input a link or select an item"
-          />
-          <IconButton
-            icon="left_click"
-            aria-label="Attach items"
-            tooltip={{ side: 'bottom', children: 'Attach items' }}
-            onClick={() => onSelectItem()}
-          />
-        </div>
-        <Button onClick={() => onApply(action)}>Apply</Button>
-      </div>
-    </Modal>
-  )
-}
-
-function extractAction(url: string | null, tapestryPath: string, tapestryId: Id) {
+export function extractAction(url: string | null, tapestryPath: string, tapestryId: Id) {
   if (!url) {
     return {
       action: null,
@@ -80,49 +33,26 @@ interface AssignActionProps {
 
 export function AssignActionButton({ dto, icon = 'link' }: AssignActionProps) {
   const [showModal, setShowModal] = useState(false)
-  const [selectedItemUrl, setSelectedItemUrl] = useState<string>()
   const tapestryPath = useTapestryPath('view')
   const tapestryId = useTapestryData('id')
-
-  const generateLink = useGenerateItemLink()
-  const items = useTapestryData('items')
-  const itemPicker = useItemPicker({
-    onItemsChanged: ([id]) => {
-      itemPicker.close()
-      const item = idMapToArray(items).find((i) => i.dto.id === id)
-      if (item) {
-        setSelectedItemUrl(generateLink(id))
-      }
-    },
-    isSelectable: (item) => item.dto.type !== 'actionButton' && item.dto.id !== dto.id,
-  })
-
   const dispatch = useDispatch()
 
   return (
     <>
       <IconButton icon={icon} aria-label="Assign action" onClick={() => setShowModal(true)} />
-      {showModal && !itemPicker.isOpen && (
-        <AssignActionModal
-          onClose={() => {
-            setShowModal(false)
-            setSelectedItemUrl(undefined)
-          }}
-          dto={dto}
+      {showModal && (
+        <AddLinkModal
+          title="Assign action"
+          onClose={() => setShowModal(false)}
+          initialLink={dto.action ?? undefined}
+          excludeItemId={dto.id}
           onApply={(url) => {
             setShowModal(false)
             const { action, actionType } = extractAction(url, tapestryPath, tapestryId)
-            dispatch(
-              updateItem(dto.id, {
-                dto: { action, actionType },
-              }),
-            )
+            dispatch(updateItem(dto.id, { dto: { action, actionType } }))
           }}
-          onSelectItem={() => itemPicker.open()}
-          initialAction={selectedItemUrl}
         />
       )}
-      {itemPicker.ui}
     </>
   )
 }

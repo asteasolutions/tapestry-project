@@ -277,13 +277,13 @@ export async function destroyItems(
 
     const items = await tx.item.findMany({
       where: { id: { in: ids } },
-      select: { tapestryId: true, id: true },
+      select: { tapestryId: true, id: true, thumbnailId: true },
     })
     const itemsByTapestry = groupBy(items, (i) => i.tapestryId)
 
     const payload = await tx.item.deleteMany({ where: { id: { in: ids } } })
 
-    const imageAssetIds = compact(items.map((item) => item.tapestryId))
+    const imageAssetIds = compact(items.map((item) => item.thumbnailId))
     if (imageAssetIds.length > 0) {
       await tx.imageAsset.deleteMany({ where: { id: { in: imageAssetIds } } })
     }
