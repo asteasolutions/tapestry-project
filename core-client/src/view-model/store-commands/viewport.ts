@@ -140,17 +140,17 @@ export function transformViewport(
           } else {
             const s = newScale / fromScale
             const translationProgress = progress === 1 ? 1 : clamp(position.step(progress), 0, 1)
-            newTranslation =
-              progress === 1
-                ? { dx, dy }
-                : add(
-                    mul(s, fromTranslation),
-                    mul(1 - s, vector(center)),
-                    neg(mul(translationProgress * newScale, absoluteTranslation)),
-                  )
+            newTranslation = add(
+              mul(s, fromTranslation),
+              mul(1 - s, vector(center)),
+              neg(mul(translationProgress * newScale, absoluteTranslation)),
+            )
           }
 
-          updateViewport({ scale: newScale, translation: newTranslation })
+          updateViewport({
+            scale: newScale,
+            translation: progress === 1 ? { dx, dy } : newTranslation,
+          })
         },
         typeof animate === 'object' ? animate : {},
       )
