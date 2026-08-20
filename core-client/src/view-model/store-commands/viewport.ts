@@ -34,7 +34,7 @@ import {
   Polynomial,
   RungeKutta4,
 } from 'tapestry-core/src/lib/algebra.js'
-import { clamp, debounce } from 'lodash-es'
+import { clamp, debounce, isEqual } from 'lodash-es'
 import { selectItems, setInteractiveElement } from './tapestry.js'
 import { PresentationStep } from 'tapestry-core/src/data-format/schemas/presentation-step.js'
 
@@ -290,10 +290,7 @@ export function focusItems(
     )
 
     const shouldRestore =
-      previousTransform !== undefined &&
-      transformed.translation.dx === viewport.transform.translation.dx &&
-      transformed.translation.dy === viewport.transform.translation.dy &&
-      transformed.scale === viewport.transform.scale
+      previousTransform !== undefined && isEqual(transformed, viewport.transform)
 
     store.dispatch(transformViewport(shouldRestore ? previousTransform : transformed, animate))
   }
