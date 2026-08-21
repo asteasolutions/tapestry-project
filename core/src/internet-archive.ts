@@ -115,6 +115,22 @@ export async function iaAdvancedSearch<F extends IAAdvancedSearchFieldsQuery>(
   }
 }
 
+// archive.org/search's media-type tabs (verified against the real site): most map directly onto
+// IAMediaType (tab=movies -> mediatype:movies, tab=etree -> mediatype:etree, etc.), but "Text
+// Contents" (tab=fulltext) and "Radio"/"TV" (tab=radio/tv) don't correspond to any mediatype value
+// at all, and "Collections" (tab=collection) is deliberately left out even though it's a real
+// value, since every query built here already excludes mediatype:collection - honoring that tab
+// would just AND two contradictory clauses together and always return zero results.
+const TAB_TO_MEDIA_TYPE: Partial<Record<string, IAMediaType>> = {
+  texts: 'texts',
+  etree: 'etree',
+  audio: 'audio',
+  movies: 'movies',
+  software: 'software',
+  image: 'image',
+  data: 'data',
+}
+
 export function parseIASearchURLQuery(source: unknown): string | null {
   if (typeof source !== 'string' || source === '') return null
 
@@ -124,25 +140,20 @@ export function parseIASearchURLQuery(source: unknown): string | null {
     if (url.host !== IA_HOST || url.pathname.replace(/^\/?/, '') !== 'search' || !query) {
       return null
     }
-    return query
+    const mediaType = TAB_TO_MEDIA_TYPE[url.searchParams.get('tab') ?? '']
+    return mediaType ? `(${query}) AND mediatype:${mediaType}` : query
   } catch (error) {
     console.warn(error)
     return null
   }
 }
 
-/**
- * A "collection" is itself just another search result (`mediatype: collection`), never an
- * importable item - every IA search query this module builds (the raw search-URL case and the
- * literal `collection:<id>` case alike) needs to exclude it, or the count and the list disagree
- * about what's actually importable.
- */
 export function excludeIACollections(query: string) {
   return `(${query}) AND NOT mediatype:collection`
 }
 
 export async function fetchIASearchCount(query: string) {
-  const response = await iaAdvancedSearch({ q: excludeIACollections(query), pageSize: 1 })
+  const response = await iaAdvancedSearch({ q: query, pageSize: 1 })
   return response?.response.numFound
 }
 

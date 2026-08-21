@@ -93,8 +93,6 @@ export async function requestSearchItems(
 
 interface IASearchListProps extends Omit<ImportItemsListProps, 'iaImport'> {
   query: string
-  /** Shown when the query returns no results - callers with a more specific case (e.g. "this
-   * collection") should pass their own wording rather than the generic search-result default. */
   emptyPlaceholder?: string
 }
 

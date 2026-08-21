@@ -9,6 +9,7 @@ import {
   parseInternetArchiveURL,
   parseIASearchURLQuery,
   fetchIASearchCount,
+  excludeIACollections,
   IAItem,
   getIAItemMetadata,
   getIAPlaylistEntries,
@@ -128,19 +129,12 @@ export async function createIAMediaItems(tapestryId: string, iaItems: IAItem[]) 
   )
 }
 
-/**
- * Handles every Internet Archive URL shape in one place: a search-results page
- * (`archive.org/search?query=...`) or an item/collection/playlist/user-list page
- * (`archive.org/details/...`, `/embed/...`). The two shapes are mutually exclusive by
- * construction (different paths), so trying the search parser first and falling through
- * costs nothing on the common (non-search) case.
- */
 const iaFactory: ItemFactory = async (source, _mediaType, tapestryId) => {
   if (typeof source !== 'string' || !isHTTPURL(source)) return null
 
   const searchQuery = parseIASearchURLQuery(source)
   if (searchQuery) {
-    const total = await fetchIASearchCount(searchQuery)
+    const total = await fetchIASearchCount(excludeIACollections(searchQuery))
     if (total === undefined) return null
     return { items: [], iaImports: [{ type: 'IASearchCollection', query: searchQuery, total }] }
   }
