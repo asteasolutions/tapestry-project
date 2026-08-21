@@ -2,22 +2,26 @@ import { Size } from 'tapestry-core/src/lib/geometry'
 import { getItemOverlayScale } from '../../../view-model/utils'
 import { Icon } from '../../lib/icon/index'
 
-interface VideoPlayOverlayProps {
+interface IconOverlayProps {
   itemSize: Size
-  type: 'videocam' | 'play_arrow'
+  icon: 'videocam' | 'play_arrow' | 'picture_as_pdf'
 }
 
-const ICON_STYLING: Record<VideoPlayOverlayProps['type'], React.CSSProperties> = {
+const ICON_STYLING: Record<IconOverlayProps['icon'], React.CSSProperties> = {
   videocam: {
-    fontSize: '60px',
-    padding: '20px',
+    fontSize: '38px',
+    padding: '13px',
   },
   play_arrow: {
-    fontSize: '100px',
+    fontSize: '50px',
+  },
+  picture_as_pdf: {
+    fontSize: '31px',
+    padding: '10px',
   },
 }
 
-export function VideoPlayOverlay({ itemSize, type }: VideoPlayOverlayProps) {
+export function IconOverlay({ itemSize, icon }: IconOverlayProps) {
   const scale = getItemOverlayScale(itemSize)
 
   return (
@@ -26,19 +30,20 @@ export function VideoPlayOverlay({ itemSize, type }: VideoPlayOverlayProps) {
         position: 'absolute',
         inset: 0,
         display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
+        alignItems: 'start',
+        justifyContent: 'end',
       }}
     >
       <Icon
-        icon={type}
+        icon={icon}
         filled
         style={{
           color: 'var(--theme-background-primary)',
           backgroundColor: 'color-mix(in srgb, var(--theme-background-mono), transparent 50%)',
-          borderRadius: '50%',
+          borderRadius: '0 0 0 8px',
           transform: `scale(${scale})`,
-          ...ICON_STYLING[type],
+          transformOrigin: '100% 0%',
+          ...ICON_STYLING[icon],
         }}
       />
     </div>

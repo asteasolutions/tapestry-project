@@ -257,6 +257,10 @@ export function useEditMoreMenu({
         dtoArray.map(({ id }) => id),
         to,
       ),
+      setSnackbar({
+        text: `Item ${to === 'front' ? 'brought to front' : 'sent to back'} (deselect to see)`,
+        duration: 3,
+      }),
     )
   }
 
@@ -322,7 +326,7 @@ export function useEditMoreMenu({
         <Icon className="button-icon" icon="flip_to_front" />
       </MenuItemButton>,
       <MenuItemButton onClick={() => bringTo('back')} className={styles.menuItemButton}>
-        Bring to back
+        Send to back
         <Icon className="button-icon" icon="flip_to_back" />
       </MenuItemButton>,
       <MenuItemButton shortcut="meta + C" onClick={copyItem} className={styles.menuItemButton}>

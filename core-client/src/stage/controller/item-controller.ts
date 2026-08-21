@@ -1,4 +1,4 @@
-import { Rectangle } from 'tapestry-core/src/lib/geometry'
+import { LinearTransform, Rectangle } from 'tapestry-core/src/lib/geometry'
 import { isMeta } from '../../lib/keyboard-event'
 import { createEventRegistry } from '../../lib/events/event-registry'
 import { EventTypes } from '../../lib/events/typed-events'
@@ -10,6 +10,7 @@ import {
   isHoveredRel,
   obtainHoveredDomTarget,
   obtainHoverTarget,
+  toPoint,
 } from '../utils'
 import { capturesPointerEvents, isTouchEvent } from '../../lib/dom'
 import { Store } from '../../lib/store/index'
@@ -19,7 +20,7 @@ import {
   LongPressUpEvent,
 } from '../../lib/long-press-detector'
 import { isMobile } from '../../lib/user-agent'
-import { TapestryViewModel } from '../../view-model'
+import { MAX_SCALE, TapestryViewModel } from '../../view-model'
 import { TapestryStage } from '..'
 import { TapestryStageController } from '.'
 import {
@@ -32,10 +33,23 @@ import {
   toggleGroupSelection,
   toggleItemSelection,
 } from '../../view-model/store-commands/tapestry'
-import { isSingleGroupSelected } from '../../view-model/utils'
-import { isHTTPURL } from 'tapestry-core/src/utils'
+import {
+  getMinScale,
+  getZoomParameters,
+  isSingleGroupSelected,
+  zoomToPoint,
+} from '../../view-model/utils'
+import { hasActionType, idMapToArray, isHTTPURL } from 'tapestry-core/src/utils'
 import { Id } from 'tapestry-core/src/data-format/schemas/common'
-import { defaultBounceAnimation, FocusOptions } from '../../view-model/store-commands/viewport'
+import {
+  defaultBounceAnimation,
+  focusGroup,
+  focusItems,
+  focusMultiselection,
+  FocusOptions,
+  focusRel,
+  transformViewport,
+} from '../../view-model/store-commands/viewport'
 
 type EventTypesMap = {
   gesture: EventTypes<GestureDetector>
@@ -56,6 +70,7 @@ export interface InternalNavigationState {
 export abstract class ItemController implements TapestryStageController {
   private selectionHandler!: DomDragHandler
   private longPressDetector: LongPressDetector
+  private previousTransform?: LinearTransform
 
   constructor(
     protected store: Store<TapestryViewModel>,
@@ -92,6 +107,47 @@ export abstract class ItemController implements TapestryStageController {
 
     this.selectionHandler.deactivate()
     this.longPressDetector.deactivate()
+  }
+
+  @eventListener('gesture', 'double-click')
+  protected onDoubleClickItem({ detail: { hoverTarget, originalEvent } }: ClickEvent) {
+    const tapestry = this.store.get()
+    const zoomOut = isMeta(originalEvent)
+    // Double-clicking on empty canvas zooms in, unless the meta key is held, in
+    // which case it zooms out. Double-clicking on an item/rel/group/multiselection
+    // always focuses that target (see below), regardless of the meta key.
+    if (!hoverTarget) {
+      const { zoomStep, animate } = getZoomParameters(
+        tapestry.viewport.transform.scale,
+        zoomOut ? getMinScale(tapestry.viewport, idMapToArray(tapestry.items)) : MAX_SCALE,
+        false,
+      )
+
+      // Double-click zooms 10 times more than clicking the button from the toolbar
+      const transformed = zoomToPoint(tapestry, zoomStep * 10, toPoint(originalEvent))
+      this.store.dispatch(transformViewport(transformed, animate))
+      return
+    }
+
+    const currentTransform = structuredClone(tapestry.viewport.transform)
+    const previousTransform = this.previousTransform
+
+    switch (hoverTarget.type) {
+      case 'item':
+        this.store.dispatch(focusItems([hoverTarget.modelId], { previousTransform }))
+        break
+      case 'rel':
+        this.store.dispatch(focusRel(hoverTarget.modelId, { previousTransform }))
+        break
+      case 'group':
+        this.store.dispatch(focusGroup(hoverTarget.modelId, { previousTransform }))
+        break
+      case 'multiselection':
+        this.store.dispatch(focusMultiselection({ previousTransform }))
+        break
+    }
+
+    this.previousTransform = currentTransform
   }
 
   @eventListener('gesture', 'click')
@@ -218,7 +274,7 @@ export abstract class ItemController implements TapestryStageController {
 
   protected handleActionItemClick(id: Id) {
     const item = this.store.get(`items.${id}.dto`)
-    if (item?.type === 'actionButton' && item.action) {
+    if (item && hasActionType(item) && item.action) {
       if (item.actionType === 'internalLink') {
         const params = new URLSearchParams(item.action)
         return this.tryNavigateToInternalState(params, { animate: defaultBounceAnimation })

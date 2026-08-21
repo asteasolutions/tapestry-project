@@ -333,6 +333,10 @@ export function coordMax(...vectors: Vector[]): Vector {
   }
 }
 
+export function clampCoords(vector: Vector, min: Vector, max: Vector): Vector {
+  return coordMax(min, coordMin(vector, max))
+}
+
 export function resizeToWidth(size: Size, width: number): Size {
   return {
     width: width,

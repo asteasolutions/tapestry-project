@@ -199,6 +199,7 @@ export function AIChat({ tapestryId, canAttachItems, onPickingItems }: AIChatPro
               </>
             }
             loadingIndicator={<LoadingLogoIcon className={styles.listLoadingIndicator} />}
+            autoScrollFirstElements
           />
         ) : (
           <div />
