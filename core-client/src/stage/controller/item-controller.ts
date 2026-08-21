@@ -1,4 +1,4 @@
-import { Rectangle } from 'tapestry-core/src/lib/geometry'
+import { LinearTransform, Rectangle } from 'tapestry-core/src/lib/geometry'
 import { isMeta } from '../../lib/keyboard-event'
 import { createEventRegistry } from '../../lib/events/event-registry'
 import { EventTypes } from '../../lib/events/typed-events'
@@ -70,6 +70,7 @@ export interface InternalNavigationState {
 export abstract class ItemController implements TapestryStageController {
   private selectionHandler!: DomDragHandler
   private longPressDetector: LongPressDetector
+  private previousTransform?: LinearTransform
 
   constructor(
     protected store: Store<TapestryViewModel>,
@@ -112,9 +113,10 @@ export abstract class ItemController implements TapestryStageController {
   protected onDoubleClickItem({ detail: { hoverTarget, originalEvent } }: ClickEvent) {
     const tapestry = this.store.get()
     const zoomOut = isMeta(originalEvent)
-    // If the user is holding the meta key down we will always zoom out,
-    // irrespective of whether they are pointing at an item/rel/group/multiselection
-    if (!hoverTarget || zoomOut) {
+    // Double-clicking on empty canvas zooms in, unless the meta key is held, in
+    // which case it zooms out. Double-clicking on an item/rel/group/multiselection
+    // always focuses that target (see below), regardless of the meta key.
+    if (!hoverTarget) {
       const { zoomStep, animate } = getZoomParameters(
         tapestry.viewport.transform.scale,
         zoomOut ? getMinScale(tapestry.viewport, idMapToArray(tapestry.items)) : MAX_SCALE,
@@ -127,16 +129,25 @@ export abstract class ItemController implements TapestryStageController {
       return
     }
 
+    const currentTransform = structuredClone(tapestry.viewport.transform)
+    const previousTransform = this.previousTransform
+
     switch (hoverTarget.type) {
       case 'item':
-        return this.store.dispatch(focusItems([hoverTarget.modelId]))
+        this.store.dispatch(focusItems([hoverTarget.modelId], { previousTransform }))
+        break
       case 'rel':
-        return this.store.dispatch(focusRel(hoverTarget.modelId))
+        this.store.dispatch(focusRel(hoverTarget.modelId, { previousTransform }))
+        break
       case 'group':
-        return this.store.dispatch(focusGroup(hoverTarget.modelId))
+        this.store.dispatch(focusGroup(hoverTarget.modelId, { previousTransform }))
+        break
       case 'multiselection':
-        return this.store.dispatch(focusMultiselection())
+        this.store.dispatch(focusMultiselection({ previousTransform }))
+        break
     }
+
+    this.previousTransform = currentTransform
   }
 
   @eventListener('gesture', 'click')
