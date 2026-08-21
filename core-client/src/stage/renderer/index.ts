@@ -21,7 +21,6 @@ import { isItemViewModel, isRelViewModel } from '../../view-model/utils'
 import { isHoveredElement } from '../utils'
 import { ItemRenderer } from './item-renderer'
 import { GroupBackgroundRenderer } from './group-background-renderer'
-import { ThumbnailContainer } from './thumbnail-container'
 
 export interface Renderer<T = unknown> {
   render(arg: T): void
@@ -59,7 +58,6 @@ export abstract class TapestryRenderer<
   boundRender = this.render.bind(this)
 
   async init() {
-    await ThumbnailContainer.loadIconTextures()
     this.store.subscribe(this.boundRender)
     this.render()
   }
@@ -67,7 +65,6 @@ export abstract class TapestryRenderer<
   async dispose() {
     this.store.unsubscribe(this.boundRender)
     this.tapestryElementRenderers.forEach((r) => r.dispose())
-    await ThumbnailContainer.unloadIconTextures()
   }
 
   protected getGroups() {
@@ -83,6 +80,12 @@ export abstract class TapestryRenderer<
   }
 
   protected render() {
+    
+    const viewportReady = this.store.get('viewport.ready')
+    if (!viewportReady) {
+      return
+    }
+    
     this.removeMissingStageItems()
 
     const selection = this.store.get('selection')
@@ -91,19 +94,19 @@ export abstract class TapestryRenderer<
     this.getRels().forEach((rel) => this.renderViewModel(rel, selection, interactiveElement))
     this.getItems().forEach((item) =>
       this.renderViewModel(item, selection, interactiveElement, item.dto.layer),
-    )
+  )
+  
+  this.renderSelectionRect()
+  
+  this.updateViewportTransformation()
+  this.updatePointer()
+  this.updateTheme()
+  
+  this.stage.pixi.tapestry.scheduleRedraw()
+}
 
-    this.renderSelectionRect()
-
-    this.updateViewportTransformation()
-    this.updatePointer()
-    this.updateTheme()
-
-    this.stage.pixi.tapestry.scheduleRedraw()
-  }
-
-  protected renderSelectionRect() {
-    const containerId = 'selection-rect'
+protected renderSelectionRect() {
+  const containerId = 'selection-rect'
     let container = this.stage.pixi.tapestry.app.stage.getChildByLabel(
       containerId,
     ) as Graphics | null

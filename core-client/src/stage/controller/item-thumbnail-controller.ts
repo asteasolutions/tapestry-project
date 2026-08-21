@@ -13,15 +13,19 @@ import {
 } from '../../workers/thumbnail-loader'
 import { Texture } from 'pixi.js'
 import { Id } from 'tapestry-core/src/data-format/schemas/common'
-import { snapshotRegistry } from '../renderer/item-renderer'
 import { isMobile } from '../../lib/user-agent'
+import { setThumbnailsInitialized } from '../../view-model/store-commands/viewport'
+
+export const snapshotRegistry: IdMap<Texture> = {}
+
+export interface LoadedRendition {
+  snapshotId: string
+  bitmap: ImageBitmap
+  meta: ImageAssetRendition
+}
 
 interface ItemThumbnailState {
-  loadedRendition?: {
-    snapshotId: string
-    bitmap: ImageBitmap
-    meta: ImageAssetRendition
-  }
+  loadedRendition?: LoadedRendition
   requestedRendition?: {
     requestId: string
     meta: ImageAssetRendition
@@ -34,7 +38,10 @@ export class ItemThumbnailController implements TapestryStageController {
   private initialRequestIds = new Set()
   private isInitialized = false
 
-  constructor(private store: Store<TapestryViewModel>) {}
+  constructor(
+    private store: Store<TapestryViewModel>,
+    private initialThumbnails?: IdMap<LoadedRendition>,
+  ) {}
 
   init(): void {
     this.thumbnailLoader = new Worker(
@@ -43,12 +50,29 @@ export class ItemThumbnailController implements TapestryStageController {
     )
     this.thumbnailLoader.addEventListener('message', this.onThumbnailLoaderMessage)
 
-    this.fetchInitialThumbnails()
+    if (this.initialThumbnails) {
+      Object.entries(this.initialThumbnails).forEach(([itemId, rendition]) => {
+        if (!rendition) {
+          return
+        }
+        this.updateItemSnapshot(itemId, {
+          id: rendition.snapshotId,
+          texture: Texture.from(rendition.bitmap),
+        })
+        this.thumbnails[itemId] = { loadedRendition: rendition }
+      })
+      this.initialThumbnails = undefined
+      this.onInitialized()
+    } else {
+      this.fetchInitialThumbnails()
+    }
   }
 
   dispose(): void {
     this.store.unsubscribe(this.recalculateLOD)
     this.store.unsubscribe(this.onItemsChanged)
+    this.onItemsChanged({})
+    this.onItemsChanged.flush()
 
     this.thumbnailLoader?.removeEventListener('message', this.onThumbnailLoaderMessage)
     this.thumbnailLoader?.terminate()
@@ -61,6 +85,7 @@ export class ItemThumbnailController implements TapestryStageController {
     this.isInitialized = true
     this.store.subscribe('viewport.transform', this.recalculateLOD)
     this.store.subscribe('items', this.onItemsChanged)
+    this.store.dispatch(setThumbnailsInitialized())
 
     this.recalculateLOD()
   }
@@ -86,7 +111,7 @@ export class ItemThumbnailController implements TapestryStageController {
         return
       }
 
-      const snapshotId = uniqueId('snapshot')
+      const snapshotId = ItemThumbnailController.generateSnapshotId()
       this.thumbnails[itemId].loadedRendition = { snapshotId, bitmap: event.data.bitmap, meta }
       this.updateItemSnapshot(itemId, { id: snapshotId, texture: Texture.from(event.data.bitmap) })
     } finally {
@@ -251,5 +276,9 @@ export class ItemThumbnailController implements TapestryStageController {
         model.items[itemId].snapshotId = snapshot?.id
       }
     })
+  }
+
+  static generateSnapshotId() {
+    return uniqueId('snapshot')
   }
 }

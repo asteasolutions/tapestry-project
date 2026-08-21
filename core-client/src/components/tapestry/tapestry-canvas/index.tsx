@@ -44,17 +44,22 @@ function TapestryElementLocator({
   transform,
 }: TapestryElementLocatorProps) {
   const { useStoreData } = useTapestryConfig()
-  const { interactiveElement, selection, disableOptimizations } = useStoreData([
-    'interactiveElement',
-    'selection',
-    'disableOptimizations',
-  ])
+  const { interactiveElement, selection, disableOptimizations, thumbnailsInitialized } =
+    useStoreData([
+      'interactiveElement',
+      'selection',
+      'disableOptimizations',
+      'thumbnailsInitialized',
+    ])
   const item = useStoreData(`items.${id}`)
   const isInteractive = id === interactiveElement?.modelId
   const isInSelection = isItemInSelection(item, selection)
   const hasBeenActive = !!item?.hasBeenActive
   const shouldDisplayDom =
-    disableOptimizations || isInteractive || item?.isPlaying || !item?.snapshotId
+    disableOptimizations ||
+    isInteractive ||
+    item?.isPlaying ||
+    (thumbnailsInitialized && !item?.snapshotId)
 
   if (!shouldDisplayDom && !(hasBeenActive && hasPersistentState(item.dto.type))) {
     // The item should currently be hidden since it is not interactive and a placeholder will be displayed instead.
