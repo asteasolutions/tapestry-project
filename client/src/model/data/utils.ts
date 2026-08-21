@@ -411,7 +411,7 @@ export async function loadInitialThumbnails(
   items: IdMap<ItemViewModel>,
   timeout?: number,
 ): Promise<IdMap<LoadedRendition>> {
-  let renditionPromises: Promise<{ rendition: LoadedRendition; itemId: string }>[] = []
+  const renditionPromises: Promise<{ rendition: LoadedRendition; itemId: string }>[] = []
   const timeoutSignal = timeout ? AbortSignal.timeout(timeout) : undefined
   for (const item of idMapToArray(items)) {
     const thumbnailRenditions = item.dto.thumbnail?.renditions ?? []

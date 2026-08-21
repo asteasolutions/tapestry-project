@@ -57,12 +57,12 @@ export abstract class TapestryRenderer<
 
   boundRender = this.render.bind(this)
 
-  async init() {
+  init() {
     this.store.subscribe(this.boundRender)
     this.render()
   }
 
-  async dispose() {
+  dispose() {
     this.store.unsubscribe(this.boundRender)
     this.tapestryElementRenderers.forEach((r) => r.dispose())
   }
@@ -80,12 +80,11 @@ export abstract class TapestryRenderer<
   }
 
   protected render() {
-    
     const viewportReady = this.store.get('viewport.ready')
     if (!viewportReady) {
       return
     }
-    
+
     this.removeMissingStageItems()
 
     const selection = this.store.get('selection')
@@ -94,19 +93,19 @@ export abstract class TapestryRenderer<
     this.getRels().forEach((rel) => this.renderViewModel(rel, selection, interactiveElement))
     this.getItems().forEach((item) =>
       this.renderViewModel(item, selection, interactiveElement, item.dto.layer),
-  )
-  
-  this.renderSelectionRect()
-  
-  this.updateViewportTransformation()
-  this.updatePointer()
-  this.updateTheme()
-  
-  this.stage.pixi.tapestry.scheduleRedraw()
-}
+    )
 
-protected renderSelectionRect() {
-  const containerId = 'selection-rect'
+    this.renderSelectionRect()
+
+    this.updateViewportTransformation()
+    this.updatePointer()
+    this.updateTheme()
+
+    this.stage.pixi.tapestry.scheduleRedraw()
+  }
+
+  protected renderSelectionRect() {
+    const containerId = 'selection-rect'
     let container = this.stage.pixi.tapestry.app.stage.getChildByLabel(
       containerId,
     ) as Graphics | null
