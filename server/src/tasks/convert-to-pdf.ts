@@ -24,6 +24,8 @@ const CONVERT_ITEM_PROPS = [
 
 async function getFaviconUrl(page: Page): Promise<string | null> {
   return page.evaluate((): string | null => {
+    // The project doesn't include lib.dom in server's tsconfig, so
+    // we manually type only the browser API surface we need here.
     const globalContext = globalThis as unknown as {
       document: {
         querySelector: (
@@ -64,65 +66,22 @@ async function faviconUrlToDataUri(
 
 function buildHeaderTemplate(faviconDataUri: string | null): string {
   return `
-    <div style="
-      width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: #f5f6f8;
-      border: 1px solid #e2e4e8;
-      border-radius: 6px;
-      padding: 6px 12px;
-      margin: 0 30px 0;
-    ">
-      <div style="display: flex; align-items: center; gap: 8px; min-width: 0; max-width: 75%;">
+    <div style="width: 100%; display: flex; justify-content: space-between; background: #f5f6f8; border: 1px solid #e2e4e8; padding: 6px 12px; margin: 0 30px 0;">
+      <div style="display: flex; align-items: center; gap: 8px; min-width: 0; max-width: 80%;">
         ${faviconDataUri ? `<img src="${faviconDataUri}" style="width: 14px; height: 14px; border-radius: 2px; flex-shrink: 0;" />` : ''}
-        <span style="
-          font-size: 13px;
-          font-weight: 600;
-          color: #1a1a1a;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        " class="title"></span>
+        <span style="font-size: 12px; font-weight: 600; color: #1a1a1a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" 
+            class="title"></span>
       </div>
-      <span style="
-        font-size: 11px;
-        color: #9a9da3;
-        margin-left: 12px;
-        flex-shrink: 0;
-      " class="date"></span>
+      <span style="font-size: 10px; color: #9a9da3; margin-left: 12px; flex-shrink: 0;" class="date"></span>
     </div>
   `
 }
 
 const FOOTER_TEMPLATE = `
-  <div style="
-    width: 100%;
-    box-sizing: border-box;
-    padding: 0 30px;
-  ">
-    <div style="
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-top: 1px solid #e2e4e8;
-      padding-top: 6px;
-    ">
-      <span style="
-        font-size: 9px;
-        color: #b0b3ba;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        max-width: 70%;
-      " class="url"></span>
-      <span style="
-        font-size: 8px;
-        color: #9a9da3;
-        letter-spacing: 0.3px;
-        flex-shrink: 0;
-      ">
+  <div style="width: 100%; box-sizing: border-box; padding: 0 30px;">
+    <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #e2e4e8; padding-top: 6px;">
+      <span style="font-size: 10px; color: #b0b3ba; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80%;" class="url"></span>
+      <span style="font-size: 8px; color: #9a9da3; flex-shrink: 0;">
         <span class="pageNumber"></span> / <span class="totalPages"></span>
       </span>
     </div>
