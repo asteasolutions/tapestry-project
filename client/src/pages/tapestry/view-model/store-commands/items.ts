@@ -368,7 +368,7 @@ export function reorderItems(
       to === 'front' ? itemIds.has(i.dto.id) : !itemIds.has(i.dto.id),
     )
 
-    const allItems = [...sortBy(backItems, ['layer']), ...sortBy(frontItems, ['layer'])]
+    const allItems = [...sortBy(backItems, ['dto.layer']), ...sortBy(frontItems, ['dto.layer'])]
     store.dispatch(...allItems.map((item, layer) => updateItem(item.dto.id, { dto: { layer } })))
   }
 }
