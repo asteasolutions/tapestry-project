@@ -182,27 +182,19 @@ export class TapestryResourcesRepo extends ResourceRepo<TapestryResourceName, Ty
     ids?: Record<K, string[] | true> | null,
     signal?: AbortSignal,
   ) {
-    const result: Partial<ResourceLists<TapestryResourceName, TypeMap>> = {}
+    const resultPromises: { [N in TapestryResourceName]?: Promise<TypeMap[N]['resource'][]> } = {}
     const { tapestries, items, rels, presentationSteps, groups } = (ids ?? {}) as Partial<
       Record<TapestryResourceName, string[] | true>
     >
 
-    let tapestryPromise: Promise<TapestryDto> | undefined,
-      itemsPromise: Promise<ItemDto[]> | undefined,
-      relsPromise: Promise<RelDto[]> | undefined,
-      groupsPromise: Promise<GroupDto[]> | undefined,
-      presentationStepsPromise: Promise<PresentationStepDto[]> | undefined
-
     if (!ids || tapestries) {
-      tapestryPromise = resource('tapestries').read(
-        { id: this.tapestryId },
-        { include: ['owner'] },
-        { signal },
-      )
+      resultPromises.tapestries = resource('tapestries')
+        .read({ id: this.tapestryId }, { include: ['owner'] }, { signal })
+        .then((t) => [t])
     }
     if (!ids || items) {
       const itemIds = Array.isArray(items) ? items : undefined
-      itemsPromise = listAll(
+      resultPromises.items = listAll(
         resource('items'),
         { filter: { ...idFilter(itemIds), 'tapestryId:eq': this.tapestryId } },
         signal,
@@ -210,7 +202,7 @@ export class TapestryResourcesRepo extends ResourceRepo<TapestryResourceName, Ty
     }
     if (!ids || rels) {
       const relIds = Array.isArray(rels) ? rels : undefined
-      relsPromise = listAll(
+      resultPromises.rels = listAll(
         resource('rels'),
         { filter: { ...idFilter(relIds), 'tapestryId:eq': this.tapestryId } },
         signal,
@@ -218,35 +210,32 @@ export class TapestryResourcesRepo extends ResourceRepo<TapestryResourceName, Ty
     }
     if (!ids || groups) {
       const groupIds = Array.isArray(groups) ? groups : undefined
-      groupsPromise = listAll(resource('groups'), {
+      resultPromises.groups = listAll(resource('groups'), {
         filter: { ...idFilter(groupIds), 'tapestryId:eq': this.tapestryId },
       })
     }
     if (!ids || presentationSteps) {
       const presentationStepIds = Array.isArray(presentationSteps) ? presentationSteps : undefined
-      presentationStepsPromise = listAll(
+      resultPromises.presentationSteps = listAll(
         resource('presentationSteps'),
         { filter: { ...idFilter(presentationStepIds), 'tapestryId:eq': this.tapestryId } },
         signal,
       )
     }
 
-    const [tapestriesResult, itemsResult, relsResult, groupsResult, presentationStepsResult] =
-      await Promise.all([
-        tapestryPromise ?? Promise.resolve(undefined),
-        itemsPromise ?? Promise.resolve(undefined),
-        relsPromise ?? Promise.resolve(undefined),
-        groupsPromise ?? Promise.resolve(undefined),
-        presentationStepsPromise ?? Promise.resolve(undefined),
-      ])
+    const result = Object.assign(
+      {},
+      ...(await Promise.all(
+        TAPESTRY_RESOURCES.map(
+          (resource) =>
+            resultPromises[resource]?.then((res) => ({
+              [resource]: res,
+            })) ?? Promise.resolve(undefined),
+        ),
+      )),
+    ) as ResourceLists<K, TypeMap>
 
-    result.tapestries = tapestriesResult && [tapestriesResult]
-    result.items = itemsResult
-    result.rels = relsResult
-    result.groups = groupsResult
-    result.presentationSteps = presentationStepsResult
-
-    return result as ResourceLists<K, TypeMap>
+    return result
   }
 
   protected createParams<K extends TapestryResourceName>(
