@@ -16,7 +16,11 @@
     color: var(--theme-text-disabled);
   }
 
-  > form > input {
+  .time-input {
+    padding: 4px;
+  }
+
+  input {
     width: 20px;
     border: none;
     padding: 0;
