@@ -1,6 +1,5 @@
-import { kebabCase, omit } from 'lodash-es'
+import { omit } from 'lodash-es'
 import { memo, useEffect, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
 import {
   createSelectionState,
   RichTextEditorApi,
@@ -8,7 +7,6 @@ import {
 } from 'tapestry-core-client/src/components/lib/rich-text-editor'
 import { TextItemViewer } from 'tapestry-core-client/src/components/tapestry/items/text/viewer'
 import { iterateParents } from 'tapestry-core-client/src/lib/dom'
-import { DOM_MODEL_ID_DATA_ATTR } from 'tapestry-core-client/src/stage/utils'
 import { COLOR_PRESETS, TRANSPARENT } from 'tapestry-core-client/src/theme'
 import { LiteralColor } from 'tapestry-core-client/src/theme/types'
 import { TextItemDto } from 'tapestry-shared/src/data-transfer/resources/dtos/item'
@@ -19,13 +17,18 @@ import { userSettings } from '../../../../services/user-settings'
 import { buildToolbarMenu } from '../../item-toolbar'
 import { useItemToolbar } from '../../item-toolbar/use-item-toolbar'
 import { TapestryItem } from '../tapestry-item'
-import { LinkTooltip, LinkTooltipProps } from './link-tooltip'
 import { ToggleFormatButton, tooltip } from './toggle-format-button'
 import { richTextEditorToolbar } from './toolbar'
+import { AddLinkModal } from '../../../add-link-modal'
 
 const BACKGROUND_COLORS: Record<LiteralColor, string> = COLOR_PRESETS
 
 export const FOREGROUND_COLORS = omit(BACKGROUND_COLORS, TRANSPARENT)
+
+interface AddLinkState {
+  initialText?: string
+  initialLink?: string
+}
 
 export const TextItem = memo(({ id }: TapestryItemProps) => {
   const editorAPI = useRef<RichTextEditorApi>(undefined)
@@ -37,7 +40,7 @@ export const TextItem = memo(({ id }: TapestryItemProps) => {
   } = useTapestryData(['id', 'interactionMode', 'interactiveElement'])
   const dispatch = useDispatch()
 
-  const [addLinkProps, setAddLinkProps] = useState<Pick<LinkTooltipProps, 'element' | 'content'>>()
+  const [addLinkProps, setAddLinkProps] = useState<AddLinkState>()
   const [selection, setSelection] = useState<SelectionState>()
   const [unsavedContent, setUnsavedContent] = useState<string | null>(null)
 
@@ -58,25 +61,17 @@ export const TextItem = memo(({ id }: TapestryItemProps) => {
     }
   }, [isEditable, dispatch, id, unsavedContent])
 
-  const addLink = (domNode?: HTMLElement) => {
+  const addLink = () => {
     const editor = editorAPI.current?.editor()
     if (addLinkProps || !editor || !isEditMode) {
       return
     }
 
-    const selectionStartDOMNode = editor.view.domAtPos(editor.state.selection.from).node
+    const existingLink = editor.getAttributes('link').href as string | undefined
 
-    const anchorElement =
-      selectionStartDOMNode instanceof HTMLElement
-        ? selectionStartDOMNode
-        : selectionStartDOMNode.parentElement
-
-    if (!anchorElement) {
-      return
-    }
     setAddLinkProps({
-      content: editorAPI.current?.selectionText(),
-      element: domNode ?? anchorElement,
+      initialText: editorAPI.current?.selectionText(),
+      initialLink: existingLink,
     })
   }
 
@@ -172,10 +167,10 @@ export const TextItem = memo(({ id }: TapestryItemProps) => {
           },
           onClick: (e) => {
             const maybeAnchor = iterateParents(e.target as HTMLElement, (e) => e.tagName !== 'A')
-            if (!e.isDefaultPrevented() && maybeAnchor && !selection?.text) {
+            if (!e.isDefaultPrevented() && maybeAnchor) {
               editorAPI.current?.editor().chain().extendMarkRange('link').run()
               // onSelectionChanged should be synchronous and called before addLink
-              addLink(maybeAnchor)
+              addLink()
             }
           },
           onCreateLink: () => {
@@ -189,39 +184,44 @@ export const TextItem = memo(({ id }: TapestryItemProps) => {
           },
         }}
       />
-      {addLinkProps &&
-        createPortal(
-          <LinkTooltip
-            {...addLinkProps}
-            onRemove={() => {
-              editorAPI.current?.editor().commands.unsetLink()
-              setAddLinkProps(undefined)
-            }}
-            onApply={(href, text) => {
-              if (!editorAPI.current) {
-                return
-              }
+      {addLinkProps && (
+        <AddLinkModal
+          initialText={addLinkProps.initialText}
+          initialLink={addLinkProps.initialLink}
+          showTextField={true}
+          onClose={() => setAddLinkProps(undefined)}
+          onRemove={
+            addLinkProps.initialLink
+              ? () => {
+                  editorAPI.current?.editor().commands.unsetLink()
+                  setAddLinkProps(undefined)
+                }
+              : undefined
+          }
+          onApply={(href, text) => {
+            if (!editorAPI.current) {
+              return
+            }
 
-              const editor = editorAPI.current.editor()
+            const editor = editorAPI.current.editor()
 
-              if (text) {
-                editor.chain().insertContent(text).run()
+            if (text) {
+              editor.chain().insertContent(text).run()
 
-                const selection = editor.state.selection
+              const selection = editor.state.selection
 
-                editor
-                  .chain()
-                  .setTextSelection({ from: selection.to - text.length, to: selection.to })
-                  .run()
-              }
+              editor
+                .chain()
+                .setTextSelection({ from: selection.to - text.length, to: selection.to })
+                .run()
+            }
 
-              editor.chain().setLink({ href }).unsetColor().run()
+            editor.chain().setLink({ href }).unsetColor().run()
 
-              setAddLinkProps(undefined)
-            }}
-          />,
-          document.querySelector(`[data-${kebabCase(DOM_MODEL_ID_DATA_ATTR)}="${id}"]`)!,
-        )}
+            setAddLinkProps(undefined)
+          }}
+        />
+      )}
     </TapestryItem>
   )
 })

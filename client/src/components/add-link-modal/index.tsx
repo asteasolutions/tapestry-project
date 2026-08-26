@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { IconButton } from 'tapestry-core-client/src/components/lib/buttons'
+import { Button, IconButton } from 'tapestry-core-client/src/components/lib/buttons'
 import { Input } from 'tapestry-core-client/src/components/lib/input'
 import { SimpleModal } from 'tapestry-core-client/src/components/lib/modal'
 import { useItemPicker } from '../item-picker/use-item-picker'
@@ -12,6 +12,7 @@ import { Id } from 'tapestry-core/src/data-format/schemas/common'
 interface AddLinkModalProps {
   onClose: () => unknown
   onApply: (link: string, text?: string) => unknown
+  onRemove?: () => unknown
   showTextField?: boolean
   initialLink?: string
   initialText?: string
@@ -22,6 +23,7 @@ interface AddLinkModalProps {
 export function AddLinkModal({
   onClose,
   onApply,
+  onRemove,
   initialLink,
   initialText,
   showTextField = false,
@@ -86,6 +88,11 @@ export function AddLinkModal({
                 }
               />
             </div>
+            {onRemove && (
+              <Button variant="primary" onClick={onRemove}>
+                Remove link
+              </Button>
+            )}
           </div>
         </SimpleModal>
       )}
