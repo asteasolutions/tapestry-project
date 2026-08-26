@@ -26,6 +26,7 @@ export function TimeInput({ text, value, onChange, max = Infinity, min = 0 }: Ti
       />
       <div className={styles.inputContainer}>
         <SubmitOnBlurInput
+          className={styles.timeInput}
           disabled={!enabled}
           value={`${minutes}`.padStart(2, '0')}
           style={{ textAlign: 'right' }}
@@ -51,6 +52,7 @@ export function TimeInput({ text, value, onChange, max = Infinity, min = 0 }: Ti
         />
         :
         <SubmitOnBlurInput
+          className={styles.timeInput}
           disabled={!enabled}
           value={`${seconds}`.padStart(2, '0')}
           parse={(value) => {
