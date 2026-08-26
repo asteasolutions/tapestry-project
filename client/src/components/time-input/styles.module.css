@@ -17,16 +17,15 @@
   }
 
   .time-input {
-    padding: 4px;
-  }
-
-  input {
-    width: 20px;
     border: none;
     padding: 0;
 
-    &[disabled] {
-      color: var(--theme-text-disabled);
+    > input {
+      width: 20px;
+
+      &[disabled] {
+        color: var(--theme-text-disabled);
+      }
     }
   }
 }

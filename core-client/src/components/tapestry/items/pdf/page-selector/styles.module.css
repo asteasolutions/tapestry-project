@@ -4,10 +4,11 @@
   align-items: center;
 
   .page-input {
-    input {
+    border-radius: 8px;
+    padding: 5px 7px;
+
+    > input {
       width: 25px;
-      border-radius: 8px;
-      padding: 0 5px;
     }
   }
 
