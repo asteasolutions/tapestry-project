@@ -195,7 +195,7 @@ export abstract class TapestryRenderer<
       this.tapestryElementRenderers.set(id, renderer)
     }
 
-    if (zIndex) {
+    if (zIndex !== undefined) {
       renderer.pixiContainer.zIndex = zIndex
     }
 
