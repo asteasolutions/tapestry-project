@@ -81,16 +81,18 @@ function buildHeaderTemplate(faviconDataUri: string | null): string {
   `
 }
 
-const FOOTER_TEMPLATE = `
-  <div style="width: 100%; box-sizing: border-box; padding: 0 30px;">
-    <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #e2e4e8; padding-top: 6px;">
-      <span style="font-size: 10px; color: #b0b3ba; word-break: break-all; overflow-wrap: anywhere; max-width: 85%;" class="url"></span>
-      <span style="font-size: 8px; color: #9a9da3; flex-shrink: 0;">
-        <span class="pageNumber"></span> / <span class="totalPages"></span>
-      </span>
+function buildFooterTemplate(pageUrl: string): string {
+  return `
+    <div style="width: 100%; box-sizing: border-box; padding: 0 30px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #e2e4e8; padding-top: 6px;">
+        <a href="${pageUrl}" style="font-size: 10px; color: #b0b3ba; text-decoration: underline; max-width: 85%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">${pageUrl}</a>
+        <span style="font-size: 8px; color: #9a9da3; flex-shrink: 0;">
+          <span class="pageNumber"></span> / <span class="totalPages"></span>
+        </span>
+      </div>
     </div>
-  </div>
-`
+  `
+}
 
 async function convertWebpageToPdf(url: string, options?: PDFOptions) {
   let generator: ReturnType<typeof inNewBrowserPage<Uint8Array>> | undefined
@@ -107,7 +109,7 @@ async function convertWebpageToPdf(url: string, options?: PDFOptions) {
         ...options,
         displayHeaderFooter: true,
         headerTemplate: buildHeaderTemplate(faviconDataUri),
-        footerTemplate: FOOTER_TEMPLATE,
+        footerTemplate: buildFooterTemplate(url),
       })
     })
 
