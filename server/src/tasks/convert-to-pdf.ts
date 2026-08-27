@@ -100,8 +100,7 @@ async function convertWebpageToPdf(url: string, options?: PDFOptions) {
       await initWebpage(page, context, { url, autoconsent: true })
 
       console.log('>  Extracting favicon...')
-      const faviconUrl = await getFaviconUrl(page)
-      const faviconDataUri = await faviconUrlToDataUri(faviconUrl, url)
+      const faviconDataUri = await faviconUrlToDataUri(await getFaviconUrl(page), url)
 
       console.log('>  Converting to pdf...')
       yield page.pdf({
