@@ -1,7 +1,12 @@
 import { Page, PDFOptions } from 'puppeteer'
 import { JobTypeMap } from '.'
 import { prisma } from '../db'
-import { initWebpage, inNewBrowserPage, scheduleTapestryThumbnailGeneration } from './utils'
+import {
+  initWebpage,
+  inNewBrowserPage,
+  pageEval,
+  scheduleTapestryThumbnailGeneration,
+} from './utils'
 import { s3Service, tapestryKey } from '../services/s3-service'
 import { DBSubscriber } from '../socket'
 import { pick } from 'lodash-es'
@@ -22,24 +27,24 @@ const CONVERT_ITEM_PROPS = [
   'dropShadow',
 ] satisfies (keyof Item)[]
 
-async function getFaviconUrl(page: Page): Promise<string | null> {
-  return page.evaluate((): string | null => {
-    // The project doesn't include lib.dom in server's tsconfig, so
-    // we manually type only the browser API surface we need here.
-    const globalContext = globalThis as unknown as {
-      document: {
-        querySelector: (
-          selector: string,
-        ) => { getAttribute: (attr: string) => string | null } | null
-        baseURI: string
-      }
-    }
+type FaviconWindow = {
+  document: {
+    querySelector: (selector: string) => {
+      getAttribute: (attr: string) => string | null
+    } | null
+    baseURI: string
+  }
+}
 
-    const faviconHref = globalContext.document
+async function getFaviconUrl(page: Page): Promise<string | null> {
+  return pageEval(page, (window) => {
+    const browserWindow = window as FaviconWindow
+
+    const faviconHref = browserWindow.document
       .querySelector('link[rel="icon"], link[rel="shortcut icon"], link[rel="apple-touch-icon"]')
       ?.getAttribute('href')
 
-    return faviconHref ? new URL(faviconHref, globalContext.document.baseURI).href : null
+    return faviconHref ? new URL(faviconHref, browserWindow.document.baseURI).href : null
   })
 }
 
@@ -66,13 +71,12 @@ async function faviconUrlToDataUri(
 
 function buildHeaderTemplate(faviconDataUri: string | null): string {
   return `
-    <div style="width: 100%; display: flex; justify-content: space-between; background: #f5f6f8; border: 1px solid #e2e4e8; padding: 6px 12px; margin: 0 30px 0;">
-      <div style="display: flex; align-items: center; gap: 8px; min-width: 0; max-width: 80%;">
+    <div style="width: 100%; display: flex; box-sizing: border-box; align-items: center; background: #f5f6f8; border: 1px solid #e2e4e8; padding: 6px 12px; margin: 0 30px; overflow: hidden; gap: 16px;">
+      <div style="display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; overflow: hidden;">
         ${faviconDataUri ? `<img src="${faviconDataUri}" style="width: 14px; height: 14px; border-radius: 2px; flex-shrink: 0;" />` : ''}
-        <span style="font-size: 12px; font-weight: 600; color: #1a1a1a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" 
-            class="title"></span>
+        <span style="font-size: 12px; font-weight: 600; color: #1a1a1a; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;" class="title"></span>
       </div>
-      <span style="font-size: 10px; color: #9a9da3; margin-left: 12px; flex-shrink: 0;" class="date"></span>
+      <span style="font-size: 10px; color: #9a9da3; flex-shrink: 0;" class="date"></span>
     </div>
   `
 }
@@ -80,7 +84,7 @@ function buildHeaderTemplate(faviconDataUri: string | null): string {
 const FOOTER_TEMPLATE = `
   <div style="width: 100%; box-sizing: border-box; padding: 0 30px;">
     <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #e2e4e8; padding-top: 6px;">
-      <span style="font-size: 10px; color: #b0b3ba; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80%;" class="url"></span>
+      <span style="font-size: 10px; color: #b0b3ba; word-break: break-all; overflow-wrap: anywhere; max-width: 85%;" class="url"></span>
       <span style="font-size: 8px; color: #9a9da3; flex-shrink: 0;">
         <span class="pageNumber"></span> / <span class="totalPages"></span>
       </span>
@@ -157,6 +161,5 @@ export async function convertToPdf({ itemId }: JobTypeMap['convert-to-pdf']) {
     })
   } catch (error) {
     console.error(`Error while converting item ${itemId} to pdf`, error)
-    throw error
   }
 }
