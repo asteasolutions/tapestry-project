@@ -36,10 +36,16 @@ import {
   MediaItemSource,
 } from '../../lib/media'
 import { resource } from '../../services/rest-resources'
-import { isFunction, omit } from 'lodash-es'
+import { isFunction, minBy, omit } from 'lodash-es'
 import mime from 'mime'
 import axios, { AxiosProgressEvent } from 'axios'
-import { arrayToIdMap, fileExtension, isMediaItem } from 'tapestry-core/src/utils'
+import {
+  arrayToIdMap,
+  fileExtension,
+  IdMap,
+  idMapToArray,
+  isMediaItem,
+} from 'tapestry-core/src/utils'
 import { userSettings } from '../../services/user-settings'
 import { itemUpload } from '../../services/item-upload'
 import { PublicUserProfileDto } from 'tapestry-shared/src/data-transfer/resources/dtos/user'
@@ -59,6 +65,12 @@ import {
   viewModelFromTapestry,
 } from 'tapestry-core-client/src/view-model/utils'
 import { DEFAULT_LAYER } from '../../pages/tapestry/view-model/utils'
+import { ItemViewModel } from 'tapestry-core-client/src/view-model'
+import {
+  ItemThumbnailController,
+  LoadedRendition,
+} from 'tapestry-core-client/src/stage/controller/item-thumbnail-controller'
+import { fetchBitmap } from 'tapestry-core-client/src/lib/file'
 
 export const EDITABLE_TAPESTRY_PROPS = [
   'background',
@@ -393,4 +405,35 @@ export function userAccess(
 
 export function fullName({ givenName, familyName }: PublicUserProfileDto) {
   return `${givenName} ${familyName}`
+}
+
+export async function loadInitialThumbnails(
+  items: IdMap<ItemViewModel>,
+  timeout?: number,
+): Promise<IdMap<LoadedRendition>> {
+  const renditionPromises: Promise<{ rendition: LoadedRendition; itemId: string }>[] = []
+  const timeoutSignal = timeout ? AbortSignal.timeout(timeout) : undefined
+  for (const item of idMapToArray(items)) {
+    const thumbnailRenditions = item.dto.thumbnail?.renditions ?? []
+    const rendition = minBy(thumbnailRenditions, ({ size }) => size.width)
+    if (!rendition) {
+      // No thumbnail to load
+      continue
+    }
+    renditionPromises.push(
+      fetchBitmap(rendition.source, undefined, timeoutSignal).then((bitmap) => ({
+        rendition: {
+          snapshotId: ItemThumbnailController.generateSnapshotId(),
+          bitmap,
+          meta: rendition,
+        },
+        itemId: item.dto.id,
+      })),
+    )
+  }
+  const renditionResults = (await Promise.allSettled(renditionPromises))
+    .filter((promise) => promise.status === 'fulfilled')
+    .map((p) => p.value)
+
+  return Object.fromEntries(renditionResults.map((result) => [result.itemId, result.rendition]))
 }
