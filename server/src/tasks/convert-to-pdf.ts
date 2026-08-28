@@ -60,7 +60,7 @@ async function faviconUrlToDataUri(
 
     const buffer = await res.arrayBuffer()
     const base64 = Buffer.from(buffer).toString('base64')
-    const contentType = res.headers.get('content-type') || 'image/x-icon'
+    const contentType = res.headers.get('content-type') ?? 'image/x-icon'
 
     return `data:${contentType};base64,${base64}`
   } catch (error) {
