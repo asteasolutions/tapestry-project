@@ -259,6 +259,7 @@ export class TapestryImportService {
                   thumbnailId: itemThumbnailsMap[i.id]?.id,
                   backgroundColor: isMediaItem(i) ? undefined : i.backgroundColor,
                   text: isMedia ? undefined : i.text,
+                  layer: i.layer,
 
                   ...(hasActionType(i)
                     ? actionMap(itemIdMap, groupIdMap, i.action, i.actionType)
