@@ -83,7 +83,8 @@ type ConfirmButtonProps = Omit<ButtonProps, 'onClick' | 'form'> &
 interface SimpleModalProps extends Omit<ModalProps, 'onClose'> {
   confirm?: ConfirmButtonProps
   cancel: CancelButtonProps
-  extraButtons?: ReactNode
+  extraLeadingButtons?: ReactNode
+  extraTrailingButtons?: ReactNode
   onClose?: () => unknown
 }
 
@@ -92,7 +93,8 @@ export function SimpleModal({
   cancel,
   children,
   onClose = cancel.onClick,
-  extraButtons,
+  extraLeadingButtons,
+  extraTrailingButtons,
   classes: { overlay, root } = {},
   ...modalProps
 }: SimpleModalProps) {
@@ -105,7 +107,7 @@ export function SimpleModal({
       <div className="simple-modal-content-container">{children}</div>
       <hr className={styles.separator} />
       <div className="simple-modal-buttons-container">
-        {extraButtons}
+        {extraLeadingButtons}
         <Button variant="secondary" {...omit(cancel, 'text')}>
           {cancel.text ?? 'Cancel'}
         </Button>
@@ -114,6 +116,7 @@ export function SimpleModal({
             {confirm.text ?? 'OK'}
           </Button>
         )}
+        {extraTrailingButtons}
       </div>
     </Modal>
   )

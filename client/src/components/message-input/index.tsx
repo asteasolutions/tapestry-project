@@ -16,8 +16,10 @@ import { useTapestryPath } from '../../hooks/use-tapestry-path'
 import { useTapestryData } from '../../pages/tapestry/tapestry-providers'
 import { extractAction } from '../assign-action-button'
 import { AddLinkModal } from '../add-link-modal'
+import { LinkActionModal } from '../link-action-modal'
 import { noop } from 'lodash'
 import { isMeta } from 'tapestry-core-client/src/lib/keyboard-event'
+import { iterateParents } from 'tapestry-core-client/src/lib/dom'
 
 export interface MessageInputProps {
   onSubmit: (text: string) => unknown
@@ -32,6 +34,12 @@ export interface MessageInputProps {
 }
 
 const TRAILING_EMPTY_PARAGRAPHS_REGEX = /(<p>(\s|<br\s*\/?>)*<\/p>)+$/gi
+
+interface LinkModalState {
+  mode: 'action' | 'edit'
+  initialText?: string
+  initialLink?: string
+}
 
 export function MessageInput({
   onSubmit,
@@ -50,21 +58,24 @@ export function MessageInput({
   const [selectionState, setSelectionState] = useState<SelectionState | undefined>(undefined)
   const [isEditorReady, setIsEditorReady] = useState(false)
   const editorApiRef = useRef<RichTextEditorApi | undefined>(undefined)
-
-  const [showModal, setShowModal] = useState(false)
-  const [initialLinkText, setInitialLinkText] = useState('')
+  const [linkModal, setLinkModal] = useState<LinkModalState>()
 
   const tapestryId = useTapestryData('id')
   const tapestryPath = useTapestryPath('view')
 
-  const handleCreateLink = () => {
-    if (selectionState?.isLink) {
-      editorApiRef.current?.link('')
+  const addLink = () => {
+    const editor = editorApiRef.current?.editor()
+    if (linkModal || !editor) {
       return
     }
-    const selected = editorApiRef.current?.selectionText() ?? ''
-    setInitialLinkText(selected)
-    setShowModal(true)
+
+    const existingLink = editor.getAttributes('link').href as string | undefined
+
+    setLinkModal({
+      mode: existingLink ? 'action' : 'edit',
+      initialText: editorApiRef.current?.selectionText(),
+      initialLink: existingLink,
+    })
   }
 
   //TODO: We should change the types of the hook so that
@@ -79,8 +90,14 @@ export function MessageInput({
     onBackgroundColorChange: noop,
     onColorChange: noop,
     onToggleMenu: noop,
-    onLinkClick: handleCreateLink,
-    canAddLink: selectionState?.isLink,
+    onLinkClick: () => {
+      if (linkModal) {
+        setLinkModal(undefined)
+      } else {
+        addLink()
+      }
+    },
+    canAddLink: !!linkModal,
     controls: {
       fontFamily: false,
       fontSize: false,
@@ -151,10 +168,23 @@ export function MessageInput({
               events={{
                 onCreate: () => setIsEditorReady(true),
                 onChange: setInput,
-                onSelectionChanged: setSelectionState,
+                onSelectionChanged: (state) => {
+                  setSelectionState(state)
+                  setLinkModal(undefined)
+                },
                 onCreateLink: () => {
-                  handleCreateLink()
+                  addLink()
                   return true
+                },
+                onClick: (e) => {
+                  const maybeAnchor = iterateParents(
+                    e.target as HTMLElement,
+                    (el) => el.tagName !== 'A',
+                  )
+                  if (!e.isDefaultPrevented() && maybeAnchor) {
+                    editorApiRef.current?.editor().chain().extendMarkRange('link').run()
+                    addLink()
+                  }
                 },
                 onKeyDown: (e) => {
                   if (e.key === 'Enter' && isMeta(e.nativeEvent)) {
@@ -165,10 +195,23 @@ export function MessageInput({
               }}
             />
 
-            {showModal && (
+            {linkModal?.mode === 'action' && linkModal.initialLink && (
+              <LinkActionModal
+                link={linkModal.initialLink}
+                onClose={() => setLinkModal(undefined)}
+                onEdit={() => setLinkModal({ ...linkModal, mode: 'edit' })}
+                onDelete={() => {
+                  editorApiRef.current?.editor().commands.unsetLink()
+                  setLinkModal(undefined)
+                }}
+              />
+            )}
+
+            {linkModal?.mode === 'edit' && (
               <AddLinkModal
-                onClose={() => setShowModal(false)}
-                initialText={initialLinkText}
+                onClose={() => setLinkModal(undefined)}
+                initialText={linkModal.initialText}
+                initialLink={linkModal.initialLink}
                 onApply={(url, text) => {
                   const { action, actionType } = extractAction(url, tapestryPath, tapestryId)
                   if (!action) return
@@ -189,7 +232,7 @@ export function MessageInput({
                     .setTextSelection(from + linkTextFinal.length)
                     .run()
 
-                  setShowModal(false)
+                  setLinkModal(undefined)
                 }}
                 showTextField={true}
               />
