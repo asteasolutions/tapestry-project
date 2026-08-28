@@ -20,12 +20,14 @@ import { TapestryItem } from '../tapestry-item'
 import { ToggleFormatButton, tooltip } from './toggle-format-button'
 import { richTextEditorToolbar } from './toolbar'
 import { AddLinkModal } from '../../../add-link-modal'
+import { LinkActionModal } from '../../../link-action-modal'
 
 const BACKGROUND_COLORS: Record<LiteralColor, string> = COLOR_PRESETS
 
 export const FOREGROUND_COLORS = omit(BACKGROUND_COLORS, TRANSPARENT)
 
-interface AddLinkState {
+interface LinkModalState {
+  mode: 'action' | 'edit'
   initialText?: string
   initialLink?: string
 }
@@ -40,7 +42,7 @@ export const TextItem = memo(({ id }: TapestryItemProps) => {
   } = useTapestryData(['id', 'interactionMode', 'interactiveElement'])
   const dispatch = useDispatch()
 
-  const [addLinkProps, setAddLinkProps] = useState<AddLinkState>()
+  const [linkModal, setLinkModal] = useState<LinkModalState>()
   const [selection, setSelection] = useState<SelectionState>()
   const [unsavedContent, setUnsavedContent] = useState<string | null>(null)
 
@@ -53,7 +55,7 @@ export const TextItem = memo(({ id }: TapestryItemProps) => {
       return
     }
     setShowFormatToolbar(false)
-    setAddLinkProps(undefined)
+    setLinkModal(undefined)
 
     if (unsavedContent !== null) {
       dispatch(updateItem(id, { dto: { text: unsavedContent } }))
@@ -63,13 +65,14 @@ export const TextItem = memo(({ id }: TapestryItemProps) => {
 
   const addLink = () => {
     const editor = editorAPI.current?.editor()
-    if (addLinkProps || !editor || !isEditMode) {
+    if (linkModal || !editor || !isEditMode) {
       return
     }
 
     const existingLink = editor.getAttributes('link').href as string | undefined
 
-    setAddLinkProps({
+    setLinkModal({
+      mode: existingLink ? 'action' : 'edit',
       initialText: editorAPI.current?.selectionText(),
       initialLink: existingLink,
     })
@@ -82,14 +85,14 @@ export const TextItem = memo(({ id }: TapestryItemProps) => {
     selection,
     tapestryId,
     onLinkClick: () => {
-      if (addLinkProps) {
-        setAddLinkProps(undefined)
+      if (linkModal) {
+        setLinkModal(undefined)
       } else {
         closeSubmenu()
         addLink()
       }
     },
-    canAddLink: !!addLinkProps,
+    canAddLink: !!linkModal,
     itemBackgroundColor: dto.backgroundColor,
     onBackgroundColorChange: (color, shouldClose) => {
       dispatch(updateItem(id, { dto: { backgroundColor: color } }))
@@ -107,7 +110,7 @@ export const TextItem = memo(({ id }: TapestryItemProps) => {
       }
     },
     onToggleMenu: (id) => {
-      setAddLinkProps(undefined)
+      setLinkModal(undefined)
       selectSubmenu(id, true)
     },
   })
@@ -163,7 +166,7 @@ export const TextItem = memo(({ id }: TapestryItemProps) => {
           },
           onSelectionChanged: (state) => {
             setSelection(state)
-            setAddLinkProps(undefined)
+            setLinkModal(undefined)
           },
           onClick: (e) => {
             const maybeAnchor = iterateParents(e.target as HTMLElement, (e) => e.tagName !== 'A')
@@ -184,20 +187,25 @@ export const TextItem = memo(({ id }: TapestryItemProps) => {
           },
         }}
       />
-      {addLinkProps && (
+
+      {linkModal?.mode === 'action' && linkModal.initialLink && (
+        <LinkActionModal
+          link={linkModal.initialLink}
+          onClose={() => setLinkModal(undefined)}
+          onEdit={() => setLinkModal({ ...linkModal, mode: 'edit' })}
+          onDelete={() => {
+            editorAPI.current?.editor().commands.unsetLink()
+            setLinkModal(undefined)
+          }}
+        />
+      )}
+
+      {linkModal?.mode === 'edit' && (
         <AddLinkModal
-          initialText={addLinkProps.initialText}
-          initialLink={addLinkProps.initialLink}
+          initialText={linkModal.initialText}
+          initialLink={linkModal.initialLink}
           showTextField={true}
-          onClose={() => setAddLinkProps(undefined)}
-          onRemove={
-            addLinkProps.initialLink
-              ? () => {
-                  editorAPI.current?.editor().commands.unsetLink()
-                  setAddLinkProps(undefined)
-                }
-              : undefined
-          }
+          onClose={() => setLinkModal(undefined)}
           onApply={(href, text) => {
             if (!editorAPI.current) {
               return
@@ -218,7 +226,7 @@ export const TextItem = memo(({ id }: TapestryItemProps) => {
 
             editor.chain().setLink({ href }).unsetColor().run()
 
-            setAddLinkProps(undefined)
+            setLinkModal(undefined)
           }}
         />
       )}
