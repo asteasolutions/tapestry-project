@@ -3,8 +3,10 @@ import { config } from '../config'
 import { AuthService } from '../services/auth'
 import { GoogleAuthService } from './google/service'
 import { IAAuthService } from './internet-archive/service'
+import { OrcidAuthService } from './orcid/service'
 import { IALoginButton } from './internet-archive/login-button'
 import { GoogleLoginButton } from './google/login-button'
+import { OrcidLoginButton } from './orcid/login-button'
 import { useObservable } from 'tapestry-core-client/src/components/lib/hooks/use-observable'
 import { SimpleModal } from 'tapestry-core-client/src/components/lib/modal/index'
 import { Input } from 'tapestry-core-client/src/components/lib/input/index'
@@ -18,11 +20,13 @@ type ProviderName = typeof config.authProvider
 const AUTH_SERVICES: Record<ProviderName, new () => AuthService> = {
   ia: IAAuthService,
   google: GoogleAuthService,
+  orcid: OrcidAuthService,
 }
 
 const LOGIN_BUTTONS: Record<ProviderName, ComponentType<LoginButtonProps>> = {
   ia: IALoginButton,
   google: GoogleLoginButton,
+  orcid: OrcidLoginButton,
 }
 
 interface RegistrationModalProps {
