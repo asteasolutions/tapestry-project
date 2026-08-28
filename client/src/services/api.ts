@@ -7,7 +7,6 @@ import { ErrorResponseDto } from 'tapestry-shared/src/data-transfer/resources/dt
 import { auth } from '../auth'
 
 class APIService {
-  private accessToken: string | null = null
   private axiosInstance: AxiosInstance
 
   constructor() {
@@ -41,16 +40,16 @@ class APIService {
     return this.request<void>(path, { method: 'DELETE', ...config })
   }
 
-  setAccessToken(token: string | null) {
-    this.accessToken = token
-  }
-
   private async request<T>(path: string, config: AxiosRequestConfig): Promise<T> {
     try {
+      if (auth.accessToken && auth.accessToken.expiresAt < Date.now()) {
+        await auth.refresh(false, config.signal)
+      }
+
       const { data } = await this.axiosInstance<T>(path, {
         ...config,
         headers: {
-          ...(this.accessToken ? { Authorization: `Bearer ${this.accessToken}` } : {}),
+          ...(auth.accessToken ? { Authorization: `Bearer ${auth.accessToken.token}` } : {}),
           ...config.headers,
           ...(config.data instanceof File ? { 'Content-Type': 'application/octet-stream' } : {}),
         },
