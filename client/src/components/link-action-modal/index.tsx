@@ -1,4 +1,3 @@
-import { Button } from 'tapestry-core-client/src/components/lib/buttons/button'
 import { SimpleModal } from 'tapestry-core-client/src/components/lib/modal'
 
 interface LinkActionModalProps {
@@ -13,12 +12,8 @@ export function LinkActionModal({ link, onClose, onEdit, onDelete }: LinkActionM
     <SimpleModal
       title="Link"
       onClose={onClose}
-      cancel={{ text: 'Edit', onClick: () => onEdit() }}
-      extraTrailingButtons={
-        <Button variant="primary-negative" onClick={() => onDelete()}>
-          Remove
-        </Button>
-      }
+      cancel={{ text: 'Edit', variant: 'outline', onClick: () => onEdit() }}
+      confirm={{ text: 'Remove', variant: 'primary-negative', onClick: () => onDelete() }}
     >
       <a href={link} target="_blank" rel="noopener noreferrer" style={{ wordBreak: 'break-all' }}>
         {link}
