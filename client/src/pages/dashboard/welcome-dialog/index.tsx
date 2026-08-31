@@ -30,7 +30,7 @@ export function WelcomeDialog({ onClose, initialCheckboxValue }: WelcomeDialogPr
         text: 'Close',
         onClick: () => onClose(dontShowAgain),
       }}
-      extraLeadingButtons={
+      extraButtons={
         <Checkbox
           label="Don't show again"
           checked={dontShowAgain}

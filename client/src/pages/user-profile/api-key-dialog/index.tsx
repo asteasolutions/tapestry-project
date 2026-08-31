@@ -42,7 +42,7 @@ export function ApiKeyDialog({ user, onClose, onSubmitted, showGuide }: ApiKeyDi
         disabled: creating,
         ...(step === 'guide' ? { onClick: () => setStep('input') } : { form }),
       }}
-      extraLeadingButtons={
+      extraButtons={
         showGuide ? (
           <Text
             variant="bodyXs"
