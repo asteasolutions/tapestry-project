@@ -1,5 +1,6 @@
-import { isHTTPURL } from 'tapestry-core/src/utils'
+import { isHeicSource, isHTTPURL } from 'tapestry-core/src/utils'
 import { MediaItemSource } from '../lib/media'
+import { convertHeicFile } from '../lib/heic'
 import { createMediaItem, getMediaSourceText } from '../model/data/utils'
 import { ItemCreateDto } from 'tapestry-shared/src/data-transfer/resources/dtos/item'
 import { findWebSourceParser } from 'tapestry-core/src/web-sources'
@@ -158,6 +159,13 @@ const iaCollectionFactory: ItemFactory = async (source, _, tapestryId) => {
   }
 }
 
+const heicImageFactory: ItemFactory = async (source, _mediaType, tapestryId) => {
+  if (!(source instanceof File) || !isHeicSource(source.name)) return null
+
+  const convertedFile = await convertHeicFile(source)
+  return { items: [await createMediaItem('image', convertedFile, tapestryId)], iaImports: [] }
+}
+
 const linkFileFactory: ItemFactory = async (source, _, tapestryId) => {
   if (!(source instanceof File)) {
     return null
@@ -182,6 +190,7 @@ const linkFileFactory: ItemFactory = async (source, _, tapestryId) => {
  * which creates a "webpage" item for all unhandled URLs.
  */
 export const ITEM_FACTORIES: ItemFactory[] = [
+  heicImageFactory,
   createSimpleMediaItemFactory('image', (_, mediaType) => !!mediaType?.startsWith('image/')),
   createSimpleMediaItemFactory('book', (_, mediaType) => mediaType === 'application/epub+zip'),
   createSimpleMediaItemFactory('pdf', (_, mediaType) => mediaType === 'application/pdf'),
