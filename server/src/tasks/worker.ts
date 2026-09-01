@@ -4,6 +4,7 @@ import { generateTapestryThumbnails } from './generate-tapestry-thumbnails.js'
 import { s3Cleanup } from './s3-cleanup.js'
 import { createTapestry } from './create-tapestry.js'
 import { convertToPdf } from './convert-to-pdf.js'
+import { convertHeicImage } from './convert-heic-image.js'
 
 async function processTask(job: Job<JobTypeMap[JobName], void, JobName>) {
   switch (job.name) {
@@ -15,6 +16,8 @@ async function processTask(job: Job<JobTypeMap[JobName], void, JobName>) {
       return createTapestry(job.data as JobTypeMap['create-tapestry'])
     case 'convert-to-pdf':
       return convertToPdf(job.data as JobTypeMap['convert-to-pdf'])
+    case 'convert-heic-image':
+      return convertHeicImage(job.data as JobTypeMap['convert-heic-image'])
   }
 }
 

@@ -22,6 +22,9 @@ export interface JobTypeMap {
   'convert-to-pdf': {
     itemId: string
   }
+  'convert-heic-image': {
+    itemId: string
+  }
 }
 
 export type JobName = keyof JobTypeMap

@@ -16,7 +16,13 @@ import {
   MediaItemUpdateDto,
 } from 'tapestry-shared/src/data-transfer/resources/dtos/item.js'
 import { ReadParamsDto } from 'tapestry-shared/src/data-transfer/resources/dtos/common.js'
-import { determineImageFormat, ensureArray, OneOrMore } from 'tapestry-core/src/utils.js'
+import {
+  determineImageFormat,
+  ensureArray,
+  isHeicSource,
+  isHTTPURL,
+  OneOrMore,
+} from 'tapestry-core/src/utils.js'
 import { socketIdFromRequest, socketServer } from '../socket/index.js'
 import { compact, get, groupBy, isEmpty, omit } from 'lodash-es'
 import { findWebSourceParser } from 'tapestry-core/src/web-sources/index.js'
@@ -111,6 +117,24 @@ async function scheduleConvertToPdf(item: ItemWithAssets) {
   )
 }
 
+function isHeicImageItem(item: Pick<Item, 'type' | 'source'>) {
+  return (
+    item.type === 'image' && !!item.source && !isHTTPURL(item.source) && isHeicSource(item.source)
+  )
+}
+
+async function scheduleConvertHeicImage(item: Pick<Item, 'id'>) {
+  await queue.add(
+    'convert-heic-image',
+    { itemId: item.id },
+    {
+      removeOnComplete: true,
+      removeOnFail: true,
+      jobId: item.id,
+    },
+  )
+}
+
 async function processThumbnailUpdate(
   item: Item,
   thumbnailUpdate: ItemUpdateDto['thumbnail'] | null | undefined,
@@ -183,14 +207,21 @@ export async function createItems(
     include: parseItemIncludes(query?.include),
   })) as ItemWithAssets[]
 
+  const heicItems = dbItems.filter(isHeicImageItem)
+  const heicItemIds = new Set(heicItems.map((item) => item.id))
+
   const itemIds = dbItems
-    .filter((dbItem) => shouldProcessItemThumbnail(dbItem))
+    .filter((dbItem) => shouldProcessItemThumbnail(dbItem) && !heicItemIds.has(dbItem.id))
     .map((item) => item.id)
 
   await (tx ?? prisma).item.updateMany({
     where: { id: { in: itemIds } },
     data: { scheduledThumbnailProcessing: 'derive' },
   })
+
+  for (const item of heicItems) {
+    await scheduleConvertHeicImage(item)
+  }
 
   const dtos = await serialize('Item', dbItems)
 

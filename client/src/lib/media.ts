@@ -2,6 +2,7 @@ import { pick } from 'lodash-es'
 import { pdfjs } from 'react-pdf'
 import { urlToBlob } from 'tapestry-core-client/src/lib/file'
 import { aspectRatio, clampSize, innerFit, Size } from 'tapestry-core/src/lib/geometry'
+import { isHeicSource } from 'tapestry-core/src/utils'
 import { WEB_SOURCE_PARSERS } from 'tapestry-core/src/web-sources'
 
 export type MediaItemSource = File | string
@@ -43,9 +44,14 @@ function getClampedItemSize(size: Size) {
 }
 
 export async function getImageItemSize(source: MediaItemSource, width?: number): Promise<Size> {
-  const image = await loadImageFromBlob(await mediaSourceToBlob(source))
   const defaultImageWidth = 300
   const imageWidth = width ?? defaultImageWidth
+
+  if (isHeicSource(source instanceof File ? source.name : source)) {
+    return getClampedItemSize({ width: imageWidth, height: imageWidth })
+  }
+
+  const image = await loadImageFromBlob(await mediaSourceToBlob(source))
 
   return getClampedItemSize({
     width: imageWidth,
