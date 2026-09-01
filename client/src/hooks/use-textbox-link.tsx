@@ -107,7 +107,6 @@ export function useTextboxLink({
     addLink,
     closeLinkModal: close,
     addingLink: !!linkModal,
-    isOpen: !!linkModal,
     ui,
   }
 }
