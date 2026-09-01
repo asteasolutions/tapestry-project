@@ -47,7 +47,7 @@ export const TextItem = memo(({ id }: TapestryItemProps) => {
   const {
     addLink,
     closeLinkModal,
-    canAddLink,
+    addingLink,
     ui: linkModalUi,
   } = useTextboxLink({
     editorAPI,
@@ -57,18 +57,21 @@ export const TextItem = memo(({ id }: TapestryItemProps) => {
     onLinkApplied: () => editorAPI.current?.editor().chain().unsetColor().run(),
   })
 
+  if (addingLink && !isEditable) {
+    closeLinkModal()
+  }
+
   useEffect(() => {
     if (isEditable) {
       return
     }
     setShowFormatToolbar(false)
-    closeLinkModal()
 
     if (unsavedContent !== null) {
       dispatch(updateItem(id, { dto: { text: unsavedContent } }))
       setUnsavedContent(null)
     }
-  }, [isEditable, dispatch, id, unsavedContent, closeLinkModal])
+  }, [isEditable, dispatch, id, unsavedContent])
 
   const [showFormatToolbar, setShowFormatToolbar] = useState(false)
 
@@ -77,14 +80,14 @@ export const TextItem = memo(({ id }: TapestryItemProps) => {
     selection,
     tapestryId,
     onLinkClick: () => {
-      if (canAddLink) {
+      if (addingLink) {
         closeLinkModal()
       } else {
         closeSubmenu()
         addLink()
       }
     },
-    canAddLink,
+    addingLink,
     itemBackgroundColor: dto.backgroundColor,
     onBackgroundColorChange: (color, shouldClose) => {
       dispatch(updateItem(id, { dto: { backgroundColor: color } }))

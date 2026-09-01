@@ -41,7 +41,11 @@ export function useTextboxLink({
 
     setLinkModal({
       mode: existingLink ? 'action' : 'edit',
-      initialText: editorAPI.current?.selectionText(),
+      initialText:
+        editorAPI.current?.selectionText().trim() &&
+        editorAPI.current.selectionText().trim() !== initialLink
+          ? editorAPI.current.selectionText()
+          : undefined,
       initialLink,
     })
   }
@@ -102,7 +106,7 @@ export function useTextboxLink({
   return {
     addLink,
     closeLinkModal: close,
-    canAddLink: !!linkModal,
+    addingLink: !!linkModal,
     isOpen: !!linkModal,
     ui,
   }

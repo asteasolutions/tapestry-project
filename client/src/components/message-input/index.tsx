@@ -57,7 +57,7 @@ export function MessageInput({
   const {
     addLink,
     closeLinkModal,
-    canAddLink,
+    addingLink,
     ui: linkModalUi,
   } = useTextboxLink({
     editorAPI: editorApiRef,
@@ -79,13 +79,13 @@ export function MessageInput({
     onColorChange: noop,
     onToggleMenu: noop,
     onLinkClick: () => {
-      if (canAddLink) {
+      if (addingLink) {
         closeLinkModal()
       } else {
         addLink()
       }
     },
-    canAddLink,
+    addingLink,
     controls: {
       fontFamily: false,
       fontSize: false,
