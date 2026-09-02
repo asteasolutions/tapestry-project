@@ -1,4 +1,4 @@
-import { isHeicSource, isHTTPURL } from 'tapestry-core/src/utils'
+import { isHTTPURL } from 'tapestry-core/src/utils'
 import { MediaItemSource, mediaSourceToBlob } from '../lib/media'
 import { convertHeicFile } from '../lib/heic'
 import { createMediaItem, getMediaSourceText } from '../model/data/utils'
@@ -160,23 +160,16 @@ const iaCollectionFactory: ItemFactory = async (source, _, tapestryId) => {
 }
 
 const HEIC_MEDIA_TYPES = ['image/heic', 'image/heif']
-
-function sourceFileName(source: MediaItemSource) {
-  if (source instanceof File) return source.name
-  return new URL(source).pathname.split('/').filter(Boolean).pop() ?? source
-}
+const HEIC_EXTENSIONS = ['heic', 'heif']
 
 const heicImageFactory: ItemFactory = async (source, mediaType, tapestryId) => {
   const isHeic = mediaType
     ? HEIC_MEDIA_TYPES.includes(mediaType)
-    : isHeicSource(sourceFileName(source))
+    : source instanceof File &&
+      HEIC_EXTENSIONS.includes(source.name.split('.').pop()?.toLowerCase() ?? '')
   if (!isHeic) return null
 
-  const file =
-    source instanceof File
-      ? source
-      : new File([await mediaSourceToBlob(source)], sourceFileName(source))
-  const convertedFile = await convertHeicFile(file)
+  const convertedFile = await convertHeicFile(await mediaSourceToBlob(source))
 
   return { items: [await createMediaItem('image', convertedFile, tapestryId)], iaImports: [] }
 }

@@ -160,8 +160,3 @@ export function determineImageFormat(url: string) {
 
   return mimeType.split('/')[1]
 }
-
-export function isHeicSource(filename: string) {
-  const [, extension] = fileExtension(filename)
-  return extension === 'heic' || extension === 'heif'
-}
