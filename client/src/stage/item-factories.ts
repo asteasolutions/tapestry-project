@@ -1,4 +1,5 @@
 import { isHTTPURL } from 'tapestry-core/src/utils'
+import mime from 'mime'
 import { MediaItemSource, mediaSourceToBlob } from '../lib/media'
 import { convertHeicFile } from '../lib/heic'
 import { createMediaItem, getMediaSourceText } from '../model/data/utils'
@@ -160,15 +161,16 @@ const iaCollectionFactory: ItemFactory = async (source, _, tapestryId) => {
 }
 
 const HEIC_MEDIA_TYPES = ['image/heic', 'image/heif']
-const HEIC_EXTENSIONS = ['heic', 'heif']
 const GENERIC_MEDIA_TYPE = 'application/octet-stream'
 
 const heicImageFactory: ItemFactory = async (source, mediaType, tapestryId) => {
-  const isHeic =
+  const isHeic = HEIC_MEDIA_TYPES.includes(
     mediaType && mediaType !== GENERIC_MEDIA_TYPE
-      ? HEIC_MEDIA_TYPES.includes(mediaType)
-      : source instanceof File &&
-        HEIC_EXTENSIONS.includes(source.name.split('.').pop()?.toLowerCase() ?? '')
+      ? mediaType
+      : source instanceof File
+        ? (mime.getType(source.name) ?? '')
+        : '',
+  )
   if (!isHeic) return null
 
   const convertedFile = await convertHeicFile(await mediaSourceToBlob(source))
