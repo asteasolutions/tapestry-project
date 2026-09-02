@@ -160,9 +160,16 @@ const iaCollectionFactory: ItemFactory = async (source, _, tapestryId) => {
 }
 
 const HEIC_MEDIA_TYPES = ['image/heic', 'image/heif']
+const HEIC_EXTENSIONS = ['heic', 'heif']
+const GENERIC_MEDIA_TYPE = 'application/octet-stream'
 
 const heicImageFactory: ItemFactory = async (source, mediaType, tapestryId) => {
-  if (!mediaType || !HEIC_MEDIA_TYPES.includes(mediaType)) return null
+  const isHeic =
+    mediaType && mediaType !== GENERIC_MEDIA_TYPE
+      ? HEIC_MEDIA_TYPES.includes(mediaType)
+      : source instanceof File &&
+        HEIC_EXTENSIONS.includes(source.name.split('.').pop()?.toLowerCase() ?? '')
+  if (!isHeic) return null
 
   const convertedFile = await convertHeicFile(await mediaSourceToBlob(source))
 
