@@ -22,6 +22,9 @@ import { isHoveredElement } from '../utils'
 import { ItemRenderer } from './item-renderer'
 import { GroupBackgroundRenderer } from './group-background-renderer'
 
+const GROUP_Z_INDEX = -2
+const REL_Z_INDEX = -1
+
 export interface Renderer<T = unknown> {
   render(arg: T): void
   dispose(): void
@@ -45,8 +48,8 @@ export abstract class TapestryRenderer<
 > implements TapestryStageController {
   private tapestryElementRenderers = new Map<string, TapestryElementRenderer<E, object>>()
 
-  private world = new Container()
-  private selected = new Container()
+  private world = new Container({ sortableChildren: true })
+  private selected = new Container({ sortableChildren: true })
 
   constructor(
     protected store: Store<TapestryViewModel>,
@@ -89,8 +92,13 @@ export abstract class TapestryRenderer<
 
     const selection = this.store.get('selection')
     const interactiveElement = this.store.get('interactiveElement')
-    this.getGroups().forEach((group) => this.renderViewModel(group, selection, interactiveElement))
-    this.getRels().forEach((rel) => this.renderViewModel(rel, selection, interactiveElement))
+
+    this.getGroups().forEach((group) =>
+      this.renderViewModel(group, selection, interactiveElement, GROUP_Z_INDEX),
+    )
+    this.getRels().forEach((rel) =>
+      this.renderViewModel(rel, selection, interactiveElement, REL_Z_INDEX),
+    )
     this.getItems().forEach((item) =>
       this.renderViewModel(item, selection, interactiveElement, item.dto.layer),
     )
