@@ -11,7 +11,19 @@ interface ImportDetailsProps {
   import: IAImport
 }
 
-export function ImportDetails({ import: { id, metadata } }: ImportDetailsProps) {
+export function ImportDetails({ import: iaImport }: ImportDetailsProps) {
+  if (iaImport.type === 'ExternalCollection') {
+    return <ExternalCollectionImportDetails collection={iaImport} />
+  }
+
+  return <IAImportDetails import={iaImport} />
+}
+
+interface IAImportDetailsProps {
+  import: Exclude<IAImport, { type: 'ExternalCollection' }>
+}
+
+function IAImportDetails({ import: { id, metadata } }: IAImportDetailsProps) {
   const description = parser.parseFromString(
     metadata.summary ?? metadata.description ?? '',
     'text/html',
@@ -45,6 +57,42 @@ export function ImportDetails({ import: { id, metadata } }: ImportDetailsProps) 
       </div>
       <Text variant={textVariant} component="div">
         {description}
+      </Text>
+    </div>
+  )
+}
+
+type ExternalCollectionImport = Extract<IAImport, { type: 'ExternalCollection' }>
+
+interface ExternalCollectionImportDetailsProps {
+  collection: ExternalCollectionImport
+}
+
+function ExternalCollectionImportDetails({ collection }: ExternalCollectionImportDetailsProps) {
+  const mdOrLess = useResponsive() <= Breakpoint.MD
+  const textVariant = mdOrLess ? 'bodyXs' : undefined
+
+  const label =
+    collection.platform === 'openverse'
+      ? collection.collection.type === 'tag'
+        ? collection.collection.tag
+        : collection.collection.source
+      : collection.collection.category
+
+  const noun =
+    collection.platform === 'openverse'
+      ? collection.mediaType === 'image'
+        ? 'images'
+        : 'audio items'
+      : 'files'
+
+  return (
+    <div className={styles.root}>
+      <Text variant={mdOrLess ? 'bodySm' : 'h6'} style={{ fontWeight: 'bold' }}>
+        {label}
+      </Text>
+      <Text variant={textVariant}>
+        {collection.total} {noun}
       </Text>
     </div>
   )

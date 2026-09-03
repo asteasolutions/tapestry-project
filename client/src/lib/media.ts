@@ -23,6 +23,10 @@ export function mediaSourceToBlob(source: MediaItemSource) {
   return source instanceof File ? source : urlToBlob(source)
 }
 
+export function resolveExternalMediaSource(url: string): Promise<MediaItemSource> {
+  return Promise.resolve(url)
+}
+
 export const MIN_ITEM_SIZE: Size = {
   width: 100,
   height: 40,
