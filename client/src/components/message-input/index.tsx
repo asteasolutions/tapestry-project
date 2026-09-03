@@ -16,7 +16,6 @@ import { useTapestryPath } from '../../hooks/use-tapestry-path'
 import { useTapestryData } from '../../pages/tapestry/tapestry-providers'
 import { noop } from 'lodash'
 import { isMeta } from 'tapestry-core-client/src/lib/keyboard-event'
-import { iterateParents } from 'tapestry-core-client/src/lib/dom'
 import { useTextboxLink } from '../../hooks/use-textbox-link'
 
 export interface MessageInputProps {
@@ -165,11 +164,8 @@ export function MessageInput({
                   return true
                 },
                 onClick: (e) => {
-                  const maybeAnchor = iterateParents(
-                    e.target as HTMLElement,
-                    (el) => el.tagName !== 'A',
-                  )
-                  if (!e.isDefaultPrevented() && maybeAnchor) {
+                  const anchor = (e.target as HTMLElement).closest('a')
+                  if (!e.isDefaultPrevented() && anchor) {
                     editorApiRef.current?.editor().chain().extendMarkRange('link').run()
                     addLink()
                   }
