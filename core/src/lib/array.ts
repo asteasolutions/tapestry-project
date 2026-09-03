@@ -1,4 +1,6 @@
-import { reduce, times } from 'lodash-es'
+import { reduce, sortBy, times } from 'lodash-es'
+import { Path } from '../type-utils'
+import { OneOrMore } from '../utils'
 
 export function mapNotNull<I, O>(arr: ArrayLike<I>, cb: (el: I) => O): NonNullable<O>[] {
   return reduce(
@@ -47,4 +49,8 @@ export function circularShift<T>(array: readonly T[], n: number) {
   return array.length < 2 || !shift
     ? [...array]
     : [...array.slice(-shift), ...array.slice(0, -shift)]
+}
+
+export function sortByPath<T>(array: readonly T[], path: OneOrMore<Path<T>>) {
+  return sortBy(array, path)
 }

@@ -1,11 +1,10 @@
-import { Container, Rectangle, Texture } from 'pixi.js'
+import { Container, Rectangle } from 'pixi.js'
 import { TapestryStage } from '..'
 import { Store } from '../../lib/store'
 import { ItemViewModel, TapestryViewModel } from '../../view-model'
 import { obtainShadowNineSlice, ShadowNineSlice } from './shadow-texture-cache'
 import { TapestryElementRenderer } from './tapestry-element-renderer'
 import { ThumbnailContainer, ThumbnailContainerState } from './thumbnail-container'
-import { IdMap } from 'tapestry-core/src/utils'
 import { ThemeName, THEMES } from '../../theme/themes'
 import { LiteralColor } from '../../theme/types'
 import { getItemOverlayScale } from '../../view-model/utils'
@@ -14,8 +13,7 @@ import {
   displayPersistedState,
   hasPersistentState,
 } from '../../components/tapestry/tapestry-canvas'
-
-export const snapshotRegistry: IdMap<Texture> = {}
+import { snapshotRegistry } from '../controller/item-thumbnail-controller'
 
 export interface ItemRenderState<I extends ItemViewModel> {
   viewModel: I

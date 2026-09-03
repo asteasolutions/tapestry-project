@@ -381,3 +381,9 @@ export function setIsZoomingLocked(
     model.viewport.isZoomingLocked = isZoomingLocked
   }
 }
+
+export function setThumbnailsInitialized(): StoreMutationCommand<TapestryViewModel> {
+  return (model) => {
+    model.thumbnailsInitialized = true
+  }
+}

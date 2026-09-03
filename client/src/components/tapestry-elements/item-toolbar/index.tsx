@@ -258,7 +258,7 @@ export function useEditMoreMenu({
         to,
       ),
       setSnackbar({
-        text: 'Layer updated (deselect the item to see the change)',
+        text: `Item ${to === 'front' ? 'brought to front' : 'sent to back'} (deselect to see)`,
         duration: 3,
       }),
     )

@@ -1,5 +1,4 @@
 import clsx from 'clsx'
-import { orderBy } from 'lodash-es'
 import { useEffect } from 'react'
 import { Rel } from 'tapestry-core/src/data-format/schemas/rel'
 import { LinearTransform, Rectangle } from 'tapestry-core/src/lib/geometry'
@@ -18,6 +17,7 @@ import styles from './styles.module.css'
 import { cssTransformForLocation } from '../../../stage/utils'
 import { ItemType } from 'tapestry-core/src/data-format/schemas/item'
 import { isMac, isMobile } from '../../../lib/user-agent'
+import { sortByPath } from 'tapestry-core/src/lib/array'
 
 export type TapestryCanvasProps = PropsWithStyle<object, 'root' | 'itemLocator' | 'relLocator'>
 
@@ -44,17 +44,22 @@ function TapestryElementLocator({
   transform,
 }: TapestryElementLocatorProps) {
   const { useStoreData } = useTapestryConfig()
-  const { interactiveElement, selection, disableOptimizations } = useStoreData([
-    'interactiveElement',
-    'selection',
-    'disableOptimizations',
-  ])
+  const { interactiveElement, selection, disableOptimizations, thumbnailsInitialized } =
+    useStoreData([
+      'interactiveElement',
+      'selection',
+      'disableOptimizations',
+      'thumbnailsInitialized',
+    ])
   const item = useStoreData(`items.${id}`)
   const isInteractive = id === interactiveElement?.modelId
   const isInSelection = isItemInSelection(item, selection)
   const hasBeenActive = !!item?.hasBeenActive
   const shouldDisplayDom =
-    disableOptimizations || isInteractive || item?.isPlaying || !item?.snapshotId
+    disableOptimizations ||
+    isInteractive ||
+    item?.isPlaying ||
+    (thumbnailsInitialized && !item?.snapshotId)
 
   if (!shouldDisplayDom && !(hasBeenActive && hasPersistentState(item.dto.type))) {
     // The item should currently be hidden since it is not interactive and a placeholder will be displayed instead.
@@ -135,7 +140,7 @@ export function TapestryCanvas({ classes, style }: TapestryCanvasProps) {
   }
 
   const itemsArray = idMapToArray(items)
-  const orderedItems = orderBy(itemsArray, 'dto.layer')
+  const orderedItems = sortByPath(itemsArray, 'dto.layer')
 
   function renderItem(item: ItemViewModel) {
     let component: TapestryElementComponent

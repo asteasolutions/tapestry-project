@@ -1,10 +1,14 @@
 import { UserDto } from 'tapestry-shared/src/data-transfer/resources/dtos/user'
 import { resource } from './rest-resources'
-import { api } from './api'
 import { Observable } from 'tapestry-core-client/src/lib/events/observable'
 import { CanceledError, GenericAbortSignal } from 'axios'
 import { SessionCreateDto } from 'tapestry-shared/src/data-transfer/resources/dtos/session'
 import { APIError } from '../errors'
+
+interface Token {
+  token: string
+  expiresAt: number
+}
 
 export interface AuthServiceState {
   user: UserDto | null
@@ -37,10 +41,10 @@ export abstract class AuthService<
 > extends Observable<AuthServiceState> {
   private autoRefreshTimeout: number | undefined
   private preparing = defer()
-  private accessToken?: string
+  private _accessToken: Token | null = null
 
-  get token() {
-    return this.accessToken
+  get accessToken() {
+    return structuredClone(this._accessToken)
   }
 
   constructor() {
@@ -69,7 +73,7 @@ export abstract class AuthService<
     try {
       // We don't want to send the old access token (if any) when refreshing the session
       // because if it is invalid, it would cause an InvalidAccessTokenError.
-      api.setAccessToken(null)
+      this._accessToken = null
       const { accessToken, user, expiresAt } = await resource('sessions').create(
         params,
         { include: loadUser ? ['user'] : undefined },
@@ -81,8 +85,7 @@ export abstract class AuthService<
         clearTimeout(this.autoRefreshTimeout)
         this.autoRefreshTimeout = window.setTimeout(this.refresh.bind(this), renewAfter)
       }
-      api.setAccessToken(accessToken)
-      this.accessToken = accessToken
+      this._accessToken = { token: accessToken, expiresAt }
       this.update((state) => {
         state.user = user ?? state.user ?? null
         state.isInitialized = true
@@ -121,7 +124,7 @@ export abstract class AuthService<
     if (!this.value.user) return
 
     await resource('sessions').destroy({ id: this.value.user.id }, { signal })
-    api.setAccessToken(null)
+    this._accessToken = null
     this.update((state) => {
       state.user = null
     })

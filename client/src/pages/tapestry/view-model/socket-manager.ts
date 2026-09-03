@@ -20,7 +20,7 @@ export type TapestryUpdated = TypedEvent<'tapestry-updated', TapestryUpdate>
 export class SocketManager extends TypedEventTarget<TapestryUpdated | RTCSignallerEvent> {
   private socket: Socket<ServerToClientEvents, ClientToServerEvents> = io(
     new URL(config.apiUrl).origin,
-    { path: SOCKET_PATH, autoConnect: false, auth: (cb) => cb({ token: auth.token }) },
+    { path: SOCKET_PATH, autoConnect: false, auth: (cb) => cb({ token: auth.accessToken?.token }) },
   )
   private isSignallerActivated = false
 
