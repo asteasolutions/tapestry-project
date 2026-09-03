@@ -110,6 +110,7 @@ const ICONS = [
   'refresh',
   'remove',
   'search',
+  'select_window_off',
   'send',
   'sentiment_very_dissatisfied',
   'settings',
