@@ -1,5 +1,16 @@
 import { isHTTPURL } from 'tapestry-core/src/utils'
-import { MediaItemSource } from '../lib/media'
+import { parseOpenverseCollectionQuery, parseOpenverseMediaId } from 'tapestry-core/src/openverse'
+import {
+  parseWikimediaCollectionQuery,
+  parseWikimediaFileTitle,
+} from 'tapestry-core/src/wikimedia-commons'
+import {
+  fetchOpenverseCollectionCount,
+  fetchOpenverseMedia,
+  fetchWikimediaCollectionCount,
+  fetchWikimediaMedia,
+} from '../lib/external-media'
+import { MediaItemSource, resolveExternalMediaSource } from '../lib/media'
 import { createMediaItem, getMediaSourceText } from '../model/data/utils'
 import { ItemCreateDto } from 'tapestry-shared/src/data-transfer/resources/dtos/item'
 import { findWebSourceParser } from 'tapestry-core/src/web-sources'
@@ -16,6 +27,7 @@ import { MediaItemType, WebpageType } from 'tapestry-core/src/data-format/schema
 import { getUserListItems } from '../lib/internet-archive'
 import { parseMediaSource, parseStringTransferData } from './data-transfer-handler'
 import { fileTypeFromBuffer } from 'file-type'
+import { compact } from 'lodash-es'
 import { parse } from 'ini'
 import { IAImport } from '../pages/tapestry/view-model'
 
@@ -158,6 +170,100 @@ const iaCollectionFactory: ItemFactory = async (source, _, tapestryId) => {
   }
 }
 
+export async function createExternalMediaItems(
+  tapestryId: string,
+  media: { url: string; pageUrl: string; mediaType: MediaItemType }[],
+) {
+  const items = await Promise.all(
+    media.map(async ({ url, pageUrl, mediaType }) => {
+      try {
+        const item = await createMediaItem(
+          mediaType,
+          await resolveExternalMediaSource(url),
+          tapestryId,
+        )
+        item.notes = `Source: ${pageUrl}`
+        return item
+      } catch {
+        return null
+      }
+    }),
+  )
+
+  return compact(items)
+}
+
+const externalMediaFactory: ItemFactory = async (source, _mediaType, tapestryId) => {
+  if (typeof source !== 'string' || !isHTTPURL(source)) return null
+
+  const parsedOpenverseMedia = parseOpenverseMediaId(source)
+  if (parsedOpenverseMedia) {
+    const { mediaType: openverseMediaType, id } = parsedOpenverseMedia
+    const media = await fetchOpenverseMedia(openverseMediaType, id)
+    if (!media) return null
+
+    const items = await createExternalMediaItems(tapestryId, [
+      { url: media.url, pageUrl: source, mediaType: openverseMediaType },
+    ])
+    if (items.length === 0) return null
+
+    return { items, iaImports: [] }
+  }
+
+  const parsedOpenverseCollection = parseOpenverseCollectionQuery(source)
+  if (parsedOpenverseCollection) {
+    const { mediaType: openverseMediaType, collection } = parsedOpenverseCollection
+    const total = await fetchOpenverseCollectionCount(openverseMediaType, collection)
+    if (total === undefined) return null
+
+    return {
+      items: [],
+      iaImports: [
+        {
+          type: 'ExternalCollection',
+          platform: 'openverse',
+          mediaType: openverseMediaType,
+          collection,
+          total,
+        },
+      ],
+    }
+  }
+
+  const wikimediaTitle = parseWikimediaFileTitle(source)
+  if (wikimediaTitle) {
+    const media = await fetchWikimediaMedia(wikimediaTitle)
+    if (!media) return null
+
+    const items = await createExternalMediaItems(tapestryId, [
+      { url: media.url, pageUrl: source, mediaType: media.mediaType },
+    ])
+    if (items.length === 0) return null
+
+    return { items, iaImports: [] }
+  }
+
+  const wikimediaCollection = parseWikimediaCollectionQuery(source)
+  if (wikimediaCollection) {
+    const total = await fetchWikimediaCollectionCount(wikimediaCollection)
+    if (total === undefined) return null
+
+    return {
+      items: [],
+      iaImports: [
+        {
+          type: 'ExternalCollection',
+          platform: 'wikimedia-commons',
+          collection: wikimediaCollection,
+          total,
+        },
+      ],
+    }
+  }
+
+  return null
+}
+
 const linkFileFactory: ItemFactory = async (source, _, tapestryId) => {
   if (!(source instanceof File)) {
     return null
@@ -189,6 +295,7 @@ export const ITEM_FACTORIES: ItemFactory[] = [
   createSimpleMediaItemFactory('audio', (_, mediaType) => !!mediaType?.startsWith('audio/')),
   linkFileFactory,
   textItemFactory,
+  externalMediaFactory,
   htmlFileItemFactory,
   iaCollectionFactory,
   webpageItemFactory,

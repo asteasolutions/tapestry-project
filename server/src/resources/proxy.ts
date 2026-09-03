@@ -6,8 +6,22 @@ import {
   WBMSnapshotDto,
 } from 'tapestry-shared/src/data-transfer/resources/dtos/proxy.js'
 import { parseInternetArchiveURL } from 'tapestry-core/src/internet-archive.js'
+import {
+  fetchOpenverseMedia,
+  fetchOpenverseCollectionCount,
+  fetchOpenverseCollectionResults,
+  OpenverseMedia,
+} from 'tapestry-core/src/openverse.js'
+import {
+  fetchWikimediaMedia,
+  fetchWikimediaCollectionCount,
+  fetchWikimediaCollectionResults,
+  WikimediaMedia,
+  WikimediaCollectionQuery,
+  WikimediaCursorStore,
+} from 'tapestry-core/src/wikimedia-commons.js'
 import { zipObject } from 'lodash-es'
-import { RedisCache } from '../services/redis.js'
+import { redis, RedisCache } from '../services/redis.js'
 import { config } from '../config.js'
 
 const WBM_SEARCH_ENDPOINT = 'https://web.archive.org/cdx/search/cdx'
@@ -56,6 +70,31 @@ function canFrame(url: string, headers: Headers, host: string) {
 }
 
 const wbmSearchResultsCache = new RedisCache('wbm-search-results')
+const externalCollectionResultsCache = new RedisCache('external-collection-results')
+const EXTERNAL_COLLECTION_CACHE_DURATION_SECONDS = 300
+// A fetch failure must not stay cached as long as a real result. Otherwise one failure blocks
+// every retry for the full cache time.
+const EXTERNAL_COLLECTION_FAILURE_CACHE_DURATION_SECONDS = 10
+const WIKIMEDIA_CURSOR_NAMESPACE = 'wikimedia-commons-cursors'
+
+// Commons paginates categories with a cursor (`gcmcontinue`), not a page number. Find each real
+// page's cursor once, by walking forward from the start. Then remember it. Cursors do not go
+// stale, so store them with no TTL. An empty string means no page exists after this one.
+function wikimediaCursorStore(collection: WikimediaCollectionQuery): WikimediaCursorStore {
+  const keyFor = (realPage: number) =>
+    `${WIKIMEDIA_CURSOR_NAMESPACE}:${JSON.stringify(collection)}:${realPage}`
+
+  return {
+    async get(realPage) {
+      const value = await redis.get(keyFor(realPage))
+      if (value === null) return undefined
+      return value === '' ? null : value
+    },
+    async set(realPage, cursor) {
+      await redis.set(keyFor(realPage), cursor ?? '')
+    },
+  }
+}
 
 export const proxy: RESTResourceImpl<Resources['proxy'], never> = {
   accessPolicy: {
@@ -151,6 +190,62 @@ export const proxy: RESTResourceImpl<Resources['proxy'], never> = {
           return {
             type: 'content-type',
             result: (await fetch(body.url, { method: 'head' })).headers.get('content-type'),
+          }
+        }
+        case 'external-media': {
+          const { query } = body
+          return {
+            type: 'external-media',
+            result:
+              query.platform === 'openverse'
+                ? await fetchOpenverseMedia(query.mediaType, query.id)
+                : await fetchWikimediaMedia(query.title),
+          }
+        }
+        case 'external-collection-count': {
+          const { query } = body
+          return {
+            type: 'external-collection-count',
+            result:
+              query.platform === 'openverse'
+                ? await fetchOpenverseCollectionCount(query.mediaType, query.collection)
+                : await fetchWikimediaCollectionCount(query.collection),
+          }
+        }
+        case 'external-collection-results': {
+          const { query } = body
+          const cacheKey = `${JSON.stringify(query)}:${body.page}:${body.pageSize}`
+          const cached = await externalCollectionResultsCache.memoize(
+            cacheKey,
+            async () =>
+              JSON.stringify(
+                (query.platform === 'openverse'
+                  ? await fetchOpenverseCollectionResults(
+                      query.mediaType,
+                      query.collection,
+                      body.page,
+                      body.pageSize,
+                    )
+                  : await fetchWikimediaCollectionResults(
+                      query.collection,
+                      body.page,
+                      body.pageSize,
+                      wikimediaCursorStore(query.collection),
+                    )) ?? null,
+              ),
+            (cached) =>
+              cached === 'null'
+                ? EXTERNAL_COLLECTION_FAILURE_CACHE_DURATION_SECONDS
+                : EXTERNAL_COLLECTION_CACHE_DURATION_SECONDS,
+          )
+
+          return {
+            type: 'external-collection-results',
+            result:
+              (JSON.parse(cached) as {
+                total: number
+                results: (OpenverseMedia | WikimediaMedia)[]
+              } | null) ?? undefined,
           }
         }
       }
