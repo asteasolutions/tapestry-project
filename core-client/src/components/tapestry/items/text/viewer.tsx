@@ -2,7 +2,7 @@ import clsx from 'clsx'
 import { RefObject, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { Icon } from 'tapestry-core-client/src/components/lib/icon/index'
 import { useFocusElement } from 'tapestry-core-client/src/components/tapestry/hooks/use-focus-element'
-import { iterateParents, matchHighlight, MatchRanges } from 'tapestry-core-client/src/lib/dom'
+import { matchHighlight, MatchRanges } from 'tapestry-core-client/src/lib/dom'
 import { TRANSPARENT } from 'tapestry-core-client/src/theme'
 import { Id } from 'tapestry-core/src/data-format/schemas/common'
 import { IdMap } from 'tapestry-core/src/utils'
@@ -151,12 +151,12 @@ export function TextItemViewer({
             events?.onSelectionChanged?.(state)
           },
           onClick: (e) => {
-            const maybeAnchor = iterateParents(e.target as HTMLElement, (e) => e.tagName !== 'A')
+            const maybeAnchor = (e.target as HTMLElement).closest('a')
             if (
               maybeAnchor &&
               !selection?.text &&
               !preventInternalLinkHandling &&
-              tryNavigatingToElement(maybeAnchor as HTMLAnchorElement)
+              tryNavigatingToElement(maybeAnchor)
             ) {
               e.preventDefault()
               return
