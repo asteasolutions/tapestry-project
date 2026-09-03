@@ -14,10 +14,9 @@ import { richTextEditorToolbar } from '../tapestry-elements/items/text/toolbar'
 import { Toolbar } from 'tapestry-core-client/src/components/lib/toolbar'
 import { useTapestryPath } from '../../hooks/use-tapestry-path'
 import { useTapestryData } from '../../pages/tapestry/tapestry-providers'
-import { extractAction } from '../assign-action-button'
-import { AddLinkModal } from '../add-link-modal'
 import { noop } from 'lodash'
 import { isMeta } from 'tapestry-core-client/src/lib/keyboard-event'
+import { useTextboxLink } from '../../hooks/use-textbox-link'
 
 export interface MessageInputProps {
   onSubmit: (text: string) => unknown
@@ -51,21 +50,20 @@ export function MessageInput({
   const [isEditorReady, setIsEditorReady] = useState(false)
   const editorApiRef = useRef<RichTextEditorApi | undefined>(undefined)
 
-  const [showModal, setShowModal] = useState(false)
-  const [initialLinkText, setInitialLinkText] = useState('')
-
   const tapestryId = useTapestryData('id')
   const tapestryPath = useTapestryPath('view')
 
-  const handleCreateLink = () => {
-    if (selectionState?.isLink) {
-      editorApiRef.current?.link('')
-      return
-    }
-    const selected = editorApiRef.current?.selectionText() ?? ''
-    setInitialLinkText(selected)
-    setShowModal(true)
-  }
+  const {
+    addLink,
+    closeLinkModal,
+    addingLink,
+    ui: linkModalUi,
+  } = useTextboxLink({
+    editorAPI: editorApiRef,
+    tapestryId,
+    tapestryPath,
+    isEditable: true,
+  })
 
   //TODO: We should change the types of the hook so that
   //if a respective controls flag is false the property here
@@ -79,8 +77,14 @@ export function MessageInput({
     onBackgroundColorChange: noop,
     onColorChange: noop,
     onToggleMenu: noop,
-    onLinkClick: handleCreateLink,
-    canAddLink: selectionState?.isLink,
+    onLinkClick: () => {
+      if (addingLink) {
+        closeLinkModal()
+      } else {
+        addLink()
+      }
+    },
+    addingLink,
     controls: {
       fontFamily: false,
       fontSize: false,
@@ -151,10 +155,20 @@ export function MessageInput({
               events={{
                 onCreate: () => setIsEditorReady(true),
                 onChange: setInput,
-                onSelectionChanged: setSelectionState,
+                onSelectionChanged: (state) => {
+                  setSelectionState(state)
+                  closeLinkModal()
+                },
                 onCreateLink: () => {
-                  handleCreateLink()
+                  addLink()
                   return true
+                },
+                onClick: (e) => {
+                  const anchor = (e.target as HTMLElement).closest('a')
+                  if (!e.isDefaultPrevented() && anchor) {
+                    editorApiRef.current?.editor().chain().extendMarkRange('link').run()
+                    addLink()
+                  }
                 },
                 onKeyDown: (e) => {
                   if (e.key === 'Enter' && isMeta(e.nativeEvent)) {
@@ -164,36 +178,7 @@ export function MessageInput({
                 },
               }}
             />
-
-            {showModal && (
-              <AddLinkModal
-                onClose={() => setShowModal(false)}
-                initialText={initialLinkText}
-                onApply={(url, text) => {
-                  const { action, actionType } = extractAction(url, tapestryPath, tapestryId)
-                  if (!action) return
-
-                  const href = actionType === 'internalLink' ? `?${action}` : url
-                  const editor = editorApiRef.current?.editor()
-                  if (!editor) return
-
-                  const linkTextFinal = text?.trim() || url
-                  const { from } = editor.state.selection
-
-                  editor
-                    .chain()
-                    .focus()
-                    .insertContent(linkTextFinal)
-                    .setTextSelection({ from, to: from + linkTextFinal.length })
-                    .command(({ commands }) => commands.setLink({ href }))
-                    .setTextSelection(from + linkTextFinal.length)
-                    .run()
-
-                  setShowModal(false)
-                }}
-                showTextField={true}
-              />
-            )}
+            {linkModalUi}
           </div>
         </>
       ) : (

@@ -1,14 +1,11 @@
-import { kebabCase, omit } from 'lodash-es'
+import { omit } from 'lodash-es'
 import { memo, useEffect, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
 import {
   createSelectionState,
   RichTextEditorApi,
   SelectionState,
 } from 'tapestry-core-client/src/components/lib/rich-text-editor'
 import { TextItemViewer } from 'tapestry-core-client/src/components/tapestry/items/text/viewer'
-import { iterateParents } from 'tapestry-core-client/src/lib/dom'
-import { DOM_MODEL_ID_DATA_ATTR } from 'tapestry-core-client/src/stage/utils'
 import { COLOR_PRESETS, TRANSPARENT } from 'tapestry-core-client/src/theme'
 import { LiteralColor } from 'tapestry-core-client/src/theme/types'
 import { TextItemDto } from 'tapestry-shared/src/data-transfer/resources/dtos/item'
@@ -16,12 +13,13 @@ import { TapestryItemProps } from '..'
 import { useDispatch, useTapestryData } from '../../../../pages/tapestry/tapestry-providers'
 import { updateItem } from '../../../../pages/tapestry/view-model/store-commands/items'
 import { userSettings } from '../../../../services/user-settings'
+import { useTapestryPath } from '../../../../hooks/use-tapestry-path'
 import { buildToolbarMenu } from '../../item-toolbar'
 import { useItemToolbar } from '../../item-toolbar/use-item-toolbar'
 import { TapestryItem } from '../tapestry-item'
-import { LinkTooltip, LinkTooltipProps } from './link-tooltip'
 import { ToggleFormatButton, tooltip } from './toggle-format-button'
 import { richTextEditorToolbar } from './toolbar'
+import { useTextboxLink } from '../../../../hooks/use-textbox-link'
 
 const BACKGROUND_COLORS: Record<LiteralColor, string> = COLOR_PRESETS
 
@@ -36,8 +34,8 @@ export const TextItem = memo(({ id }: TapestryItemProps) => {
     interactiveElement,
   } = useTapestryData(['id', 'interactionMode', 'interactiveElement'])
   const dispatch = useDispatch()
+  const tapestryPath = useTapestryPath('view')
 
-  const [addLinkProps, setAddLinkProps] = useState<Pick<LinkTooltipProps, 'element' | 'content'>>()
   const [selection, setSelection] = useState<SelectionState>()
   const [unsavedContent, setUnsavedContent] = useState<string | null>(null)
 
@@ -45,40 +43,34 @@ export const TextItem = memo(({ id }: TapestryItemProps) => {
   const isInteractiveElement = id === interactiveElement?.modelId
   const isEditable = isEditMode && isInteractiveElement
 
+  const {
+    addLink,
+    closeLinkModal,
+    addingLink,
+    ui: linkModalUi,
+  } = useTextboxLink({
+    editorAPI,
+    tapestryId,
+    tapestryPath,
+    isEditable: isEditMode,
+    onLinkApplied: () => editorAPI.current?.editor().chain().unsetColor().run(),
+  })
+
+  if (addingLink && !isEditable) {
+    closeLinkModal()
+  }
+
   useEffect(() => {
     if (isEditable) {
       return
     }
     setShowFormatToolbar(false)
-    setAddLinkProps(undefined)
 
     if (unsavedContent !== null) {
       dispatch(updateItem(id, { dto: { text: unsavedContent } }))
       setUnsavedContent(null)
     }
   }, [isEditable, dispatch, id, unsavedContent])
-
-  const addLink = (domNode?: HTMLElement) => {
-    const editor = editorAPI.current?.editor()
-    if (addLinkProps || !editor || !isEditMode) {
-      return
-    }
-
-    const selectionStartDOMNode = editor.view.domAtPos(editor.state.selection.from).node
-
-    const anchorElement =
-      selectionStartDOMNode instanceof HTMLElement
-        ? selectionStartDOMNode
-        : selectionStartDOMNode.parentElement
-
-    if (!anchorElement) {
-      return
-    }
-    setAddLinkProps({
-      content: editorAPI.current?.selectionText(),
-      element: domNode ?? anchorElement,
-    })
-  }
 
   const [showFormatToolbar, setShowFormatToolbar] = useState(false)
 
@@ -87,14 +79,14 @@ export const TextItem = memo(({ id }: TapestryItemProps) => {
     selection,
     tapestryId,
     onLinkClick: () => {
-      if (addLinkProps) {
-        setAddLinkProps(undefined)
+      if (addingLink) {
+        closeLinkModal()
       } else {
         closeSubmenu()
         addLink()
       }
     },
-    canAddLink: !!addLinkProps,
+    addingLink,
     itemBackgroundColor: dto.backgroundColor,
     onBackgroundColorChange: (color, shouldClose) => {
       dispatch(updateItem(id, { dto: { backgroundColor: color } }))
@@ -112,7 +104,7 @@ export const TextItem = memo(({ id }: TapestryItemProps) => {
       }
     },
     onToggleMenu: (id) => {
-      setAddLinkProps(undefined)
+      closeLinkModal()
       selectSubmenu(id, true)
     },
   })
@@ -168,14 +160,14 @@ export const TextItem = memo(({ id }: TapestryItemProps) => {
           },
           onSelectionChanged: (state) => {
             setSelection(state)
-            setAddLinkProps(undefined)
+            closeLinkModal()
           },
           onClick: (e) => {
-            const maybeAnchor = iterateParents(e.target as HTMLElement, (e) => e.tagName !== 'A')
-            if (!e.isDefaultPrevented() && maybeAnchor && !selection?.text) {
+            const anchor = (e.target as HTMLElement).closest('a')
+            if (!e.isDefaultPrevented() && anchor) {
               editorAPI.current?.editor().chain().extendMarkRange('link').run()
               // onSelectionChanged should be synchronous and called before addLink
-              addLink(maybeAnchor)
+              addLink()
             }
           },
           onCreateLink: () => {
@@ -189,39 +181,7 @@ export const TextItem = memo(({ id }: TapestryItemProps) => {
           },
         }}
       />
-      {addLinkProps &&
-        createPortal(
-          <LinkTooltip
-            {...addLinkProps}
-            onRemove={() => {
-              editorAPI.current?.editor().commands.unsetLink()
-              setAddLinkProps(undefined)
-            }}
-            onApply={(href, text) => {
-              if (!editorAPI.current) {
-                return
-              }
-
-              const editor = editorAPI.current.editor()
-
-              if (text) {
-                editor.chain().insertContent(text).run()
-
-                const selection = editor.state.selection
-
-                editor
-                  .chain()
-                  .setTextSelection({ from: selection.to - text.length, to: selection.to })
-                  .run()
-              }
-
-              editor.chain().setLink({ href }).unsetColor().run()
-
-              setAddLinkProps(undefined)
-            }}
-          />,
-          document.querySelector(`[data-${kebabCase(DOM_MODEL_ID_DATA_ATTR)}="${id}"]`)!,
-        )}
+      {linkModalUi}
     </TapestryItem>
   )
 })
