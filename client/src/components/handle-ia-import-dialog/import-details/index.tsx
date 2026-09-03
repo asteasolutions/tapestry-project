@@ -11,6 +11,8 @@ interface ImportDetailsProps {
   import: IAImport
 }
 
+// TODO: Extract a shared layout component. This removes the duplication between the two
+// branches below.
 export function ImportDetails({ import: iaImport }: ImportDetailsProps) {
   const mdOrLess = useResponsive() <= Breakpoint.MD
   const textVariant = mdOrLess ? 'bodyXs' : undefined
