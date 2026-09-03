@@ -109,7 +109,11 @@ export function useMultiselectMenu<M extends MultiselectMenuItem[]>(
     if (menuItem === 'deselect') {
       return {
         element: (
-          <IconButton icon="cancel" aria-label="Deselect" onClick={() => dispatch(deselectAll())} />
+          <IconButton
+            icon="select_window_off"
+            aria-label="Deselect"
+            onClick={() => dispatch(deselectAll())}
+          />
         ),
         tooltip: { side: 'bottom', children: <ShortcutLabel text="Deselect">Esc</ShortcutLabel> },
       }
