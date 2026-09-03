@@ -28,13 +28,12 @@ export const ALLOWED_ORIGINS = [
   'https://player.vimeo.com',
 ]
 
-const ALLOWED_HOST_SUFFIXES = ['.wikipedia.org']
+const ALLOWED_DOMAINS = ['.wikipedia.org']
 
 function sameOriginAllowed(url: string) {
   const { origin, hostname } = new URL(url)
   return (
-    ALLOWED_ORIGINS.includes(origin) ||
-    ALLOWED_HOST_SUFFIXES.some((suffix) => hostname.endsWith(suffix))
+    ALLOWED_ORIGINS.includes(origin) || ALLOWED_DOMAINS.some((domain) => hostname.endsWith(domain))
   )
 }
 
