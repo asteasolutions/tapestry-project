@@ -39,11 +39,13 @@ export function useTextboxLink({
       ? `${window.location.origin}${tapestryPath}${existingLink}`
       : existingLink
 
-    const selectionText = editorAPI.current?.selectionText().trim()
+    const selectionText = editorAPI.current?.selectionText()
+    const trimmedSelectionText = selectionText?.trim()
 
     setLinkModal({
       mode: existingLink ? 'action' : 'edit',
-      initialText: selectionText && selectionText !== initialLink ? selectionText : undefined,
+      initialText:
+        trimmedSelectionText && trimmedSelectionText !== initialLink ? selectionText : undefined,
       initialLink,
     })
   }

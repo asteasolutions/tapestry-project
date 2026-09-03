@@ -6,7 +6,6 @@ import {
   SelectionState,
 } from 'tapestry-core-client/src/components/lib/rich-text-editor'
 import { TextItemViewer } from 'tapestry-core-client/src/components/tapestry/items/text/viewer'
-import { iterateParents } from 'tapestry-core-client/src/lib/dom'
 import { COLOR_PRESETS, TRANSPARENT } from 'tapestry-core-client/src/theme'
 import { LiteralColor } from 'tapestry-core-client/src/theme/types'
 import { TextItemDto } from 'tapestry-shared/src/data-transfer/resources/dtos/item'
@@ -164,8 +163,8 @@ export const TextItem = memo(({ id }: TapestryItemProps) => {
             closeLinkModal()
           },
           onClick: (e) => {
-            const maybeAnchor = iterateParents(e.target as HTMLElement, (e) => e.tagName !== 'A')
-            if (!e.isDefaultPrevented() && maybeAnchor) {
+            const anchor = (e.target as HTMLElement).closest('a')
+            if (!e.isDefaultPrevented() && anchor) {
               editorAPI.current?.editor().chain().extendMarkRange('link').run()
               // onSelectionChanged should be synchronous and called before addLink
               addLink()
