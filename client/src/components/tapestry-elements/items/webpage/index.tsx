@@ -189,6 +189,7 @@ export const WebpageItem = memo(({ id }: TapestryItemProps) => {
             },
             'separator',
             refreshButton,
+            'separator',
             ...controls,
           ]
         : [refreshButton, 'separator', ...controls]
