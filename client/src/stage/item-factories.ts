@@ -1,7 +1,5 @@
 import { isHTTPURL } from 'tapestry-core/src/utils'
-import mime from 'mime'
-import { MediaItemSource, mediaSourceToBlob } from '../lib/media'
-import { convertHeicFile } from '../lib/heic'
+import { MediaItemSource, mediaSourceToBlob, convertHeicFile } from '../lib/media'
 import { createMediaItem, getMediaSourceText } from '../model/data/utils'
 import { ItemCreateDto } from 'tapestry-shared/src/data-transfer/resources/dtos/item'
 import { findWebSourceParser } from 'tapestry-core/src/web-sources'
@@ -17,7 +15,7 @@ import {
 import { MediaItemType, WebpageType } from 'tapestry-core/src/data-format/schemas/item'
 import { getUserListItems } from '../lib/internet-archive'
 import { parseMediaSource, parseStringTransferData } from './data-transfer-handler'
-import { fileTypeFromBuffer } from 'file-type'
+import { fileTypeFromBlob, fileTypeFromBuffer } from 'file-type'
 import { parse } from 'ini'
 import { IAImport } from '../pages/tapestry/view-model'
 
@@ -161,17 +159,10 @@ const iaCollectionFactory: ItemFactory = async (source, _, tapestryId) => {
 }
 
 const HEIC_MEDIA_TYPES = ['image/heic', 'image/heif']
-const GENERIC_MEDIA_TYPE = 'application/octet-stream'
 
 const heicImageFactory: ItemFactory = async (source, mediaType, tapestryId) => {
-  const isHeic = HEIC_MEDIA_TYPES.includes(
-    mediaType && mediaType !== GENERIC_MEDIA_TYPE
-      ? mediaType
-      : source instanceof File
-        ? (mime.getType(source.name) ?? '')
-        : '',
-  )
-  if (!isHeic) return null
+  const detectedType = source instanceof File ? (await fileTypeFromBlob(source))?.mime : mediaType
+  if (!HEIC_MEDIA_TYPES.includes(detectedType ?? '')) return null
 
   const convertedFile = await convertHeicFile(await mediaSourceToBlob(source))
 
