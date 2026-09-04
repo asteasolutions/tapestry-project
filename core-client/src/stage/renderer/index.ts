@@ -224,14 +224,42 @@ export abstract class TapestryRenderer<
     selection?: Selection,
     interactiveElement?: TapestryElementRef | null,
   ) {
-    return (
+    if (
       selection?.itemIds.has(viewModel.dto.id) ||
       selection?.groupIds.has(viewModel.dto.id) ||
-      interactiveElement?.modelId === viewModel.dto.id ||
-      (isItemViewModel(viewModel) &&
-        viewModel.dto.groupId &&
-        selection?.groupIds.has(viewModel.dto.groupId))
-    )
+      interactiveElement?.modelId === viewModel.dto.id
+    ) {
+      return true
+    }
+
+    if (
+      isItemViewModel(viewModel) &&
+      viewModel.dto.groupId &&
+      selection?.groupIds.has(viewModel.dto.groupId)
+    ) {
+      return true
+    }
+
+    if (isRelViewModel(viewModel)) {
+      return this.isRelAnchorSelected(viewModel, selection)
+    }
+
+    return false
+  }
+
+  protected isRelAnchorSelected(rel: E & RelViewModel, selection?: Selection) {
+    if (!selection) return false
+
+    const items = this.store.get('items')
+    const anchorItemIds = [rel.dto.from.itemId, rel.dto.to.itemId]
+
+    return anchorItemIds.some((itemId) => {
+      if (!itemId) return false
+      if (selection.itemIds.has(itemId)) return true
+
+      const groupId = items[itemId]?.dto.groupId
+      return !!groupId && selection.groupIds.has(groupId)
+    })
   }
 
   protected getRenderedTapestryElementIds() {
