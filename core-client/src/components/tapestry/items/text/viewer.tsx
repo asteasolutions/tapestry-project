@@ -28,6 +28,7 @@ export function elementIdFromLink(
   const currentTapestryPath = `${location.origin}${location.pathname}`.replace(/(\/edit)?$/, '')
   return link.startsWith(currentTapestryPath) && !!element ? elementId : null
 }
+const SCROLL_TOLERANCE_PX = 20
 
 function useHasScroll(editorRef: RefObject<RichTextEditorApi | undefined>) {
   const [hasScroll, setHasScroll] = useState(compute)
@@ -36,9 +37,16 @@ function useHasScroll(editorRef: RefObject<RichTextEditorApi | undefined>) {
     if (!editor) {
       return false
     }
-    return editor.editor().view.dom.scrollHeight > editor.editor().view.dom.clientHeight
+    const { scrollHeight, clientHeight } = editor.editor().view.dom
+    return scrollHeight - clientHeight > SCROLL_TOLERANCE_PX
   }
-  return { hasScroll, check: () => setHasScroll(compute()) }
+
+  function check() {
+    setHasScroll(compute())
+    void document.fonts.ready.then(() => setHasScroll(compute()))
+  }
+
+  return { hasScroll, check }
 }
 
 export interface TextItemViewerProps extends Partial<RichTextEditorProps> {
