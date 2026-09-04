@@ -23,12 +23,12 @@ const FOREGROUND_COLORS = OPAQUE_COLOR_PRESETS
 
 export type FormattingSubmenu = 'text-color' | 'text-background'
 
-interface TextItemToolbarOptions {
+interface RichTextEditorToolbarOptions {
   selection: SelectionState | undefined
   editorAPI: React.RefObject<RichTextEditorApi | undefined>
   tapestryId: string
   onLinkClick?: () => unknown
-  canAddLink?: boolean
+  addingLink?: boolean
   itemBackgroundColor: LiteralColor | null | undefined
   onBackgroundColorChange: (color: LiteralColor, shouldClose: boolean) => unknown
   onColorChange: (color: LiteralColor, shouldClose: boolean) => unknown
@@ -36,18 +36,18 @@ interface TextItemToolbarOptions {
   controls?: { [K in keyof Controls]: boolean }
 }
 
-export function textItemToolbar({
+export function richTextEditorToolbar({
   selection,
   editorAPI,
   tapestryId,
   onLinkClick,
-  canAddLink,
+  addingLink,
   itemBackgroundColor,
   onBackgroundColorChange,
   onColorChange,
   onToggleMenu,
   controls,
-}: TextItemToolbarOptions): MaybeMenuItem[] {
+}: RichTextEditorToolbarOptions): MaybeMenuItem[] {
   const foregroundColor = selection?.color
   const backgroundColor = itemBackgroundColor ?? TRANSPARENT
   const isCustomBackgroundColor =
@@ -157,7 +157,7 @@ export function textItemToolbar({
                   icon="add_link"
                   aria-label="Insert link"
                   onClick={() => onLinkClick?.()}
-                  isActive={canAddLink}
+                  isActive={addingLink}
                 />
               ),
               tooltip: {

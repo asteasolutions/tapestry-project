@@ -1,11 +1,10 @@
-import { Container, Rectangle, Texture } from 'pixi.js'
+import { Container, Rectangle } from 'pixi.js'
 import { TapestryStage } from '..'
 import { Store } from '../../lib/store'
 import { ItemViewModel, TapestryViewModel } from '../../view-model'
 import { obtainShadowNineSlice, ShadowNineSlice } from './shadow-texture-cache'
 import { TapestryElementRenderer } from './tapestry-element-renderer'
 import { ThumbnailContainer, ThumbnailContainerState } from './thumbnail-container'
-import { IdMap } from 'tapestry-core/src/utils'
 import { ThemeName, THEMES } from '../../theme/themes'
 import { LiteralColor } from '../../theme/types'
 import { getItemOverlayScale } from '../../view-model/utils'
@@ -14,8 +13,7 @@ import {
   displayPersistedState,
   hasPersistentState,
 } from '../../components/tapestry/tapestry-canvas'
-
-export const snapshotRegistry: IdMap<Texture> = {}
+import { snapshotRegistry } from '../controller/item-thumbnail-controller'
 
 export interface ItemRenderState<I extends ItemViewModel> {
   viewModel: I
@@ -37,57 +35,61 @@ type Icons = Record<
 const ICON_SIZE_STEP = 10
 const ICONS: Icons = {
   videoWebpage: (color, background, scale) => {
-    const size = roundToPrecision(100 * scale, ICON_SIZE_STEP)
+    const size = roundToPrecision(130 * scale, ICON_SIZE_STEP)
     return {
-      minSize: 220,
+      minSize: 120,
       icon: {
         background,
         props: {
           iconName: 'videoCam',
           size,
           color,
-          fontSize: Math.round(0.6 * size),
+          fontSize: Math.round(0.3 * size),
         },
       },
     }
   },
-  video: (color, background, scale) => ({
-    minSize: 220,
-    icon: {
-      background,
-      props: {
-        iconName: 'playArrow',
-        size: roundToPrecision(100 * scale, ICON_SIZE_STEP),
-        color,
-      },
-    },
-  }),
-  audio: (color, background, scale) => {
-    const size = roundToPrecision(100 * scale, ICON_SIZE_STEP)
+  video: (color, background, scale) => {
+    const size = roundToPrecision(130 * scale, ICON_SIZE_STEP)
     return {
-      minSize: 220,
+      minSize: 120,
+      icon: {
+        background,
+        props: {
+          iconName: 'videoCam',
+          size,
+          color,
+          fontSize: Math.round(0.3 * size),
+        },
+      },
+    }
+  },
+  audio: (color, background, scale) => {
+    const size = roundToPrecision(130 * scale, ICON_SIZE_STEP)
+    return {
+      minSize: 120,
       icon: {
         background,
         props: {
           iconName: 'volumeUp',
           size,
           color,
-          fontSize: Math.round(0.75 * size),
+          fontSize: Math.round(0.37 * size),
         },
       },
     }
   },
   pdf: (color, background, scale) => {
-    const size = roundToPrecision(80 * scale, ICON_SIZE_STEP)
+    const size = roundToPrecision(100 * scale, ICON_SIZE_STEP)
     return {
-      minSize: 200,
+      minSize: 100,
       icon: {
         background,
         props: {
           iconName: 'pdf',
           size,
           color,
-          fontSize: Math.round(0.625 * size),
+          fontSize: Math.round(0.3 * size),
         },
       },
     }

@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react'
 import { focusGroup, focusItems } from '../../../view-model/store-commands/viewport'
 import { setInteractiveElement } from '../../../view-model/store-commands/tapestry'
 import { useTapestryConfig } from '..'
+import { InternalNavigationState } from '../../../stage/controller/item-controller'
 
 export function useFocusElement() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -11,7 +12,7 @@ export function useFocusElement() {
     setSearchParams(
       { focus: id, ...params },
       {
-        state: { timestamp: Date.now() },
+        state: { timestamp: Date.now() } satisfies InternalNavigationState,
         replace: searchParams.get('focus') === id,
       },
     )
@@ -23,9 +24,9 @@ export function useFocusedElement() {
   const [params] = useSearchParams()
   const modelId = params.get('focus')
 
-  const locationState = useLocation().state as { timestamp: number } | null
+  const locationState = useLocation().state as InternalNavigationState | null
 
-  const timestamp = locationState?.timestamp
+  const { timestamp, animate } = locationState ?? {}
 
   const elements = useStoreData(['items', 'groups'])
   const elementsRef = useRef(elements)
@@ -43,13 +44,13 @@ export function useFocusedElement() {
     const { items, groups } = elementsRef.current
     if (items[modelId]) {
       dispatch(
-        focusItems([modelId], { addToolbarPadding: true }),
+        focusItems([modelId], { addToolbarPadding: true, animate }),
         setInteractiveElement({ modelId, modelType: 'item' }),
       )
     } else if (groups[modelId]) {
-      dispatch(focusGroup(modelId))
+      dispatch(focusGroup(modelId, { animate }))
     } else if (modelId === 'all') {
-      dispatch(focusItems(Object.keys(items)))
+      dispatch(focusItems(Object.keys(items), { animate }))
     }
-  }, [modelId, viewportReady, dispatch, timestamp])
+  }, [modelId, viewportReady, dispatch, timestamp, animate])
 }

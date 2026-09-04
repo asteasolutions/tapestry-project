@@ -27,7 +27,10 @@ export default tseslint.config({
       { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
     ],
     '@typescript-eslint/consistent-type-definitions': 'off',
-    '@typescript-eslint/switch-exhaustiveness-check': 'error',
+    '@typescript-eslint/switch-exhaustiveness-check': [
+      'error',
+      { considerDefaultExhaustiveForUnions: true },
+    ],
     '@typescript-eslint/no-misused-promises': 'off',
     '@typescript-eslint/prefer-nullish-coalescing': [
       'warn',

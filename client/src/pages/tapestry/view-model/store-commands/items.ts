@@ -1,5 +1,5 @@
 import { Draft } from 'immer'
-import { max, merge, sortBy, sum } from 'lodash-es'
+import { max, merge, partition, sum } from 'lodash-es'
 import { StoreMutationCommand } from 'tapestry-core-client/src/lib/store/index'
 import { tween } from 'tapestry-core-client/src/view-model/tweening'
 import {
@@ -26,6 +26,7 @@ import { itemUpload } from '../../../../services/item-upload'
 import {
   getGridDimensions,
   getGridIndices,
+  getMaxLayer,
   getMultiselectRectangle,
   GridState,
   reassignPresentationStep,
@@ -35,6 +36,7 @@ import { deletePresentationSteps } from './presentation-steps'
 import { deleteRels } from './rels'
 import { selectItems, setInteractiveElement } from './tapestry'
 import { setIsZoomingLocked } from './viewport'
+import { sortByPath } from 'tapestry-core/src/lib/array'
 
 export function insertItems(
   items: OneOrMore<EditableItemViewModel>,
@@ -81,8 +83,10 @@ export function addAndPositionItems(
         ? translate(centerAtPoint, mul(-1, translation), scale)
         : centerAtPoint
     const move = vector(boundingRect.center, center)
+    let maxLayer = getMaxLayer(store)
     items.forEach((item) => {
       item.dto.position = translate(item.dto.position, move)
+      item.dto.layer = ++maxLayer
     })
 
     store.dispatch(insertItems(items), selectItems(items.map((i) => i.dto.id)))
@@ -207,7 +211,7 @@ export function arrangeItems(
     ]
 
     const rect = getMultiselectRectangle(selectionItems)
-    const sorted = sortBy(
+    const sorted = sortByPath(
       selectionElements,
       grid.primary === 'cols' ? ['position.y', 'position.x'] : ['position.x', 'position.y'],
     )
@@ -351,5 +355,21 @@ export function removeFromGroup(itemId: string): StoreMutationCommand<EditableTa
         }),
       )
     }
+  }
+}
+
+export function reorderItems(
+  ids: OneOrMore<string>,
+  to: 'back' | 'front',
+): StoreMutationCommand<EditableTapestryViewModel> {
+  return (_, { store }) => {
+    const itemIds = new Set(ensureArray(ids))
+
+    const [frontItems, backItems] = partition(idMapToArray(store.get(`items`)), (i) =>
+      to === 'front' ? itemIds.has(i.dto.id) : !itemIds.has(i.dto.id),
+    )
+
+    const allItems = [...sortByPath(backItems, 'dto.layer'), ...sortByPath(frontItems, 'dto.layer')]
+    store.dispatch(...allItems.map((item, layer) => updateItem(item.dto.id, { dto: { layer } })))
   }
 }

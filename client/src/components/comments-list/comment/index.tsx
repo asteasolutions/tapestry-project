@@ -15,43 +15,84 @@ import { resource } from '../../../services/rest-resources'
 import { MessageInput } from '../../message-input'
 import { useTapestryData } from '../../../pages/tapestry/tapestry-providers'
 import { Tooltip } from 'tapestry-core-client/src/components/lib/tooltip/index'
+import { RichTextEditor } from 'tapestry-core-client/src/components/lib/rich-text-editor'
+import { useNavigate } from 'react-router'
+import { useTapestryPath } from '../../../hooks/use-tapestry-path'
 
 interface CommentProps {
   comment: CommentDto
   tapestryAuthorId: string
+  isEditing: boolean
+  setEditing: (value: boolean) => void
   onDelete?: () => void
   onEdit?: (newComment: CommentDto) => void
 }
 
 function CommentContent({ createdAt, updatedAt, deletedAt, text }: CommentDto) {
   const lastUpdate = isEqual(updatedAt, createdAt) ? undefined : updatedAt
-  return (
-    <Text component="div" variant="bodySm" className={styles.commentText}>
-      {deletedAt ? (
+  const navigate = useNavigate()
+  const interactionMode = useTapestryData('interactionMode')
+  const tapestryPath = useTapestryPath(interactionMode)
+
+  if (deletedAt) {
+    return (
+      <Text component="div" variant="bodySm" className={styles.commentText}>
         <em>[Deleted]</em>
-      ) : lastUpdate ? (
-        <>
-          {text}{' '}
-          <Text variant="bodyXs" className={styles.editLabel}>
-            (edited)
-            <Tooltip side="top" offset={4}>
-              {intlFormat(lastUpdate, {
-                day: 'numeric',
-                month: 'short',
-                hour: 'numeric',
-                minute: 'numeric',
-              })}
-            </Tooltip>
-          </Text>
-        </>
-      ) : (
-        text
+      </Text>
+    )
+  }
+
+  return (
+    <div className={styles.commentText}>
+      <RichTextEditor
+        events={{
+          onClick: async (e: React.MouseEvent<HTMLDivElement>) => {
+            const anchor = (e.target as HTMLElement).closest('a')
+            if (!anchor) return
+
+            const href = anchor.getAttribute('href')
+            if (!href) return
+
+            const isInternal = href.startsWith('?')
+
+            if (isInternal) {
+              e.preventDefault()
+
+              await navigate(`${tapestryPath}${href}`, {
+                replace: false,
+                state: { timestamp: Date.now() },
+              })
+            }
+          },
+        }}
+        value={text}
+        isEditable={false}
+      />
+      {lastUpdate && (
+        <Text variant="bodyXs" className={styles.editLabel}>
+          (edited)
+          <Tooltip side="top" offset={4}>
+            {intlFormat(lastUpdate, {
+              day: 'numeric',
+              month: 'short',
+              hour: 'numeric',
+              minute: 'numeric',
+            })}
+          </Tooltip>
+        </Text>
       )}
-    </Text>
+    </div>
   )
 }
 
-export function Comment({ comment, tapestryAuthorId, onDelete, onEdit }: CommentProps) {
+export function Comment({
+  comment,
+  tapestryAuthorId,
+  isEditing,
+  setEditing,
+  onDelete,
+  onEdit,
+}: CommentProps) {
   const { user } = useSession()
 
   const isDeleted = !!comment.deletedAt
@@ -62,7 +103,6 @@ export function Comment({ comment, tapestryAuthorId, onDelete, onEdit }: Comment
   const { id } = comment
 
   const [showEditControls, setShowEditControls] = useState(false)
-  const [editing, setEditing] = useState(false)
   const [deleting, setDeleting] = useState(false)
 
   const { trigger: deleteComment, loading: deleteInProgress } = useAsyncAction(
@@ -79,7 +119,7 @@ export function Comment({ comment, tapestryAuthorId, onDelete, onEdit }: Comment
     onEdit?.(newComment)
   })
 
-  const showingEditControls = showEditControls && canModify
+  const showingEditControls = (showEditControls || isEditing) && canModify
 
   return (
     <div
@@ -98,7 +138,7 @@ export function Comment({ comment, tapestryAuthorId, onDelete, onEdit }: Comment
                 size="small"
                 icon="edit"
                 aria-label="Edit comment"
-                onClick={() => setEditing(!editing)}
+                onClick={() => setEditing(!isEditing)}
                 tooltip={{ side: 'bottom', children: 'Edit' }}
               />
             )}
@@ -121,8 +161,13 @@ export function Comment({ comment, tapestryAuthorId, onDelete, onEdit }: Comment
           </span>
         )}
       </div>
-      {editing ? (
-        <MessageInput onSubmit={editComment} className={styles.editComment} value={comment.text} />
+      {isEditing ? (
+        <MessageInput
+          placeholder="Add comment"
+          onSubmit={editComment}
+          className={styles.editComment}
+          value={comment.text}
+        />
       ) : (
         <CommentContent {...comment} />
       )}

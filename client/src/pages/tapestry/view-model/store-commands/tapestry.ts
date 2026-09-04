@@ -1,10 +1,19 @@
 import { omit, sample } from 'lodash-es'
-import { maxEmptyArea, ORIGIN, Point, Rectangle } from 'tapestry-core/src/lib/geometry'
+import { ORIGIN, Point, Rectangle, scaleSize } from 'tapestry-core/src/lib/geometry'
 import { TapestryDto } from 'tapestry-shared/src/data-transfer/resources/dtos/tapestry'
-import { EditableTapestryViewModel, InteractionMode, IAImport, convertCommand } from '..'
+import {
+  EditableTapestryViewModel,
+  InteractionMode,
+  IAImport,
+  convertCommand,
+  EDIT_VIEWPORT_LIMITS,
+} from '..'
 import { StoreMutationCommand } from 'tapestry-core-client/src/lib/store/index'
 import { EditableTapestryProps } from '../../../../model/data/utils'
-import { positionAtViewport } from 'tapestry-core-client/src/view-model/utils'
+import {
+  DEFAULT_VIEWPORT_LIMITS,
+  positionAtViewport,
+} from 'tapestry-core-client/src/view-model/utils'
 import { idMapToArray } from 'tapestry-core/src/utils'
 import { COLLABORATOR_COLORS } from 'tapestry-core-client/src/theme'
 import { PublicUserProfileDto } from 'tapestry-shared/src/data-transfer/resources/dtos/user'
@@ -39,20 +48,10 @@ export function updateTapestry(
 export function setViewAsStart(): StoreMutationCommand<EditableTapestryViewModel> {
   return (model) => {
     const { viewport } = model
-    const visibleArea = maxEmptyArea(
-      new Rectangle(ORIGIN, viewport.size),
-      idMapToArray(viewport.obstructions),
-    )!
-    model.startView = {
-      position: positionAtViewport(viewport, ORIGIN, {
-        dx: visibleArea.left / viewport.transform.scale,
-        dy: visibleArea.top / viewport.transform.scale,
-      }),
-      size: {
-        width: visibleArea.width / viewport.transform.scale,
-        height: visibleArea.height / viewport.transform.scale,
-      },
-    }
+    model.startView = new Rectangle(
+      positionAtViewport(viewport, ORIGIN),
+      scaleSize(viewport.size, 1 / viewport.transform.scale),
+    )
   }
 }
 
@@ -66,6 +65,10 @@ export function setInteractionMode(
       selectItem(null),
       (model) => {
         model.interactionMode = mode
+        model.viewport = {
+          ...model.viewport,
+          ...(mode === 'edit' ? EDIT_VIEWPORT_LIMITS : DEFAULT_VIEWPORT_LIMITS),
+        }
         model.disableOptimizations = mode === 'edit'
       },
       setSnackbar(`You are in ${mode === 'edit' ? 'Author' : 'Viewer'} mode`),

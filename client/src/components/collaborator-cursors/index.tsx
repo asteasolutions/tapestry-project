@@ -3,42 +3,36 @@ import styles from './styles.module.css'
 import { Avatar } from '../avatar'
 import cursor from '../../assets/icons/cursor.svg?react'
 import { ActiveCollaborator } from '../../pages/tapestry/view-model'
-import { useEffect, useState } from 'react'
 import { SvgIcon } from 'tapestry-core-client/src/components/lib/svg-icon'
 import { idMapToArray } from 'tapestry-core/src/utils'
-import { isEqual } from 'lodash-es'
 import { CURSOR_BROADCAST_PERIOD } from '../../stage/utils'
+import { Viewport } from 'tapestry-core-client/src/view-model'
+import { useRecentlyChanged } from 'tapestry-core-client/src/components/tapestry/hooks/use-recently-changed'
 
 const MAX_INACTIVITY_PERIOD = 15_000
 
 interface CollaboratorCursorProps {
   collaborator: ActiveCollaborator
+  viewport: Viewport
 }
 
-function CollaboratorCursor({ collaborator }: CollaboratorCursorProps) {
-  const [prevCursorPosition, setPrevCursorPosition] = useState(collaborator.cursorPosition)
-  const [hidden, setHidden] = useState(false)
-
-  useEffect(() => {
-    const timeout = window.setTimeout(() => setHidden(true), MAX_INACTIVITY_PERIOD)
-    return () => clearTimeout(timeout)
-  }, [prevCursorPosition])
-
-  if (!isEqual(prevCursorPosition, collaborator.cursorPosition)) {
-    setPrevCursorPosition(collaborator.cursorPosition)
-    setHidden(false)
-  }
+function CollaboratorCursor({ collaborator, viewport }: CollaboratorCursorProps) {
+  const hidden = !useRecentlyChanged(collaborator.cursorPosition, MAX_INACTIVITY_PERIOD)
 
   if (hidden) {
     return null
   }
 
+  const {
+    transform: { translation, scale },
+  } = viewport
+
   return (
     <div
       className={styles.cursorContainer}
       style={{
-        top: collaborator.cursorPosition.y,
-        left: collaborator.cursorPosition.x,
+        top: collaborator.cursorPosition.y * scale + translation.dy,
+        left: collaborator.cursorPosition.x * scale + translation.dx,
         transition: `top ${CURSOR_BROADCAST_PERIOD}ms linear, left ${CURSOR_BROADCAST_PERIOD}ms linear`,
       }}
     >
@@ -53,13 +47,11 @@ function CollaboratorCursor({ collaborator }: CollaboratorCursorProps) {
 }
 
 export function CollaboratorCursors() {
-  const {
-    collaborators,
-    viewport: {
-      transform: { translation, scale },
-    },
-    interactionMode,
-  } = useTapestryData(['collaborators', 'viewport', 'interactionMode'])
+  const { collaborators, viewport, interactionMode } = useTapestryData([
+    'collaborators',
+    'viewport',
+    'interactionMode',
+  ])
 
   if (interactionMode !== 'edit') {
     return null
@@ -70,15 +62,9 @@ export function CollaboratorCursors() {
   )
 
   return (
-    <div
-      className={styles.collaboratorsCursorsContainer}
-      style={{
-        transform: `translate(${translation.dx}px, ${translation.dy}px) scale(${scale})`,
-      }}
-      inert
-    >
+    <div className={styles.collaboratorsCursorsContainer} inert>
       {visibleCollaborators.map((collaborator) => (
-        <CollaboratorCursor key={collaborator.id} collaborator={collaborator} />
+        <CollaboratorCursor key={collaborator.id} collaborator={collaborator} viewport={viewport} />
       ))}
     </div>
   )

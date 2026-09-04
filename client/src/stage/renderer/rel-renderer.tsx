@@ -39,9 +39,14 @@ export class EditorRelRenderer extends RelRenderer<EditableRelViewModel> {
     return state
   }
 
-  protected computeRelCurvePoints(viewModel: EditableRelViewModel, items: IdMap<ItemViewModel>) {
+  protected computeRelCurvePoints(
+    viewModel: EditableRelViewModel,
+    relScale: number,
+    items: IdMap<ItemViewModel>,
+  ) {
     return computeRelCurvePoints<EditableRelViewModel>(
       viewModel,
+      relScale,
       items,
       (relViewModel, endpoint) => {
         if (
@@ -80,6 +85,7 @@ export class EditorRelRenderer extends RelRenderer<EditableRelViewModel> {
     fromItem,
     toItem,
     theme,
+    relScale,
   }: RelRenderState<EditableRelViewModel>):
     | (CommentsIndicatorContainerState & { position: Point })
     | undefined {
@@ -87,7 +93,7 @@ export class EditorRelRenderer extends RelRenderer<EditableRelViewModel> {
       return
     }
 
-    const curve = this.computeRelCurvePoints(viewModel, {
+    const curve = this.computeRelCurvePoints(viewModel, relScale, {
       [fromItem.dto.id]: fromItem,
       [toItem.dto.id]: toItem,
     })
