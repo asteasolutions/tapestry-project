@@ -13,24 +13,34 @@ const HEIGHT = Math.floor(WIDTH * (10 / 21))
 
 export async function generateTapestryThumbnails({
   tapestryId,
-  generateAll,
+  generationStrategy = 'standard',
 }: JobTypeMap['generate-tapestry-thumbnails']) {
-  if (generateAll) {
-    await prisma.item.updateMany({
-      where: { tapestryId },
-      data: { scheduledThumbnailProcessing: generateAll },
-    })
-  }
   const tapestry = await prisma.tapestry.findUniqueOrThrow({
     where: { id: tapestryId },
-    include: { items: { where: { scheduledThumbnailProcessing: { not: null } } } },
+    include: {
+      items:
+        generationStrategy === 'standard'
+          ? {
+              where: { scheduledThumbnailProcessing: { not: null } },
+            }
+          : true,
+    },
+  })
+
+  await prisma.item.updateMany({
+    where: { tapestryId },
+    data: { scheduledThumbnailProcessing: null },
   })
 
   const itemsToScreenshot: Item[] = []
   for (const item of tapestry.items) {
     if (hasInherentThumbnail(item)) {
       try {
-        await processItemThumbnail(item.id, () => generatePrimaryThumbnail(item))
+        await processItemThumbnail(
+          item.id,
+          () => generatePrimaryThumbnail(item),
+          (item.scheduledThumbnailProcessing || generationStrategy) === 'recreate',
+        )
       } catch (error) {
         console.error(`Error while generating thumbnail for ${item.type} item ${item.id}:`, error)
       }
@@ -59,10 +69,14 @@ export async function generateTapestryThumbnails({
 
     // Use the generator to perform screenshots of the tapestry items as well, while the browser page is open
     for (const item of itemsToScreenshot) {
-      await processItemThumbnail(item.id, async () => {
-        const { done, value } = await thumbnails!.next(item)
-        return done ? undefined : value
-      })
+      await processItemThumbnail(
+        item.id,
+        async () => {
+          const { done, value } = await thumbnails!.next(item)
+          return done ? undefined : value
+        },
+        (item.scheduledThumbnailProcessing || generationStrategy) === 'recreate',
+      )
     }
   } catch (error) {
     console.error('Error while generating tapestry thumbnail', error)
