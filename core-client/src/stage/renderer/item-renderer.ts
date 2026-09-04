@@ -110,7 +110,8 @@ export class ItemRenderer<I extends ItemViewModel> extends TapestryElementRender
     super(store, stage, viewModel)
     this.thumbnail = new ThumbnailContainer(null, {
       borderRadius: 8,
-      thumbnailPlacement: viewModel.dto.type === 'image' ? 'stretch' : 'cover',
+      thumbnailPlacement:
+        viewModel.dto.type === 'image' || viewModel.dto.type === 'iiif' ? 'stretch' : 'cover',
     })
     this.dragArea = new Container({ label: 'dragArea', eventMode: 'static' })
     this.pixiContainer.addChild(this.thumbnail)

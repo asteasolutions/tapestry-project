@@ -223,3 +223,10 @@ export async function getIAItemMediaType(id: string) {
 export function getIAItemThumbnailURL(id: string) {
   return `https://archive.org/services/img/${id}`
 }
+
+const IA_IIIF_HOST = 'https://iiif.archive.org'
+
+/** Builds the URL of the IIIF Presentation manifest that Internet Archive serves for the given item. */
+export function getIAIIIFManifestURL(id: string) {
+  return `${IA_IIIF_HOST}/iiif/${id}/manifest.json`
+}
