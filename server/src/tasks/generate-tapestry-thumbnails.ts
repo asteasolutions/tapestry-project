@@ -7,9 +7,9 @@ import { Item } from '@prisma/client'
 import { generatePrimaryThumbnail, hasInherentThumbnail } from './thumbnail-generators/index.js'
 import { processItemThumbnail } from './process-item-thumbnail.js'
 
-// 6 times the dimensions of the thumbnail as displayed in the UI
-const WIDTH = 6 * 375
-const HEIGHT = Math.floor(WIDTH * (10 / 21))
+// the ratio of the thumbnail as displayed in the UI
+const DESKTOP_WIDTH = 2000
+const DESKTOP_HEIGHT = Math.floor(DESKTOP_WIDTH * (10 / 21))
 
 export async function generateTapestryThumbnails({
   tapestryId,
@@ -42,7 +42,7 @@ export async function generateTapestryThumbnails({
   let thumbnails: ReturnType<typeof takeTapestryScreenshots> | undefined
   try {
     thumbnails = takeTapestryScreenshots(`/t/${tapestryId}`, tapestry.ownerId, {
-      windowSize: { width: WIDTH, height: HEIGHT },
+      windowSize: { width: DESKTOP_WIDTH, height: DESKTOP_HEIGHT },
       timeout: config.worker.tapestryThumbnailGenerationTimeout,
     })
 

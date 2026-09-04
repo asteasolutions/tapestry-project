@@ -35,7 +35,7 @@ import { InteractionMode } from './view-model'
 import { TapestryDataSync } from './view-model/tapestry-data-sync'
 import { ThumbnailContainer } from 'tapestry-core-client/src/stage/renderer/thumbnail-container'
 
-const INITIAL_THUMBNAILS_LOAD_TIMEOUT = 12_000
+const INITIAL_THUMBNAILS_LOAD_TIMEOUT = 4_500
 
 function getErrorMessage(error: unknown) {
   if (error instanceof APIError) {
