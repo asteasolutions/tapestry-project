@@ -13,11 +13,18 @@ const HEIGHT = Math.floor(WIDTH * (10 / 21))
 
 export async function generateTapestryThumbnails({
   tapestryId,
-  generateAll,
+  generationStrategy = 'standard',
 }: JobTypeMap['generate-tapestry-thumbnails']) {
   const tapestry = await prisma.tapestry.findUniqueOrThrow({
     where: { id: tapestryId },
-    include: { items: !!generateAll || { where: { scheduledThumbnailProcessing: { not: null } } } },
+    include: {
+      items:
+        generationStrategy === 'standard'
+          ? {
+              where: { scheduledThumbnailProcessing: { not: null } },
+            }
+          : true,
+    },
   })
 
   await prisma.item.updateMany({
@@ -32,7 +39,7 @@ export async function generateTapestryThumbnails({
         await processItemThumbnail(
           item.id,
           () => generatePrimaryThumbnail(item),
-          (item.scheduledThumbnailProcessing || generateAll) === 'recreate',
+          (item.scheduledThumbnailProcessing || generationStrategy) === 'recreate',
         )
       } catch (error) {
         console.error(`Error while generating thumbnail for ${item.type} item ${item.id}:`, error)
@@ -68,7 +75,7 @@ export async function generateTapestryThumbnails({
           const { done, value } = await thumbnails!.next(item)
           return done ? undefined : value
         },
-        (item.scheduledThumbnailProcessing || generateAll) === 'recreate',
+        (item.scheduledThumbnailProcessing || generationStrategy) === 'recreate',
       )
     }
   } catch (error) {
