@@ -1,21 +1,22 @@
 /**
- * Minimal helpers for working with IIIF (International Image Interoperability Framework) content.
+ * Minimal helpers for IIIF (International Image Interoperability Framework) content.
  *
- * We support the two widely deployed versions of the IIIF Presentation API - 2.x and 3.x - and extract just
- * enough information from a manifest to display its first canvas as a deep-zoomable image: the IIIF Image API
- * service endpoint and the intrinsic pixel dimensions of the image.
+ * This module supports two IIIF Presentation API versions: 2.x and 3.x. It extracts only
+ * what is needed to display the first canvas as a deep-zoomable image: the IIIF Image
+ * API service endpoint, and the image's pixel dimensions.
  *
- * Multi-canvas manifests (e.g. digitized books) are intentionally reduced to their first canvas for now.
+ * A multi-canvas manifest, like a digitized book, is reduced to its first canvas. This
+ * is a deliberate limit, for now.
  */
 
 /** The information needed to render a single IIIF image as a deep-zoomable item. */
 export interface IIIFCanvas {
   /**
-   * The base URL of the IIIF Image API service for this canvas (i.e. the URL that serves `info.json` and tiles).
-   * This is what a deep-zoom viewer such as OpenSeadragon consumes.
+   * The base URL of the IIIF Image API service for this canvas. This URL serves
+   * `info.json` and tiles. A deep-zoom viewer, like OpenSeadragon, consumes it directly.
    */
   imageService: string
-  /** A direct URL to a full-size rendering of the image, usable as a fallback when tiling is unavailable. */
+  /** A direct URL to a full-size rendering of the image. Use it as a fallback when tiling is unavailable. */
   imageUrl: string
   /** The intrinsic width of the image, in pixels. */
   width: number
@@ -25,8 +26,39 @@ export interface IIIFCanvas {
   label?: string
 }
 
-// IIIF manifests are untyped JSON that varies between Presentation API versions, so we navigate them with
-// small, defensive accessors rather than casts.
+const IMAGE_SERVICE_PARAM = 'imageService'
+
+// An iiif item's source is the manifest URL. Add the resolved image service as a query
+// param on that same URL. This avoids a separate database column. It also keeps source
+// a real, fetchable manifest link.
+export function withResolvedImageService(manifestUrl: string, imageService: string): string {
+  const url = new URL(manifestUrl)
+  url.searchParams.set(IMAGE_SERVICE_PARAM, imageService)
+  return url.toString()
+}
+
+/** Read the resolved image service from an iiif item's source. */
+export function getResolvedImageService(source: string): string | null {
+  try {
+    return new URL(source).searchParams.get(IMAGE_SERVICE_PARAM)
+  } catch {
+    return null
+  }
+}
+
+/** Strip the resolved image service param. Return the real, plain manifest URL. */
+export function getManifestUrl(source: string): string {
+  try {
+    const url = new URL(source)
+    url.searchParams.delete(IMAGE_SERVICE_PARAM)
+    return url.toString()
+  } catch {
+    return source
+  }
+}
+
+// IIIF manifests are untyped JSON. Their shape varies between Presentation API
+// versions. Navigate them with small, defensive accessors instead of type casts.
 function asRecord(value: unknown): Record<string, unknown> | undefined {
   return value && typeof value === 'object' && !Array.isArray(value)
     ? (value as Record<string, unknown>)
@@ -37,7 +69,7 @@ function asString(value: unknown): string | undefined {
   return typeof value === 'string' ? value : undefined
 }
 
-/** Returns the first element of an array, or the value itself if it isn't an array. */
+/** Return the first element of an array. If the value is not an array, return it as-is. */
 function first(value: unknown): unknown {
   return Array.isArray(value) ? value[0] : value
 }
@@ -47,7 +79,7 @@ function toNumber(value: unknown): number {
   return typeof value === 'string' ? Number(value) : NaN
 }
 
-/** Extracts the id of a IIIF service, tolerating both the 2.x (`@id`) and 3.x (`id`) property names. */
+/** Extract the id of a IIIF service. Accept both the 2.x `@id` and 3.x `id` property names. */
 function serviceId(service: unknown): string | undefined {
   const svc = asRecord(first(service))
   if (!svc) return undefined
@@ -55,8 +87,9 @@ function serviceId(service: unknown): string | undefined {
 }
 
 /**
- * Resolves a IIIF label into a plain string. Handles the 3.x language map (`{ en: ['...'] }`), the 2.x
- * value object (`{ '@value': '...' }`), arrays of either, and bare strings.
+ * Resolve a IIIF label into a plain string. Handle the 3.x language map
+ * (`{ en: ['...'] }`), the 2.x value object (`{ '@value': '...' }`), an array of either,
+ * or a bare string.
  */
 function parseLabel(label: unknown): string | undefined {
   if (typeof label === 'string') return label
@@ -69,7 +102,7 @@ function parseLabel(label: unknown): string | undefined {
   return asString(firstValue) ?? asString(Array.isArray(firstValue) ? firstValue[0] : undefined)
 }
 
-/** Builds a IIIF Image API request URL (e.g. for a scaled-down rendering used as a thumbnail). */
+/** Build a IIIF Image API request URL. Use this, for example, to get a scaled-down rendering for a thumbnail. */
 export function iiifImageURL(
   imageService: string,
   {
@@ -90,14 +123,16 @@ export function iiifImageURL(
 }
 
 /**
- * Parses a IIIF Presentation API manifest (2.x or 3.x) and extracts the information needed to render its first
- * canvas. Returns `null` if the value is not a recognizable IIIF manifest with at least one image-bearing canvas.
+ * Parse a IIIF Presentation API manifest, 2.x or 3.x. Extract the information needed to
+ * render its first canvas. Return `null` if the value is not a recognizable IIIF
+ * manifest, or has no image-bearing canvas.
  */
 export function parseIIIFManifest(manifest: unknown): IIIFCanvas | null {
   const root = asRecord(manifest)
   if (!root) return null
 
-  // Presentation API 3.x: manifest.items[] are canvases, each holding annotation pages -> annotations -> body.
+  // Presentation API 3.x: `manifest.items[]` holds canvases. Each canvas holds
+  // annotation pages, then annotations, then a body.
   if (Array.isArray(root.items)) {
     const canvas = asRecord(root.items[0])
     if (!canvas) return null
@@ -115,7 +150,7 @@ export function parseIIIFManifest(manifest: unknown): IIIFCanvas | null {
     }
   }
 
-  // Presentation API 2.x: manifest.sequences[].canvases[].images[].resource(.service)
+  // Presentation API 2.x: `manifest.sequences[].canvases[].images[].resource(.service)`
   if (Array.isArray(root.sequences)) {
     const sequence = asRecord(root.sequences[0])
     const canvas = asRecord(first(sequence?.canvases))
@@ -135,7 +170,7 @@ export function parseIIIFManifest(manifest: unknown): IIIFCanvas | null {
   return null
 }
 
-/** Fetches a IIIF manifest by URL. Returns the parsed JSON, or `null` on any network/parse failure. */
+/** Fetch a IIIF manifest by URL. Return the parsed JSON. Return `null` on any network or parse failure. */
 export async function fetchIIIFManifest(url: string, signal?: AbortSignal): Promise<unknown> {
   try {
     const response = await fetch(url, { signal })
@@ -147,7 +182,7 @@ export async function fetchIIIFManifest(url: string, signal?: AbortSignal): Prom
   }
 }
 
-/** Fetches a IIIF manifest and resolves its first canvas, or `null` if it is not a usable IIIF manifest. */
+/** Fetch a IIIF manifest. Resolve its first canvas. Return `null` if the manifest is not usable. */
 export async function fetchIIIFFirstCanvas(
   url: string,
   signal?: AbortSignal,

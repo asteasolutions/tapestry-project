@@ -118,13 +118,6 @@ export const IiifItemSchema = z.object({
   type: z.literal('iiif').describe('The type of this item.'),
   ...commonItemProps.base,
   ...commonItemProps.source,
-  imageService: z
-    .string()
-    .describe(
-      'The base URL of the IIIF Image API service for the displayed canvas (the endpoint that serves ' +
-        '"info.json" and image tiles). The "source" property holds the URL of the IIIF Presentation manifest ' +
-        'this image was resolved from. The image service is used for deep-zoom, tiled rendering of the image.',
-    ),
 })
 
 export const PdfItemSchema = z.object({

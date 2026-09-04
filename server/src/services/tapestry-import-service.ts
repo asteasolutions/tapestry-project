@@ -273,7 +273,6 @@ export class TapestryImportService {
                     i.type === 'webpage'
                       ? (i.webpageType ?? (await determineWebpageType(i.source)))
                       : null,
-                  imageService: i.type === 'iiif' ? i.imageService : null,
                   ...(hasStartStopTime(i) ? { startTime: i.startTime, stopTime: i.stopTime } : {}),
                   defaultPage: i.type === 'pdf' ? i.defaultPage : null,
                 }

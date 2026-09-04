@@ -25,7 +25,11 @@ import {
   getIAIIIFManifestURL,
   parseInternetArchiveURL,
 } from 'tapestry-core/src/internet-archive.js'
-import { fetchIIIFFirstCanvas } from 'tapestry-core/src/iiif.js'
+import {
+  fetchIIIFFirstCanvas,
+  getResolvedImageService,
+  withResolvedImageService,
+} from 'tapestry-core/src/iiif.js'
 import { extractInternallyHostedS3Key } from '../services/s3-service.js'
 import { Path, WithOptional } from 'tapestry-core/src/type-utils.js'
 import { queue } from '../tasks/index.js'
@@ -106,10 +110,11 @@ async function resolveWebSource(item: ItemCreateDto | ItemUpdateDto) {
 }
 
 /**
- * Normalizes an IIIF item's source. The client usually resolves the manifest itself (and sets
- * `skipSourceResolution`), but when an item is created directly via the API we accept either an Internet
- * Archive item URL (from which we derive the manifest) or a direct manifest URL, and resolve the IIIF
- * Image API service endpoint from it if one wasn't provided.
+ * Normalize an iiif item's source. The client usually resolves the manifest itself and
+ * sets `skipSourceResolution`. This function handles the direct-API case instead. It
+ * accepts an Internet Archive item URL or a direct manifest URL. It derives the manifest
+ * from an IA URL. It resolves the IIIF Image API service endpoint if the source does not
+ * already encode one.
  */
 async function resolveIiifSource(item: (ItemCreateDto | ItemUpdateDto) & { type: 'iiif' }) {
   if (!item.source || item.skipSourceResolution) return
@@ -119,12 +124,12 @@ async function resolveIiifSource(item: (ItemCreateDto | ItemUpdateDto) & { type:
     item.source = getIAIIIFManifestURL(descriptor.item.id)
   }
 
-  if (!item.imageService) {
+  if (!getResolvedImageService(item.source)) {
     const canvas = await fetchIIIFFirstCanvas(item.source)
     if (!canvas) {
       throw new BadRequestError(`Could not resolve a IIIF image from manifest: ${item.source}`)
     }
-    item.imageService = canvas.imageService
+    item.source = withResolvedImageService(item.source, canvas.imageService)
   }
 }
 

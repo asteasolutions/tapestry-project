@@ -3,7 +3,7 @@ import { pdfjs } from 'react-pdf'
 import { urlToBlob } from 'tapestry-core-client/src/lib/file'
 import { aspectRatio, clampSize, innerFit, Size } from 'tapestry-core/src/lib/geometry'
 import { WEB_SOURCE_PARSERS } from 'tapestry-core/src/web-sources'
-import { fetchIIIFFirstCanvas } from 'tapestry-core/src/iiif'
+import { fetchIIIFFirstCanvas, getManifestUrl } from 'tapestry-core/src/iiif'
 
 export type MediaItemSource = File | string
 
@@ -58,8 +58,11 @@ const DEFAULT_IIIF_WIDTH = 400
 
 export async function getIiifItemSize(source: MediaItemSource): Promise<Size> {
   const width = DEFAULT_IIIF_WIDTH
-  // For IIIF items the source is the manifest URL; derive the aspect ratio from the first canvas.
-  const canvas = typeof source === 'string' ? await fetchIIIFFirstCanvas(source) : null
+  // An iiif item's source is the manifest URL. Derive the aspect ratio from the first
+  // canvas. Strip the resolved image service param first, since it is not part of the
+  // real manifest URL.
+  const canvas =
+    typeof source === 'string' ? await fetchIIIFFirstCanvas(getManifestUrl(source)) : null
   const height = canvas?.width ? (width * canvas.height) / canvas.width : width
   return getClampedItemSize({ width, height })
 }

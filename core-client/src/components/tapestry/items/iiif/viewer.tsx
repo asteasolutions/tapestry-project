@@ -2,15 +2,18 @@ import OpenSeadragon from 'openseadragon'
 import { memo, useEffect, useRef } from 'react'
 import { TapestryElementComponentProps, useTapestryConfig } from '../..'
 import { IiifItem as IiifItemDto } from 'tapestry-core/src/data-format/schemas/item'
+import { getResolvedImageService } from 'tapestry-core/src/iiif'
 
 /**
- * Renders a IIIF image as a deep-zoomable, tiled viewer using OpenSeadragon. The item's `imageService`
- * is the IIIF Image API endpoint; OpenSeadragon loads its `info.json` and requests tiles on demand, so we
- * can display very large images (e.g. high-resolution scanned maps) without downloading the whole image.
+ * Render a IIIF image as a deep-zoomable, tiled viewer. Use OpenSeadragon. Read the
+ * IIIF Image API endpoint from the item's source. OpenSeadragon loads its `info.json`
+ * file and requests tiles on demand. This displays very large images, like
+ * high-resolution scanned maps, without downloading the whole image.
  */
 export const IiifItemViewer = memo(({ id }: TapestryElementComponentProps) => {
   const { useStoreData } = useTapestryConfig()
-  const { imageService } = useStoreData(`items.${id}.dto`) as IiifItemDto
+  const { source } = useStoreData(`items.${id}.dto`) as IiifItemDto
+  const imageService = source ? getResolvedImageService(source) : null
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -19,14 +22,16 @@ export const IiifItemViewer = memo(({ id }: TapestryElementComponentProps) => {
 
     const viewer = OpenSeadragon({
       element,
-      // The IIIF Image API "info.json" descriptor; OpenSeadragon detects the IIIF tile source from it.
+      // OpenSeadragon detects the IIIF tile source from the Image API "info.json" descriptor.
       tileSources: `${imageService.replace(/\/$/, '')}/info.json`,
-      // IIIF tiles are served cross-origin (e.g. from iiif.archive.org), so load them anonymously, matching
-      // the plain image viewer. This keeps Chrome from reusing cache entries with the wrong CORS headers.
+      // IIIF tiles load cross-origin (e.g. from iiif.archive.org). Load them anonymously,
+      // matching the plain image viewer. This keeps Chrome from reusing a cache entry
+      // that has the wrong CORS headers.
       crossOriginPolicy: 'Anonymous',
       ajaxWithCredentials: false,
-      // Zoom/pan via mouse wheel, drag and pinch. We omit the button overlay so the viewer stays
-      // self-contained (no external control-icon assets) and uncluttered inside a tapestry item.
+      // Users zoom and pan with the mouse wheel, drag, and pinch. Omit the button
+      // overlay. This needs no external control-icon assets, and stays uncluttered
+      // inside a tapestry item.
       showNavigationControl: false,
       showZoomControl: false,
       showHomeControl: false,
@@ -39,7 +44,7 @@ export const IiifItemViewer = memo(({ id }: TapestryElementComponentProps) => {
     return () => viewer.destroy()
   }, [imageService])
 
-  // A dark backdrop is shown while OpenSeadragon fetches "info.json" and the first tiles.
+  // Show a dark backdrop while OpenSeadragon fetches "info.json" and the first tiles.
   return (
     <div ref={containerRef} style={{ width: '100%', height: '100%', backgroundColor: '#000' }} />
   )
