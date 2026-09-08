@@ -23,6 +23,15 @@ export function mediaSourceToBlob(source: MediaItemSource) {
   return source instanceof File ? source : urlToBlob(source)
 }
 
+const HEIC_CONVERT_QUALITY = 0.92
+
+export async function convertHeicFile(blob: Blob) {
+  const { heicTo } = await import('heic-to')
+  const jpegBlob = await heicTo({ blob, type: 'image/jpeg', quality: HEIC_CONVERT_QUALITY })
+
+  return new File([jpegBlob], 'converted.jpg', { type: 'image/jpeg' })
+}
+
 export const MIN_ITEM_SIZE: Size = {
   width: 100,
   height: 40,
