@@ -11,7 +11,8 @@ import { getItemOverlayScale } from '../../view-model/utils'
 import { roundToPrecision } from 'tapestry-core/src/lib/algebra'
 import {
   displayPersistedState,
-  hasPersistentState,
+  hasPersistedState,
+  shouldDisplayDom,
 } from '../../components/tapestry/tapestry-canvas'
 import { snapshotRegistry } from '../controller/item-thumbnail-controller'
 
@@ -21,6 +22,7 @@ export interface ItemRenderState<I extends ItemViewModel> {
   disableOptimizations?: boolean
   theme: ThemeName
   dropShadow?: ShadowNineSlice
+  thumbnailsInitialized?: boolean
 }
 
 type Icons = Record<
@@ -135,6 +137,7 @@ export class ItemRenderer<I extends ItemViewModel> extends TapestryElementRender
       dropShadow: viewModel.dto.dropShadow
         ? obtainShadowNineSlice(stage.pixi.tapestry.app.renderer, 8)
         : undefined,
+      thumbnailsInitialized: store.get('thumbnailsInitialized'),
     }
   }
 
@@ -149,19 +152,18 @@ export class ItemRenderer<I extends ItemViewModel> extends TapestryElementRender
     disableOptimizations,
     theme,
     dropShadow,
+    thumbnailsInitialized,
   }: ItemRenderState<I>) {
     const snapshot = viewModel.snapshotId && snapshotRegistry[viewModel.snapshotId]
-    const shouldDisplayDom =
-      disableOptimizations || isInteractive || viewModel.isPlaying || !snapshot
     if (
-      shouldDisplayDom ||
-      (viewModel.hasBeenActive && hasPersistentState(viewModel.dto.type) && displayPersistedState)
+      shouldDisplayDom({ disableOptimizations, isInteractive, thumbnailsInitialized }, viewModel) ||
+      (hasPersistedState(viewModel) && displayPersistedState)
     ) {
       this.thumbnail.visible = false
     } else {
       const { position, size } = viewModel.dto
       this.thumbnail.visible = true
-      this.thumbnail.texture = snapshot
+      this.thumbnail.texture = snapshot || 'placeholder'
       this.thumbnail.position = position
       this.thumbnail.update({
         size,
