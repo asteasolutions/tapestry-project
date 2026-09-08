@@ -1,0 +1,29 @@
+.root {
+  width: 100%;
+  display: flex;
+
+  :global(.volume .volume-slider) {
+    /* background-color: aqua; */
+    /* inset: auto;
+    right: -8px;
+    bottom: calc(100% + 16px); */
+  }
+
+  :global(.menu-item-wrapper):has(.progress) {
+    flex: 1;
+    display: flex;
+  }
+}
+
+.progress {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  flex: 1;
+  text-wrap: nowrap;
+}
+
+.progress-slider {
+  width: 100%;
+  accent-color: var(--theme-background-brand-secondary);
+}

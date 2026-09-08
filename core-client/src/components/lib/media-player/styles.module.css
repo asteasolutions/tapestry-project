@@ -1,4 +1,4 @@
-.root {
+/* .root {
   container-type: size;
 
   :global(.video-js) {
@@ -69,7 +69,7 @@
       }
 
       /* Start responsive styles */
-      --size: 30px;
+/* --size: 30px;
       --bar-height: calc(0.07 * var(--size));
       --grabber-size: calc(0.21 * var(--size));
       --tooltip-font-size: max(10px, calc(0.2 * var(--size)));
@@ -152,11 +152,11 @@
         :global(.vjs-menu-item) {
           font-size: calc(0.28 * var(--size));
         }
-      }
+      } */
 
-      /* Define a step-wise increase in the height of the control bar based on container width,
+/* Define a step-wise increase in the height of the control bar based on container width,
       but only if the new height is at least 15% of the container height. */
-      @container (width > 380px) and (height > 300px) {
+/* @container (width > 380px) and (height > 300px) {
         --size: 45px;
       }
 
@@ -191,4 +191,23 @@
       }
     }
   }
+} */
+
+.main {
+  position: relative;
+}
+
+/* .media {
+  width: 100%;
+  display: block;
+} */
+
+.controlBar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  z-index: 1;
+  display: flex;
 }
