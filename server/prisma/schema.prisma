@@ -16,6 +16,7 @@ model User {
   createdAt            DateTime              @default(now())
   updatedAt            DateTime              @updatedAt
   gsiUserId            String?               @unique
+  orcidId              String?               @unique
   email                String                @unique
   username             String                @unique
   givenName            String

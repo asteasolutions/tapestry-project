@@ -13,6 +13,11 @@ const usernameRegex = /^[a-zA-Z0-9_+.-]*$/g
 export const SessionCreateSchema = z.discriminatedUnion('authType', [
   z.object({ authType: z.literal('refreshToken') }),
   z.object({ authType: z.literal('gsi'), gsiCredential: z.string() }),
+  z.object({
+    authType: z.literal('orcid'),
+    code: z.string(),
+    redirectUri: z.string(),
+  }),
   z.object({ authType: z.literal('iaCookies') }),
   z.object({ authType: z.literal('iaCredentials'), email: z.string(), password: z.string() }),
   z.object({
