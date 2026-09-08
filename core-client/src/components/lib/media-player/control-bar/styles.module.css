@@ -2,11 +2,30 @@
   width: 100%;
   display: flex;
 
-  :global(.volume .volume-slider) {
-    /* background-color: aqua; */
-    /* inset: auto;
-    right: -8px;
-    bottom: calc(100% + 16px); */
+  :global(.submenu-item.volume),
+  :global(.submenu-item.rate) {
+    position: relative;
+
+    :global(.submenu) {
+      position: absolute;
+      top: auto;
+      bottom: 100%;
+      left: 50%;
+      width: min-content;
+      transform: translateX(-50%);
+      z-index: 1;
+    }
+
+    :global(.wrapper) {
+      background: transparent;
+      box-shadow: none;
+      padding: 0;
+    }
+
+    :global(.toolbar-row) {
+      padding: 0;
+      gap: 0;
+    }
   }
 
   :global(.menu-item-wrapper):has(.progress) {
@@ -26,4 +45,23 @@
 .progress-slider {
   width: 100%;
   accent-color: var(--theme-background-brand-secondary);
+}
+
+.volume-slider {
+  accent-color: var(--theme-background-brand-secondary);
+  position: relative;
+  bottom: 0;
+  appearance: slider-vertical;
+}
+
+.playback-rate {
+  background-color: var(--theme-background-primary);
+  width: 48px;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.playback-rate-buttons {
+  background-color: var(--theme-background-primary);
 }

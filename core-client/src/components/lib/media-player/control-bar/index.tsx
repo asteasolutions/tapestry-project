@@ -1,5 +1,5 @@
 import clsx from 'clsx'
-import { IconButton } from '../../buttons'
+import { Button, IconButton, MenuItemButton } from '../../buttons'
 import { MaybeMenuItem, Toolbar } from '../../toolbar'
 import styles from './styles.module.css'
 import { useState } from 'react'
@@ -13,7 +13,14 @@ interface ControlBarProps {
   duration: number
   onSeek: (time: number) => void
   isOver: boolean
+  volume: number
+  onVolumeChange: (volume: number) => void
+  playbackRate?: number
+  onPlaybackRateChange: (rate: number) => void
 }
+
+const PLAYBACK_RATES = [4, 2, 1.5, 1, 0.5]
+
 export function ControlBar({
   isOpen = true,
   className,
@@ -23,6 +30,10 @@ export function ControlBar({
   duration,
   onSeek,
   isOver,
+  volume,
+  onVolumeChange,
+  playbackRate = 1,
+  onPlaybackRateChange,
 }: ControlBarProps) {
   function formatTime(seconds: number): string {
     if (isNaN(seconds)) {
@@ -33,28 +44,30 @@ export function ControlBar({
     return `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`
   }
 
-  const slide = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onSeek(Number(e.target.value))
-  }
-
   const [selectedSubmenu, setSelectedSubmenu] = useState<string>('')
 
   const selectSubmenu = (id: string) => {
     setSelectedSubmenu((prev) => (prev === id ? '' : id))
   }
 
-  const closeSubmenu = () => {
+  const onRateSelect = (rate: number) => {
+    onPlaybackRateChange(rate)
     setSelectedSubmenu('')
   }
 
   const items: MaybeMenuItem[] = [
-    <IconButton
-      icon={isOver ? 'refresh' : isPlaying ? 'pause' : 'play_arrow'}
-      aria-label={
-        isOver ? 'Replay media button' : isPlaying ? 'Pause media button' : 'Play media button'
-      }
-      onClick={togglePlay}
-    />,
+    {
+      element: (
+        <IconButton
+          icon={isOver ? 'refresh' : isPlaying ? 'pause' : 'play_arrow'}
+          aria-label={
+            isOver ? 'Replay media button' : isPlaying ? 'Pause media button' : 'Play media button'
+          }
+          onClick={togglePlay}
+        />
+      ),
+      tooltip: { side: 'top', children: isPlaying ? 'Pause ' : 'Play' },
+    },
     {
       id: 'volume',
       ui: {
@@ -64,14 +77,22 @@ export function ControlBar({
             aria-label="Volume controls"
             onClick={() => selectSubmenu('volume')}
             isActive={selectedSubmenu.startsWith('volume')}
-            className={styles.volume}
-            style={{}}
           />
         ),
-        tooltip: { side: 'bottom', children: 'Volume range' },
+        tooltip: { side: 'top', children: 'Volume' },
       },
       direction: 'column',
-      submenu: [<input type="range" className={styles.volumeSlider} />],
+      submenu: [
+        <input
+          type="range"
+          min={0}
+          max={1}
+          step={0.01}
+          value={volume}
+          onChange={(e) => onVolumeChange(Number(e.target.value))}
+          className={styles.volumeSlider}
+        />,
+      ],
     },
     <div className={styles.progress}>
       <input
@@ -81,21 +102,53 @@ export function ControlBar({
         max={duration || 0}
         value={currentTime}
         step={0.1}
-        onChange={slide}
+        onChange={(e) => onSeek(Number(e.target.value))}
         className={styles.progressSlider}
       />
       <span>
         {formatTime(currentTime)} / {formatTime(duration)}
       </span>
     </div>,
+    {
+      id: 'rate',
+      ui: {
+        element: (
+          <Button
+            aria-label="playback rate"
+            variant="clear"
+            onClick={() => selectSubmenu('rate')}
+            isActive={selectedSubmenu.startsWith('rate')}
+            className={styles.playbackRate}
+          >
+            {`${playbackRate}x`}
+          </Button>
+        ),
+        tooltip: { side: 'top', children: 'Playback Rate' },
+      },
+      direction: 'column',
+      submenu: [
+        <div className={styles.playbackRateButtons}>
+          {PLAYBACK_RATES.map((rate) => (
+            <Button
+              key={rate}
+              aria-label={`${rate}x rate`}
+              variant="secondary"
+              onClick={() => onRateSelect(rate)}
+              className={styles.playbackRate}
+            >
+              {`${rate}x`}
+            </Button>
+          ))}
+        </div>,
+      ],
+    },
   ]
 
   return (
     <Toolbar
-      //   wrapperRef={obstruction.ref}
       isOpen={isOpen}
       className={clsx(className, styles.root)}
-      onFocusOut={closeSubmenu}
+      onFocusOut={() => setSelectedSubmenu('')}
       selectedSubmenu={selectedSubmenu}
       items={items}
     />

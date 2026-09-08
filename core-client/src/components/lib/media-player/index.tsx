@@ -70,6 +70,8 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
   // const onReadyRef = usePropRef(onPlayerReady)
 
   const videoRef = useRef<HTMLVideoElement | null>(null)
+  const [volume, setVolume] = useState<number>(1)
+  const [playbackRate, setPlaybackRate] = useState<number>(1)
 
   const autoStop = useRef(!!stopTime)
   const [currentPlaybackInterval, setCurrentPlaybackInterval] = useState({ startTime, stopTime })
@@ -196,9 +198,24 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
       clearTimeout(timer)
       timer = setTimeout(() => {
         setIsMoving(false)
-      }, 10000)
+      }, 300000)
     }
   }, [])
+
+  const onVolumeChange = (newVolume: number) => {
+    if (videoRef.current) {
+      videoRef.current.volume = newVolume
+      videoRef.current.muted = newVolume === 0
+      setVolume(newVolume)
+    }
+  }
+
+  const onPlaybackRateChange = (newRate: number) => {
+    if (videoRef.current) {
+      videoRef.current.playbackRate = newRate
+      setPlaybackRate(newRate)
+    }
+  }
 
   return (
     <div className={styles.main} onMouseMove={handleMouseMove}>
@@ -216,14 +233,18 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
       </video>
       <div onMouseEnter={() => setIsHovering(true)} onMouseLeave={() => setIsHovering(false)}>
         <ControlBar
-          isOpen={isMoving || isHovering || !isPlaying}
           className={styles.controlBar}
+          isOpen={isMoving || isHovering || !isPlaying}
           isPlaying={isPlaying}
           togglePlay={togglePlay}
           currentTime={currentTime}
           duration={duration}
           isOver={isOver}
           onSeek={onSeek}
+          volume={volume}
+          onVolumeChange={onVolumeChange}
+          playbackRate={playbackRate}
+          onPlaybackRateChange={onPlaybackRateChange}
         />
       </div>
       {/* <div data-vjs-player>
