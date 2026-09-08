@@ -31,7 +31,7 @@ export function elementIdFromLink(
 const SCROLL_TOLERANCE_PX = 20
 
 function useHasScroll(editorRef: RefObject<RichTextEditorApi | undefined>) {
-  const [hasScroll, setHasScroll] = useState(compute)
+  const [hasScroll, setHasScroll] = useState(false)
   function compute() {
     const editor = editorRef.current
     if (!editor) {
@@ -42,7 +42,6 @@ function useHasScroll(editorRef: RefObject<RichTextEditorApi | undefined>) {
   }
 
   function check() {
-    setHasScroll(compute())
     void document.fonts.ready.then(() => setHasScroll(compute()))
   }
 
