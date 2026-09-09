@@ -193,14 +193,9 @@
   }
 } */
 
-.main {
+.root {
   position: relative;
 }
-
-/* .media {
-  width: 100%;
-  display: block;
-} */
 
 .controlBar {
   position: absolute;

@@ -1,5 +1,5 @@
 import clsx from 'clsx'
-import { Button, IconButton, MenuItemButton } from '../../buttons'
+import { Button, IconButton } from '../../buttons'
 import { MaybeMenuItem, Toolbar } from '../../toolbar'
 import styles from './styles.module.css'
 import { useState } from 'react'
@@ -17,6 +17,7 @@ interface ControlBarProps {
   onVolumeChange: (volume: number) => void
   playbackRate?: number
   onPlaybackRateChange: (rate: number) => void
+  toggleFullScreen: () => void
 }
 
 const PLAYBACK_RATES = [4, 2, 1.5, 1, 0.5]
@@ -34,6 +35,7 @@ export function ControlBar({
   onVolumeChange,
   playbackRate = 1,
   onPlaybackRateChange,
+  toggleFullScreen,
 }: ControlBarProps) {
   function formatTime(seconds: number): string {
     if (isNaN(seconds)) {
@@ -105,7 +107,7 @@ export function ControlBar({
         onChange={(e) => onSeek(Number(e.target.value))}
         className={styles.progressSlider}
       />
-      <span>
+      <span style={{ fontSize: '14px' }}>
         {formatTime(currentTime)} / {formatTime(duration)}
       </span>
     </div>,
@@ -135,12 +137,26 @@ export function ControlBar({
               variant="secondary"
               onClick={() => onRateSelect(rate)}
               className={styles.playbackRate}
+              style={{ fontSize: '12px' }}
             >
               {`${rate}x`}
             </Button>
           ))}
         </div>,
       ],
+    },
+    {
+      element: (
+        <IconButton
+          icon={document.fullscreenElement ? 'fullscreen_exit' : 'fullscreen'}
+          aria-label={document.fullscreenElement ? 'exit fullscreen' : 'enter fullscreen'}
+          onClick={toggleFullScreen}
+        />
+      ),
+      tooltip: {
+        side: 'top',
+        children: document.fullscreenElement ? 'Exit Fullscreen' : 'Fullscreen',
+      },
     },
   ]
 

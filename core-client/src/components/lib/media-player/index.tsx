@@ -72,6 +72,7 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const [volume, setVolume] = useState<number>(1)
   const [playbackRate, setPlaybackRate] = useState<number>(1)
+  const [fullscreen, setFullscreen] = useState<boolean>(false)
 
   const autoStop = useRef(!!stopTime)
   const [currentPlaybackInterval, setCurrentPlaybackInterval] = useState({ startTime, stopTime })
@@ -217,8 +218,22 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
     }
   }
 
+  const toggleFullscreen = () => {
+    if (videoRef.current) {
+      if (!document.fullscreenElement) {
+        if (videoRef.current.requestFullscreen) {
+          videoRef.current.requestFullscreen()
+        }
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen()
+        }
+      }
+    }
+  }
+
   return (
-    <div className={styles.main} onMouseMove={handleMouseMove}>
+    <div className={styles.root} onMouseMove={handleMouseMove}>
       <video
         ref={videoRef}
         onLoadedMetadata={onLoadedMetadata}
@@ -245,6 +260,7 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
           onVolumeChange={onVolumeChange}
           playbackRate={playbackRate}
           onPlaybackRateChange={onPlaybackRateChange}
+          toggleFullScreen={toggleFullscreen}
         />
       </div>
       {/* <div data-vjs-player>

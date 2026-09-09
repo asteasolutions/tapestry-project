@@ -2,6 +2,19 @@
   width: 100%;
   display: flex;
 
+  :global(.wrapper) {
+    width: 100%;
+    box-sizing: border-box;
+    border-radius: 0;
+
+    :global(.toolbar-row) {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      box-sizing: border-box;
+    }
+  }
+
   :global(.submenu-item.volume),
   :global(.submenu-item.rate) {
     position: relative;
@@ -17,6 +30,7 @@
     }
 
     :global(.wrapper) {
+      width: auto;
       background: transparent;
       box-shadow: none;
       padding: 0;
@@ -40,6 +54,7 @@
   align-items: center;
   flex: 1;
   text-wrap: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 .progress-slider {
@@ -56,10 +71,11 @@
 
 .playback-rate {
   background-color: var(--theme-background-primary);
-  width: 48px;
+  width: 40px;
   border: none;
   border-radius: 0;
   box-shadow: none;
+  box-sizing: border-box;
 }
 
 .playback-rate-buttons {
