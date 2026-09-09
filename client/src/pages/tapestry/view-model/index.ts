@@ -162,6 +162,11 @@ export type IAImport =
       metadata: IAItemMetadata['metadata']
       entries: PlaylistEntry[]
     }
+  | {
+      type: 'IASearchCollection'
+      query: string
+      total: number
+    }
 
 export interface Collaborator {
   id: string
