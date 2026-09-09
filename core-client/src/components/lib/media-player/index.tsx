@@ -6,6 +6,7 @@ import { usePropRef } from '../hooks/use-prop-ref'
 import 'video.js/dist/video-js.css'
 import styles from './styles.module.css'
 import { ControlBar } from './control-bar'
+import clsx from 'clsx'
 
 export function useMediaEvent(
   player: Player | undefined,
@@ -73,6 +74,7 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
   const [volume, setVolume] = useState<number>(1)
   const [playbackRate, setPlaybackRate] = useState<number>(1)
   const [fullscreen, setFullscreen] = useState<boolean>(false)
+  const isAudio = component === 'audio' || options.audioOnlyMode
 
   const autoStop = useRef(!!stopTime)
   const [currentPlaybackInterval, setCurrentPlaybackInterval] = useState({ startTime, stopTime })
@@ -233,23 +235,38 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
   }
 
   return (
-    <div className={styles.root} onMouseMove={handleMouseMove}>
-      <video
-        ref={videoRef}
-        onLoadedMetadata={onLoadedMetadata}
-        onTimeUpdate={onTimeUpdate}
-        controls={false}
-        style={style}
-      >
-        <source
+    <div
+      className={clsx(styles.root, { [styles.audioOnly]: isAudio })}
+      style={style}
+      onMouseMove={handleMouseMove}
+    >
+      {isAudio ? (
+        <audio
+          ref={videoRef}
+          onLoadedMetadata={onLoadedMetadata}
+          onTimeUpdate={onTimeUpdate}
           src={options.src}
-          type={options.mediaType || (component === 'video' ? 'video/mp4' : 'audio/mpeg')}
+          style={{ display: 'none' }}
         />
-      </video>
-      <div onMouseEnter={() => setIsHovering(true)} onMouseLeave={() => setIsHovering(false)}>
+      ) : (
+        <video
+          ref={videoRef}
+          onLoadedMetadata={onLoadedMetadata}
+          onTimeUpdate={onTimeUpdate}
+          controls={false}
+          style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+        >
+          <source src={options.src} type={options.mediaType || 'video/mp4'} />
+        </video>
+      )}
+
+      <div
+        className={styles.controlBar}
+        onMouseEnter={() => setIsHovering(true)}
+        onMouseLeave={() => setIsHovering(false)}
+      >
         <ControlBar
-          className={styles.controlBar}
-          isOpen={isMoving || isHovering || !isPlaying}
+          isOpen={isAudio || isMoving || isHovering || !isPlaying}
           isPlaying={isPlaying}
           togglePlay={togglePlay}
           currentTime={currentTime}
@@ -260,7 +277,7 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
           onVolumeChange={onVolumeChange}
           playbackRate={playbackRate}
           onPlaybackRateChange={onPlaybackRateChange}
-          toggleFullScreen={toggleFullscreen}
+          toggleFullScreen={isAudio ? undefined : toggleFullscreen}
         />
       </div>
       {/* <div data-vjs-player>

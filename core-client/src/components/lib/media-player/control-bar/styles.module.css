@@ -1,6 +1,7 @@
 .root {
   width: 100%;
   display: flex;
+  position: relative;
 
   :global(.wrapper) {
     width: 100%;
@@ -24,7 +25,8 @@
       top: auto;
       bottom: 100%;
       left: 50%;
-      width: min-content;
+      width: fit-content;
+      height: fit-content;
       transform: translateX(-50%);
       z-index: 1;
     }
@@ -43,22 +45,25 @@
   }
 
   :global(.menu-item-wrapper):has(.progress) {
-    flex: 1;
+    flex: 1 1 auto;
+    min-width: 0;
     display: flex;
   }
 }
 
 .progress {
   width: 100%;
+  min-width: 0;
   display: flex;
   align-items: center;
-  flex: 1;
+  flex: 1 1 auto;
   text-wrap: nowrap;
   font-variant-numeric: tabular-nums;
 }
 
 .progress-slider {
   width: 100%;
+  flex: 1;
   accent-color: var(--theme-background-brand-secondary);
 }
 

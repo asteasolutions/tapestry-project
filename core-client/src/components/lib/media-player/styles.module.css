@@ -197,7 +197,7 @@
   position: relative;
 }
 
-.controlBar {
+.control-bar {
   position: absolute;
   bottom: 0;
   left: 0;
@@ -205,4 +205,16 @@
   width: 100%;
   z-index: 1;
   display: flex;
+}
+
+.audio-only {
+  position: relative;
+  display: flex;
+  width: 100%;
+  min-width: 360px;
+}
+
+.audio-only:has(.control-bar) {
+  position: static;
+  bottom: auto;
 }

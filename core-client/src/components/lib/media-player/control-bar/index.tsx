@@ -17,7 +17,7 @@ interface ControlBarProps {
   onVolumeChange: (volume: number) => void
   playbackRate?: number
   onPlaybackRateChange: (rate: number) => void
-  toggleFullScreen: () => void
+  toggleFullScreen?: () => void
 }
 
 const PLAYBACK_RATES = [4, 2, 1.5, 1, 0.5]
@@ -145,7 +145,10 @@ export function ControlBar({
         </div>,
       ],
     },
-    {
+  ]
+
+  if (toggleFullScreen) {
+    items.push({
       element: (
         <IconButton
           icon={document.fullscreenElement ? 'fullscreen_exit' : 'fullscreen'}
@@ -157,8 +160,8 @@ export function ControlBar({
         side: 'top',
         children: document.fullscreenElement ? 'Exit Fullscreen' : 'Fullscreen',
       },
-    },
-  ]
+    })
+  }
 
   return (
     <Toolbar
