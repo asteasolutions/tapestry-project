@@ -70,7 +70,7 @@ export class EditorTapestryRenderer extends TapestryRenderer<EditableTapestryEle
     viewModel: EditableTapestryElementViewModel,
     selection?: Selection,
     interactiveElement?: TapestryElementRef | null,
-  ): boolean | '' | null | undefined {
+  ): boolean {
     return (
       super.isSelected(viewModel, selection, interactiveElement) ||
       (isRelViewModel(viewModel) && !!viewModel.dragState)

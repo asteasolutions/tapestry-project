@@ -1,5 +1,5 @@
 import { isHTTPURL } from 'tapestry-core/src/utils'
-import { MediaItemSource } from '../lib/media'
+import { MediaItemSource, mediaSourceToBlob, convertHeicFile } from '../lib/media'
 import { createMediaItem, getMediaSourceText } from '../model/data/utils'
 import { ItemCreateDto } from 'tapestry-shared/src/data-transfer/resources/dtos/item'
 import { findWebSourceParser } from 'tapestry-core/src/web-sources'
@@ -7,6 +7,9 @@ import {
   iaItemEmbedURL,
   IAMediaType,
   parseInternetArchiveURL,
+  parseIASearchURLQuery,
+  fetchIASearchCount,
+  excludeIACollections,
   IAItem,
   getIAItemMetadata,
   getIAPlaylistEntries,
@@ -17,7 +20,7 @@ import { fetchIIIFFirstCanvas, withResolvedImageService } from 'tapestry-core/sr
 import { MediaItemType, WebpageType } from 'tapestry-core/src/data-format/schemas/item'
 import { getUserListItems } from '../lib/internet-archive'
 import { parseMediaSource, parseStringTransferData } from './data-transfer-handler'
-import { fileTypeFromBuffer } from 'file-type'
+import { fileTypeFromBlob, fileTypeFromBuffer } from 'file-type'
 import { parse } from 'ini'
 import { IAImport } from '../pages/tapestry/view-model'
 
@@ -143,8 +146,8 @@ const iiifItemFactory: ItemFactory = async (source, mediaType, tapestryId) => {
   let manifestUrl: string
   const descriptor = parseInternetArchiveURL(source)
   if (descriptor && descriptor.urlType !== 'user-list') {
-    // Only handle image-type IA items here. Let iaCollectionFactory handle audio, video,
-    // and collections.
+    // Only handle image-type IA items here. Let iaFactory handle audio, video, and
+    // collections.
     if ((await getIAItemMetadata(descriptor.item.id))?.mediatype !== 'image') return null
     manifestUrl = getIAIIIFManifestURL(descriptor.item.id)
   } else if (mediaType?.includes('json') || /\/iiif\/|manifest/i.test(source)) {
@@ -169,13 +172,22 @@ const iiifItemFactory: ItemFactory = async (source, mediaType, tapestryId) => {
   return { items: [item], iaImports: [] }
 }
 
-const iaCollectionFactory: ItemFactory = async (source, _, tapestryId) => {
+const iaFactory: ItemFactory = async (source, _mediaType, tapestryId) => {
+  if (typeof source !== 'string' || !isHTTPURL(source)) return null
+
+  const searchQuery = parseIASearchURLQuery(source)
+  if (searchQuery) {
+    const total = await fetchIASearchCount(excludeIACollections(searchQuery))
+    if (total === undefined) return null
+    return { items: [], iaImports: [{ type: 'IASearchCollection', query: searchQuery, total }] }
+  }
+
   const descriptor = parseInternetArchiveURL(source)
   if (!descriptor) return null
 
   if (descriptor.urlType === 'user-list') {
     return {
-      items: await createIAMediaItems(tapestryId, await getUserListItems(source as string)),
+      items: await createIAMediaItems(tapestryId, await getUserListItems(source)),
       iaImports: [],
     }
   }
@@ -199,6 +211,17 @@ const iaCollectionFactory: ItemFactory = async (source, _, tapestryId) => {
     items: await createIAMediaItems(tapestryId, await getNestedIAItems(descriptor.item)),
     iaImports: [],
   }
+}
+
+const HEIC_MEDIA_TYPES = ['image/heic', 'image/heif']
+
+const heicImageFactory: ItemFactory = async (source, mediaType, tapestryId) => {
+  const detectedType = source instanceof File ? (await fileTypeFromBlob(source))?.mime : mediaType
+  if (!HEIC_MEDIA_TYPES.includes(detectedType ?? '')) return null
+
+  const convertedFile = await convertHeicFile(await mediaSourceToBlob(source))
+
+  return { items: [await createMediaItem('image', convertedFile, tapestryId)], iaImports: [] }
 }
 
 const linkFileFactory: ItemFactory = async (source, _, tapestryId) => {
@@ -225,6 +248,7 @@ const linkFileFactory: ItemFactory = async (source, _, tapestryId) => {
  * which creates a "webpage" item for all unhandled URLs.
  */
 export const ITEM_FACTORIES: ItemFactory[] = [
+  heicImageFactory,
   createSimpleMediaItemFactory('image', (_, mediaType) => !!mediaType?.startsWith('image/')),
   createSimpleMediaItemFactory('book', (_, mediaType) => mediaType === 'application/epub+zip'),
   createSimpleMediaItemFactory('pdf', (_, mediaType) => mediaType === 'application/pdf'),
@@ -234,6 +258,6 @@ export const ITEM_FACTORIES: ItemFactory[] = [
   textItemFactory,
   htmlFileItemFactory,
   iiifItemFactory,
-  iaCollectionFactory,
+  iaFactory,
   webpageItemFactory,
 ]

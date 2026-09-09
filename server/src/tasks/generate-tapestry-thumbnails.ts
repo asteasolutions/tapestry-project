@@ -7,30 +7,40 @@ import { Item } from '@prisma/client'
 import { generatePrimaryThumbnail, hasInherentThumbnail } from './thumbnail-generators/index.js'
 import { processItemThumbnail } from './process-item-thumbnail.js'
 
-// 6 times the dimensions of the thumbnail as displayed in the UI
-const WIDTH = 6 * 375
-const HEIGHT = Math.floor(WIDTH * (10 / 21))
+// the ratio of the thumbnail as displayed in the UI
+const DESKTOP_WIDTH = 2000
+const DESKTOP_HEIGHT = Math.floor(DESKTOP_WIDTH * (10 / 21))
 
 export async function generateTapestryThumbnails({
   tapestryId,
-  generateAll,
+  generationStrategy = 'standard',
 }: JobTypeMap['generate-tapestry-thumbnails']) {
-  if (generateAll) {
-    await prisma.item.updateMany({
-      where: { tapestryId },
-      data: { scheduledThumbnailProcessing: generateAll },
-    })
-  }
   const tapestry = await prisma.tapestry.findUniqueOrThrow({
     where: { id: tapestryId },
-    include: { items: { where: { scheduledThumbnailProcessing: { not: null } } } },
+    include: {
+      items:
+        generationStrategy === 'standard'
+          ? {
+              where: { scheduledThumbnailProcessing: { not: null } },
+            }
+          : true,
+    },
+  })
+
+  await prisma.item.updateMany({
+    where: { tapestryId },
+    data: { scheduledThumbnailProcessing: null },
   })
 
   const itemsToScreenshot: Item[] = []
   for (const item of tapestry.items) {
     if (hasInherentThumbnail(item)) {
       try {
-        await processItemThumbnail(item.id, () => generatePrimaryThumbnail(item))
+        await processItemThumbnail(
+          item.id,
+          () => generatePrimaryThumbnail(item),
+          (item.scheduledThumbnailProcessing || generationStrategy) === 'recreate',
+        )
       } catch (error) {
         console.error(`Error while generating thumbnail for ${item.type} item ${item.id}:`, error)
       }
@@ -42,7 +52,7 @@ export async function generateTapestryThumbnails({
   let thumbnails: ReturnType<typeof takeTapestryScreenshots> | undefined
   try {
     thumbnails = takeTapestryScreenshots(`/t/${tapestryId}`, tapestry.ownerId, {
-      windowSize: { width: WIDTH, height: HEIGHT },
+      windowSize: { width: DESKTOP_WIDTH, height: DESKTOP_HEIGHT },
       timeout: config.worker.tapestryThumbnailGenerationTimeout,
     })
 
@@ -59,10 +69,14 @@ export async function generateTapestryThumbnails({
 
     // Use the generator to perform screenshots of the tapestry items as well, while the browser page is open
     for (const item of itemsToScreenshot) {
-      await processItemThumbnail(item.id, async () => {
-        const { done, value } = await thumbnails!.next(item)
-        return done ? undefined : value
-      })
+      await processItemThumbnail(
+        item.id,
+        async () => {
+          const { done, value } = await thumbnails!.next(item)
+          return done ? undefined : value
+        },
+        (item.scheduledThumbnailProcessing || generationStrategy) === 'recreate',
+      )
     }
   } catch (error) {
     console.error('Error while generating tapestry thumbnail', error)
