@@ -4,6 +4,7 @@
   align-items: center;
   justify-content: center;
   user-select: none;
+  -webkit-user-select: none;
 
   @media screen and (width > 600px) {
     position: absolute;

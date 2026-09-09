@@ -13,6 +13,8 @@
   :global(> .pixi-container) {
     position: absolute;
     inset: 0;
+    user-select: none;
+    -webkit-user-select: none;
 
     > canvas {
       display: block;
