@@ -11,11 +11,15 @@ interface ImportDetailsProps {
   import: IAImport
 }
 
-// TODO: Extract a shared layout component. This removes the duplication between the two
+// TODO: Extract a shared layout component. This removes the duplication between the
 // branches below.
 export function ImportDetails({ import: iaImport }: ImportDetailsProps) {
   const mdOrLess = useResponsive() <= Breakpoint.MD
   const textVariant = mdOrLess ? 'bodyXs' : undefined
+
+  if (iaImport.type === 'ExternalCollection') {
+    return <ExternalCollectionImportDetails collection={iaImport} />
+  }
 
   if (iaImport.type === 'IASearchCollection') {
     return (
@@ -68,6 +72,42 @@ export function ImportDetails({ import: iaImport }: ImportDetailsProps) {
       </div>
       <Text variant={textVariant} component="div">
         {description}
+      </Text>
+    </div>
+  )
+}
+
+type ExternalCollectionImport = Extract<IAImport, { type: 'ExternalCollection' }>
+
+interface ExternalCollectionImportDetailsProps {
+  collection: ExternalCollectionImport
+}
+
+function ExternalCollectionImportDetails({ collection }: ExternalCollectionImportDetailsProps) {
+  const mdOrLess = useResponsive() <= Breakpoint.MD
+  const textVariant = mdOrLess ? 'bodyXs' : undefined
+
+  const label =
+    collection.platform === 'openverse'
+      ? collection.collection.type === 'tag'
+        ? collection.collection.tag
+        : collection.collection.source
+      : collection.collection.category
+
+  const noun =
+    collection.platform === 'openverse'
+      ? collection.mediaType === 'image'
+        ? 'images'
+        : 'audio items'
+      : 'files'
+
+  return (
+    <div className={styles.root}>
+      <Text variant={mdOrLess ? 'bodySm' : 'h6'} style={{ fontWeight: 'bold' }}>
+        {label}
+      </Text>
+      <Text variant={textVariant}>
+        {collection.total} {noun}
       </Text>
     </div>
   )

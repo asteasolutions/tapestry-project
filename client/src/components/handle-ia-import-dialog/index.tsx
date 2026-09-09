@@ -3,6 +3,8 @@ import { compact } from 'lodash-es'
 import { useState } from 'react'
 import { useAsyncAction } from 'tapestry-core-client/src/components/lib/hooks/use-async-action'
 import { SimpleModal } from 'tapestry-core-client/src/components/lib/modal/index'
+import { openverseMediaPageURL } from 'tapestry-core/src/openverse'
+import { wikimediaFilePageURL, WikimediaMediaType } from 'tapestry-core/src/wikimedia-commons'
 import { IAMediaType } from 'tapestry-core/src/internet-archive'
 import { toggleElement } from 'tapestry-core/src/lib/array'
 import { useDispatch, useTapestryData } from '../../pages/tapestry/tapestry-providers'
@@ -11,7 +13,11 @@ import { addAndPositionItems } from '../../pages/tapestry/view-model/store-comma
 import { setIAImport } from '../../pages/tapestry/view-model/store-commands/tapestry'
 import { createItemViewModel } from '../../pages/tapestry/view-model/utils'
 import { Breakpoint, useResponsive } from '../../providers/responsive-provider'
-import { createIAMediaItems } from '../../stage/item-factories'
+import {
+  fetchOpenverseCollectionResults,
+  fetchWikimediaCollectionResults,
+} from '../../lib/external-media'
+import { createIAMediaItems, createExternalMediaItems } from '../../stage/item-factories'
 import { ImportDetails } from './import-details/index'
 import { ImportItemsList } from './import-items-list/index'
 import { requestSearchItems } from './import-items-list/search-list/index'
@@ -20,21 +26,59 @@ import styles from './styles.module.css'
 export interface ImportItem {
   id: string
   mediaType?: IAMediaType
+  sourceUrl?: string
+  wikimediaMediaType?: WikimediaMediaType
 }
 
 const IA_IMPORT_TITLE_MAP: Record<IAImport['type'], string> = {
   IACollection: 'Choose collection items',
   IAPlaylist: 'Choose playlist items',
+  ExternalCollection: 'Choose items to import',
   IASearchCollection: 'Choose search result items',
 }
 
 const IA_IMPORT_CLASS_MAP: Record<IAImport['type'], string> = {
   IACollection: styles.collectionList,
   IAPlaylist: styles.playlist,
+  ExternalCollection: styles.collectionList,
   IASearchCollection: styles.collectionList,
 }
 
 async function createNewItems(iaImport: IAImport, items: ImportItem[], tapestryId: string) {
+  if (iaImport.type === 'ExternalCollection') {
+    if (iaImport.platform === 'openverse') {
+      const { mediaType } = iaImport
+      return createExternalMediaItems(
+        tapestryId,
+        compact(
+          items.map(
+            ({ id, sourceUrl }) =>
+              sourceUrl && {
+                url: sourceUrl,
+                pageUrl: openverseMediaPageURL(mediaType, id),
+                mediaType,
+              },
+          ),
+        ),
+      )
+    }
+
+    return createExternalMediaItems(
+      tapestryId,
+      compact(
+        items.map(
+          ({ id, sourceUrl, wikimediaMediaType }) =>
+            sourceUrl &&
+            wikimediaMediaType && {
+              url: sourceUrl,
+              pageUrl: wikimediaFilePageURL(id),
+              mediaType: wikimediaMediaType,
+            },
+        ),
+      ),
+    )
+  }
+
   if (iaImport.type === 'IACollection' || iaImport.type === 'IASearchCollection') {
     return createIAMediaItems(
       tapestryId,
@@ -81,6 +125,31 @@ export function HandleIAImportDialog() {
 
     if (iaImport.type === 'IAPlaylist') {
       setSelectedItems(iaImport.entries.slice(0, MAX_SELECTION).map((e) => ({ id: e.filename })))
+    } else if (iaImport.type === 'ExternalCollection' && iaImport.platform === 'openverse') {
+      const results = await fetchOpenverseCollectionResults(
+        iaImport.mediaType,
+        iaImport.collection,
+        1,
+        MAX_SELECTION,
+        signal,
+      )
+      setSelectedItems(
+        (results?.results ?? []).map((media) => ({ id: media.id, sourceUrl: media.url })),
+      )
+    } else if (iaImport.type === 'ExternalCollection') {
+      const results = await fetchWikimediaCollectionResults(
+        iaImport.collection,
+        1,
+        MAX_SELECTION,
+        signal,
+      )
+      setSelectedItems(
+        (results?.results ?? []).map((media) => ({
+          id: media.id,
+          sourceUrl: media.url,
+          wikimediaMediaType: media.mediaType,
+        })),
+      )
     } else {
       const query =
         iaImport.type === 'IASearchCollection' ? iaImport.query : `collection:${iaImport.id}`
@@ -90,6 +159,26 @@ export function HandleIAImportDialog() {
           mediaType: i.mediatype,
         })),
       )
+    }
+  })
+
+  const { trigger: confirmSelection, loading: creatingItems } = useAsyncAction(async () => {
+    if (!iaImport) {
+      return
+    }
+    dispatch((model) => {
+      model.pendingRequests++
+    })
+    try {
+      const viewModels = (await createNewItems(iaImport, selectedItems, tapestryId)).map(
+        createItemViewModel,
+      )
+      dispatch(viewModels.length > 0 && addAndPositionItems(viewModels))
+      onClose()
+    } finally {
+      dispatch((model) => {
+        model.pendingRequests--
+      })
     }
   })
 
@@ -113,18 +202,13 @@ export function HandleIAImportDialog() {
     <SimpleModal
       classes={{ root: clsx(styles.modal, IA_IMPORT_CLASS_MAP[iaImport.type]) }}
       title={getTitle(iaImports, importIndex)}
-      cancel={{ onClick: onClose }}
+      cancel={{ onClick: onClose, disabled: creatingItems }}
       confirm={{
-        text: `Save selection${selectedItems.length > 0 ? ` (${selectedItems.length})` : ''}`,
-        disabled: selectedItems.length === 0,
-        onClick: async () => {
-          const viewModels = (await createNewItems(iaImport, selectedItems, tapestryId)).map(
-            createItemViewModel,
-          )
-          dispatch(viewModels.length > 0 && addAndPositionItems(viewModels))
-
-          onClose()
-        },
+        text: creatingItems
+          ? 'Saving…'
+          : `Save selection${selectedItems.length > 0 ? ` (${selectedItems.length})` : ''}`,
+        disabled: selectedItems.length === 0 || creatingItems,
+        onClick: confirmSelection,
       }}
     >
       <div className={styles.content}>

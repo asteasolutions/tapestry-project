@@ -1,3 +1,10 @@
+import {
+  OpenverseCollectionQuery,
+  OpenverseMedia,
+  OpenverseMediaType,
+} from 'tapestry-core/src/openverse'
+import { WikimediaCollectionQuery, WikimediaMedia } from 'tapestry-core/src/wikimedia-commons'
+
 type WBMSnapshotKeys = [
   'urlkey',
   'timestamp',
@@ -58,15 +65,61 @@ export interface FetchContentTypeProxyDto {
   result: string | null
 }
 
+export type ExternalMediaQuery =
+  | { platform: 'openverse'; mediaType: OpenverseMediaType; id: string }
+  | { platform: 'wikimedia-commons'; title: string }
+
+export type ExternalCollectionQuery =
+  | { platform: 'openverse'; mediaType: OpenverseMediaType; collection: OpenverseCollectionQuery }
+  | { platform: 'wikimedia-commons'; collection: WikimediaCollectionQuery }
+
+export interface ExternalMediaProxyDto {
+  type: 'external-media'
+  result: OpenverseMedia | WikimediaMedia | null
+}
+
+export interface CreateExternalMediaProxyDto {
+  type: 'external-media'
+  query: ExternalMediaQuery
+}
+
+export interface ExternalCollectionCountProxyDto {
+  type: 'external-collection-count'
+  result: number | undefined
+}
+
+export interface CreateExternalCollectionCountProxyDto {
+  type: 'external-collection-count'
+  query: ExternalCollectionQuery
+}
+
+export interface ExternalCollectionResultsProxyDto {
+  type: 'external-collection-results'
+  result: { total: number; results: (OpenverseMedia | WikimediaMedia)[] } | undefined
+}
+
+export interface CreateExternalCollectionResultsProxyDto {
+  type: 'external-collection-results'
+  query: ExternalCollectionQuery
+  page: number
+  pageSize: number
+}
+
 export type ProxyDto =
   | ListWBMSnapshotsProxyDto
   | CreateWBMSnapshotProxyDto
   | CanFrameProxyDto
   | IAUserListProxyDto
   | FetchContentTypeProxyDto
+  | ExternalMediaProxyDto
+  | ExternalCollectionCountProxyDto
+  | ExternalCollectionResultsProxyDto
 
 export type ProxyCreateDto =
   | CreateListWBMSnapshotsProxyDto
+  | CreateExternalMediaProxyDto
+  | CreateExternalCollectionCountProxyDto
+  | CreateExternalCollectionResultsProxyDto
   | {
       type:
         | CreateWBMSnapshotProxyDto['type']

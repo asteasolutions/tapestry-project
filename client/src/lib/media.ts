@@ -23,6 +23,10 @@ export function mediaSourceToBlob(source: MediaItemSource) {
   return source instanceof File ? source : urlToBlob(source)
 }
 
+export function resolveExternalMediaSource(url: string): Promise<MediaItemSource> {
+  return Promise.resolve(url)
+}
+
 const HEIC_CONVERT_QUALITY = 0.92
 
 export async function convertHeicFile(blob: Blob) {

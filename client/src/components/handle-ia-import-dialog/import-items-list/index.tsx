@@ -1,5 +1,6 @@
 import { ImportItem } from '..'
 import { IAImport } from '../../../pages/tapestry/view-model'
+import { ExternalCollectionList } from './external-collection-list'
 import { IAPlaylistEntries } from './playlist'
 import { IASearchList } from './search-list'
 import { ReactNode } from 'react'
@@ -25,6 +26,9 @@ export function ImportItemsList({ iaImport, ...props }: ImportItemsListProps) {
   }
   if (iaImport.type === 'IASearchCollection') {
     return <IASearchList query={iaImport.query} {...props} />
+  }
+  if (iaImport.type === 'ExternalCollection') {
+    return <ExternalCollectionList collection={iaImport} {...props} />
   }
   return <IAPlaylistEntries entries={iaImport.entries} {...props} />
 }

@@ -29,6 +29,61 @@ export const UserListResponseSchema = z.object({
   }),
 })
 
+export const OpenverseMediaSchema = z.object({
+  id: z.string(),
+  url: z.string(),
+  thumbnail: z.string().nullable(),
+  title: z.string(),
+  creator: z.string().nullable(),
+  license: z.string(),
+})
+
+export const OpenverseMediaTypeSchema = z.enum(['image', 'audio'])
+
+export const OpenverseCollectionQuerySchema = z.discriminatedUnion('type', [
+  z.object({ type: z.literal('tag'), tag: z.string() }),
+  z.object({ type: z.literal('source'), source: z.string() }),
+])
+
+export const WikimediaMediaTypeSchema = z.enum(['image', 'video', 'audio', 'pdf'])
+
+export const WikimediaMediaSchema = z.object({
+  id: z.string(),
+  url: z.string(),
+  thumbnail: z.string().nullable(),
+  title: z.string(),
+  uploader: z.string().nullable(),
+  mediaType: WikimediaMediaTypeSchema,
+})
+
+export const WikimediaCollectionQuerySchema = z.object({
+  type: z.literal('category'),
+  category: z.string(),
+})
+
+const ExternalMediaQuerySchema = z.discriminatedUnion('platform', [
+  z.object({
+    platform: z.literal('openverse'),
+    mediaType: OpenverseMediaTypeSchema,
+    id: z.string(),
+  }),
+  z.object({ platform: z.literal('wikimedia-commons'), title: z.string() }),
+])
+
+const ExternalCollectionQuerySchema = z.discriminatedUnion('platform', [
+  z.object({
+    platform: z.literal('openverse'),
+    mediaType: OpenverseMediaTypeSchema,
+    collection: OpenverseCollectionQuerySchema,
+  }),
+  z.object({
+    platform: z.literal('wikimedia-commons'),
+    collection: WikimediaCollectionQuerySchema,
+  }),
+])
+
+const ExternalMediaResultSchema = z.union([OpenverseMediaSchema, WikimediaMediaSchema])
+
 export const ProxySchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('list-wbm-snapshots'),
@@ -50,6 +105,23 @@ export const ProxySchema = z.discriminatedUnion('type', [
     type: z.literal('content-type'),
     result: z.string(),
   }),
+  z.object({
+    type: z.literal('external-media'),
+    result: ExternalMediaResultSchema.nullable(),
+  }),
+  z.object({
+    type: z.literal('external-collection-count'),
+    result: z.number().optional(),
+  }),
+  z.object({
+    type: z.literal('external-collection-results'),
+    result: z
+      .object({
+        total: z.number(),
+        results: ExternalMediaResultSchema.array(),
+      })
+      .optional(),
+  }),
 ])
 
 const CreateListWBMSnapshotsProxySchema = z.object({
@@ -63,7 +135,27 @@ const CreateFromUrlProxySchema = z.object({
   url: z.string(),
 })
 
+const CreateExternalMediaProxySchema = z.object({
+  type: z.literal('external-media'),
+  query: ExternalMediaQuerySchema,
+})
+
+const CreateExternalCollectionCountProxySchema = z.object({
+  type: z.literal('external-collection-count'),
+  query: ExternalCollectionQuerySchema,
+})
+
+const CreateExternalCollectionResultsProxySchema = z.object({
+  type: z.literal('external-collection-results'),
+  query: ExternalCollectionQuerySchema,
+  page: z.number(),
+  pageSize: z.number(),
+})
+
 export const ProxyCreateSchema = z.discriminatedUnion('type', [
   CreateListWBMSnapshotsProxySchema,
   CreateFromUrlProxySchema,
+  CreateExternalMediaProxySchema,
+  CreateExternalCollectionCountProxySchema,
+  CreateExternalCollectionResultsProxySchema,
 ])
