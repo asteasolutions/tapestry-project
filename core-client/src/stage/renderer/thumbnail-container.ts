@@ -45,6 +45,7 @@ const DEFAULT_ICON_SIZE = 24
 
 export class ThumbnailContainer extends Container {
   private static iconTextures?: Record<IconName, Texture>
+  private static placeholderTexture = Texture.WHITE
 
   private state: ThumbnailContainerState
   private shadowSprite?: NineSliceSprite
@@ -101,8 +102,10 @@ export class ThumbnailContainer extends Container {
     this.iconTextures = undefined
   }
 
-  private createSprite(texture: Texture) {
-    const sprite = new Sprite(texture)
+  private createSprite(texture: Texture | 'placeholder') {
+    const sprite = new Sprite(
+      texture === 'placeholder' ? ThumbnailContainer.placeholderTexture : texture,
+    )
     sprite.width = this.state.size.width
     sprite.height = this.state.size.height
     return sprite
@@ -119,7 +122,7 @@ export class ThumbnailContainer extends Container {
     this.updateIconPosition()
   }
 
-  set texture(newTexture: Texture | null) {
+  set texture(newTexture: Texture | 'placeholder' | null) {
     if (this.thumbnail) {
       this.thumbnailContainer.removeChild(this.thumbnail)
       this.thumbnail.destroy()
@@ -128,8 +131,8 @@ export class ThumbnailContainer extends Container {
     if (newTexture) {
       this.thumbnail = this.createSprite(newTexture)
       this.thumbnailContainer.addChild(this.thumbnail)
+      this.fitThumbnail()
     }
-    this.fitThumbnail()
   }
 
   private roundCorners() {

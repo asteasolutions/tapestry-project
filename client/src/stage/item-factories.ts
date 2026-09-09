@@ -10,7 +10,12 @@ import {
   fetchWikimediaCollectionCount,
   fetchWikimediaMedia,
 } from '../lib/external-media'
-import { MediaItemSource, resolveExternalMediaSource } from '../lib/media'
+import {
+  MediaItemSource,
+  resolveExternalMediaSource,
+  mediaSourceToBlob,
+  convertHeicFile,
+} from '../lib/media'
 import { createMediaItem, getMediaSourceText } from '../model/data/utils'
 import { ItemCreateDto } from 'tapestry-shared/src/data-transfer/resources/dtos/item'
 import { findWebSourceParser } from 'tapestry-core/src/web-sources'
@@ -18,6 +23,9 @@ import {
   iaItemEmbedURL,
   IAMediaType,
   parseInternetArchiveURL,
+  parseIASearchURLQuery,
+  fetchIASearchCount,
+  excludeIACollections,
   IAItem,
   getIAItemMetadata,
   getIAPlaylistEntries,
@@ -26,7 +34,7 @@ import {
 import { MediaItemType, WebpageType } from 'tapestry-core/src/data-format/schemas/item'
 import { getUserListItems } from '../lib/internet-archive'
 import { parseMediaSource, parseStringTransferData } from './data-transfer-handler'
-import { fileTypeFromBuffer } from 'file-type'
+import { fileTypeFromBlob, fileTypeFromBuffer } from 'file-type'
 import { compact } from 'lodash-es'
 import { parse } from 'ini'
 import { IAImport } from '../pages/tapestry/view-model'
@@ -138,13 +146,22 @@ export async function createIAMediaItems(tapestryId: string, iaItems: IAItem[]) 
   )
 }
 
-const iaCollectionFactory: ItemFactory = async (source, _, tapestryId) => {
+const iaFactory: ItemFactory = async (source, _mediaType, tapestryId) => {
+  if (typeof source !== 'string' || !isHTTPURL(source)) return null
+
+  const searchQuery = parseIASearchURLQuery(source)
+  if (searchQuery) {
+    const total = await fetchIASearchCount(excludeIACollections(searchQuery))
+    if (total === undefined) return null
+    return { items: [], iaImports: [{ type: 'IASearchCollection', query: searchQuery, total }] }
+  }
+
   const descriptor = parseInternetArchiveURL(source)
   if (!descriptor) return null
 
   if (descriptor.urlType === 'user-list') {
     return {
-      items: await createIAMediaItems(tapestryId, await getUserListItems(source as string)),
+      items: await createIAMediaItems(tapestryId, await getUserListItems(source)),
       iaImports: [],
     }
   }
@@ -264,6 +281,17 @@ const externalMediaFactory: ItemFactory = async (source, _mediaType, tapestryId)
   return null
 }
 
+const HEIC_MEDIA_TYPES = ['image/heic', 'image/heif']
+
+const heicImageFactory: ItemFactory = async (source, mediaType, tapestryId) => {
+  const detectedType = source instanceof File ? (await fileTypeFromBlob(source))?.mime : mediaType
+  if (!HEIC_MEDIA_TYPES.includes(detectedType ?? '')) return null
+
+  const convertedFile = await convertHeicFile(await mediaSourceToBlob(source))
+
+  return { items: [await createMediaItem('image', convertedFile, tapestryId)], iaImports: [] }
+}
+
 const linkFileFactory: ItemFactory = async (source, _, tapestryId) => {
   if (!(source instanceof File)) {
     return null
@@ -288,6 +316,7 @@ const linkFileFactory: ItemFactory = async (source, _, tapestryId) => {
  * which creates a "webpage" item for all unhandled URLs.
  */
 export const ITEM_FACTORIES: ItemFactory[] = [
+  heicImageFactory,
   createSimpleMediaItemFactory('image', (_, mediaType) => !!mediaType?.startsWith('image/')),
   createSimpleMediaItemFactory('book', (_, mediaType) => mediaType === 'application/epub+zip'),
   createSimpleMediaItemFactory('pdf', (_, mediaType) => mediaType === 'application/pdf'),
@@ -297,6 +326,6 @@ export const ITEM_FACTORIES: ItemFactory[] = [
   textItemFactory,
   externalMediaFactory,
   htmlFileItemFactory,
-  iaCollectionFactory,
+  iaFactory,
   webpageItemFactory,
 ]

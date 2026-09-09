@@ -172,6 +172,11 @@ export type IAImport =
         }
       | { platform: 'wikimedia-commons'; collection: WikimediaCollectionQuery }
     ))
+  | {
+      type: 'IASearchCollection'
+      query: string
+      total: number
+    }
 
 export interface Collaborator {
   id: string

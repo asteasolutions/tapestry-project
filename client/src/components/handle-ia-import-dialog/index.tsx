@@ -19,8 +19,8 @@ import {
 } from '../../lib/external-media'
 import { createIAMediaItems, createExternalMediaItems } from '../../stage/item-factories'
 import { ImportDetails } from './import-details/index'
-import { requestCollectionItems } from './import-items-list/collection-list/index'
 import { ImportItemsList } from './import-items-list/index'
+import { requestSearchItems } from './import-items-list/search-list/index'
 import styles from './styles.module.css'
 
 export interface ImportItem {
@@ -34,12 +34,14 @@ const IA_IMPORT_TITLE_MAP: Record<IAImport['type'], string> = {
   IACollection: 'Choose collection items',
   IAPlaylist: 'Choose playlist items',
   ExternalCollection: 'Choose items to import',
+  IASearchCollection: 'Choose search result items',
 }
 
 const IA_IMPORT_CLASS_MAP: Record<IAImport['type'], string> = {
   IACollection: styles.collectionList,
   IAPlaylist: styles.playlist,
   ExternalCollection: styles.collectionList,
+  IASearchCollection: styles.collectionList,
 }
 
 async function createNewItems(iaImport: IAImport, items: ImportItem[], tapestryId: string) {
@@ -77,22 +79,21 @@ async function createNewItems(iaImport: IAImport, items: ImportItem[], tapestryI
     )
   }
 
-  const {
-    type,
-    id,
-    metadata: { mediatype: mediaType },
-  } = iaImport
-
-  if (type === 'IACollection') {
+  if (iaImport.type === 'IACollection' || iaImport.type === 'IASearchCollection') {
     return createIAMediaItems(
       tapestryId,
       compact(items.map(({ id, mediaType }) => mediaType && { id, mediaType })),
     )
   }
 
+  const { id, metadata } = iaImport
   return createIAMediaItems(
     tapestryId,
-    items.map(({ id: file }) => ({ id, mediaType, pathParams: [encodeURIComponent(file)] })),
+    items.map(({ id: file }) => ({
+      id,
+      mediaType: metadata.mediatype,
+      pathParams: [encodeURIComponent(file)],
+    })),
   )
 }
 
@@ -150,8 +151,10 @@ export function HandleIAImportDialog() {
         })),
       )
     } else {
+      const query =
+        iaImport.type === 'IASearchCollection' ? iaImport.query : `collection:${iaImport.id}`
       setSelectedItems(
-        (await requestCollectionItems(iaImport.id, 0, MAX_SELECTION, signal)).data.map((i) => ({
+        (await requestSearchItems(query, 0, MAX_SELECTION, signal)).data.map((i) => ({
           id: i.id,
           mediaType: i.mediatype,
         })),
