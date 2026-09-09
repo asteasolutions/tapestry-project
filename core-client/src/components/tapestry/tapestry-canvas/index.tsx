@@ -19,13 +19,13 @@ import { ItemType } from 'tapestry-core/src/data-format/schemas/item'
 import { isMac, isMobile } from '../../../lib/user-agent'
 import { sortByPath } from 'tapestry-core/src/lib/array'
 
-const ITEMS_WITH_THUMBNAIL_PLACEHOLDER: ItemType[] = ['audio', 'video', 'book', 'pdf', 'webpage']
+const ITEMS_WITHOUT_THUMBNAIL_PLACEHOLDER: ItemType[] = ['text', 'actionButton']
 
 function shouldDisplayThumbnailPlaceholder(item: ItemViewModel) {
   return (
     (item.dto.thumbnail?.renditions.length ?? 0) > 0 &&
     !item.snapshotId &&
-    ITEMS_WITH_THUMBNAIL_PLACEHOLDER.includes(item.dto.type)
+    !ITEMS_WITHOUT_THUMBNAIL_PLACEHOLDER.includes(item.dto.type)
   )
 }
 
