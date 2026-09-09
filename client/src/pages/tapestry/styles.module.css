@@ -3,6 +3,11 @@
   height: 100%;
   overflow: hidden;
 
+  &,
+  * {
+    -webkit-user-drag: none !important;
+  }
+
   &:global(.scene-cursor) {
     &,
     * {
