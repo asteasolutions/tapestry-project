@@ -20,6 +20,7 @@ import { MAX_SELECTION } from '../..'
 import { LazyListLoader } from '../../../lazy-list/lazy-list-loader'
 import { useObservable } from 'tapestry-core-client/src/components/lib/hooks/use-observable'
 import { SelectAll } from '../select-all'
+import { paginateBySkipLimit } from '../paginate-by-skip-limit'
 
 function getSearchOpts(query: string) {
   return {
@@ -52,42 +53,19 @@ export async function requestSearchItems(
   limit: number,
   signal: AbortSignal,
 ) {
-  const firstPage = Math.floor(skip / limit) + 1
-
-  const firstPageResult = await iaAdvancedSearch(
-    {
-      ...getSearchOpts(query),
-      page: firstPage,
-      pageSize: limit,
-    },
+  const { data, firstPage } = await paginateBySkipLimit(
+    (page, pageSize, pageSignal) =>
+      iaAdvancedSearch({ ...getSearchOpts(query), page, pageSize }, pageSignal),
+    (result) => result.response.docs,
+    skip,
+    limit,
     signal,
   )
 
-  const totalCount = firstPageResult?.response.numFound
-
-  const extra = skip % limit
-  const secondPageResult = extra
-    ? await iaAdvancedSearch(
-        {
-          ...getSearchOpts(query),
-          page: firstPage + 1,
-          pageSize: limit,
-        },
-        signal,
-      )
-    : null
-
-  const finalResult = [
-    ...(firstPageResult?.response.docs ?? []),
-    ...(secondPageResult?.response.docs ?? []),
-  ]
-    .slice(extra, extra + limit)
-    .map((doc) => ({ ...doc, id: doc.identifier }))
-
   return {
     skip,
-    total: totalCount ?? finalResult.length,
-    data: finalResult,
+    total: firstPage.result?.response.numFound ?? data.length,
+    data: data.map((doc) => ({ ...doc, id: doc.identifier })),
   }
 }
 

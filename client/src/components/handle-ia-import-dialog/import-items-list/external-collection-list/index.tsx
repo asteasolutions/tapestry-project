@@ -19,6 +19,7 @@ import { Text } from 'tapestry-core-client/src/components/lib/text/index'
 import { useObservable } from 'tapestry-core-client/src/components/lib/hooks/use-observable'
 import { SelectAll } from '../select-all'
 import { MAX_SELECTION } from '../..'
+import { paginateBySkipLimit } from '../paginate-by-skip-limit'
 import styles from './styles.module.css'
 
 // Use this icon when a media item has no real thumbnail. This covers Openverse audio (always
@@ -74,24 +75,18 @@ async function requestExternalItems<Media>(
   limit: number,
   signal: AbortSignal,
 ) {
-  const firstPage = Math.floor(skip / limit) + 1
-
-  const firstPageResult = await fetchPageWithRetry(fetchPage, firstPage, limit, signal)
-
-  const extra = skip % limit
-  const secondPageResult = extra
-    ? await fetchPageWithRetry(fetchPage, firstPage + 1, limit, signal)
-    : undefined
-
-  const finalResult = [
-    ...(firstPageResult?.results ?? []),
-    ...(secondPageResult?.results ?? []),
-  ].slice(extra, extra + limit)
+  const { data, firstPage, secondPage } = await paginateBySkipLimit(
+    (page, pageSize, pageSignal) => fetchPageWithRetry(fetchPage, page, pageSize, pageSignal),
+    (result) => result.results,
+    skip,
+    limit,
+    signal,
+  )
 
   return {
     skip,
-    data: finalResult,
-    failed: firstPageResult === undefined || (!!extra && secondPageResult === undefined),
+    data,
+    failed: firstPage.result === undefined || (secondPage !== undefined && !secondPage.result),
   }
 }
 
