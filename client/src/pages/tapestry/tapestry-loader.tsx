@@ -149,6 +149,7 @@ export function TapestryLoader({ id, mode }: TapestryLoaderProps) {
     // We do not want to reload the tapestry when the view/edit param changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [id, user?.id],
+    { initiallyLoading: true },
   )
   const { tapestryDataSync, initialThumbnails } = tapestryData ?? {}
 
