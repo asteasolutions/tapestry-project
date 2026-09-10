@@ -5,7 +5,7 @@ import { generateVideoThumbnail } from './video.js'
 import { generatePDFThumbnail } from './pdf.js'
 import { generateImageThumbnail } from './image.js'
 import { generateWebpageThumbnail, generateYoutubeThumbnail } from './webpage.js'
-import { getResolvedImageService, iiifImageURL } from 'tapestry-core/src/iiif.js'
+import { fetchIIIFFirstCanvas, iiifImageURL } from 'tapestry-core/src/iiif.js'
 
 export interface ThumbnailRenditionOutput {
   data: Buffer<ArrayBufferLike>
@@ -30,11 +30,12 @@ export async function generatePrimaryThumbnail(
 ) {
   if (item.type === 'iiif') {
     // An iiif item is a deep-zoom tiled image, not a flat one. Render a bounded derivative
-    // from the IIIF Image API instead, for use as the thumbnail. The item's source is the
-    // manifest URL, with the resolved image service URL encoded as a query param.
+    // of its first canvas from the IIIF Image API instead, for use as the thumbnail. The
+    // item's source is the manifest URL; resolve the canvas's image service from it.
     const thumbWidth = Math.max(MIN_THUMBNAIL_SIZE, item.width)
-    const imageService = getResolvedImageService(item.source!)!
-    const derivativeUrl = iiifImageURL(imageService, { size: `${thumbWidth},` })
+    const canvas = await fetchIIIFFirstCanvas(item.source!)
+    if (!canvas) return
+    const derivativeUrl = iiifImageURL(canvas.imageService, { size: `${thumbWidth},` })
     return generateImageThumbnail(derivativeUrl, { maxDim: thumbWidth })
   }
 

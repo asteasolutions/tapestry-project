@@ -1,12 +1,11 @@
 /**
  * Minimal helpers for IIIF (International Image Interoperability Framework) content.
  *
- * This module supports two IIIF Presentation API versions: 2.x and 3.x. It extracts only
- * what is needed to display the first canvas as a deep-zoomable image: the IIIF Image
- * API service endpoint, and the image's pixel dimensions.
- *
- * A multi-canvas manifest, like a digitized book, is reduced to its first canvas. This
- * is a deliberate limit, for now.
+ * The viewer itself (Clover IIIF) parses and renders a manifest directly from its URL,
+ * so an iiif item's `source` is always just the plain manifest URL. This module now
+ * only resolves a manifest's first canvas for the two places that still need a concrete
+ * image ahead of time: sizing a newly created item, and generating its server-side
+ * thumbnail. It supports both IIIF Presentation API versions, 2.x and 3.x.
  */
 
 /** The information needed to render a single IIIF image as a deep-zoomable item. */
@@ -24,37 +23,6 @@ export interface IIIFCanvas {
   height: number
   /** An optional human-readable label for the canvas or manifest. */
   label?: string
-}
-
-const IMAGE_SERVICE_PARAM = 'imageService'
-
-// An iiif item's source is the manifest URL. Add the resolved image service as a query
-// param on that same URL. This avoids a separate database column. It also keeps source
-// a real, fetchable manifest link.
-export function withResolvedImageService(manifestUrl: string, imageService: string): string {
-  const url = new URL(manifestUrl)
-  url.searchParams.set(IMAGE_SERVICE_PARAM, imageService)
-  return url.toString()
-}
-
-/** Read the resolved image service from an iiif item's source. */
-export function getResolvedImageService(source: string): string | null {
-  try {
-    return new URL(source).searchParams.get(IMAGE_SERVICE_PARAM)
-  } catch {
-    return null
-  }
-}
-
-/** Strip the resolved image service param. Return the real, plain manifest URL. */
-export function getManifestUrl(source: string): string {
-  try {
-    const url = new URL(source)
-    url.searchParams.delete(IMAGE_SERVICE_PARAM)
-    return url.toString()
-  } catch {
-    return source
-  }
 }
 
 // IIIF manifests are untyped JSON. Their shape varies between Presentation API

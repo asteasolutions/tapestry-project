@@ -25,11 +25,7 @@ import {
   getIAIIIFManifestURL,
   parseInternetArchiveURL,
 } from 'tapestry-core/src/internet-archive.js'
-import {
-  fetchIIIFFirstCanvas,
-  getResolvedImageService,
-  withResolvedImageService,
-} from 'tapestry-core/src/iiif.js'
+import { fetchIIIFFirstCanvas } from 'tapestry-core/src/iiif.js'
 import { extractInternallyHostedS3Key } from '../services/s3-service.js'
 import { Path, WithOptional } from 'tapestry-core/src/type-utils.js'
 import { queue } from '../tasks/index.js'
@@ -115,9 +111,9 @@ async function resolveWebSource(item: ItemCreateDto | ItemUpdateDto) {
 /**
  * Normalize an iiif item's source. The client usually resolves the manifest itself and
  * sets `skipSourceResolution`. This function handles the direct-API case instead. It
- * accepts an Internet Archive item URL or a direct manifest URL. It derives the manifest
- * from an IA URL. It resolves the IIIF Image API service endpoint if the source does not
- * already encode one.
+ * accepts an Internet Archive item URL or a direct manifest URL, deriving the manifest
+ * URL from an IA URL, and confirms the manifest actually resolves to an image before
+ * accepting it.
  */
 async function resolveIiifSource(item: (ItemCreateDto | ItemUpdateDto) & { type: 'iiif' }) {
   if (!item.source || item.skipSourceResolution) return
@@ -127,12 +123,8 @@ async function resolveIiifSource(item: (ItemCreateDto | ItemUpdateDto) & { type:
     item.source = getIAIIIFManifestURL(descriptor.item.id)
   }
 
-  if (!getResolvedImageService(item.source)) {
-    const canvas = await fetchIIIFFirstCanvas(item.source)
-    if (!canvas) {
-      throw new BadRequestError(`Could not resolve a IIIF image from manifest: ${item.source}`)
-    }
-    item.source = withResolvedImageService(item.source, canvas.imageService)
+  if (!(await fetchIIIFFirstCanvas(item.source))) {
+    throw new BadRequestError(`Could not resolve a IIIF image from manifest: ${item.source}`)
   }
 }
 

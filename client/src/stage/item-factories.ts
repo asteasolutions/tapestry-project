@@ -16,7 +16,7 @@ import {
   getNestedIAItems,
   getIAIIIFManifestURL,
 } from 'tapestry-core/src/internet-archive'
-import { fetchIIIFFirstCanvas, withResolvedImageService } from 'tapestry-core/src/iiif'
+import { fetchIIIFFirstCanvas } from 'tapestry-core/src/iiif'
 import { MediaItemType, WebpageType } from 'tapestry-core/src/data-format/schemas/item'
 import { getUserListItems } from '../lib/internet-archive'
 import { parseMediaSource, parseStringTransferData } from './data-transfer-handler'
@@ -132,13 +132,12 @@ export async function createIAMediaItems(tapestryId: string, iaItems: IAItem[]) 
 }
 
 /**
- * Create a deep-zoomable IIIF image item. Accept two kinds of source: an Internet
- * Archive item URL for an image-type item, or a direct IIIF Presentation manifest URL.
- * Derive the manifest URL from an IA URL. Resolve the manifest to its first canvas.
- * Encode the image service in the item's source, alongside the manifest URL, so the
- * viewer can render tiles on demand. Return null for anything that is not a usable IIIF
- * image, so the remaining factories (IA collections/playlists, plain webpages) can
- * handle it instead.
+ * Create a IIIF item. Accept two kinds of source: an Internet Archive item URL for an
+ * image-type item, or a direct IIIF Presentation manifest URL. Derive the manifest URL
+ * from an IA URL. Confirm the manifest actually resolves to an image before creating
+ * the item, so a bad or unrelated URL falls through to the remaining factories (IA
+ * collections/playlists, plain webpages) instead. The viewer renders the manifest URL
+ * directly; it does its own parsing of the full manifest, not just this first canvas.
  */
 const iiifItemFactory: ItemFactory = async (source, mediaType, tapestryId) => {
   if (typeof source !== 'string' || !isHTTPURL(source)) return null
@@ -157,16 +156,11 @@ const iiifItemFactory: ItemFactory = async (source, mediaType, tapestryId) => {
     return null
   }
 
-  const canvas = await fetchIIIFFirstCanvas(manifestUrl)
-  if (!canvas) return null
+  if (!(await fetchIIIFFirstCanvas(manifestUrl))) return null
 
-  const item = await createMediaItem(
-    'iiif',
-    withResolvedImageService(manifestUrl, canvas.imageService),
-    tapestryId,
-  )
-  // The client has already resolved the manifest and image service. The server does not
-  // need to redo it.
+  const item = await createMediaItem('iiif', manifestUrl, tapestryId)
+  // The client has already resolved the manifest URL (from an IA source, if that's what
+  // this was). The server does not need to redo it.
   item.skipSourceResolution = true
 
   return { items: [item], iaImports: [] }
