@@ -39,8 +39,6 @@ export const VideoItemPlayer = memo(
       dispatch(setItemIsPlaying(id, false))
     }, [dispatch, id])
 
-    const showVideo = isPlaying || isInteractive
-
     const captureFrame = useCallback(
       async (media: HTMLVideoElement | HTMLAudioElement) => {
         // Return early if the element isn't a video element
@@ -98,29 +96,17 @@ export const VideoItemPlayer = memo(
               void captureFrame(e.currentTarget)
             }
           }}
+          thumbnail={thumbnail}
           // The video is hidden in order to optimize the Safari layering algorithm
+          //MediaPlayer handles display: none of the video
           style={{
-            display: showVideo ? 'block' : 'none',
             width: '100%',
             height: '100%',
             ...style,
           }}
           {...playerProps}
         />
-        {thumbnail && (
-          <img
-            src={thumbnail}
-            // Images that may be loaded via `fetch` elsewhere must always be loaded with CORS policy "anonymous"
-            // in order to prevent cached CORS header errors in Chrome.
-            crossOrigin="anonymous"
-            style={{
-              display: showVideo ? 'none' : 'block',
-              height: '100%',
-              width: '100%',
-              objectFit: 'cover',
-            }}
-          />
-        )}
+
         {!isInteractive && !isPlaying && <IconOverlay itemSize={dto.size} icon="videocam" />}
       </div>
     )
