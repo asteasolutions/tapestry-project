@@ -2,26 +2,32 @@ import CloverViewer from '@samvera/clover-iiif/viewer'
 import { memo } from 'react'
 import { TapestryElementComponentProps, useTapestryConfig } from '../..'
 import { IiifItem as IiifItemDto } from 'tapestry-core/src/data-format/schemas/item'
-import { Icon } from '../../../lib/icon/index'
+import { fetchIIIFManifest } from 'tapestry-core/src/iiif'
+import { useAsync } from '../../../lib/hooks/use-async'
 import styles from './styles.module.css'
-
-// Tapestry's own convention for "we're waiting on something" (see e.g. the webpage
-// item's thumbnail-generation placeholder), not Clover's default "Loading" text.
-function IiifLoadingIndicator() {
-  return <Icon icon="hourglass_top" className={styles.loadingIndicator} />
-}
 
 /**
  * Render a full IIIF manifest — every canvas, its metadata, and structures/table of
- * contents — using Clover IIIF. The item's source is the manifest URL itself; Clover
- * fetches and parses it directly, so nothing here needs to resolve a canvas ahead of
- * time.
+ * contents — using Clover IIIF. Fetch the manifest ourselves first, rather than handing
+ * Clover the bare URL: Clover would otherwise mount its own container and fetch the
+ * manifest itself, showing an empty frame in the meantime. Only mount the viewer, with
+ * the manifest already in hand, once there's actually something to show. (The
+ * create-time wait — pasting a manifest URL to begin with — already gets Tapestry's
+ * own pending-work indicator for free, since item creation validates the manifest
+ * before the item exists at all; this is the separate wait for viewing an
+ * already-created item again later.)
  */
 export const IiifItemViewer = memo(({ id }: TapestryElementComponentProps) => {
   const { useStoreData } = useTapestryConfig()
   const { source } = useStoreData(`items.${id}.dto`) as IiifItemDto
 
-  if (!source) return null
+  const { data: manifest } = useAsync(
+    (abortController) =>
+      source ? fetchIIIFManifest(source, abortController.signal) : Promise.resolve(null),
+    [source],
+  )
+
+  if (!manifest) return null
 
   return (
     <div className={styles.root}>
@@ -29,7 +35,7 @@ export const IiifItemViewer = memo(({ id }: TapestryElementComponentProps) => {
         // Disambiguates this instance's internal state/DOM ids from any other Viewer
         // on the page showing the same manifest (e.g. the same source imported twice).
         id={id}
-        iiifContent={source}
+        iiifContent={manifest}
         options={{
           canvasHeight: '100%',
           // Tapestry's own ItemToolbar already gives the item a title and controls.
@@ -43,7 +49,6 @@ export const IiifItemViewer = memo(({ id }: TapestryElementComponentProps) => {
           // search anyway, so disable it outright rather than depend on that path.
           showMediaSearch: false,
           withCredentials: false,
-          customLoadingComponent: IiifLoadingIndicator,
           openSeadragon: {
             // IIIF tiles load cross-origin (e.g. from iiif.archive.org). Load them
             // anonymously, matching the plain image viewer.

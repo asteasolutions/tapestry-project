@@ -18,15 +18,3 @@
   --clover-color-secondary-muted: var(--theme-background-neutral-hover);
   --clover-viewer-background: var(--theme-background-primary);
 }
-
-.loading-indicator {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  color: var(--theme-text-primary);
-  background-color: var(--theme-background-primary);
-  border-radius: 50%;
-  padding: 4px;
-  font-size: 20px;
-  z-index: 1;
-}
