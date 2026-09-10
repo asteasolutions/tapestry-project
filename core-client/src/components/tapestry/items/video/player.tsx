@@ -82,6 +82,7 @@ export const VideoItemPlayer = memo(
     return (
       <div className={styles.root}>
         <MediaPlayer
+          id={id}
           component="video"
           options={options}
           startTime={mediaParams.startTime ?? dto.startTime ?? 0}

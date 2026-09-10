@@ -11,7 +11,7 @@ import { usePlayableItemToolbar } from '../../item-toolbar/use-playable-item-too
 export const AudioItem = memo(({ id }: TapestryItemProps) => {
   const dto = useTapestryData(`items.${id}.dto`) as AudioItemDto
   const src = useMediaSource(dto.source)
-  const [duration, setDuration] = useState(0)
+  const [duration] = useState(0)
 
   const { toolbar } = usePlayableItemToolbar(dto, duration)
 

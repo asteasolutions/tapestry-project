@@ -4,6 +4,8 @@ import { usePropRef } from '../hooks/use-prop-ref'
 import styles from './styles.module.css'
 import { ControlBar } from './control-bar'
 import clsx from 'clsx'
+import { createPortal } from 'react-dom'
+import { Id } from 'tapestry-core/src/data-format/schemas/common'
 
 type ComponentType = 'video' | 'audio'
 
@@ -22,6 +24,7 @@ export interface VideoJSOptions {
 }
 
 export interface MediaPlayerProps<T extends ComponentType> {
+  id: Id
   component: T
   options: VideoJSOptions
   startTime: number
@@ -35,6 +38,7 @@ export interface MediaPlayerProps<T extends ComponentType> {
 }
 
 export function MediaPlayer<T extends 'video' | 'audio'>({
+  id,
   component,
   options,
   startTime,
@@ -178,6 +182,8 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
     }
   }
 
+  const portal = document.querySelector(`[data-model-id="${id}"]`)
+
   return (
     <div
       className={clsx(styles.root, { [styles.audioOnly]: isAudio })}
@@ -240,20 +246,24 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
         onMouseEnter={() => setIsHovering(true)}
         onMouseLeave={() => setIsHovering(false)}
       >
-        <ControlBar
-          isOpen={isAudio || isMoving || isHovering || !isPlaying}
-          isPlaying={isPlaying}
-          togglePlay={togglePlay}
-          currentTime={currentTime}
-          duration={duration}
-          isOver={isOver}
-          onSeek={onSeek}
-          volume={volume}
-          onVolumeChange={onVolumeChange}
-          playbackRate={playbackRate}
-          onPlaybackRateChange={onPlaybackRateChange}
-          toggleFullScreen={isAudio ? undefined : toggleFullscreen}
-        />
+        {portal &&
+          createPortal(
+            <ControlBar
+              isOpen={isAudio || isMoving || isHovering || !isPlaying}
+              isPlaying={isPlaying}
+              togglePlay={togglePlay}
+              currentTime={currentTime}
+              duration={duration}
+              isOver={isOver}
+              onSeek={onSeek}
+              volume={volume}
+              onVolumeChange={onVolumeChange}
+              playbackRate={playbackRate}
+              onPlaybackRateChange={onPlaybackRateChange}
+              toggleFullScreen={isAudio ? undefined : toggleFullscreen}
+            />,
+            portal,
+          )}
       </div>
     </div>
   )
