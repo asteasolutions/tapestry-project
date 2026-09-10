@@ -26,8 +26,9 @@ export const VideoItemPlayer = memo(
     const mediaParams = useMediaParams(id)
 
     const [isPlaying, setIsPlaying] = useState(false)
-    const [thumbnail, setThumbnail] = useState(() => getPrimaryThumbnail(dto))
+    const [thumbnail, setThumbnail] = useState<string | undefined>()
     const frameThumbnailRef = useRef<string>(undefined)
+    const primaryThumbnail = useMemo(() => getPrimaryThumbnail(dto), [dto])
 
     const onStart = useCallback(() => {
       setIsPlaying(true)
@@ -96,7 +97,7 @@ export const VideoItemPlayer = memo(
               void captureFrame(e.currentTarget)
             }
           }}
-          thumbnail={thumbnail}
+          thumbnail={thumbnail || primaryThumbnail}
           // The video is hidden in order to optimize the Safari layering algorithm
           //MediaPlayer handles display: none of the video
           style={{

@@ -1,7 +1,6 @@
 import { isEqual } from 'lodash-es'
 import { useRef, useState, CSSProperties, useMemo } from 'react'
 import { usePropRef } from '../hooks/use-prop-ref'
-import 'video.js/dist/video-js.css'
 import styles from './styles.module.css'
 import { ControlBar } from './control-bar'
 import clsx from 'clsx'
@@ -146,7 +145,7 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
       clearTimeout(timer)
       timer = setTimeout(() => {
         setIsMoving(false)
-      }, 300000)
+      }, 3000)
     }
   }, [])
 
@@ -213,6 +212,7 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
             height: '100%',
             objectFit: 'contain',
           }}
+          crossOrigin="anonymous"
         >
           <source src={options.src} type={options.mediaType || 'video/mp4'} />
         </video>
