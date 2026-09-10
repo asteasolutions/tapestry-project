@@ -8,14 +8,16 @@ import styles from './styles.module.css'
 
 /**
  * Render a full IIIF manifest — every canvas, its metadata, and structures/table of
- * contents — using Clover IIIF. Fetch the manifest ourselves first, rather than handing
- * Clover the bare URL: Clover would otherwise mount its own container and fetch the
- * manifest itself, showing an empty frame in the meantime. Only mount the viewer, with
- * the manifest already in hand, once there's actually something to show. (The
- * create-time wait — pasting a manifest URL to begin with — already gets Tapestry's
- * own pending-work indicator for free, since item creation validates the manifest
- * before the item exists at all; this is the separate wait for viewing an
- * already-created item again later.)
+ * contents — using Clover IIIF. Confirm the manifest is actually reachable ourselves
+ * first (so nothing renders until there's something to show).
+ *
+ * Do not pass Clover's `id` (or `manifestId`) prop: despite its doc comment, it is not
+ * an instance-disambiguation key. Clover's own source
+ * (`node_modules/@samvera/clover-iiif/dist/viewer/index.mjs`) shows it *replaces*
+ * `iiifContent` outright (`let S = h; id && (S = id)`) — passing our own item id there
+ * fed a non-URL, non-JSON string into Clover's "maybe this is a base64-encoded IIIF
+ * Content State" fallback, which crashed trying to decode and JSON.parse it. Each
+ * mounted CloverViewer already gets its own independent vault/state regardless.
  */
 export const IiifItemViewer = memo(({ id }: TapestryElementComponentProps) => {
   const { useStoreData } = useTapestryConfig()
@@ -32,10 +34,7 @@ export const IiifItemViewer = memo(({ id }: TapestryElementComponentProps) => {
   return (
     <div className={styles.root}>
       <CloverViewer
-        // Disambiguates this instance's internal state/DOM ids from any other Viewer
-        // on the page showing the same manifest (e.g. the same source imported twice).
-        id={id}
-        iiifContent={manifest}
+        iiifContent={source}
         options={{
           canvasHeight: '100%',
           // Tapestry's own ItemToolbar already gives the item a title and controls.
