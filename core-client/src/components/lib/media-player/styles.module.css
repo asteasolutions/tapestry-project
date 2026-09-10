@@ -1,3 +1,7 @@
+:global([data-model-id]) {
+  position: relative;
+}
+
 .root {
   position: relative;
 }

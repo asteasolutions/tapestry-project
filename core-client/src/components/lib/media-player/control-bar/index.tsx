@@ -15,6 +15,7 @@ interface ControlBarProps {
   isOver: boolean
   volume: number
   onVolumeChange: (volume: number) => void
+  toggleMute: () => void
   playbackRate?: number
   onPlaybackRateChange: (rate: number) => void
   toggleFullScreen?: () => void
@@ -33,6 +34,7 @@ export function ControlBar({
   isOver,
   volume,
   onVolumeChange,
+  toggleMute,
   playbackRate = 1,
   onPlaybackRateChange,
   toggleFullScreen,
@@ -75,9 +77,11 @@ export function ControlBar({
       ui: {
         element: (
           <IconButton
-            icon="volume_up"
+            icon={volume === 0 ? 'volume_off' : 'volume_up'}
             aria-label="Volume controls"
-            onClick={() => selectSubmenu('volume')}
+            onClick={toggleMute}
+            onMouseEnter={() => selectSubmenu('volume')}
+            onMouseLeave={() => selectSubmenu('')}
             isActive={selectedSubmenu.startsWith('volume')}
           />
         ),
@@ -91,6 +95,8 @@ export function ControlBar({
           max={1}
           step={0.01}
           value={volume}
+          onMouseEnter={() => selectSubmenu('volume')}
+          onMouseLeave={() => selectSubmenu('')}
           onChange={(e) => onVolumeChange(Number(e.target.value))}
           className={styles.volumeSlider}
         />,

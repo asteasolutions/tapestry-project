@@ -169,16 +169,27 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
   }
 
   const toggleFullscreen = () => {
-    if (mediaRef.current) {
-      if (!document.fullscreenElement) {
-        if (mediaRef.current.requestFullscreen) {
-          mediaRef.current.requestFullscreen()
-        }
-      } else {
-        if (document.exitFullscreen) {
-          document.exitFullscreen()
+    if (document.fullscreenElement) {
+      if (document.exitFullscreen) {
+        document.exitFullscreen()
+      }
+    } else {
+      const fullscreenContainer = portal || mediaRef.current?.parentElement
+      if (fullscreenContainer) {
+        if (!document.fullscreenElement) {
+          fullscreenContainer.requestFullscreen()
         }
       }
+    }
+  }
+
+  const previousVolumeRef = useRef<number>(1)
+  const toggleMute = () => {
+    if (volume > 0) {
+      previousVolumeRef.current = volume
+      onVolumeChange(0)
+    } else {
+      onVolumeChange(previousVolumeRef.current > 0 ? previousVolumeRef.current : 1)
     }
   }
 
@@ -241,13 +252,13 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
         />
       )}
 
-      <div
-        className={styles.controlBar}
-        onMouseEnter={() => setIsHovering(true)}
-        onMouseLeave={() => setIsHovering(false)}
-      >
-        {portal &&
-          createPortal(
+      {portal &&
+        createPortal(
+          <div
+            className={styles.controlBar}
+            onMouseEnter={() => setIsHovering(true)}
+            onMouseLeave={() => setIsHovering(false)}
+          >
             <ControlBar
               isOpen={isAudio || isMoving || isHovering || !isPlaying}
               isPlaying={isPlaying}
@@ -258,13 +269,14 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
               onSeek={onSeek}
               volume={volume}
               onVolumeChange={onVolumeChange}
+              toggleMute={toggleMute}
               playbackRate={playbackRate}
               onPlaybackRateChange={onPlaybackRateChange}
               toggleFullScreen={isAudio ? undefined : toggleFullscreen}
-            />,
-            portal,
-          )}
-      </div>
+            />
+          </div>,
+          portal,
+        )}
     </div>
   )
 }
