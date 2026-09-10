@@ -2,7 +2,14 @@ import CloverViewer from '@samvera/clover-iiif/viewer'
 import { memo } from 'react'
 import { TapestryElementComponentProps, useTapestryConfig } from '../..'
 import { IiifItem as IiifItemDto } from 'tapestry-core/src/data-format/schemas/item'
+import { Icon } from '../../../lib/icon/index'
 import styles from './styles.module.css'
+
+// Tapestry's own convention for "we're waiting on something" (see e.g. the webpage
+// item's thumbnail-generation placeholder), not Clover's default "Loading" text.
+function IiifLoadingIndicator() {
+  return <Icon icon="hourglass_top" className={styles.loadingIndicator} />
+}
 
 /**
  * Render a full IIIF manifest — every canvas, its metadata, and structures/table of
@@ -29,8 +36,14 @@ export const IiifItemViewer = memo(({ id }: TapestryElementComponentProps) => {
           showTitle: false,
           showIIIFBadge: false,
           showDownload: false,
-          informationPanel: { open: false },
+          informationPanel: { open: false, renderContentSearch: false },
+          // Some manifests declare a legacy Presentation 2.x SearchService1/
+          // AutoCompleteService1 (e.g. Wellcome Collection's). Clover's content-search
+          // probing of these can crash on the response. Tapestry doesn't need in-item
+          // search anyway, so disable it outright rather than depend on that path.
+          showMediaSearch: false,
           withCredentials: false,
+          customLoadingComponent: IiifLoadingIndicator,
           openSeadragon: {
             // IIIF tiles load cross-origin (e.g. from iiif.archive.org). Load them
             // anonymously, matching the plain image viewer.
