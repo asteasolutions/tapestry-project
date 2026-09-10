@@ -1,6 +1,5 @@
 import { isEqual } from 'lodash-es'
 import { useEffect, useRef, useState, CSSProperties, useMemo } from 'react'
-import videojs from 'video.js'
 import Player from 'video.js/dist/types/player'
 import { usePropRef } from '../hooks/use-prop-ref'
 import 'video.js/dist/video-js.css'
@@ -32,8 +31,6 @@ export function getVideoElement(player: Player | undefined) {
 
 type ComponentType = 'video' | 'audio'
 
-type OnPlayerReady = (player: Player) => unknown
-
 export interface VideoJSOptions {
   autoplay?: boolean | 'muted' | 'play' | 'any'
   src: string
@@ -51,29 +48,29 @@ export interface VideoJSOptions {
 export interface MediaPlayerProps<T extends ComponentType> {
   component: T
   options: VideoJSOptions
-  onPlayerReady?: OnPlayerReady
   startTime: number
   stopTime?: number
   style?: CSSProperties
+  onPlay?: React.ReactEventHandler<HTMLVideoElement | HTMLAudioElement>
+  onPause?: React.ReactEventHandler<HTMLVideoElement | HTMLAudioElement>
+  onEnded?: React.ReactEventHandler<HTMLVideoElement | HTMLAudioElement>
+  onSeeked?: React.ReactEventHandler<HTMLVideoElement | HTMLAudioElement>
 }
 
 export function MediaPlayer<T extends 'video' | 'audio'>({
   component,
   options,
-  onPlayerReady,
   startTime,
   stopTime,
   style,
+  onPlay,
+  onPause,
+  onEnded,
+  onSeeked,
 }: MediaPlayerProps<T>) {
-  // const internalRef = useRef<HTMLDivElement | null>(null)
-
-  // const playerRef = useRef<Player>(null)
-  // const onReadyRef = usePropRef(onPlayerReady)
-
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const [volume, setVolume] = useState<number>(1)
   const [playbackRate, setPlaybackRate] = useState<number>(1)
-  const [fullscreen, setFullscreen] = useState<boolean>(false)
   const isAudio = component === 'audio' || options.audioOnlyMode
 
   const autoStop = useRef(!!stopTime)
@@ -95,45 +92,6 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
       videoRef.current.pause()
     }
   }
-
-  // useEffect(() => {
-  //   const { src, mediaType, ...restOptions } = options
-  //   const isVideo = component === 'video'
-  //   const currentOptions = {
-  //     fluid: true,
-  //     audioOnlyMode: !isVideo,
-  //     audioPosterMode: !isVideo,
-  //     playbackRates: [0.5, 1, 1.5, 2, 4],
-  //     ...restOptions,
-  //   }
-
-  //   if (!playerRef.current) {
-  //     const videoElement = document.createElement('video-js')
-  //     internalRef.current!.appendChild(videoElement)
-
-  //     const player = videojs(videoElement, currentOptions, () => {
-  //       // It appears that video.js sets the crossorigin attribute after it has set the src.
-  //       // Therefore since we have preload != 'none' when attempting the capture the current
-  //       // video frame when pausing we end up with a security error. That's why the src is
-  //       // set in the ready callback
-  //       player.src({ src, type: mediaType || (isVideo ? 'video/mp4' : 'audio/mpeg') })
-  //       onReadyRef.current?.(player)
-  //     })
-  //     playerRef.current = player
-  //   } else {
-  //     const player = playerRef.current
-  //     // @ts-expect-error VideoJS types leave a lot to be desired
-  //     if (src !== player.src()) {
-  //       player.src({ src, type: mediaType })
-  //     }
-  //     player.options(currentOptions)
-  //     player.poster(currentOptions.poster)
-  //     // From video.js, line 24518: Calling the audioPosterMode method first so that
-  //     // the audioOnlyMode can take precedence when both options are set to true
-  //     void player.audioPosterMode(currentOptions.audioPosterMode)
-  //     void player.audioOnlyMode(currentOptions.audioOnlyMode)
-  //   }
-  //   const player = playerRef.current
 
   const onTimeUpdate = () => {
     if (!videoRef.current) {
@@ -164,14 +122,6 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
     setDuration(videoRef.current.duration)
     setIsOver(currentTime === duration)
   }
-
-  // player.on('loadedmetadata', onLoadedMetadata)
-
-  // return () => {
-  //   player.off('timeupdate', onTimeUpdate)
-  //   player.off('loadedmetadata', onLoadedMetadata)
-  // }
-  // }, [options, intervalRef, onReadyRef, component])
 
   const [isPlaying, setIsPlaying] = useState<boolean>(false)
 
@@ -245,6 +195,10 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
           ref={videoRef}
           onLoadedMetadata={onLoadedMetadata}
           onTimeUpdate={onTimeUpdate}
+          onPlay={onPlay}
+          onPause={onPause}
+          onEnded={onEnded}
+          onSeeked={onSeeked}
           src={options.src}
           style={{ display: 'none' }}
         />
@@ -253,6 +207,10 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
           ref={videoRef}
           onLoadedMetadata={onLoadedMetadata}
           onTimeUpdate={onTimeUpdate}
+          onPlay={onPlay}
+          onPause={onPause}
+          onEnded={onEnded}
+          onSeeked={onSeeked}
           controls={false}
           style={{ width: '100%', height: '100%', objectFit: 'contain' }}
         >
@@ -280,9 +238,6 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
           toggleFullScreen={isAudio ? undefined : toggleFullscreen}
         />
       </div>
-      {/* <div data-vjs-player>
-        <div ref={internalRef} style={style} className={styles.root} />
-      </div> */}
     </div>
   )
 }

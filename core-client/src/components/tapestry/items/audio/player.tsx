@@ -1,17 +1,10 @@
 import { useMediaSource } from '../../../lib/hooks/use-media-source'
 import { memo, useCallback, useMemo, useState } from 'react'
 import { AudioItem as AudioItemDto } from 'tapestry-core/src/data-format/schemas/item'
-import {
-  MediaPlayer,
-  MediaPlayerProps,
-  useMediaEvent,
-  VideoJSOptions,
-} from '../../../lib/media-player'
+import { MediaPlayer, MediaPlayerProps, VideoJSOptions } from '../../../lib/media-player'
 import { useTapestryConfig } from '../..'
 import { useMediaParams } from '../../hooks/use-media-params'
 import { Id } from 'tapestry-core/src/data-format/schemas/common'
-import { useAutoplay } from '../../hooks/use-autoplay'
-import Player from 'video.js/dist/types/player'
 import { setItemIsPlaying } from '../../../../view-model/store-commands/tapestry'
 
 export interface AudioItemPlayerProps extends Partial<MediaPlayerProps<'audio'>> {
@@ -20,11 +13,9 @@ export interface AudioItemPlayerProps extends Partial<MediaPlayerProps<'audio'>>
 }
 
 export const AudioItemPlayer = memo(
-  ({ id, mediaType, style, onPlayerReady, ...playerProps }: AudioItemPlayerProps) => {
+  ({ id, mediaType, style, ...playerProps }: AudioItemPlayerProps) => {
     const { useStoreData, useDispatch } = useTapestryConfig()
     const dispatch = useDispatch()
-    const onStart = useCallback(() => dispatch(setItemIsPlaying(id, true)), [dispatch, id])
-    const onStop = useCallback(() => dispatch(setItemIsPlaying(id, false)), [dispatch, id])
     const { startTime, source, stopTime, thumbnail } = useStoreData(
       `items.${id}.dto`,
     ) as AudioItemDto
@@ -33,13 +24,17 @@ export const AudioItemPlayer = memo(
     )?.source
     const src = useMediaSource(source)
     const mediaParams = useMediaParams(id)
-    const [player, setPlayer] = useState<Player>()
+    const [isPlaying, setIsPlaying] = useState<boolean>(false)
 
-    useAutoplay(id, player, mediaParams.autoplay)
+    const onStart = useCallback(() => {
+      setIsPlaying(true)
+      dispatch(setItemIsPlaying(id, true))
+    }, [dispatch, id])
 
-    useMediaEvent(player, 'play', onStart)
-    useMediaEvent(player, 'pause', onStop)
-    useMediaEvent(player, 'ended', onStop)
+    const onStop = useCallback(() => {
+      setIsPlaying(false)
+      dispatch(setItemIsPlaying(id, false))
+    }, [dispatch, id])
 
     const options = useMemo<VideoJSOptions>(
       () => ({
@@ -56,12 +51,11 @@ export const AudioItemPlayer = memo(
       <MediaPlayer
         component="audio"
         options={options}
-        onPlayerReady={(player) => {
-          setPlayer(player)
-          onPlayerReady?.(player)
-        }}
         startTime={mediaParams.startTime ?? startTime ?? 0}
         stopTime={mediaParams.stopTime ?? stopTime ?? undefined}
+        onPlay={onStart}
+        onPause={onStop}
+        onEnded={onStop}
         style={{ display: 'block', width: '100%', height: '100%', ...style }}
         {...playerProps}
       />
