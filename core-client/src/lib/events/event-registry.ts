@@ -61,7 +61,7 @@ export function createEventRegistry<
     target: EventTarget | TypedEventTarget<TypedEvent>,
     mode: Mode | Mode[] | '__all__' = '__all__',
   ) {
-    mode = (mode !== '__all__' && !isArray(mode) ? [mode] : mode) as Mode[] | '__all__'
+    mode = mode !== '__all__' && !isArray(mode) ? [mode] : mode
     const instanceId = (instance as WithInstanceId)._instanceId ?? null
     const eventListeners = instanceId !== null ? eventListenersPerInstance.get(instanceId) : null
     const listenersForTarget = eventListeners?.get(category)

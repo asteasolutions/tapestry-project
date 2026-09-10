@@ -13,6 +13,10 @@
     "shared",
     "viewer"
   ],
+  "overrides": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "sh -c 'cd core && npm run lint' && sh -c 'cd core-client && npm run lint' && sh -c 'cd shared && npm run lint' && sh -c 'cd client && npm run lint' && sh -c 'cd server && npm run lint' && sh -c 'cd viewer && npm run lint'",

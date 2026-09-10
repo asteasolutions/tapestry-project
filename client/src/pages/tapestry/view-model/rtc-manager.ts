@@ -19,9 +19,7 @@ type SignallerMessageEvent = TypedEvent<'signaling-message', RTCSignalingMessage
 type SignallerDisconnectedEvent = TypedEvent<'signaller-disconnected', null>
 
 export type RTCSignallerEvent =
-  | SignallerConnectedEvent
-  | SignallerMessageEvent
-  | SignallerDisconnectedEvent
+  SignallerConnectedEvent | SignallerMessageEvent | SignallerDisconnectedEvent
 
 export interface RTCSignaller extends TypedEventTarget<RTCSignallerEvent> {
   sendSignallerMessage: (message: RTCSignalingMessage) => void
