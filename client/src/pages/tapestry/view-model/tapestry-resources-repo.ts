@@ -141,6 +141,28 @@ function createItemPatch(newItem: ItemDto, oldItem: ItemDto) {
   return isEmpty(patch) ? undefined : { ...patch, type: newItem.type }
 }
 
+const ITEM_READONLY_PROPS = [
+  'createdAt',
+  'updatedAt',
+  'tapestry',
+  'scheduledThumbnailProcessing',
+  'thumbnail',
+] as const
+
+const MEDIA_ITEM_READONLY_PROPS = [...ITEM_READONLY_PROPS, 'internallyHosted'] as const
+
+function itemToCreateParams(item: ItemDto): ItemCreateDto & { id: string } {
+  const readonlyProps: readonly string[] = isMediaItem(item)
+    ? MEDIA_ITEM_READONLY_PROPS
+    : ITEM_READONLY_PROPS
+
+  const createParams = Object.fromEntries(
+    Object.entries(item).filter(([key]) => !readonlyProps.includes(key)),
+  ) as ItemCreateDto & { id: string }
+
+  return createParams
+}
+
 type EventTypesMap = {
   socketManager: EventTypes<SocketManager>
 }
@@ -246,7 +268,7 @@ export class TapestryResourcesRepo extends ResourceRepo<TapestryResourceName, Ty
       throw new Error('Cannot create new tapestries!')
     }
     if (resourceName === 'items') {
-      return resource as ItemCreateDto & { id: string }
+      return itemToCreateParams(resource as ItemDto)
     }
     if (resourceName === 'groups') {
       return resource as GroupCreateDto & { id: string }
