@@ -81,7 +81,7 @@ function TapestryElementLocator({
     ])
   const item = useStoreData(`items.${id}`)
   const isInteractive = id === interactiveElement?.modelId
-  const isInSelection = isItemInSelection(item, selection)
+  const isInSelection = !!item && isItemInSelection(item, selection)
   const displayDom =
     !item || shouldDisplayDom({ disableOptimizations, thumbnailsInitialized, isInteractive }, item)
 
