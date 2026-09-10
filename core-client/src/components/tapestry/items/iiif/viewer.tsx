@@ -19,12 +19,16 @@ export const IiifItemViewer = memo(({ id }: TapestryElementComponentProps) => {
   return (
     <div className={styles.root}>
       <CloverViewer
+        // Disambiguates this instance's internal state/DOM ids from any other Viewer
+        // on the page showing the same manifest (e.g. the same source imported twice).
+        id={id}
         iiifContent={source}
         options={{
           canvasHeight: '100%',
           // Tapestry's own ItemToolbar already gives the item a title and controls.
           showTitle: false,
           showIIIFBadge: false,
+          showDownload: false,
           informationPanel: { open: false },
           withCredentials: false,
           openSeadragon: {
@@ -32,6 +36,10 @@ export const IiifItemViewer = memo(({ id }: TapestryElementComponentProps) => {
             // anonymously, matching the plain image viewer.
             crossOriginPolicy: 'Anonymous',
             ajaxWithCredentials: false,
+            // Fill the item's frame edge-to-edge instead of letterboxing, and skip the
+            // minimap overlay — Tapestry's own zoom/pan chrome is the item itself.
+            homeFillsViewer: true,
+            showNavigator: false,
           },
         }}
       />

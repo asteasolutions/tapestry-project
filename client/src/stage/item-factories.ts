@@ -149,7 +149,7 @@ const iiifItemFactory: ItemFactory = async (source, mediaType, tapestryId) => {
     // collections.
     if ((await getIAItemMetadata(descriptor.item.id))?.mediatype !== 'image') return null
     manifestUrl = getIAIIIFManifestURL(descriptor.item.id)
-  } else if (mediaType?.includes('json') || /\/iiif\/|manifest/i.test(source)) {
+  } else if (mediaType?.includes('json') || /iiif|manifest/i.test(source)) {
     // A directly pasted IIIF manifest URL. This covers any IIIF source, not just IA.
     manifestUrl = source
   } else {
