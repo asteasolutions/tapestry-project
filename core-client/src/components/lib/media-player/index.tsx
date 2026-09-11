@@ -1,36 +1,13 @@
 import { isEqual } from 'lodash-es'
-import { useEffect, useRef, useState, CSSProperties } from 'react'
-import videojs from 'video.js'
-import Player from 'video.js/dist/types/player'
+import { useRef, useState, CSSProperties, useMemo } from 'react'
 import { usePropRef } from '../hooks/use-prop-ref'
-import 'video.js/dist/video-js.css'
 import styles from './styles.module.css'
-
-export function useMediaEvent(
-  player: Player | undefined,
-  event: string,
-  callback: (player: Player) => unknown,
-) {
-  const callbackRef = usePropRef(callback)
-  useEffect(() => {
-    if (!player) {
-      return
-    }
-
-    const onEvent = () => callbackRef.current(player)
-    player.on(event, onEvent)
-
-    return () => player.off(event, onEvent)
-  }, [player, event, callbackRef])
-}
-
-export function getVideoElement(player: Player | undefined) {
-  return player?.el().querySelector('video')
-}
+import { ControlBar } from './control-bar'
+import clsx from 'clsx'
+import { createPortal } from 'react-dom'
+import { Id } from 'tapestry-core/src/data-format/schemas/common'
 
 type ComponentType = 'video' | 'audio'
-
-type OnPlayerReady = (player: Player) => unknown
 
 export interface VideoJSOptions {
   autoplay?: boolean | 'muted' | 'play' | 'any'
@@ -47,108 +24,255 @@ export interface VideoJSOptions {
 }
 
 export interface MediaPlayerProps<T extends ComponentType> {
+  id: Id
   component: T
   options: VideoJSOptions
-  onPlayerReady?: OnPlayerReady
   startTime: number
   stopTime?: number
   style?: CSSProperties
+  onPlay?: React.ReactEventHandler<HTMLVideoElement | HTMLAudioElement>
+  onPause?: React.ReactEventHandler<HTMLVideoElement | HTMLAudioElement>
+  onEnded?: React.ReactEventHandler<HTMLVideoElement | HTMLAudioElement>
+  onSeeked?: React.ReactEventHandler<HTMLVideoElement | HTMLAudioElement>
+  thumbnail?: string
 }
 
 export function MediaPlayer<T extends 'video' | 'audio'>({
+  id,
   component,
   options,
-  onPlayerReady,
   startTime,
   stopTime,
   style,
+  onPlay,
+  onPause,
+  onEnded,
+  onSeeked,
+  thumbnail,
 }: MediaPlayerProps<T>) {
-  const internalRef = useRef<HTMLDivElement | null>(null)
-
-  const playerRef = useRef<Player>(null)
-  const onReadyRef = usePropRef(onPlayerReady)
+  const mediaRef = useRef<HTMLVideoElement | HTMLAudioElement | null>(null)
+  const [volume, setVolume] = useState<number>(1)
+  const [playbackRate, setPlaybackRate] = useState<number>(1)
+  const isAudio = component === 'audio' || options.audioOnlyMode
 
   const autoStop = useRef(!!stopTime)
   const [currentPlaybackInterval, setCurrentPlaybackInterval] = useState({ startTime, stopTime })
+  const intervalRef = usePropRef(currentPlaybackInterval)
+
+  const [currentTime, setCurrentTime] = useState<number>(0)
+  const [duration, setDuration] = useState<number>(0)
+  const [isOver, setIsOver] = useState<boolean>(false)
+
+  const [isMoving, setIsMoving] = useState<boolean>(false)
+  const [isHovering, setIsHovering] = useState<boolean>(false)
+
   if (!isEqual(currentPlaybackInterval, { startTime, stopTime })) {
     setCurrentPlaybackInterval({ startTime, stopTime })
     autoStop.current = true
-    if (playerRef.current) {
-      playerRef.current.currentTime(startTime)
-      playerRef.current.pause()
+    if (mediaRef.current) {
+      mediaRef.current.currentTime = startTime
+      mediaRef.current.pause()
     }
   }
 
-  const intervalRef = usePropRef(currentPlaybackInterval)
-
-  useEffect(() => {
-    const { src, mediaType, ...restOptions } = options
-    const isVideo = component === 'video'
-    const currentOptions = {
-      fluid: true,
-      audioOnlyMode: !isVideo,
-      audioPosterMode: !isVideo,
-      playbackRates: [0.5, 1, 1.5, 2, 4],
-      ...restOptions,
+  const onTimeUpdate = () => {
+    if (!mediaRef.current) {
+      return
     }
 
-    if (!playerRef.current) {
-      const videoElement = document.createElement('video-js')
-      internalRef.current!.appendChild(videoElement)
+    const { startTime, stopTime } = intervalRef.current
+    const currentTime = mediaRef.current.currentTime
+    if (autoStop.current && stopTime && (currentTime >= stopTime || currentTime < startTime)) {
+      // If the playback goes outside the interval for any reason (either natural playback or seeking)
+      // we are pausing the auto stop functionality
+      autoStop.current = false
+      // If the playback naturally reached the stop time we pause the video
+      if (currentTime >= stopTime && !mediaRef.current.seeking) {
+        mediaRef.current.pause()
+      }
+    }
 
-      const player = videojs(videoElement, currentOptions, () => {
-        // It appears that video.js sets the crossorigin attribute after it has set the src.
-        // Therefore since we have preload != 'none' when attempting the capture the current
-        // video frame when pausing we end up with a security error. That's why the src is
-        // set in the ready callback
-        player.src({ src, type: mediaType || (isVideo ? 'video/mp4' : 'audio/mpeg') })
-        onReadyRef.current?.(player)
-      })
-      playerRef.current = player
+    setCurrentTime(currentTime)
+    setIsOver(currentTime === duration)
+  }
+
+  const onLoadedMetadata = () => {
+    if (!mediaRef.current) {
+      return
+    }
+    mediaRef.current.currentTime = intervalRef.current.startTime
+    setDuration(mediaRef.current.duration)
+    setIsOver(currentTime === duration)
+  }
+
+  const [isPlaying, setIsPlaying] = useState<boolean>(false)
+
+  const handlePlay = (e: React.SyntheticEvent<HTMLVideoElement | HTMLAudioElement>) => {
+    setIsPlaying(true)
+    onPlay?.(e)
+  }
+
+  const handlePause = (e: React.SyntheticEvent<HTMLVideoElement | HTMLAudioElement>) => {
+    setIsPlaying(false)
+    onPause?.(e)
+  }
+
+  const handleEnded = (e: React.SyntheticEvent<HTMLVideoElement | HTMLAudioElement>) => {
+    setIsPlaying(false)
+    onEnded?.(e)
+  }
+
+  const togglePlay = async () => {
+    if (!mediaRef.current) {
+      return
+    }
+
+    if (mediaRef.current.paused) {
+      await mediaRef.current.play()
     } else {
-      const player = playerRef.current
-      // @ts-expect-error VideoJS types leave a lot to be desired
-      if (src !== player.src()) {
-        player.src({ src, type: mediaType })
-      }
-      player.options(currentOptions)
-      player.poster(currentOptions.poster)
-      // From video.js, line 24518: Calling the audioPosterMode method first so that
-      // the audioOnlyMode can take precedence when both options are set to true
-      void player.audioPosterMode(currentOptions.audioPosterMode)
-      void player.audioOnlyMode(currentOptions.audioOnlyMode)
+      mediaRef.current.pause()
     }
-    const player = playerRef.current
+  }
 
-    const onTimeUpdate = () => {
-      const { startTime, stopTime } = intervalRef.current
-      const currentTime = player.currentTime()!
-      if (autoStop.current && stopTime && (currentTime >= stopTime || currentTime < startTime)) {
-        // If the playback goes outside the interval for any reason (either natural playback or seeking)
-        // we are pausing the auto stop functionality
-        autoStop.current = false
-        // If the playback naturally reached the stop time we pause the video
-        if (currentTime >= stopTime && !player.seeking()) {
-          player.pause()
-        }
-      }
+  const onSeek = (time: number) => {
+    if (mediaRef.current) {
+      mediaRef.current.currentTime = time
+      setCurrentTime(time)
+      setIsOver(currentTime === duration)
     }
+  }
 
-    const onLoadedMetadata = () => {
-      player.currentTime(intervalRef.current.startTime)
-      player.on('timeupdate', onTimeUpdate)
-    }
-    player.on('loadedmetadata', onLoadedMetadata)
-
+  const handleMouseMove = useMemo(() => {
+    let timer: NodeJS.Timeout
     return () => {
-      player.off('timeupdate', onTimeUpdate)
-      player.off('loadedmetadata', onLoadedMetadata)
+      setIsMoving(true)
+      clearTimeout(timer)
+      timer = setTimeout(() => {
+        setIsMoving(false)
+      }, 3000)
     }
-  }, [options, intervalRef, onReadyRef, component])
+  }, [])
+
+  const onVolumeChange = (newVolume: number) => {
+    if (mediaRef.current) {
+      mediaRef.current.volume = newVolume
+      mediaRef.current.muted = newVolume === 0
+      setVolume(newVolume)
+    }
+  }
+
+  const onPlaybackRateChange = (newRate: number) => {
+    if (mediaRef.current) {
+      mediaRef.current.playbackRate = newRate
+      setPlaybackRate(newRate)
+    }
+  }
+
+  const toggleFullscreen = async () => {
+    if (document.fullscreenElement) {
+      await document.exitFullscreen()
+    } else {
+      const fullscreenContainer = portal ?? mediaRef.current?.parentElement
+      if (fullscreenContainer) {
+        await fullscreenContainer.requestFullscreen()
+      }
+    }
+  }
+
+  const previousVolumeRef = useRef<number>(1)
+  const toggleMute = () => {
+    if (volume > 0) {
+      previousVolumeRef.current = volume
+      onVolumeChange(0)
+    } else {
+      onVolumeChange(previousVolumeRef.current > 0 ? previousVolumeRef.current : 1)
+    }
+  }
+
+  const portal = document.querySelector(`[data-model-id="${id}"]`)
 
   return (
-    <div data-vjs-player style={{ height: '100%' }}>
-      <div ref={internalRef} style={style} className={styles.root} />
+    <div
+      className={clsx(styles.root, { [styles.audioOnly]: isAudio })}
+      style={style}
+      onMouseMove={handleMouseMove}
+    >
+      {isAudio ? (
+        <audio
+          ref={mediaRef as React.RefObject<HTMLAudioElement>}
+          onLoadedMetadata={onLoadedMetadata}
+          onTimeUpdate={onTimeUpdate}
+          onPlay={handlePlay}
+          onPause={handlePause}
+          onEnded={handleEnded}
+          onSeeked={onSeeked}
+          src={options.src}
+          style={{ display: 'none' }}
+        />
+      ) : (
+        <video
+          ref={mediaRef as React.RefObject<HTMLVideoElement>}
+          onLoadedMetadata={onLoadedMetadata}
+          onTimeUpdate={onTimeUpdate}
+          onPlay={handlePlay}
+          onPause={handlePause}
+          onEnded={handleEnded}
+          onSeeked={onSeeked}
+          controls={false}
+          style={{
+            display: isPlaying ? 'block' : 'none',
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain',
+          }}
+          crossOrigin="anonymous"
+        >
+          <source src={options.src} type={options.mediaType || 'video/mp4'} />
+        </video>
+      )}
+
+      {thumbnail && (
+        <img
+          src={thumbnail}
+          // Images that may be loaded via `fetch` elsewhere must always be loaded with CORS policy "anonymous"
+          // in order to prevent cached CORS header errors in Chrome.
+          crossOrigin="anonymous"
+          alt="Video thumbnail"
+          style={{
+            display: isPlaying ? 'none' : 'block',
+            height: '100%',
+            width: '100%',
+            objectFit: 'cover',
+            pointerEvents: 'none',
+          }}
+        />
+      )}
+
+      {portal &&
+        createPortal(
+          <div
+            className={styles.controlBar}
+            onMouseEnter={() => setIsHovering(true)}
+            onMouseLeave={() => setIsHovering(false)}
+          >
+            <ControlBar
+              isOpen={isAudio || isMoving || isHovering || !isPlaying}
+              isPlaying={isPlaying}
+              togglePlay={togglePlay}
+              currentTime={currentTime}
+              duration={duration}
+              isOver={isOver}
+              onSeek={onSeek}
+              volume={volume}
+              onVolumeChange={onVolumeChange}
+              toggleMute={toggleMute}
+              playbackRate={playbackRate}
+              onPlaybackRateChange={onPlaybackRateChange}
+              toggleFullScreen={isAudio ? undefined : toggleFullscreen}
+            />
+          </div>,
+          portal,
+        )}
     </div>
   )
 }
