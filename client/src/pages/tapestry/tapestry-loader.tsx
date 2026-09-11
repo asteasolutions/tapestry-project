@@ -162,12 +162,8 @@ export function TapestryLoader({ id, mode }: TapestryLoaderProps) {
     )
   }
 
-  if (!id || loading) {
+  if (!id || loading || !tapestryDataSync) {
     return <LoadingLogo />
-  }
-
-  if (!tapestryDataSync) {
-    return 'Tapestry not found'
   }
 
   return (
