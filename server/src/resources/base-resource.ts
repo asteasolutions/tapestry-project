@@ -140,7 +140,8 @@ export function bindEndpoints<E extends Record<string, Endpoint>, ListFilter>(
       E[keyof E]
     >
     const createListFilter = get(accessPolicy, 'createListFilter') as
-      ListFilterFactory<ListFilter> | undefined
+      | ListFilterFactory<ListFilter>
+      | undefined
     bindEndpoint(
       router,
       endpoints[endpointName],

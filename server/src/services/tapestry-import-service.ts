@@ -30,7 +30,10 @@ import { generateThumbnails } from '../tasks/utils.js'
 class ImportError extends BadRequestError {
   constructor(
     public type:
-      'root-not-found' | 'bad-item-source' | 'item-source-not-found' | 'unrecognized-version',
+      | 'root-not-found'
+      | 'bad-item-source'
+      | 'item-source-not-found'
+      | 'unrecognized-version',
     public message = '',
   ) {
     super(message)

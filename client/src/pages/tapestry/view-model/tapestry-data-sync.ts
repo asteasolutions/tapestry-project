@@ -283,31 +283,41 @@ export class TapestryDataSync {
 
   private createTapestryRepoPatches(tapestry: EditableTapestryViewModel) {
     return [
-      ...EDITABLE_TAPESTRY_PROPS.map((prop): Patch => ({
-        op: 'replace',
-        path: ['tapestries', this.tapestryId, prop],
-        value: tapestry[prop],
-      })),
-      ...Object.values(tapestry.items).map((item): Patch => ({
-        op: 'replace',
-        path: ['items', item!.dto.id],
-        value: item!.dto,
-      })),
-      ...Object.values(tapestry.rels).map((rel): Patch => ({
-        op: 'replace',
-        path: ['rels', rel!.dto.id],
-        value: rel!.dto,
-      })),
-      ...Object.values(tapestry.groups).map((group): Patch => ({
-        op: 'replace',
-        path: ['groups', group!.dto.id],
-        value: group!.dto,
-      })),
-      ...Object.values(tapestry.presentationSteps).map((step): Patch => ({
-        op: 'replace',
-        path: ['presentationSteps', step!.dto.id],
-        value: step!.dto,
-      })),
+      ...EDITABLE_TAPESTRY_PROPS.map(
+        (prop): Patch => ({
+          op: 'replace',
+          path: ['tapestries', this.tapestryId, prop],
+          value: tapestry[prop],
+        }),
+      ),
+      ...Object.values(tapestry.items).map(
+        (item): Patch => ({
+          op: 'replace',
+          path: ['items', item!.dto.id],
+          value: item!.dto,
+        }),
+      ),
+      ...Object.values(tapestry.rels).map(
+        (rel): Patch => ({
+          op: 'replace',
+          path: ['rels', rel!.dto.id],
+          value: rel!.dto,
+        }),
+      ),
+      ...Object.values(tapestry.groups).map(
+        (group): Patch => ({
+          op: 'replace',
+          path: ['groups', group!.dto.id],
+          value: group!.dto,
+        }),
+      ),
+      ...Object.values(tapestry.presentationSteps).map(
+        (step): Patch => ({
+          op: 'replace',
+          path: ['presentationSteps', step!.dto.id],
+          value: step!.dto,
+        }),
+      ),
     ]
   }
 

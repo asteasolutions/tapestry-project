@@ -87,7 +87,8 @@ export class EditorRelRenderer extends RelRenderer<EditableRelViewModel> {
     theme,
     relScale,
   }: RelRenderState<EditableRelViewModel>):
-    (CommentsIndicatorContainerState & { position: Point }) | undefined {
+    | (CommentsIndicatorContainerState & { position: Point })
+    | undefined {
     if (!fromItem || !toItem) {
       return
     }

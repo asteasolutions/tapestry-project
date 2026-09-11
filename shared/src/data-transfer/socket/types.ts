@@ -35,12 +35,10 @@ interface ServerEventDescriptor {
 // SubscriptionEventDescriptors, like the client's socket manager, need it widened to `string`.
 const _serverToClient = {
   'tapestry-updated': {
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
     params: '' as string,
     ack: (_payload: TapestryUpdate): void => undefined,
   },
   'rtc-signaling-message': {
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
     params: '' as string,
     ack: (_payload: RTCSignalingMessage): void => undefined,
   },

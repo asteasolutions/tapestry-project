@@ -28,7 +28,7 @@ export function SubmitOnBlurInput({
       onSubmit={(e) => {
         e.preventDefault()
         // We could use a ref as well, but since this is fairly isolated I decided to skip on it --ivo
-        e.target.querySelector('input')?.blur()
+        e.currentTarget.querySelector('input')?.blur()
       }}
       className={formClass}
     >

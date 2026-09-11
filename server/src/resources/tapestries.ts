@@ -204,7 +204,8 @@ export async function canListTapestryElements(
   userId: string | null,
 ) {
   const tapestryId = filter?.find(({ prop, op }) => prop === 'tapestryId' && op === 'eq')?.value as
-    string | undefined
+    | string
+    | undefined
 
   if (!tapestryId) return false
 

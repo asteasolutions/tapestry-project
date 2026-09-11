@@ -98,5 +98,7 @@ export type MediaItemUpdateDto = DistributiveOmit<
 export type ItemDto = TextItemDto | ActionButtonItemDto | MediaItemDto
 export type ItemCreateDto = TextItemCreateDto | ActionButtonItemCreateDto | MediaItemCreateDto
 export type ItemCreateInTapestryDto =
-  TextItemCreateInTapestryDto | ActionButtonItemCreateInTapestryDto | MediaItemCreateInTapestryDto
+  | TextItemCreateInTapestryDto
+  | ActionButtonItemCreateInTapestryDto
+  | MediaItemCreateInTapestryDto
 export type ItemUpdateDto = TextItemUpdateDto | ActionButtonItemUpdateDto | MediaItemUpdateDto
