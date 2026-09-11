@@ -21,7 +21,7 @@ import StarterKit, { StarterKitOptions } from '@tiptap/starter-kit'
 import clsx from 'clsx'
 import ColorConstructor from 'color'
 import { compact, mapValues, trim } from 'lodash-es'
-import { MouseEventHandler, useRef } from 'react'
+import { FunctionComponent, MouseEventHandler, useRef } from 'react'
 import { PropsWithStyle } from '..'
 import { LiteralColor } from '../../../theme/types'
 import { Color } from './color-extension'
@@ -122,20 +122,23 @@ export interface Controls {
   comment?: false | Mark<CommentOptions>
 }
 
-export interface RichTextEditorProps extends PropsWithStyle {
+export type RichTextEditorEvents<C extends Controls = Controls> = {
+  onChange?: (value: string) => unknown
+  onCreate?: (editor: Editor) => unknown
+  onSelectionChanged?: (state: SelectionState) => unknown
+  onClick?: MouseEventHandler<HTMLDivElement>
+  onKeyDown?: (e: React.KeyboardEvent<HTMLDivElement>) => unknown
+} & (C['link'] extends false ? unknown : { onCreateLink?: () => boolean }) &
+  (C['comment'] extends false ? unknown : { CommentBubble?: FunctionComponent<{ editor: Editor }> })
+
+export interface RichTextEditorProps<C extends Controls = Controls> extends PropsWithStyle {
   value: string
   isEditable: boolean
   api?: React.RefObject<RichTextEditorApi | undefined>
   placeholder?: string
-  events?: {
-    onChange?: (value: string) => unknown
-    onCreate?: (editor: Editor) => unknown
-    onSelectionChanged?: (state: SelectionState) => unknown
-    onCreateLink?: () => boolean
-    onClick?: MouseEventHandler<HTMLDivElement>
-    onKeyDown?: (e: React.KeyboardEvent<HTMLDivElement>) => unknown
-  }
-  controls?: Controls
+  events?: RichTextEditorEvents<C>
+  controls?: C
+  BubbleMenu?: FunctionComponent<{ editor: Editor }>
 }
 
 interface ExtensionOptions {
@@ -175,7 +178,7 @@ function getExtensions({ placeholder, onCreateLink, controls = {} }: ExtensionOp
       : (controls.justification ?? TextAlign.configure({ types: ['heading', 'paragraph'] })),
     controls.fontSize === false ? undefined : (controls.fontSize ?? FontSizeExtension),
     controls.fontFamily === false ? undefined : (controls.fontFamily ?? FontFamily),
-    controls.comment === false ? undefined : (controls.comment ?? Comment),
+    ...(controls.comment === false ? [] : [controls.comment ?? Comment]),
     ...(placeholder ? [Placeholder.configure({ placeholder, showOnlyWhenEditable: false })] : []),
   ])
 }

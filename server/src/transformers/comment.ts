@@ -16,6 +16,7 @@ export async function commentDbToDto(dbComment: Comment): Promise<CommentDto> {
       item: dbComment.itemId,
       rel: dbComment.relId,
       comment: dbComment.parentCommentId,
+      annotation: dbComment.annotationId,
     }[dbComment.contextType]!,
     tapestryId: dbComment.tapestryId,
     deletedAt: dbComment.deletedAt,
@@ -34,6 +35,7 @@ const DB_TO_DTO_FIELD_MAP: Record<CommentDBField, string> = {
   itemId: 'contextId',
   relId: 'contextId',
   parentCommentId: 'contextId',
+  annotationId: 'annotationId',
   deletedAt: 'deletedAt',
 }
 

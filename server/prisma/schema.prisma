@@ -29,6 +29,7 @@ model User {
   aiChats              AiChat[]
   secrets              UserSecret[]
   tapestryBookmarks    TapestryBookmark[]
+  itemAnnotations      ItemAnnotation[]
 }
 
 enum UITheme {
@@ -210,6 +211,7 @@ model Item {
   comments                     Comment[]
   presentationSteps            PresentationStep[]
   referencingAttachments       AiChatMessageAttachment[]
+  itemAnnotations              ItemAnnotation[]
 }
 
 model PresentationStep {
@@ -262,6 +264,7 @@ enum CommentContextType {
   item
   rel
   comment
+  annotation
 }
 
 model Comment {
@@ -281,6 +284,8 @@ model Comment {
   parentComment   Comment?           @relation("reply", fields: [parentCommentId], references: [id], onDelete: Cascade)
   parentCommentId String?
   replies         Comment[]          @relation("reply")
+  annotation      ItemAnnotation?    @relation(fields: [annotationId], references: [id], onDelete: Cascade)
+  annotationId    String?
   deletedAt       DateTime?
 }
 
@@ -394,4 +399,16 @@ model UserSecret {
   maskedValue String
   owner       User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   ownerId     String
+}
+
+model ItemAnnotation {
+  id        String    @id @default(uuid())
+  createdAt DateTime  @default(now())
+  updateAt  DateTime  @updatedAt
+  elementId String?
+  item      Item?     @relation(fields: [itemId], references: [id], onDelete: NoAction)
+  itemId    String?
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  comments  Comment[]
 }

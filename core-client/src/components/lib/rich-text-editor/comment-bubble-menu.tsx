@@ -29,7 +29,7 @@ export function CommentBubbleMenu({ editor }: CommentBubbleMenuProps) {
       style={{ transform: 'scale(calc(1 / var(--scale)))' }}
       options={{
         placement: 'right-end',
-        offset: { crossAxis: 10, mainAxis: -5 },
+        offset: { crossAxis: 10 },
         onHide: () => {
           setIsAdding(false)
           setNote('')

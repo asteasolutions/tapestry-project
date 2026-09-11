@@ -22,7 +22,7 @@
         }
       }
 
-      :global(span[data-comment]) {
+      :global(span[data-annotation-id]) {
         text-decoration: underline dotted;
         text-decoration-color: var(--theme-icon-primary);
         text-underline-offset: 3px;

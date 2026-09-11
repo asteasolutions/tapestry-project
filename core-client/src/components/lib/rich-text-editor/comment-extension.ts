@@ -13,6 +13,8 @@ declare module '@tiptap/core' {
   }
 }
 
+const ID_ATTR = 'data-annotation-id'
+
 export const Comment = Mark.create<CommentOptions>({
   name: 'comment',
 
@@ -20,15 +22,14 @@ export const Comment = Mark.create<CommentOptions>({
     return {
       note: {
         default: null,
-        parseHTML: (element) => element.getAttribute('data-comment'),
-        renderHTML: ({ note }: { note?: string | null }) =>
-          note ? { 'data-comment': note, title: note } : {},
+        parseHTML: (element) => element.getAttribute(ID_ATTR),
+        renderHTML: ({ note }: { note?: string | null }) => (note ? { [ID_ATTR]: note } : {}),
       },
     }
   },
 
   parseHTML() {
-    return [{ tag: 'span[data-comment]' }]
+    return [{ tag: `span[${ID_ATTR}]` }]
   },
 
   renderHTML({ HTMLAttributes }) {

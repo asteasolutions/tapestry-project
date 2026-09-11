@@ -151,6 +151,7 @@ export function MessageInput({
                 justification: false,
                 fontFamily: false,
                 fontSize: false,
+                comment: false,
               }}
               events={{
                 onCreate: () => setIsEditorReady(true),

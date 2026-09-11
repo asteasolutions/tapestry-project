@@ -1,3 +1,4 @@
+import { AnnotationDto } from '../schemas/annotation.js'
 import { BaseResourceDto } from './common.js'
 import { ItemDto } from './item.js'
 import { RelDto } from './rel.js'
@@ -33,15 +34,26 @@ export interface ReplyDto extends BaseCommentDto {
   parentComment?: CommentDto | null
 }
 
-export type CommentDto = TapestryCommentDto | ItemCommentDto | RelCommentDto | ReplyDto
+export interface ItemAnnotationCommentDto extends BaseCommentDto {
+  contextType: 'annotation'
+  annotation?: AnnotationDto | null
+}
 
-type CommentCreateOmitProps = keyof BaseResourceDto | 'autor' | 'authorId'
+export type CommentDto =
+  | TapestryCommentDto
+  | ItemCommentDto
+  | RelCommentDto
+  | ReplyDto
+  | ItemAnnotationCommentDto
+
+type CommentCreateOmitProps = keyof BaseResourceDto | 'author' | 'authorId'
 
 export type CommentCreateDto =
   | Omit<TapestryCommentDto, CommentCreateOmitProps | 'tapestry'>
   | Omit<ItemCommentDto, CommentCreateOmitProps | 'item'>
   | Omit<RelCommentDto, CommentCreateOmitProps | 'rel'>
-  | Omit<ReplyDto, CommentCreateOmitProps>
+  | Omit<ReplyDto, CommentCreateOmitProps | 'parentComment'>
+  | Omit<ItemAnnotationCommentDto, CommentCreateOmitProps | 'annotataion'>
 
 export interface CommentUpdateDto {
   text: BaseCommentDto['text']

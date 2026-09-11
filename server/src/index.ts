@@ -38,6 +38,7 @@ import { presentationStepBatchMutations } from './resources/presentation-step-ba
 import { socketServer } from './socket/index.js'
 import { userSecrets } from './resources/user-secrets.js'
 import { tapestryBookmarks } from './resources/tapestry-bookmarks.js'
+import { annotations } from './resources/annotations'
 import qs from 'qs'
 
 export const app = express()
@@ -87,6 +88,7 @@ app.use(
   bindEndpoints(resources.presentationStepBatchMutations, presentationStepBatchMutations),
   bindEndpoints(resources.userSecrets, userSecrets),
   bindEndpoints(resources.tapestryBookmarks, tapestryBookmarks),
+  bindEndpoints(resources.annotations, annotations),
 )
 app.use(express.static(path.join(import.meta.dirname, 'assets')))
 
