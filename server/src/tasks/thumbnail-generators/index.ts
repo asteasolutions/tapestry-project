@@ -30,8 +30,8 @@ export async function generatePrimaryThumbnail(
 ) {
   if (item.type === 'iiif') {
     // An iiif item is a deep-zoom tiled image, not a flat one. Render a bounded derivative
-    // of its first canvas from the IIIF Image API instead, for use as the thumbnail. The
-    // item's source is the manifest URL; resolve the canvas's image service from it.
+    // of its first canvas from the IIIF Image API instead, and use it as the thumbnail.
+    // The item's source is the manifest URL. Resolve the canvas's image service from it.
     const thumbWidth = Math.max(MIN_THUMBNAIL_SIZE, item.width)
     const canvas = await fetchIIIFFirstCanvas(item.source!)
     if (!canvas) return

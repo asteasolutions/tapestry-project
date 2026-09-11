@@ -111,9 +111,8 @@ async function resolveWebSource(item: ItemCreateDto | ItemUpdateDto) {
 /**
  * Normalize an iiif item's source. The client usually resolves the manifest itself and
  * sets `skipSourceResolution`. This function handles the direct-API case instead. It
- * accepts an Internet Archive item URL or a direct manifest URL, deriving the manifest
- * URL from an IA URL, and confirms the manifest actually resolves to an image before
- * accepting it.
+ * accepts an Internet Archive item URL or a direct manifest URL. It derives the manifest
+ * URL from an IA URL. It confirms the manifest resolves to an image before accepting it.
  */
 async function resolveIiifSource(item: (ItemCreateDto | ItemUpdateDto) & { type: 'iiif' }) {
   if (!item.source || item.skipSourceResolution) return

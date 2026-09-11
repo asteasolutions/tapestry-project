@@ -1,11 +1,12 @@
 /**
  * Minimal helpers for IIIF (International Image Interoperability Framework) content.
  *
- * The viewer itself (Clover IIIF) parses and renders a manifest directly from its URL,
- * so an iiif item's `source` is always just the plain manifest URL. This module now
- * only resolves a manifest's first canvas for the two places that still need a concrete
- * image ahead of time: sizing a newly created item, and generating its server-side
- * thumbnail. It supports both IIIF Presentation API versions, 2.x and 3.x.
+ * Clover IIIF parses and renders a manifest directly from its URL. An iiif item's
+ * `source` is the plain manifest URL. This module resolves a manifest's first canvas
+ * instead, for callers that need one concrete image ahead of time: item sizing,
+ * thumbnail generation, and the single-canvas viewer path. It also counts a manifest's
+ * canvases, to tell a single-canvas manifest from a multi-canvas one. It supports both
+ * IIIF Presentation API versions, 2.x and 3.x.
  */
 
 /** The information needed to render a single IIIF image as a deep-zoomable item. */
@@ -136,6 +137,15 @@ export function parseIIIFManifest(manifest: unknown): IIIFCanvas | null {
   }
 
   return null
+}
+
+/** Count a IIIF manifest's canvases, 2.x or 3.x. Return 0 if the value is not a recognizable manifest. */
+export function countIIIFCanvases(manifest: unknown): number {
+  const root = asRecord(manifest)
+  if (!root) return 0
+  if (Array.isArray(root.items)) return root.items.length
+  const sequence = asRecord(first(root.sequences))
+  return Array.isArray(sequence?.canvases) ? sequence.canvases.length : 0
 }
 
 /** Fetch a IIIF manifest by URL. Return the parsed JSON. Return `null` on any network or parse failure. */

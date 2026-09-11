@@ -4,9 +4,8 @@
   height: 100%;
 
   /*
-   * Map Clover's theme tokens onto Tapestry's own theme variables (see
-   * core-client/src/theme/index.ts's serializeTheme), rather than the deprecated
-   * customTheme prop, so the viewer follows Tapestry's light/dark theme automatically.
+   * Map Clover's theme tokens to Tapestry's theme variables (see
+   * core-client/src/theme/index.ts). This makes the viewer follow Tapestry's theme.
    */
   --clover-color-primary: var(--theme-text-primary);
   --clover-color-primary-alt: var(--theme-text-primary-inverse);

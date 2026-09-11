@@ -134,10 +134,10 @@ export async function createIAMediaItems(tapestryId: string, iaItems: IAItem[]) 
 /**
  * Create a IIIF item. Accept two kinds of source: an Internet Archive item URL for an
  * image-type item, or a direct IIIF Presentation manifest URL. Derive the manifest URL
- * from an IA URL. Confirm the manifest actually resolves to an image before creating
- * the item, so a bad or unrelated URL falls through to the remaining factories (IA
- * collections/playlists, plain webpages) instead. The viewer renders the manifest URL
- * directly; it does its own parsing of the full manifest, not just this first canvas.
+ * from an IA URL. Confirm the manifest resolves to an image before creating the item. A
+ * bad or unrelated URL then falls through to the remaining factories: IA
+ * collections/playlists, then plain webpages. The viewer renders the manifest URL
+ * directly and parses the full manifest itself, not just this first canvas.
  */
 const iiifItemFactory: ItemFactory = async (source, mediaType, tapestryId) => {
   if (typeof source !== 'string' || !isHTTPURL(source)) return null
@@ -159,8 +159,8 @@ const iiifItemFactory: ItemFactory = async (source, mediaType, tapestryId) => {
   if (!(await fetchIIIFFirstCanvas(manifestUrl))) return null
 
   const item = await createMediaItem('iiif', manifestUrl, tapestryId)
-  // The client has already resolved the manifest URL (from an IA source, if that's what
-  // this was). The server does not need to redo it.
+  // The client already resolved the manifest URL, including from an IA source. The
+  // server does not need to redo it.
   item.skipSourceResolution = true
 
   return { items: [item], iaImports: [] }
