@@ -14,7 +14,9 @@ import {
   getIAItemMetadata,
   getIAPlaylistEntries,
   getNestedIAItems,
+  getIAIIIFManifestURL,
 } from 'tapestry-core/src/internet-archive'
+import { fetchIIIFFirstCanvas } from 'tapestry-core/src/iiif'
 import { MediaItemType, WebpageType } from 'tapestry-core/src/data-format/schemas/item'
 import { getUserListItems } from '../lib/internet-archive'
 import { parseMediaSource, parseStringTransferData } from './data-transfer-handler'
@@ -129,6 +131,41 @@ export async function createIAMediaItems(tapestryId: string, iaItems: IAItem[]) 
   )
 }
 
+/**
+ * Create a IIIF item. Accept two kinds of source: an Internet Archive item URL for an
+ * image-type item, or a direct IIIF Presentation manifest URL. Derive the manifest URL
+ * from an IA URL. Confirm the manifest resolves to an image before creating the item. A
+ * bad or unrelated URL then falls through to the remaining factories: IA
+ * collections/playlists, then plain webpages. The viewer renders the manifest URL
+ * directly and parses the full manifest itself, not just this first canvas.
+ */
+const iiifItemFactory: ItemFactory = async (source, mediaType, tapestryId) => {
+  if (typeof source !== 'string' || !isHTTPURL(source)) return null
+
+  let manifestUrl: string
+  const descriptor = parseInternetArchiveURL(source)
+  if (descriptor && descriptor.urlType !== 'user-list') {
+    // Only handle image-type IA items here. Let iaFactory handle audio, video, and
+    // collections.
+    if ((await getIAItemMetadata(descriptor.item.id))?.mediatype !== 'image') return null
+    manifestUrl = getIAIIIFManifestURL(descriptor.item.id)
+  } else if (mediaType?.includes('json') || /iiif|manifest/i.test(source)) {
+    // A directly pasted IIIF manifest URL. This covers any IIIF source, not just IA.
+    manifestUrl = source
+  } else {
+    return null
+  }
+
+  if (!(await fetchIIIFFirstCanvas(manifestUrl))) return null
+
+  const item = await createMediaItem('iiif', manifestUrl, tapestryId)
+  // The client already resolved the manifest URL, including from an IA source. The
+  // server does not need to redo it.
+  item.skipSourceResolution = true
+
+  return { items: [item], iaImports: [] }
+}
+
 const iaFactory: ItemFactory = async (source, _mediaType, tapestryId) => {
   if (typeof source !== 'string' || !isHTTPURL(source)) return null
 
@@ -214,6 +251,7 @@ export const ITEM_FACTORIES: ItemFactory[] = [
   linkFileFactory,
   textItemFactory,
   htmlFileItemFactory,
+  iiifItemFactory,
   iaFactory,
   webpageItemFactory,
 ]

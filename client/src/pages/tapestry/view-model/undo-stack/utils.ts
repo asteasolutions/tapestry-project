@@ -1,5 +1,5 @@
 import { Patch } from 'immer'
-import { get } from 'lodash'
+import { get } from 'lodash-es'
 
 /**
  * Gets the new value which will be applied at the given path by the given patch, or `undefined` if the patch

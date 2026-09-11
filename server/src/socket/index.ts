@@ -53,8 +53,8 @@ export class DBSubscriber {
     this.subscriber.notifications.on(DEFAULT_CHANNEL, listener)
   }
 
-  async notify(notification: DBNotification) {
-    return this.subscriber.notify(DEFAULT_CHANNEL, notification)
+  async notify(notification: DBNotification): Promise<void> {
+    await this.subscriber.notify(DEFAULT_CHANNEL, notification)
   }
 
   async close() {

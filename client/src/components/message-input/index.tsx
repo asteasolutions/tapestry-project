@@ -14,7 +14,7 @@ import { richTextEditorToolbar } from '../tapestry-elements/items/text/toolbar'
 import { Toolbar } from 'tapestry-core-client/src/components/lib/toolbar'
 import { useTapestryPath } from '../../hooks/use-tapestry-path'
 import { useTapestryData } from '../../pages/tapestry/tapestry-providers'
-import { noop } from 'lodash'
+import { noop } from 'lodash-es'
 import { isMeta } from 'tapestry-core-client/src/lib/keyboard-event'
 import { useTextboxLink } from '../../hooks/use-textbox-link'
 

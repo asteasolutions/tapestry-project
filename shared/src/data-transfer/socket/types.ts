@@ -30,9 +30,14 @@ interface ServerEventDescriptor {
   ack: (...args: any) => void
 }
 
-// This constant is only used to ensure type-safety
+// This constant is only used to ensure type-safety. `params` is asserted to `string` (rather
+// than the literal `''` an `as const` would otherwise infer) because consumers of
+// SubscriptionEventDescriptors, like the client's socket manager, need it widened to `string`.
 const _serverToClient = {
-  'tapestry-updated': { params: '' as string, ack: (_payload: TapestryUpdate): void => undefined },
+  'tapestry-updated': {
+    params: '' as string,
+    ack: (_payload: TapestryUpdate): void => undefined,
+  },
   'rtc-signaling-message': {
     params: '' as string,
     ack: (_payload: RTCSignalingMessage): void => undefined,
