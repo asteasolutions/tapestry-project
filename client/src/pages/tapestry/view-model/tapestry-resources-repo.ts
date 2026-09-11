@@ -27,7 +27,7 @@ import {
   RelUpdateDto,
 } from 'tapestry-shared/src/data-transfer/resources/dtos/rel'
 import { idFilter, listAll, resource, RESTMethodOptions } from '../../../services/rest-resources'
-import { isEmpty, isEqual } from 'lodash-es'
+import { isEmpty, isEqual, omit } from 'lodash-es'
 import {
   BaseResourceDto,
   BatchMutationDto,
@@ -141,6 +141,21 @@ function createItemPatch(newItem: ItemDto, oldItem: ItemDto) {
   return isEmpty(patch) ? undefined : { ...patch, type: newItem.type }
 }
 
+const ITEM_READONLY_PROPS = [
+  'createdAt',
+  'updatedAt',
+  'tapestry',
+  'scheduledThumbnailProcessing',
+  'thumbnail',
+] as const
+
+const MEDIA_ITEM_READONLY_PROPS = [...ITEM_READONLY_PROPS, 'internallyHosted'] as const
+
+function itemToCreateParams(item: ItemDto): ItemCreateDto & { id: string } {
+  const readonlyProps = isMediaItem(item) ? MEDIA_ITEM_READONLY_PROPS : ITEM_READONLY_PROPS
+  return omit(item, readonlyProps) as ItemCreateDto & { id: string }
+}
+
 type EventTypesMap = {
   socketManager: EventTypes<SocketManager>
 }
@@ -246,7 +261,7 @@ export class TapestryResourcesRepo extends ResourceRepo<TapestryResourceName, Ty
       throw new Error('Cannot create new tapestries!')
     }
     if (resourceName === 'items') {
-      return resource as ItemCreateDto & { id: string }
+      return itemToCreateParams(resource as ItemDto)
     }
     if (resourceName === 'groups') {
       return resource as GroupCreateDto & { id: string }
