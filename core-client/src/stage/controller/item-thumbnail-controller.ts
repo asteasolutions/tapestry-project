@@ -1,10 +1,10 @@
 import { ImageAssetRendition } from 'tapestry-core/src/data-format/schemas/item'
 import { TapestryStageController } from '.'
 import { Store } from '../../lib/store'
-import { ItemViewModel, TapestryViewModel } from '../../view-model'
+import { ItemViewModel, TapestryViewModel, Viewport } from '../../view-model'
 import { IdMap, idMapToArray } from 'tapestry-core/src/utils'
 import { ORIGIN, Rectangle, scaleSize, Size } from 'tapestry-core/src/lib/geometry'
-import { debounce, minBy, uniqueId } from 'lodash-es'
+import { debounce, maxBy, minBy, uniqueId } from 'lodash-es'
 import { positionAtViewport } from '../../view-model/utils'
 import {
   ThumbnailLoadError,
@@ -58,10 +58,8 @@ export class ItemThumbnailController implements TapestryStageController {
         this.setLoadedRendition(itemId, rendition)
       })
       this.initialThumbnails = undefined
-      this.onInitialized()
-    } else {
-      this.fetchInitialThumbnails()
     }
+    this.fetchInitialThumbnails()
   }
 
   dispose(): void {
@@ -121,6 +119,9 @@ export class ItemThumbnailController implements TapestryStageController {
 
   private fetchInitialThumbnails() {
     for (const item of idMapToArray(this.store.get('items'))) {
+      if (this.thumbnails[item.dto.id]) {
+        continue
+      }
       const thumbnailRenditions = item.dto.thumbnail?.renditions ?? []
       const rendition = minBy(thumbnailRenditions, ({ size }) => size.width)
       if (!rendition) {
@@ -130,6 +131,9 @@ export class ItemThumbnailController implements TapestryStageController {
 
       const requestId = this.requestThumbnailRendition(item.dto.id, rendition)
       this.initialRequestIds.add(requestId)
+    }
+    if (this.initialRequestIds.size === 0) {
+      this.onInitialized()
     }
   }
 
@@ -143,23 +147,33 @@ export class ItemThumbnailController implements TapestryStageController {
     return maxLOD
   }
 
+  private getLoadRect(viewport: Viewport) {
+    const {
+      size,
+      transform: { scale },
+    } = viewport
+
+    const loadMargin = Math.min(size.width, size.height) / 3
+
+    return new Rectangle(positionAtViewport(viewport, ORIGIN), scaleSize(size, 1 / scale)).expand(
+      loadMargin / scale,
+    )
+  }
+
   private recalculateLOD = debounce(() => {
     const viewport = this.store.get('viewport')
-    const viewportRect = new Rectangle(
-      positionAtViewport(viewport, ORIGIN),
-      scaleSize(viewport.size, 1 / viewport.transform.scale),
-    )
+    const loadRect = this.getLoadRect(viewport)
     const items = idMapToArray(this.store.get('items'))
     const maxLOD = this.computeMaxLOD(items.length)
     for (const item of idMapToArray(this.store.get('items'))) {
-      this.recalculateLODForItem(item, viewport.transform.scale, viewportRect, maxLOD)
+      this.recalculateLODForItem(item, viewport.transform.scale, loadRect, maxLOD)
     }
   }, 250)
 
   private recalculateLODForItem(
     item: ItemViewModel,
     scale: number,
-    viewportRect: Rectangle,
+    loadRect: Rectangle,
     maxLOD: number,
     forceReload = false,
   ) {
@@ -176,8 +190,8 @@ export class ItemThumbnailController implements TapestryStageController {
     const { requestedRendition, loadedRendition } = this.thumbnails[itemId]
     const requestedOrLoadedRendition = requestedRendition ?? loadedRendition
 
-    const isVisible = viewportRect.intersects(new Rectangle(item.dto))
-    if (!forceReload && !isVisible && requestedOrLoadedRendition) return
+    const isVisible = loadRect.intersects(new Rectangle(item.dto))
+    if (!forceReload && !isVisible) return
 
     if (
       forceReload ||
@@ -207,15 +221,17 @@ export class ItemThumbnailController implements TapestryStageController {
     // pixel ratio (we want to load higher-resolution images on higher-resolution displays such as retina displays).
     // Thumbnail renditions should have the same aspect ratio as the item, so comparing only width should suffice.
     const levelOfDetail = Math.min(width * Math.min(2, window.devicePixelRatio), maxLOD)
-    return minBy(renditions, ({ size }) => Math.abs(size.width - levelOfDetail))
+    return (
+      minBy(
+        renditions.filter(({ size }) => size.width >= levelOfDetail),
+        ({ size }) => size.width - levelOfDetail,
+      ) ?? maxBy(renditions, ({ size }) => size.width)
+    )
   }
 
   private onItemsChanged = debounce((itemsMap: TapestryViewModel['items']) => {
     const viewport = this.store.get('viewport')
-    const viewportRect = new Rectangle(
-      positionAtViewport(viewport, ORIGIN),
-      scaleSize(viewport.size, 1 / viewport.transform.scale),
-    )
+    const loadRect = this.getLoadRect(viewport)
     const items = idMapToArray(itemsMap)
     const maxLOD = this.computeMaxLOD(items.length)
     for (const item of items) {
@@ -224,7 +240,7 @@ export class ItemThumbnailController implements TapestryStageController {
       if (
         item.dto.thumbnail?.renditions.every((r) => r.source !== requestedOrLoadedRendition?.source)
       ) {
-        this.recalculateLODForItem(item, viewport.transform.scale, viewportRect, maxLOD, true)
+        this.recalculateLODForItem(item, viewport.transform.scale, loadRect, maxLOD, true)
       } else if (!item.dto.thumbnail) {
         this.setLoadedRendition(item.dto.id, null)
       }

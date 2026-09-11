@@ -1,6 +1,7 @@
 import clsx from 'clsx'
 import { intlFormat } from 'date-fns'
 import {
+  excludeIACollections,
   iaAdvancedSearch,
   getIAItemThumbnailURL,
   IAMediaType,
@@ -20,9 +21,9 @@ import { LazyListLoader } from '../../../lazy-list/lazy-list-loader'
 import { useObservable } from 'tapestry-core-client/src/components/lib/hooks/use-observable'
 import { SelectAll } from '../select-all'
 
-function getCollectionSearchOpts(collectionId: string) {
+function getSearchOpts(query: string) {
   return {
-    q: `collection:${collectionId} AND NOT mediatype:collection`,
+    q: excludeIACollections(query),
     fields: {
       identifier: true,
       mediatype: true,
@@ -35,7 +36,7 @@ function getCollectionSearchOpts(collectionId: string) {
   }
 }
 
-interface IACollectionItem {
+interface IASearchResultItem {
   id: string
   identifier: string
   mediatype: IAMediaType
@@ -45,8 +46,8 @@ interface IACollectionItem {
   downloads: number
 }
 
-export async function requestCollectionItems(
-  id: string,
+export async function requestSearchItems(
+  query: string,
   skip: number,
   limit: number,
   signal: AbortSignal,
@@ -55,7 +56,7 @@ export async function requestCollectionItems(
 
   const firstPageResult = await iaAdvancedSearch(
     {
-      ...getCollectionSearchOpts(id),
+      ...getSearchOpts(query),
       page: firstPage,
       pageSize: limit,
     },
@@ -68,7 +69,7 @@ export async function requestCollectionItems(
   const secondPageResult = extra
     ? await iaAdvancedSearch(
         {
-          ...getCollectionSearchOpts(id),
+          ...getSearchOpts(query),
           page: firstPage + 1,
           pageSize: limit,
         },
@@ -90,18 +91,20 @@ export async function requestCollectionItems(
   }
 }
 
-interface IACollectionListProps extends Omit<ImportItemsListProps, 'iaImport'> {
-  collectionId: string
+interface IASearchListProps extends Omit<ImportItemsListProps, 'iaImport'> {
+  query: string
+  emptyPlaceholder?: string
 }
 
-export function IACollectionList({
+export function IASearchList({
   onSelect,
   onToggleAll,
   toggling,
-  collectionId,
+  query,
   selectedItems,
   header,
-}: IACollectionListProps) {
+  emptyPlaceholder = 'No results for this search',
+}: IASearchListProps) {
   const mdOrLess = useResponsive() <= Breakpoint.MD
   const textVariant = mdOrLess ? 'bodyXs' : undefined
   const lineClamp = mdOrLess ? 1 : 2
@@ -119,11 +122,11 @@ export function IACollectionList({
     </>
   )
 
-  const [listLoader, setListLoader] = useState<LazyListLoader<IACollectionItem> | null>(null)
+  const [listLoader, setListLoader] = useState<LazyListLoader<IASearchResultItem> | null>(null)
   const state = useObservable(listLoader)
   const total = state?.total
 
-  const requestItems = useMemo(() => partial(requestCollectionItems, collectionId), [collectionId])
+  const requestItems = useMemo(() => partial(requestSearchItems, query), [query])
 
   const selectedCount = selectedItems.length
   const hasSelection = selectedCount > 0
@@ -206,7 +209,7 @@ export function IACollectionList({
           )
 
           return mdOrLess ? (
-            <details className={styles.detailsElement} name="IA-collection-list">
+            <details className={styles.detailsElement} name="IA-search-list">
               <summary className={styles.collectionItem}>
                 {itemSummary}
                 <Icon component="div" icon="arrow_forward_ios" className={styles.detailsIcon} />
@@ -223,7 +226,7 @@ export function IACollectionList({
             </div>
           )
         }}
-        emptyPlaceholder={<Text>No items in this collection</Text>}
+        emptyPlaceholder={<Text>{emptyPlaceholder}</Text>}
         loadingIndicator={<LoadingLogoIcon className={styles.loadingIndicator} />}
       />
     </div>
