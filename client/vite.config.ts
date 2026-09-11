@@ -24,6 +24,13 @@ export default defineConfig(({ mode }) => {
         targets: [{ src: pdfWasmDir, dest: '' }],
       }),
     ],
+    resolve: {
+      // @asteasolutions/epub-reader imports plain lodash internally, but declares only
+      // lodash-es. Resolve it to the real dependency instead of installing both.
+      alias: {
+        lodash: 'lodash-es',
+      },
+    },
     build: {
       assetsInlineLimit: 0,
     },
