@@ -362,6 +362,14 @@ export function isItemInSelection<I extends ItemViewModel>(
   )
 }
 
+export function isRelInSelection<I extends ItemViewModel>(
+  fromItem: I | undefined,
+  toItem: I | undefined,
+  selection: TapestryViewModel['selection'],
+): boolean {
+  return isItemInSelection(fromItem, selection) || isItemInSelection(toItem, selection)
+}
+
 export function getSelectionItems<I extends ItemViewModel>({
   items,
   selection,

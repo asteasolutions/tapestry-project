@@ -33,6 +33,7 @@ export class PixiAppWrapper {
       this.rafId = undefined
     }
 
+    this.animations.forEach((animations) => this.removeAnimations(animations))
     this.app.stage.removeChildren().forEach((c) => c.destroy({ children: true }))
     this.app.destroy(true, true)
   }
