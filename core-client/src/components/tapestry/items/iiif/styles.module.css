@@ -4,7 +4,7 @@
   height: 100%;
 
   /* A deep-zoom image sits on a fixed, opaque backdrop, not a themed one. */
-  background-color: #000;
+  background-color: #fff;
 
   /*
    * Map Clover's theme tokens to Tapestry's theme variables (see
@@ -18,7 +18,7 @@
   --clover-color-secondary: var(--theme-background-interface);
   --clover-color-secondary-alt: var(--theme-background-neutral);
   --clover-color-secondary-muted: var(--theme-background-neutral-hover);
-  --clover-viewer-background: #000;
+  --clover-viewer-background: #fff;
 
   /* Shorten the canvas/slide picker rail (defaults to 100px). */
   --clover-thumbnail-height: 60px;
