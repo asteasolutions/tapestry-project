@@ -122,13 +122,13 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
     onEnded?.(e)
   }
 
-  const togglePlay = () => {
+  const togglePlay = async () => {
     if (!mediaRef.current) {
       return
     }
 
     if (mediaRef.current.paused) {
-      mediaRef.current.play()
+      await mediaRef.current.play()
     } else {
       mediaRef.current.pause()
     }
@@ -168,17 +168,13 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
     }
   }
 
-  const toggleFullscreen = () => {
+  const toggleFullscreen = async () => {
     if (document.fullscreenElement) {
-      if (document.exitFullscreen) {
-        document.exitFullscreen()
-      }
+      await document.exitFullscreen()
     } else {
-      const fullscreenContainer = portal || mediaRef.current?.parentElement
+      const fullscreenContainer = portal ?? mediaRef.current?.parentElement
       if (fullscreenContainer) {
-        if (!document.fullscreenElement) {
-          fullscreenContainer.requestFullscreen()
-        }
+        await fullscreenContainer.requestFullscreen()
       }
     }
   }

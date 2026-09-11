@@ -71,7 +71,8 @@
   accent-color: var(--theme-background-brand-secondary);
   position: relative;
   bottom: 0;
-  appearance: slider-vertical;
+  writing-mode: vertical-lr;
+  direction: rtl;
 }
 
 .playback-rate {
