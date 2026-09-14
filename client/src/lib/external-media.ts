@@ -1,107 +1,44 @@
 import {
-  OpenverseCollectionQuery,
-  OpenverseMedia,
-  OpenverseMediaType,
-} from 'tapestry-core/src/openverse'
-import { WikimediaCollectionQuery, WikimediaMedia } from 'tapestry-core/src/wikimedia-commons'
-import {
-  ExternalMediaProxyDto,
-  ExternalCollectionCountProxyDto,
-  ExternalCollectionResultsProxyDto,
-} from 'tapestry-shared/src/data-transfer/resources/dtos/proxy'
-import { resource } from '../services/rest-resources'
+  fetchWikimediaCollectionResults as coreFetchWikimediaCollectionResults,
+  WikimediaCollectionQuery,
+  WikimediaCursorStore,
+} from 'tapestry-core/src/wikimedia-commons'
 
-export async function fetchOpenverseMedia(
-  mediaType: OpenverseMediaType,
-  id: string,
-  signal?: AbortSignal,
-): Promise<OpenverseMedia | null> {
-  const { result } = (await resource('proxy').create(
-    { type: 'external-media', query: { platform: 'openverse', mediaType, id } },
-    {},
-    { signal },
-  )) as ExternalMediaProxyDto
+/**
+ * Commons paginates categories with a cursor (`gcmcontinue`), not a page number. Find each real
+ * page's cursor once, by walking forward from the start, then remember it for the rest of this
+ * browser session — cursors do not go stale. Kept in memory only: unlike the server-side proxy
+ * this replaced, there is no need for it to survive a page reload or be shared across users.
+ */
+const wikimediaCursorsByCollection = new Map<string, Map<number, string | null>>()
 
-  return result as OpenverseMedia | null
-}
+function wikimediaCursorStore(collection: WikimediaCollectionQuery): WikimediaCursorStore {
+  const key = JSON.stringify(collection)
+  const cursors = wikimediaCursorsByCollection.get(key) ?? new Map<number, string | null>()
+  wikimediaCursorsByCollection.set(key, cursors)
 
-export async function fetchWikimediaMedia(
-  title: string,
-  signal?: AbortSignal,
-): Promise<WikimediaMedia | null> {
-  const { result } = (await resource('proxy').create(
-    { type: 'external-media', query: { platform: 'wikimedia-commons', title } },
-    {},
-    { signal },
-  )) as ExternalMediaProxyDto
-
-  return result as WikimediaMedia | null
-}
-
-export async function fetchOpenverseCollectionCount(
-  mediaType: OpenverseMediaType,
-  collection: OpenverseCollectionQuery,
-  signal?: AbortSignal,
-): Promise<number | undefined> {
-  const { result } = (await resource('proxy').create(
-    { type: 'external-collection-count', query: { platform: 'openverse', mediaType, collection } },
-    {},
-    { signal },
-  )) as ExternalCollectionCountProxyDto
-
-  return result
-}
-
-export async function fetchWikimediaCollectionCount(
-  collection: WikimediaCollectionQuery,
-  signal?: AbortSignal,
-): Promise<number | undefined> {
-  const { result } = (await resource('proxy').create(
-    { type: 'external-collection-count', query: { platform: 'wikimedia-commons', collection } },
-    {},
-    { signal },
-  )) as ExternalCollectionCountProxyDto
-
-  return result
-}
-
-export async function fetchOpenverseCollectionResults(
-  mediaType: OpenverseMediaType,
-  collection: OpenverseCollectionQuery,
-  page: number,
-  pageSize: number,
-  signal?: AbortSignal,
-): Promise<{ total: number; results: OpenverseMedia[] } | undefined> {
-  const { result } = (await resource('proxy').create(
-    {
-      type: 'external-collection-results',
-      query: { platform: 'openverse', mediaType, collection },
-      page,
-      pageSize,
+  return {
+    get(realPage) {
+      return Promise.resolve(cursors.get(realPage))
     },
-    {},
-    { signal },
-  )) as ExternalCollectionResultsProxyDto
-
-  return result as { total: number; results: OpenverseMedia[] } | undefined
+    set(realPage, cursor) {
+      cursors.set(realPage, cursor)
+      return Promise.resolve()
+    },
+  }
 }
 
-export async function fetchWikimediaCollectionResults(
+export function fetchWikimediaCollectionResults(
   collection: WikimediaCollectionQuery,
   page: number,
   pageSize: number,
   signal?: AbortSignal,
-): Promise<{ total: number; results: WikimediaMedia[] } | undefined> {
-  const { result } = (await resource('proxy').create(
-    {
-      type: 'external-collection-results',
-      query: { platform: 'wikimedia-commons', collection },
-      page,
-      pageSize,
-    },
-    {},
-    { signal },
-  )) as ExternalCollectionResultsProxyDto
-
-  return result as { total: number; results: WikimediaMedia[] } | undefined
+) {
+  return coreFetchWikimediaCollectionResults(
+    collection,
+    page,
+    pageSize,
+    wikimediaCursorStore(collection),
+    signal,
+  )
 }
