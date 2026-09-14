@@ -25,7 +25,8 @@ const DEFAULT_REL_Z_INDEX = 0
 const LINE_SMOOTHNESS = 0.7
 
 const SCALE_LOG_BASE = 1.3
-const MIN_REL_VISIBLE_SCALING = 0.4
+const MIN_REL_VISIBLE_SCALING = 0.1
+const MAX_REL_VISIBLE_SCALING = 10
 
 export function drawCurve(gfx: Graphics, curve: Curve, part: 'full' | 'head' | 'tail' = 'full') {
   const start = part === 'tail' ? curve.points.middle : curve.points.start
@@ -108,7 +109,10 @@ export class RelRenderer<R extends RelViewModel> extends TapestryElementRenderer
         isInteractive ||
         (isHoveredElement(pointerInteractionTarget) && pointerInteractionTarget.modelId === id),
       theme: store.get('theme'),
-      relScale: Math.max(1, MIN_REL_VISIBLE_SCALING / discreteScale),
+      relScale: Math.min(
+        MAX_REL_VISIBLE_SCALING,
+        Math.max(1, MIN_REL_VISIBLE_SCALING / discreteScale),
+      ),
     }
   }
 
