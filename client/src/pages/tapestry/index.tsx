@@ -7,7 +7,7 @@ import { resource } from '../../services/rest-resources'
 import { dashboardPath, tapestryPath } from '../../utils/paths'
 import { useTapestryPathParams } from '../../hooks/use-tapestry-path'
 import { LoadingLogo } from '../../components/loading-logo'
-import { useRef } from 'react'
+import { useState } from 'react'
 
 interface TapestryIdState {
   tapestryId?: string
@@ -49,20 +49,14 @@ export function TapestryPage() {
 }
 
 export function TapestryBySlugPage() {
-  const { state } = useLocation() as Location<TapestryIdState | undefined>
+  const [state, setState] = useState((useLocation() as Location<TapestryIdState | undefined>).state)
   const { username, slug, edit } = useTapestryPathParams()
   const mode: InteractionMode = edit === 'edit' ? 'edit' : 'view'
 
-  const cachedTapestryIdRef = useRef<string | undefined>(state?.tapestryId)
-
-  if (state?.tapestryId && !cachedTapestryIdRef.current) {
-    cachedTapestryIdRef.current = state.tapestryId
-  }
-
   const { data: tapestryId, loading } = useAsync(
     async ({ signal }) => {
-      if (cachedTapestryIdRef.current) {
-        return cachedTapestryIdRef.current
+      if (state?.tapestryId) {
+        return state.tapestryId
       }
 
       const tapestry = await resource('tapestries').read(
@@ -71,13 +65,13 @@ export function TapestryBySlugPage() {
         { signal },
       )
 
-      cachedTapestryIdRef.current = tapestry.id
+      setState({ tapestryId: tapestry.id })
       return tapestry.id
     },
-    [username, slug],
+    [username, slug, state?.tapestryId],
   )
 
-  if (!loading && !(cachedTapestryIdRef.current ?? tapestryId)) {
+  if (!loading && !tapestryId) {
     return (
       <Navigate
         to={dashboardPath('home')}
@@ -87,5 +81,5 @@ export function TapestryBySlugPage() {
     )
   }
 
-  return <TapestryLoader id={cachedTapestryIdRef.current ?? tapestryId ?? ''} mode={mode} />
+  return <TapestryLoader id={tapestryId ?? ''} mode={mode} />
 }
