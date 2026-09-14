@@ -16,7 +16,7 @@ import {
   getNestedIAItems,
   getIAIIIFManifestURL,
 } from 'tapestry-core/src/internet-archive'
-import { fetchIIIFFirstCanvas } from 'tapestry-core/src/iiif'
+import { fetchIIIFCanvasCount } from 'tapestry-core/src/iiif'
 import { MediaItemType, WebpageType } from 'tapestry-core/src/data-format/schemas/item'
 import { getUserListItems } from '../lib/internet-archive'
 import { parseMediaSource, parseStringTransferData } from './data-transfer-handler'
@@ -134,10 +134,10 @@ export async function createIAMediaItems(tapestryId: string, iaItems: IAItem[]) 
 /**
  * Create a IIIF item. Accept two kinds of source: an Internet Archive item URL for an
  * image-type item, or a direct IIIF Presentation manifest URL. Derive the manifest URL
- * from an IA URL. Confirm the manifest resolves to an image before creating the item. A
- * bad or unrelated URL then falls through to the remaining factories: IA
+ * from an IA URL. Confirm the URL actually resolves to a real manifest before creating
+ * the item. A bad or unrelated URL then falls through to the remaining factories: IA
  * collections/playlists, then plain webpages. The viewer renders the manifest URL
- * directly and parses the full manifest itself, not just this first canvas.
+ * directly and parses the full manifest itself.
  */
 const iiifItemFactory: ItemFactory = async (source, mediaType, tapestryId) => {
   if (typeof source !== 'string' || !isHTTPURL(source)) return null
@@ -156,7 +156,7 @@ const iiifItemFactory: ItemFactory = async (source, mediaType, tapestryId) => {
     return null
   }
 
-  if (!(await fetchIIIFFirstCanvas(manifestUrl))) return null
+  if ((await fetchIIIFCanvasCount(manifestUrl)) === null) return null
 
   const item = await createMediaItem('iiif', manifestUrl, tapestryId)
   // The client already resolved the manifest URL, including from an IA source. The
