@@ -152,7 +152,7 @@ export interface PlaylistEntry {
   title: string
 }
 
-export type IAImport =
+export type CollectionImport =
   | {
       type: 'IACollection'
       id: string
@@ -164,14 +164,17 @@ export type IAImport =
       metadata: IAItemMetadata['metadata']
       entries: PlaylistEntry[]
     }
-  | ({ type: 'ExternalCollection'; total: number } & (
-      | {
-          platform: 'openverse'
-          mediaType: OpenverseMediaType
-          collection: OpenverseCollectionQuery
-        }
-      | { platform: 'wikimedia-commons'; collection: WikimediaCollectionQuery }
-    ))
+  | {
+      type: 'OpenverseCollection'
+      mediaType: OpenverseMediaType
+      collection: OpenverseCollectionQuery
+      total: number
+    }
+  | {
+      type: 'WikimediaCommonsCategory'
+      collection: WikimediaCollectionQuery
+      total: number
+    }
   | {
       type: 'IASearchCollection'
       query: string
@@ -211,7 +214,7 @@ export interface EditableTapestryViewModel
   readonly commentThread?: CommentThread
   readonly largeFiles: File[]
   readonly presentationOrderState?: PresentationOrderState | null
-  readonly iaImports: IAImport[]
+  readonly collectionImports: CollectionImport[]
   readonly pendingRequests: number
   readonly newRelPreview?: EditableRelViewModel | null
   readonly hideEditControls?: boolean

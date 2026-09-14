@@ -17,7 +17,7 @@ function formatDuration(durationSeconds: number) {
   return `${hours > 0 ? `${hours}:` : ''}${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
 }
 
-interface IAPlaylistEntriesProps extends Omit<ImportItemsListProps, 'iaImport'> {
+interface IAPlaylistEntriesProps extends Omit<ImportItemsListProps, 'collectionImport'> {
   entries: PlaylistEntry[]
 }
 

@@ -1,5 +1,5 @@
 import { getIAItemThumbnailURL } from 'tapestry-core/src/internet-archive'
-import { IAImport } from '../../../pages/tapestry/view-model'
+import { CollectionImport } from '../../../pages/tapestry/view-model'
 import styles from './styles.module.css'
 import { Text } from 'tapestry-core-client/src/components/lib/text/index'
 import { intlFormat } from 'date-fns'
@@ -8,20 +8,24 @@ import { Breakpoint, useResponsive } from '../../../providers/responsive-provide
 const parser = new DOMParser()
 
 interface ImportDetailsProps {
-  import: IAImport
+  import: CollectionImport
 }
 
 // TODO: Extract a shared layout component. This removes the duplication between the
 // branches below.
-export function ImportDetails({ import: iaImport }: ImportDetailsProps) {
+export function ImportDetails({ import: collectionImport }: ImportDetailsProps) {
   const mdOrLess = useResponsive() <= Breakpoint.MD
   const textVariant = mdOrLess ? 'bodyXs' : undefined
 
-  if (iaImport.type === 'ExternalCollection') {
-    return <ExternalCollectionImportDetails collection={iaImport} />
+  if (collectionImport.type === 'OpenverseCollection') {
+    return <OpenverseCollectionDetails collection={collectionImport} />
   }
 
-  if (iaImport.type === 'IASearchCollection') {
+  if (collectionImport.type === 'WikimediaCommonsCategory') {
+    return <WikimediaCommonsCategoryDetails collection={collectionImport} />
+  }
+
+  if (collectionImport.type === 'IASearchCollection') {
     return (
       <div className={styles.root}>
         <div className={styles.header}>
@@ -30,18 +34,18 @@ export function ImportDetails({ import: iaImport }: ImportDetailsProps) {
               Search results
             </Text>
             <Text variant={textVariant} lineClamp={2}>
-              {iaImport.total} results
+              {collectionImport.total} results
             </Text>
           </div>
         </div>
         <Text variant={textVariant} component="div">
-          {iaImport.query}
+          {collectionImport.query}
         </Text>
       </div>
     )
   }
 
-  const { id, metadata } = iaImport
+  const { id, metadata } = collectionImport
   const description = parser.parseFromString(
     metadata.summary ?? metadata.description ?? '',
     'text/html',
@@ -77,29 +81,23 @@ export function ImportDetails({ import: iaImport }: ImportDetailsProps) {
   )
 }
 
-type ExternalCollectionImport = Extract<IAImport, { type: 'ExternalCollection' }>
+type OpenverseCollectionImport = Extract<CollectionImport, { type: 'OpenverseCollection' }>
+type WikimediaCommonsCategoryImport = Extract<
+  CollectionImport,
+  { type: 'WikimediaCommonsCategory' }
+>
 
-interface ExternalCollectionImportDetailsProps {
-  collection: ExternalCollectionImport
-}
-
-function ExternalCollectionImportDetails({ collection }: ExternalCollectionImportDetailsProps) {
+function CollectionDetailsLayout({
+  label,
+  total,
+  noun,
+}: {
+  label: string
+  total: number
+  noun: string
+}) {
   const mdOrLess = useResponsive() <= Breakpoint.MD
   const textVariant = mdOrLess ? 'bodyXs' : undefined
-
-  const label =
-    collection.platform === 'openverse'
-      ? collection.collection.type === 'tag'
-        ? collection.collection.tag
-        : collection.collection.source
-      : collection.collection.category
-
-  const noun =
-    collection.platform === 'openverse'
-      ? collection.mediaType === 'image'
-        ? 'images'
-        : 'audio items'
-      : 'files'
 
   return (
     <div className={styles.root}>
@@ -107,8 +105,41 @@ function ExternalCollectionImportDetails({ collection }: ExternalCollectionImpor
         {label}
       </Text>
       <Text variant={textVariant}>
-        {collection.total} {noun}
+        {total} {noun}
       </Text>
     </div>
+  )
+}
+
+const OPENVERSE_MEDIA_TYPE_NOUN: Record<OpenverseCollectionImport['mediaType'], string> = {
+  image: 'images',
+  audio: 'audio items',
+}
+
+function openverseCollectionLabel(collection: OpenverseCollectionImport['collection']): string {
+  return collection.type === 'tag' ? collection.tag : collection.source
+}
+
+function OpenverseCollectionDetails({ collection }: { collection: OpenverseCollectionImport }) {
+  return (
+    <CollectionDetailsLayout
+      label={openverseCollectionLabel(collection.collection)}
+      total={collection.total}
+      noun={OPENVERSE_MEDIA_TYPE_NOUN[collection.mediaType]}
+    />
+  )
+}
+
+function WikimediaCommonsCategoryDetails({
+  collection,
+}: {
+  collection: WikimediaCommonsCategoryImport
+}) {
+  return (
+    <CollectionDetailsLayout
+      label={collection.collection.category}
+      total={collection.total}
+      noun="files"
+    />
   )
 }
