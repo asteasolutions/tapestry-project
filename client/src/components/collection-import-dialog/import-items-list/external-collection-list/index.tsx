@@ -1,23 +1,21 @@
 import clsx from 'clsx'
-import { CSSProperties, useMemo, useState } from 'react'
-import { partial } from 'lodash-es'
-import { OpenverseMedia } from 'tapestry-core/src/openverse'
-import { WikimediaMedia } from 'tapestry-core/src/wikimedia-commons'
+import { CSSProperties, ReactNode, useMemo, useState } from 'react'
 import {
   fetchOpenverseCollectionResults,
-  fetchWikimediaCollectionResults,
-} from '../../../../lib/external-media'
+  OpenverseMedia,
+  OpenverseMediaType,
+} from 'tapestry-core/src/openverse'
+import { WikimediaMedia } from 'tapestry-core/src/wikimedia-commons'
+import { fetchWikimediaCollectionResults } from '../../../../lib/external-media'
 import { ImportItemsListProps } from '..'
-import { IAImport } from '../../../../pages/tapestry/view-model'
+import { CollectionImport } from '../../../../pages/tapestry/view-model'
 import { useResponsive, Breakpoint } from '../../../../providers/responsive-provider'
-import { Checkbox } from 'tapestry-core-client/src/components/lib/checkbox'
 import { Icon, IconName } from 'tapestry-core-client/src/components/lib/icon/index'
-import { LazyList } from '../../../lazy-list'
 import { LazyListLoader } from '../../../lazy-list/lazy-list-loader'
-import { LoadingLogoIcon } from '../../../loading-logo-icon'
 import { Text } from 'tapestry-core-client/src/components/lib/text/index'
 import { useObservable } from 'tapestry-core-client/src/components/lib/hooks/use-observable'
 import { SelectAll } from '../select-all'
+import { CollectionList } from '../collection-list'
 import { MAX_SELECTION } from '../..'
 import { paginateBySkipLimit } from '../paginate-by-skip-limit'
 import styles from './styles.module.css'
@@ -90,9 +88,84 @@ async function requestExternalItems<Media>(
   }
 }
 
-export type ExternalCollectionImport = Extract<IAImport, { type: 'ExternalCollection' }>
+export type ExternalCollectionImport = Extract<
+  CollectionImport,
+  { type: 'OpenverseCollection' | 'WikimediaCommonsCategory' }
+>
 
-interface ExternalCollectionListProps extends Omit<ImportItemsListProps, 'iaImport'> {
+type FetchExternalPage = (
+  skip: number,
+  limit: number,
+  signal: AbortSignal,
+) => Promise<{ skip: number; data: (OpenverseMedia | WikimediaMedia)[]; failed: boolean }>
+
+interface ExternalCollectionConfig {
+  detailColumnCount: number
+  detailsHeader: ReactNode
+  emptyPlaceholder: string
+  itemMediaTypeFallback: OpenverseMediaType | undefined
+  fetchPage: FetchExternalPage
+}
+
+// Everything that varies by platform lives here, in one place. Adding a platform means
+// adding one branch here, not touching every ternary in the component below.
+function describeExternalCollection(
+  collection: ExternalCollectionImport,
+  textVariant: 'bodyXs' | undefined,
+): ExternalCollectionConfig {
+  if (collection.type === 'OpenverseCollection') {
+    return {
+      detailColumnCount: 2,
+      detailsHeader: (
+        <>
+          <Text variant={textVariant} className={styles.bold}>
+            Creator
+          </Text>
+          <Text variant={textVariant} className={styles.bold}>
+            License
+          </Text>
+        </>
+      ),
+      emptyPlaceholder: `No ${collection.mediaType === 'image' ? 'images' : 'audio items'} in this collection`,
+      itemMediaTypeFallback: collection.mediaType,
+      fetchPage: (skip, limit, signal) =>
+        requestExternalItems(
+          (page, pageSize, pageSignal) =>
+            fetchOpenverseCollectionResults(
+              collection.mediaType,
+              collection.collection,
+              page,
+              pageSize,
+              pageSignal,
+            ),
+          skip,
+          limit,
+          signal,
+        ),
+    }
+  }
+
+  return {
+    detailColumnCount: 1,
+    detailsHeader: (
+      <Text variant={textVariant} className={styles.bold}>
+        Uploader
+      </Text>
+    ),
+    emptyPlaceholder: 'No files in this category',
+    itemMediaTypeFallback: undefined,
+    fetchPage: (skip, limit, signal) =>
+      requestExternalItems(
+        (page, pageSize, pageSignal) =>
+          fetchWikimediaCollectionResults(collection.collection, page, pageSize, pageSignal),
+        skip,
+        limit,
+        signal,
+      ),
+  }
+}
+
+interface ExternalCollectionListProps extends Omit<ImportItemsListProps, 'collectionImport'> {
   collection: ExternalCollectionImport
 }
 
@@ -106,24 +179,9 @@ export function ExternalCollectionList({
 }: ExternalCollectionListProps) {
   const mdOrLess = useResponsive() <= Breakpoint.MD
   const textVariant = mdOrLess ? 'bodyXs' : undefined
-  const { platform } = collection
 
-  const detailColumnCount = platform === 'openverse' ? 2 : 1
-  const detailsHeader =
-    platform === 'openverse' ? (
-      <>
-        <Text variant={textVariant} className={styles.bold}>
-          Creator
-        </Text>
-        <Text variant={textVariant} className={styles.bold}>
-          License
-        </Text>
-      </>
-    ) : (
-      <Text variant={textVariant} className={styles.bold}>
-        Uploader
-      </Text>
-    )
+  const { detailColumnCount, detailsHeader, emptyPlaceholder, itemMediaTypeFallback, fetchPage } =
+    useMemo(() => describeExternalCollection(collection, textVariant), [collection, textVariant])
 
   const [listLoader, setListLoader] = useState<LazyListLoader<
     OpenverseMedia | WikimediaMedia
@@ -135,26 +193,15 @@ export function ExternalCollectionList({
   const [loadFailed, setLoadFailed] = useState(false)
 
   const requestItems = useMemo(() => {
-    const fetchExternalItems =
-      platform === 'openverse'
-        ? partial(
-            requestExternalItems,
-            partial(fetchOpenverseCollectionResults, collection.mediaType, collection.collection),
-          )
-        : partial(
-            requestExternalItems,
-            partial(fetchWikimediaCollectionResults, collection.collection),
-          )
-
     // Always report the count fetched up front. Do not derive the total from each page's own
     // response. LazyListLoader treats a change in total as a change in the list. It then does a
     // full reload and clears the current items. A failed page must not look like a smaller list.
     return async (skip: number, limit: number, signal: AbortSignal) => {
-      const result = await fetchExternalItems(skip, limit, signal)
+      const result = await fetchPage(skip, limit, signal)
       setLoadFailed(result.failed)
       return { skip: result.skip, total: collection.total, data: result.data }
     }
-  }, [platform, collection])
+  }, [fetchPage, collection.total])
 
   const selectedCount = selectedItems.length
   const maxSelectable = total === undefined ? undefined : Math.min(total, MAX_SELECTION)
@@ -182,11 +229,23 @@ export function ExternalCollectionList({
           {detailsHeader}
         </div>
       )}
-      <LazyList
+      <CollectionList
         windowSize={20}
-        requestItems={requestItems}
         loadingEdgeProximity={5}
+        requestItems={requestItems}
         onLoaderInitialized={setListLoader}
+        // Openverse and Wikimedia Commons rate-limit aggressively. Nothing here needs a
+        // background refresh while the picker is open, only real user-driven pagination.
+        autoReload={false}
+        mdOrLess={mdOrLess}
+        detailsHeader={detailsHeader}
+        detailsGroupName="external-collection-list"
+        classes={{
+          collectionItem: styles.collectionItem,
+          detailsElement: styles.detailsElement,
+          detailsIcon: styles.detailsIcon,
+          itemDetails: styles.itemDetails,
+        }}
         header={
           mdOrLess ? (
             <>
@@ -197,99 +256,61 @@ export function ExternalCollectionList({
             header
           )
         }
-        renderItem={(item) => {
-          if (undecodableIds.has(item.id)) return null
-
-          const itemMediaType =
-            'mediaType' in item
-              ? item.mediaType
-              : collection.platform === 'openverse'
-                ? collection.mediaType
-                : undefined
-          const checked = !!selectedItems.find((i) => i.id === item.id)
-          const itemSummary = (
-            <Checkbox
-              checked={checked}
-              onChange={() =>
-                onSelect({
-                  id: item.id,
-                  sourceUrl: item.url,
-                  ...('mediaType' in item ? { wikimediaMediaType: item.mediaType } : {}),
-                })
-              }
-              classes={{ checkbox: styles.checkbox }}
-              disabled={!checked && selectedCount >= MAX_SELECTION}
-              label={{
-                content: (
-                  <>
-                    {item.thumbnail ? (
-                      <img
-                        className={styles.itemImage}
-                        src={item.thumbnail}
-                        alt={item.title}
-                        onError={() =>
-                          setUndecodableIds((current) => new Set(current).add(item.id))
-                        }
-                      />
-                    ) : (
-                      <Icon
-                        component="div"
-                        icon={NO_THUMBNAIL_ICON[itemMediaType ?? 'image']}
-                        className={clsx(styles.itemImage, styles.noThumbnailIcon)}
-                      />
-                    )}
-                    <Text lineClamp={2} variant={textVariant}>
-                      {item.title}
-                    </Text>
-                  </>
-                ),
-                position: 'after',
-              }}
-            />
-          )
-
-          const itemDetails =
-            'uploader' in item ? (
+        shouldRenderItem={(item) => !undecodableIds.has(item.id)}
+        isSelected={(item) => !!selectedItems.find((i) => i.id === item.id)}
+        onSelectItem={(item) =>
+          onSelect({
+            id: item.id,
+            sourceUrl: item.url,
+            ...('mediaType' in item ? { wikimediaMediaType: item.mediaType } : {}),
+          })
+        }
+        selectedCount={selectedCount}
+        renderItemContent={(item) => {
+          const itemMediaType = 'mediaType' in item ? item.mediaType : itemMediaTypeFallback
+          return (
+            <>
+              {item.thumbnail ? (
+                <img
+                  className={styles.itemImage}
+                  src={item.thumbnail}
+                  alt={item.title}
+                  onError={() => setUndecodableIds((current) => new Set(current).add(item.id))}
+                />
+              ) : (
+                <Icon
+                  component="div"
+                  icon={NO_THUMBNAIL_ICON[itemMediaType ?? 'image']}
+                  className={clsx(styles.itemImage, styles.noThumbnailIcon)}
+                />
+              )}
               <Text lineClamp={2} variant={textVariant}>
-                {item.uploader}
+                {item.title}
               </Text>
-            ) : (
-              <>
-                <Text lineClamp={2} variant={textVariant}>
-                  {item.creator}
-                </Text>
-                <Text variant={textVariant}>{item.license}</Text>
-              </>
-            )
-
-          return mdOrLess ? (
-            <details className={styles.detailsElement} name="external-collection-list">
-              <summary className={styles.collectionItem}>
-                {itemSummary}
-                <Icon component="div" icon="arrow_forward_ios" className={styles.detailsIcon} />
-              </summary>
-              <div className={styles.itemDetails}>
-                {detailsHeader}
-                {itemDetails}
-              </div>
-            </details>
-          ) : (
-            <div className={styles.collectionItem}>
-              {itemSummary}
-              {itemDetails}
-            </div>
+            </>
           )
         }}
+        renderItemDetails={(item) =>
+          'uploader' in item ? (
+            <Text lineClamp={2} variant={textVariant}>
+              {item.uploader}
+            </Text>
+          ) : (
+            <>
+              <Text lineClamp={2} variant={textVariant}>
+                {item.creator}
+              </Text>
+              <Text variant={textVariant}>{item.license}</Text>
+            </>
+          )
+        }
         emptyPlaceholder={
           <Text>
             {loadFailed
               ? "Couldn't load items right now — try again in a moment"
-              : platform === 'openverse'
-                ? `No ${collection.mediaType === 'image' ? 'images' : 'audio items'} in this collection`
-                : 'No files in this category'}
+              : emptyPlaceholder}
           </Text>
         }
-        loadingIndicator={<LoadingLogoIcon className={styles.loadingIndicator} />}
       />
     </div>
   )

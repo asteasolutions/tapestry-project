@@ -10,7 +10,7 @@
     background-color: var(--theme-background-primary);
     border-bottom: 1px solid var(--theme-border-subtle);
 
-    /* The summary arrow has a transform property. This makes a new stacking context. The item needs a z-index. */
+    /* The z-index is needed because the summary arrow has a transform property which creates a new stacking context */
     z-index: 1;
   }
 
@@ -29,7 +29,7 @@
     display: grid;
     gap: 10px;
     align-items: center;
-    grid-template-columns: auto repeat(var(--detail-column-count), 130px);
+    grid-template-columns: auto 150px 110px 60px;
 
     @media screen and (width <= 900px) {
       padding: 5px var(--padding-x);
@@ -40,15 +40,6 @@
       height: 30px;
       width: 30px;
       object-fit: cover;
-      background-color: var(--theme-background-disabled);
-
-      &.no-thumbnail-icon {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 18px;
-        color: var(--theme-text-tertiary-inverse);
-      }
     }
   }
 
@@ -75,7 +66,7 @@
         border-top: 0.3px solid var(--theme-border-subtle);
         padding: 5px 15px;
         display: grid;
-        grid-template-columns: repeat(var(--detail-column-count), 1fr);
+        grid-template: 1fr 1fr / 1fr 1fr 1fr;
         justify-items: center;
         text-align: center;
       }
@@ -87,13 +78,12 @@
     border-bottom: 1px solid var(--theme-border-subtle);
   }
 
-  .bold {
-    font-weight: bold;
+  .views {
+    text-align: end;
   }
 
-  .loading-indicator {
-    position: absolute;
-    inset: 0;
+  .bold {
+    font-weight: bold;
   }
 
   .checkbox {

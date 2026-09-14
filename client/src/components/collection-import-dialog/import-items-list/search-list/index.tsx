@@ -8,15 +8,11 @@ import {
 } from 'tapestry-core/src/internet-archive'
 import { ImportItemsListProps } from '..'
 import { useResponsive, Breakpoint } from '../../../../providers/responsive-provider'
-import { Checkbox } from 'tapestry-core-client/src/components/lib/checkbox'
-import { Icon } from 'tapestry-core-client/src/components/lib/icon/index'
-import { LazyList } from '../../../lazy-list'
-import { LoadingLogoIcon } from '../../../loading-logo-icon'
 import { Text } from 'tapestry-core-client/src/components/lib/text/index'
+import { CollectionList } from '../collection-list'
 import styles from './styles.module.css'
 import { useMemo, useState } from 'react'
 import { partial } from 'lodash-es'
-import { MAX_SELECTION } from '../..'
 import { LazyListLoader } from '../../../lazy-list/lazy-list-loader'
 import { useObservable } from 'tapestry-core-client/src/components/lib/hooks/use-observable'
 import { SelectAll } from '../select-all'
@@ -69,7 +65,7 @@ export async function requestSearchItems(
   }
 }
 
-interface IASearchListProps extends Omit<ImportItemsListProps, 'iaImport'> {
+interface IASearchListProps extends Omit<ImportItemsListProps, 'collectionImport'> {
   query: string
   emptyPlaceholder?: string
 }
@@ -128,11 +124,20 @@ export function IASearchList({
           {detailsHeader}
         </div>
       )}
-      <LazyList
+      <CollectionList
         windowSize={100}
-        requestItems={requestItems}
         loadingEdgeProximity={15}
+        requestItems={requestItems}
         onLoaderInitialized={setListLoader}
+        mdOrLess={mdOrLess}
+        detailsHeader={detailsHeader}
+        detailsGroupName="IA-search-list"
+        classes={{
+          collectionItem: styles.collectionItem,
+          detailsElement: styles.detailsElement,
+          detailsIcon: styles.detailsIcon,
+          itemDetails: styles.itemDetails,
+        }}
         header={
           mdOrLess ? (
             <>
@@ -143,69 +148,34 @@ export function IASearchList({
             header
           )
         }
-        renderItem={(item) => {
-          const checked = !!selectedItems.find((i) => i.id === item.id)
-          const itemSummary = (
-            <Checkbox
-              checked={checked}
-              onChange={() => onSelect({ id: item.id, mediaType: item.mediatype })}
-              classes={{ checkbox: styles.checkbox }}
-              disabled={!checked && selectedCount >= MAX_SELECTION}
-              label={{
-                content: (
-                  <>
-                    <img className={styles.itemImage} src={getIAItemThumbnailURL(item.id)} />
-                    <Text lineClamp={2} variant={textVariant}>
-                      {item.title}
-                    </Text>
-                  </>
-                ),
-                position: 'after',
-              }}
-            />
-          )
-
-          const itemDetails = (
-            <>
-              <Text lineClamp={lineClamp} variant={textVariant}>
-                {item.creator}
-              </Text>
-              <Text variant={textVariant}>
-                {intlFormat(item.publicdate, {
-                  day: 'numeric',
-                  month: 'short',
-                  year: 'numeric',
-                })}
-              </Text>
-              <Text className={styles.views} variant={textVariant}>
-                {new Intl.NumberFormat('en-US', {
-                  notation: 'compact',
-                  compactDisplay: 'short',
-                }).format(item.downloads)}
-              </Text>
-            </>
-          )
-
-          return mdOrLess ? (
-            <details className={styles.detailsElement} name="IA-search-list">
-              <summary className={styles.collectionItem}>
-                {itemSummary}
-                <Icon component="div" icon="arrow_forward_ios" className={styles.detailsIcon} />
-              </summary>
-              <div className={styles.itemDetails}>
-                {detailsHeader}
-                {itemDetails}
-              </div>
-            </details>
-          ) : (
-            <div className={styles.collectionItem}>
-              {itemSummary}
-              {itemDetails}
-            </div>
-          )
-        }}
+        isSelected={(item) => !!selectedItems.find((i) => i.id === item.id)}
+        onSelectItem={(item) => onSelect({ id: item.id, mediaType: item.mediatype })}
+        selectedCount={selectedCount}
+        renderItemContent={(item) => (
+          <>
+            <img className={styles.itemImage} src={getIAItemThumbnailURL(item.id)} />
+            <Text lineClamp={2} variant={textVariant}>
+              {item.title}
+            </Text>
+          </>
+        )}
+        renderItemDetails={(item) => (
+          <>
+            <Text lineClamp={lineClamp} variant={textVariant}>
+              {item.creator}
+            </Text>
+            <Text variant={textVariant}>
+              {intlFormat(item.publicdate, { day: 'numeric', month: 'short', year: 'numeric' })}
+            </Text>
+            <Text className={styles.views} variant={textVariant}>
+              {new Intl.NumberFormat('en-US', {
+                notation: 'compact',
+                compactDisplay: 'short',
+              }).format(item.downloads)}
+            </Text>
+          </>
+        )}
         emptyPlaceholder={<Text>{emptyPlaceholder}</Text>}
-        loadingIndicator={<LoadingLogoIcon className={styles.loadingIndicator} />}
       />
     </div>
   )
