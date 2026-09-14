@@ -107,11 +107,7 @@ export function TapestryLoader({ id, mode }: TapestryLoaderProps) {
     }
   }, [id, user])
 
-  const {
-    data: tapestryData,
-    loading,
-    error,
-  } = useAsync(
+  const { data: tapestryData, error } = useAsync(
     async ({ signal }, onCleanup) => {
       if (!id) return
 
@@ -162,12 +158,8 @@ export function TapestryLoader({ id, mode }: TapestryLoaderProps) {
     )
   }
 
-  if (!id || loading) {
-    return <LoadingLogo />
-  }
-
   if (!tapestryDataSync) {
-    return 'Tapestry not found'
+    return <LoadingLogo />
   }
 
   return (
