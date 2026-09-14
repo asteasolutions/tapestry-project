@@ -18,8 +18,12 @@
   --clover-color-secondary: var(--theme-background-interface);
   --clover-color-secondary-alt: var(--theme-background-neutral);
   --clover-color-secondary-muted: var(--theme-background-neutral-hover);
-  --clover-viewer-background: #fff;
 
-  /* Shorten the canvas/slide picker rail (defaults to 100px). */
-  --clover-thumbnail-height: 60px;
+  /* Shrink the canvas/slide picker rail (defaults to 15rem). Setting a height too
+     stretches the thumbnails, since Clover derives a square from the width alone. */
+  --clover-thumbnail-width: 80px;
+}
+
+.root :global(.clover-viewer-media-wrapper) {
+  padding-top: 8px;
 }
