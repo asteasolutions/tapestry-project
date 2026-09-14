@@ -1,3 +1,5 @@
+// Openverse API docs: https://docs.openverse.org/api/. Endpoint reference for the
+// list/detail routes used below: https://api.openverse.org/v1/#tag/images.
 const OPENVERSE_HOST = 'openverse.org'
 const OPENVERSE_MAX_PAGE_SIZE = 20
 

@@ -1,3 +1,6 @@
+// Wikimedia Commons is queried through the MediaWiki Action API, documented at
+// https://www.mediawiki.org/wiki/API:Main_page. Category listing uses the `categorymembers`
+// generator: https://www.mediawiki.org/wiki/API:Categorymembers.
 const COMMONS_HOST = 'commons.wikimedia.org'
 const COMMONS_API_URL = 'https://commons.wikimedia.org/w/api.php'
 const COMMONS_PAGE_SIZE = 50
