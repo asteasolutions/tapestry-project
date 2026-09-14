@@ -49,7 +49,7 @@ export function TapestryPage() {
 }
 
 export function TapestryBySlugPage() {
-  const [state, setState] = useState((useLocation() as Location<TapestryIdState | undefined>).state)
+  const [state] = useState((useLocation() as Location<TapestryIdState | undefined>).state)
   const { username, slug, edit } = useTapestryPathParams()
   const mode: InteractionMode = edit === 'edit' ? 'edit' : 'view'
 
@@ -65,7 +65,6 @@ export function TapestryBySlugPage() {
         { signal },
       )
 
-      setState({ tapestryId: tapestry.id })
       return tapestry.id
     },
     [username, slug, state?.tapestryId],
