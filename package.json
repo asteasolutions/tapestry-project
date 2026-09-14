@@ -13,9 +13,9 @@
     "shared",
     "viewer"
   ],
+  "_comment_overrides": "@samvera/clover-iiif depends on @radix-ui/react-form@^0.0.3, which only supports react@^16-18. Without this override, npm installs a duplicate react@18, which crashes at runtime. @radix-ui/react-form@^0.1.16 supports react@^19. Remove this once clover-iiif upgrades past that version.",
   "overrides": {
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "@radix-ui/react-form": "^0.1.16"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
