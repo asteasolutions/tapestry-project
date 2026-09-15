@@ -14,6 +14,11 @@ import { Range } from 'tapestry-core/src/lib/algebra.js'
 import { ItemViewModel, RelViewModel, RelEndpointName } from './index.js'
 import { IdMap } from 'tapestry-core/src/utils.js'
 import { clamp } from 'lodash-es'
+import {
+  getArrowheadCenterOffset,
+  getArrowheadCornerRadius,
+  getTriangleRadius,
+} from '../stage/renderer/rel-renderer.js'
 
 export const REL_ARROWHEAD_SIZES: Record<LineWeight, number> = {
   light: 15,
@@ -63,9 +68,9 @@ export function computeCurvePoints({
   const endpointDistance = distance(from.point, to.point)
 
   function computeSemiCurvePoints({ point, hasArrow }: CurveEndpointParams, direction: Vector) {
-    const corner = arrowheadSize / 8
-    const triangleRadius = arrowheadSize / 2
-    const arrowOffset = triangleRadius * 1.5 - corner * (Math.sqrt(2) - 1)
+    const arrowOffset =
+      getTriangleRadius(arrowheadSize) / 2 +
+      getArrowheadCenterOffset(arrowheadSize, getArrowheadCornerRadius(arrowheadSize))
 
     const curveEndpoint = hasArrow ? translate(point, mul(arrowOffset, direction)) : point
     const dist = norm(mul(endpointDistance, direction)) / 3
