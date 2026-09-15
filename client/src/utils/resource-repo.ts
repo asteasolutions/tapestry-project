@@ -338,8 +338,10 @@ export abstract class ResourceRepo<
       })
 
       toRemoveFromWorkingCopy.forEach((id) => {
-        delete (workingCopy as ResourceIdMaps<R, TypeMap>)[resourceName][id]
-        delete this.resourceVersions[resourceName][id]
+        if (get(this.resourceVersions, [resourceName, id], 0) <= commitVersion) {
+          delete (workingCopy as ResourceIdMaps<R, TypeMap>)[resourceName][id]
+          delete this.resourceVersions[resourceName][id]
+        }
       })
     })
 
