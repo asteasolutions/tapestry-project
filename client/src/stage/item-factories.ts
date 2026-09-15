@@ -16,7 +16,7 @@ import {
   getNestedIAItems,
   getIAIIIFManifestURL,
 } from 'tapestry-core/src/internet-archive'
-import { fetchIIIFCanvasCount } from 'tapestry-core/src/iiif'
+import { isIIIFManifest } from 'tapestry-core/src/iiif'
 import { MediaItemType, WebpageType } from 'tapestry-core/src/data-format/schemas/item'
 import { getUserListItems } from '../lib/internet-archive'
 import { parseMediaSource, parseStringTransferData } from './data-transfer-handler'
@@ -156,12 +156,9 @@ const iiifItemFactory: ItemFactory = async (source, mediaType, tapestryId) => {
     return null
   }
 
-  if ((await fetchIIIFCanvasCount(manifestUrl)) === null) return null
+  if (!(await isIIIFManifest(manifestUrl))) return null
 
   const item = await createMediaItem('iiif', manifestUrl, tapestryId)
-  // The client already resolved the manifest URL, including from an IA source. The
-  // server does not need to redo it.
-  item.skipSourceResolution = true
 
   return { items: [item], iaImports: [] }
 }
