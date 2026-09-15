@@ -66,7 +66,6 @@ export abstract class ResourceRepo<
   private head = 0
   private remote: ResourceIdMaps<R, TypeMap>
   private resourceVersions: ResourceVersions<R>
-  private deletedResourceVersions: ResourceVersions<R>
 
   private isDirty = false
   private pushTimeout: number | null = null
@@ -84,9 +83,6 @@ export abstract class ResourceRepo<
 
     this.remote = cloneDeep(workingCopy)
     this.resourceVersions = Object.fromEntries(
-      resourceNames.map((name) => [name, {}]),
-    ) as ResourceVersions<R>
-    this.deletedResourceVersions = Object.fromEntries(
       resourceNames.map((name) => [name, {}]),
     ) as ResourceVersions<R>
   }
@@ -111,9 +107,6 @@ export abstract class ResourceRepo<
    */
   commit(resources: ResourceIdMaps<R, TypeMap>, { skipPush }: CommitOptions = {}) {
     this.resourceVersions = mapValues(resources, (idMap) => mapValues(idMap, () => this.head))
-    this.deletedResourceVersions = Object.fromEntries(
-      this.resourceNames.map((name) => [name, {}]),
-    ) as ResourceVersions<R>
     this.update(() => createDraft(cloneDeep(resources)), { silent: true })
     if (!skipPush) {
       this.requestPush()
@@ -133,16 +126,11 @@ export abstract class ResourceRepo<
 
     for (const { path, op } of patches) {
       if (op === 'remove' && path.length === 2) {
-        // A resource has been removed locally. Record the head at which this happened
-        // instead of just dropping the version, so that a still-in-flight
-        // push response for an earlier mutation of this resource can recognize the
-        // delete happened after it and avoid resurrecting the resource.
-        set(this.deletedResourceVersions, path.slice(0, 2), this.head)
+        // A resource has been removed
         delete this.resourceVersions[path[0] as R][path[1]]
       } else {
-        // A resource has been modified (or re/created) locally - it is no longer deleted.
+        // A resource has been modified
         set(this.resourceVersions, path.slice(0, 2), this.head)
-        delete this.deletedResourceVersions[path[0] as R][path[1]]
       }
     }
 
@@ -188,7 +176,6 @@ export abstract class ResourceRepo<
             // eslint-disable-next-line @typescript-eslint/no-floating-promises
             set(workingCopy, resourcePath, resource)
             set(this.resourceVersions, resourcePath, this.head - 1)
-            delete this.deletedResourceVersions[resourceName][resource.id]
           })
           updated.forEach((resource) => {
             const resourcePath = [resourceName, resource.id]
@@ -208,7 +195,6 @@ export abstract class ResourceRepo<
             // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
             delete workingCopy[resourceName][id]
             delete this.resourceVersions[resourceName][id]
-            delete this.deletedResourceVersions[resourceName][id]
           })
         })
       }
@@ -328,19 +314,9 @@ export abstract class ResourceRepo<
       toSetInWorkingCopy.push(...request.destroy!.map((id) => this.remote[resourceName][id]!))
       errors.push(response.destroyed)
     } else {
-      // Deletion has succeeded, at least partially. The remote copy always reflects the
-      // server's confirmation of the delete - that's simply a fact now.
+      // Deletion has succeeded, at least partially. If some record failed to delete, revert them.
       response.destroyed.forEach((id) => delete this.remote[resourceName][id])
-
-      for (const id of response.destroyed) {
-        const resourcePath = [resourceName, id]
-        const wasRecreatedAfterThisCommit =
-          get(this.resourceVersions, resourcePath, 0) > commitVersion
-        if (!wasRecreatedAfterThisCommit) {
-          toRemoveFromWorkingCopy.push(id)
-        }
-      }
-
+      toRemoveFromWorkingCopy.push(...response.destroyed)
       for (const id of new Set(request.destroy).difference(new Set(response.destroyed))) {
         toSetInWorkingCopy.push(cloneDeep(this.remote[resourceName][id]!))
       }
@@ -350,17 +326,14 @@ export abstract class ResourceRepo<
     this.update((workingCopy) => {
       toSetInWorkingCopy.forEach((resource) => {
         const resourcePath = [resourceName, resource.id]
-        const deletedAt = get(this.deletedResourceVersions, resourcePath) as number | undefined
-        const wasDeletedAfterThisCommit = deletedAt !== undefined && deletedAt > commitVersion
 
         // Don't override local changes that may have happened since the push operation started
         if (
-          !wasDeletedAfterThisCommit &&
-          get(this.resourceVersions, resourcePath, 0) <= commitVersion
+          get(this.resourceVersions, resourcePath) !== undefined &&
+          get(this.resourceVersions, resourcePath) <= commitVersion
         ) {
           // eslint-disable-next-line @typescript-eslint/no-floating-promises
           set(workingCopy, resourcePath, resource)
-          delete this.deletedResourceVersions[resourceName][resource.id]
         }
       })
 
