@@ -15,7 +15,6 @@ export interface ThumbnailRenditionOutput {
 
 const MIN_THUMBNAIL_SIZE = 600
 
-// iiif gets a screenshot thumbnail instead (see generate-tapestry-thumbnails.ts).
 const ITEM_TYPES_WITH_INHERENT_THUMBNAIL = ['pdf', 'video', 'image', 'webpage'] as const
 export type ItemTypeWithInherentThumbnail = (typeof ITEM_TYPES_WITH_INHERENT_THUMBNAIL)[number]
 
