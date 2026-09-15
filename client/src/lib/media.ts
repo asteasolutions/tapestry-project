@@ -68,7 +68,8 @@ const IIIF_MULTI_CANVAS_SIZE: Size = { width: 400, height: 550 }
 
 export async function getIiifItemSize(source: MediaItemSource): Promise<Size> {
   const canvasCount = typeof source === 'string' ? await fetchIIIFCanvasCount(source) : null
-  const size = canvasCount !== null && canvasCount > 1 ? IIIF_MULTI_CANVAS_SIZE : IIIF_SINGLE_CANVAS_SIZE
+  const size =
+    canvasCount !== null && canvasCount > 1 ? IIIF_MULTI_CANVAS_SIZE : IIIF_SINGLE_CANVAS_SIZE
   return getClampedItemSize(size)
 }
 
