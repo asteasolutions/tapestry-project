@@ -1,6 +1,7 @@
 import { Location, Navigate, useLocation, useParams } from 'react-router'
 import { TapestryLoader } from './tapestry-loader'
 import { InteractionMode } from './view-model'
+import { SnackbarData } from 'tapestry-core-client/src/view-model'
 import { useAsync } from 'tapestry-core-client/src/components/lib/hooks/use-async'
 import { resource } from '../../services/rest-resources'
 import { dashboardPath, tapestryPath } from '../../utils/paths'
@@ -28,7 +29,7 @@ export function TapestryPage() {
       <Navigate
         to={dashboardPath('home')}
         replace
-        state={{ text: 'Tapestry not found', variant: 'error' }}
+        state={{ text: 'Tapestry not found', variant: 'error' } satisfies SnackbarData}
       />
     )
   }
@@ -38,7 +39,7 @@ export function TapestryPage() {
       <Navigate
         to={tapestryPath(tapestry.owner!.username, tapestry.slug, mode, location.search)}
         replace
-        state={{ tapestryId: tapestry.id }}
+        state={{ tapestryId: tapestry.id } satisfies TapestryIdState}
       />
     )
   }
@@ -72,7 +73,7 @@ export function TapestryBySlugPage() {
       <Navigate
         to={dashboardPath('home')}
         replace
-        state={{ text: 'Tapestry not found', variant: 'error' }}
+        state={{ text: 'Tapestry not found', variant: 'error' } satisfies SnackbarData}
       />
     )
   }
