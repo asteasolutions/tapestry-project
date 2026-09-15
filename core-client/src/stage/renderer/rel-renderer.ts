@@ -170,7 +170,7 @@ export class RelRenderer<R extends RelViewModel> extends TapestryElementRenderer
     color: string,
   ) {
     const corner = getArrowheadCornerRadius(size)
-    const triangleRadius = size / 2
+    const triangleRadius = getTriangleRadius(size)
     const middle = translate(point, mul(getArrowheadCenterOffset(size, corner), dir))
     const midpoint = new Point(middle.x, middle.y)
 
