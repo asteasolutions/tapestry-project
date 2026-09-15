@@ -16,7 +16,7 @@ import {
   getNestedIAItems,
   getIAIIIFManifestURL,
 } from 'tapestry-core/src/internet-archive'
-import { isIIIFManifest } from 'tapestry-core/src/iiif'
+import { extractIIIFContentStateURL, isIIIFManifest } from 'tapestry-core/src/iiif'
 import { MediaItemType, WebpageType } from 'tapestry-core/src/data-format/schemas/item'
 import { getUserListItems } from '../lib/internet-archive'
 import { parseMediaSource, parseStringTransferData } from './data-transfer-handler'
@@ -132,23 +132,29 @@ export async function createIAMediaItems(tapestryId: string, iaItems: IAItem[]) 
 }
 
 /**
- * Create a IIIF item. Accept two kinds of source: an Internet Archive item URL for an
- * image-type item, or a direct IIIF Presentation manifest URL. Derive the manifest URL
- * from an IA URL. Confirm the URL actually resolves to a real manifest before creating
- * the item. A bad or unrelated URL then falls through to the remaining factories: IA
- * collections/playlists, then plain webpages. The viewer renders the manifest URL
- * directly and parses the full manifest itself.
+ * Create a IIIF item. Accept three kinds of source: an Internet Archive item URL for an
+ * image-type item, a viewer's own shareable link (e.g. Mirador's embed URL), or a direct
+ * IIIF Presentation manifest URL. Derive the manifest URL from the first two. Confirm
+ * the URL actually resolves to a real manifest before creating the item. A bad or
+ * unrelated URL then falls through to the remaining factories: IA collections/playlists,
+ * then plain webpages. The viewer renders the manifest URL directly and parses the full
+ * manifest itself.
  */
 const iiifItemFactory: ItemFactory = async (source, mediaType, tapestryId) => {
   if (typeof source !== 'string' || !isHTTPURL(source)) return null
 
   let manifestUrl: string
   const descriptor = parseInternetArchiveURL(source)
+  const contentStateUrl = extractIIIFContentStateURL(source)
   if (descriptor && descriptor.urlType !== 'user-list') {
     // Only handle image-type IA items here. Let iaFactory handle audio, video, and
     // collections.
     if ((await getIAItemMetadata(descriptor.item.id))?.mediatype !== 'image') return null
     manifestUrl = getIAIIIFManifestURL(descriptor.item.id)
+  } else if (contentStateUrl) {
+    // A viewer's own shareable link, e.g. Mirador's embed URL, per the IIIF Content
+    // State API. Use the manifest URL it points to, not the viewer page itself.
+    manifestUrl = contentStateUrl
   } else if (mediaType?.includes('json') || /iiif|manifest/i.test(source)) {
     // A directly pasted IIIF manifest URL. This covers any IIIF source, not just IA.
     manifestUrl = source
