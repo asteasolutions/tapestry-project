@@ -2,23 +2,24 @@ import { lazy, memo, Suspense } from 'react'
 import { TapestryElementComponentProps, useTapestryConfig } from '../..'
 import { IiifItem as IiifItemDto } from 'tapestry-core/src/data-format/schemas/item'
 import { ItemPlaceholder } from '../../item-placeholder'
-import { LoadingSpinner } from '../../../lib/loading-spinner/index'
+import { ItemLoadingSpinner } from '../../item-loading-spinner'
 import { getPrimaryThumbnail } from '../../../../view-model/utils'
 import styles from './styles.module.css'
 
-const CloverViewer = lazy(() => import('@samvera/clover-iiif/viewer'))
-
-// Clover instantiates this itself, with no props, in place of its own plain "Loading" text.
-function IiifLoadingSpinner() {
-  return <LoadingSpinner size="100px" />
-}
-
 // Do not pass Clover's id or manifestId props. Each one replaces iiifContent instead of
 // identifying the instance.
+const CloverViewer = lazy(() => import('@samvera/clover-iiif/viewer'))
+
 export const IiifItemViewer = memo(({ id }: TapestryElementComponentProps) => {
   const { useStoreData } = useTapestryConfig()
   const dto = useStoreData(`items.${id}.dto`) as IiifItemDto
   const hasBeenActive = useStoreData(`items.${id}.hasBeenActive`)
+
+  // Clover instantiates this itself, with no props, in place of its own plain "Loading"
+  // text -- defined here to close over `id`.
+  function IiifLoadingSpinner() {
+    return <ItemLoadingSpinner itemId={id} />
+  }
 
   if (!hasBeenActive) {
     return (
@@ -32,7 +33,7 @@ export const IiifItemViewer = memo(({ id }: TapestryElementComponentProps) => {
 
   return (
     <div className={styles.root}>
-      <Suspense fallback={<LoadingSpinner size="100px" />}>
+      <Suspense fallback={<ItemLoadingSpinner itemId={id} />}>
         <CloverViewer
           iiifContent={dto.source}
           options={{
