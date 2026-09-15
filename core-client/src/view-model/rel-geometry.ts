@@ -17,7 +17,7 @@ import { clamp } from 'lodash-es'
 import {
   getArrowheadCenterOffset,
   getArrowheadCornerRadius,
-  getTriangleRadius,
+  getArrowheadTriangleRadius,
 } from '../stage/renderer/rel-renderer.js'
 
 export const REL_ARROWHEAD_SIZES: Record<LineWeight, number> = {
@@ -69,7 +69,7 @@ export function computeCurvePoints({
 
   function computeSemiCurvePoints({ point, hasArrow }: CurveEndpointParams, direction: Vector) {
     const arrowOffset =
-      getTriangleRadius(arrowheadSize) / 2 +
+      getArrowheadTriangleRadius(arrowheadSize) / 2 +
       getArrowheadCenterOffset(arrowheadSize, getArrowheadCornerRadius(arrowheadSize))
 
     const curveEndpoint = hasArrow ? translate(point, mul(arrowOffset, direction)) : point

@@ -26,7 +26,7 @@ const LINE_SMOOTHNESS = 0.7
 
 const SCALE_LOG_BASE = 1.3
 const LOCK_VISIBLE_SIZE_AT_SCALE = 0.4
-const MAX_REL_SCALE = 15
+const MAX_REL_SCALE = 5
 
 export function drawCurve(gfx: Graphics, curve: Curve, part: 'full' | 'head' | 'tail' = 'full') {
   const start = part === 'tail' ? curve.points.middle : curve.points.start
@@ -50,6 +50,18 @@ export function drawCurve(gfx: Graphics, curve: Curve, part: 'full' | 'head' | '
     )
   }
   return gfx
+}
+
+export function getArrowheadTriangleRadius(arrowheadSize: number) {
+  return arrowheadSize / 2
+}
+
+export function getArrowheadCornerRadius(arrowheadSize: number) {
+  return arrowheadSize / 8
+}
+
+export function getArrowheadCenterOffset(arrowheadSize: number, arrowheadCornerRadius: number) {
+  return getArrowheadTriangleRadius(arrowheadSize) - arrowheadCornerRadius * (Math.sqrt(2) - 1)
 }
 
 export interface RelRenderState<R extends RelViewModel> {
@@ -170,7 +182,7 @@ export class RelRenderer<R extends RelViewModel> extends TapestryElementRenderer
     color: string,
   ) {
     const corner = getArrowheadCornerRadius(size)
-    const triangleRadius = getTriangleRadius(size)
+    const triangleRadius = getArrowheadTriangleRadius(size)
     const middle = translate(point, mul(getArrowheadCenterOffset(size, corner), dir))
     const midpoint = new Point(middle.x, middle.y)
 
@@ -178,16 +190,4 @@ export class RelRenderer<R extends RelViewModel> extends TapestryElementRenderer
       .roundPoly(midpoint.x, midpoint.y, triangleRadius, 3, corner, angleX(dir) + Math.PI / 6)
       .fill({ color })
   }
-}
-
-export function getTriangleRadius(arrowheadSize: number) {
-  return arrowheadSize / 2
-}
-
-export function getArrowheadCornerRadius(arrowheadSize: number) {
-  return arrowheadSize / 8
-}
-
-export function getArrowheadCenterOffset(arrowheadSize: number, arrowheadCornerRadius: number) {
-  return getTriangleRadius(arrowheadSize) - arrowheadCornerRadius * (Math.sqrt(2) - 1)
 }
