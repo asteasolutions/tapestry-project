@@ -16,7 +16,6 @@ import {
   SelectionState,
 } from '../../../lib/rich-text-editor'
 import styles from './styles.module.css'
-import { max } from 'lodash'
 
 export function elementIdFromLink(
   link: string,
@@ -30,6 +29,8 @@ export function elementIdFromLink(
   return link.startsWith(currentTapestryPath) && !!element ? elementId : null
 }
 const SCROLL_TOLERANCE_PX = 20
+const SCROLL_INDICATOR_MIN_SIZE = 24
+const SCROLL_INDICATOR_RATIO = 0.03
 
 function useHasScroll(editorRef: RefObject<RichTextEditorApi | undefined>) {
   const [hasScroll, setHasScroll] = useState(false)
@@ -52,6 +53,13 @@ function useHasScroll(editorRef: RefObject<RichTextEditorApi | undefined>) {
 export interface TextItemViewerProps extends Partial<RichTextEditorProps> {
   id: Id
   preventInternalLinkHandling?: boolean
+}
+
+function getScrollIndicatorSize(itemHeight: number, itemWidth: number) {
+  return Math.max(
+    SCROLL_INDICATOR_MIN_SIZE,
+    SCROLL_INDICATOR_RATIO * Math.max(itemHeight, itemWidth),
+  )
 }
 
 export function TextItemViewer({
@@ -117,6 +125,7 @@ export function TextItemViewer({
   }, [isInteractiveElement, wasInteractiveElement])
 
   const { hasScroll, check } = useHasScroll(editorAPI)
+  const indicatorSize = getScrollIndicatorSize(dto.size.height, dto.size.width)
 
   // TODO: Updating tiptap will allow us to render a router Link in the editor
   // instead of manually handling link clicks
@@ -182,7 +191,7 @@ export function TextItemViewer({
           className={styles.scrollIndicator}
           style={
             {
-              '--scroll-indicator-size': `${max([24, 0.04 * dto.size.height])}px`,
+              '--scroll-indicator-size': `${indicatorSize}px`,
             } as React.CSSProperties
           }
         />
