@@ -129,7 +129,7 @@ export function TextItemViewer({
   }
 
   return (
-    <>
+    <div className={styles.editorWrapper}>
       <RichTextEditor
         api={editorAPI}
         // setting value to unsavedContent prevents re-rendering of the editor with old text before the model updates
@@ -178,6 +178,6 @@ export function TextItemViewer({
       {!isInteractiveElement && hasScroll && (
         <Icon icon="unfold_more" className={styles.scrollIndicator} />
       )}
-    </>
+    </div>
   )
 }
