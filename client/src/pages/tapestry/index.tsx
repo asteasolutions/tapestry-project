@@ -7,6 +7,7 @@ import { resource } from '../../services/rest-resources'
 import { dashboardPath, tapestryPath } from '../../utils/paths'
 import { useTapestryPathParams } from '../../hooks/use-tapestry-path'
 import { LoadingLogo } from '../../components/loading-logo'
+import { useState } from 'react'
 
 interface TapestryIdState {
   tapestryId?: string
@@ -39,7 +40,7 @@ export function TapestryPage() {
       <Navigate
         to={tapestryPath(tapestry.owner!.username, tapestry.slug, mode, location.search)}
         replace
-        state={{ tapestryId: tapestry.id } satisfies TapestryIdState}
+        state={{ ...location.state, tapestryId: tapestry.id } satisfies TapestryIdState}
       />
     )
   }
@@ -48,7 +49,7 @@ export function TapestryPage() {
 }
 
 export function TapestryBySlugPage() {
-  const { state } = useLocation() as Location<TapestryIdState | undefined>
+  const [state] = useState((useLocation() as Location<TapestryIdState | undefined>).state)
   const { username, slug, edit } = useTapestryPathParams()
   const mode: InteractionMode = edit === 'edit' ? 'edit' : 'view'
 
@@ -63,6 +64,7 @@ export function TapestryBySlugPage() {
         {},
         { signal },
       )
+
       return tapestry.id
     },
     [username, slug, state?.tapestryId],
