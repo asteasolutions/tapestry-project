@@ -9,6 +9,7 @@ import { useTapestryConfig } from '../..'
 import { WebpageLoader } from './loader'
 import { WebFrame as WebFrameComponent, WebFrameSwitchProps } from './web-frame'
 import { setItemIsPlaying } from '../../../../view-model/store-commands/tapestry'
+import { IconOverlay } from '../../video-play-overlay'
 
 const IFRAME_ALLOWED_RESTRICTIONS = [
   'allow-downloads',
@@ -86,6 +87,7 @@ export function WebpageItemViewer({
   const { useStoreData, useDispatch } = useTapestryConfig()
   const dispatch = useDispatch()
   const dto = useStoreData(`items.${id}.dto`) as WebpageItem
+  const isInteractive = useStoreData('interactiveElement')?.modelId === id
   const displayWebpage = useStoreData(`items.${id}.hasBeenActive`)
   const [webpageLoaded, setWebpageLoaded] = useState(false)
   const [webpageReloadIndex, setWebpageReloadIndex] = useState(0)
@@ -116,17 +118,23 @@ export function WebpageItemViewer({
   const sandbox = useSandbox(src)
 
   return (
-    <WebpageLoader item={dto} displayPage={displayWebpage} pageLoading={!!loading}>
-      <WebFrame
-        webpageType={dto.webpageType}
-        src={src}
-        sandbox={sandbox.join(' ')}
-        onLoad={() => setWebpageLoaded(true)}
-        key={`reload-${webpageReloadIndex}`}
-        allowFullScreen
-        allow="autoplay"
-        onPlaybackStateChange={(isPlaying) => dispatch(setItemIsPlaying(id, isPlaying))}
-      />
-    </WebpageLoader>
+    <>
+      <WebpageLoader item={dto} displayPage={displayWebpage} pageLoading={!!loading}>
+        <WebFrame
+          webpageType={dto.webpageType}
+          src={src}
+          sandbox={sandbox.join(' ')}
+          onLoad={() => setWebpageLoaded(true)}
+          key={`reload-${webpageReloadIndex}`}
+          allowFullScreen
+          allow="autoplay"
+          onPlaybackStateChange={(isPlaying) => dispatch(setItemIsPlaying(id, isPlaying))}
+        />
+      </WebpageLoader>
+      {
+        /* If the webpageType is video content, the video badge should be displayed */
+        !isInteractive && !dto.webpageType && <IconOverlay itemSize={dto.size} icon="globe" />
+      }
+    </>
   )
 }
