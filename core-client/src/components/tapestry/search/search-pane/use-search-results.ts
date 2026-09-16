@@ -16,6 +16,7 @@ const itemIcons: Record<ItemType, IconName> = {
   audio: 'audio_file',
   book: 'auto_stories',
   image: 'image',
+  iiif: 'pinch_zoom_in',
   pdf: 'picture_as_pdf',
   video: 'video_file',
   webpage: 'iframe',

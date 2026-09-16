@@ -13,6 +13,10 @@
     "shared",
     "viewer"
   ],
+  "_comment_overrides": "@samvera/clover-iiif depends on @radix-ui/react-form@^0.0.3, which only supports react@^16-18. Without this override, npm installs a duplicate react@18, which crashes at runtime. @radix-ui/react-form@^0.1.16 supports react@^19. Remove this once clover-iiif upgrades past that version.",
+  "overrides": {
+    "@radix-ui/react-form": "^0.1.16"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "sh -c 'cd core && npm run lint' && sh -c 'cd core-client && npm run lint' && sh -c 'cd shared && npm run lint' && sh -c 'cd client && npm run lint' && sh -c 'cd server && npm run lint' && sh -c 'cd viewer && npm run lint'",

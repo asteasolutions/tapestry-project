@@ -5,7 +5,7 @@ import { PlayableShareMenu, shareMenu } from './share-menu'
 import { TimeInput } from '../../time-input'
 import { updateItem } from '../../../pages/tapestry/view-model/store-commands/items'
 import { useDispatch, useTapestryData } from '../../../pages/tapestry/tapestry-providers'
-import { capitalize } from 'lodash'
+import { capitalize } from 'lodash-es'
 
 export function usePlayableItemToolbar(dto: AudioItemDto | VideoItemDto, duration?: number) {
   const { startTime, stopTime, id } = dto

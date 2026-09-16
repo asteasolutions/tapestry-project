@@ -10,7 +10,7 @@ import { Container, ContainerChild, ContainerOptions } from 'pixi.js'
 import { Store } from '../../lib/store/index'
 import { getType, isItemViewModel, isRelViewModel } from '../../view-model/utils'
 import { TapestryStage } from '..'
-import { get, isEqual } from 'lodash'
+import { get, isEqual } from 'lodash-es'
 
 export class ViewContainer<C extends ContainerChild = ContainerChild> extends Container<C> {
   public readonly modelRef: TapestryElementRef | GroupModelRef
