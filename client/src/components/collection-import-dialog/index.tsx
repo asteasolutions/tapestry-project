@@ -17,7 +17,7 @@ import { fetchWikimediaCollectionResults } from '../../lib/external-media'
 import { createIAMediaItems, createExternalMediaItems } from '../../stage/item-factories'
 import { ImportDetails } from './import-details/index'
 import { ImportItemsList } from './import-items-list/index'
-import { requestSearchItems } from './import-items-list/search-list/index'
+import { requestSearchItems } from './import-items-list/ia-search-list/index'
 import styles from './styles.module.css'
 
 export interface ImportItem {
@@ -203,7 +203,7 @@ export function CollectionImportDialog() {
     }
   }
 
-  const header = <ImportDetails import={collectionImport} />
+  const importDetails = <ImportDetails import={collectionImport} />
 
   return (
     <SimpleModal
@@ -219,14 +219,14 @@ export function CollectionImportDialog() {
       }}
     >
       <div className={styles.content}>
-        {!mdOrLess && header}
+        {!mdOrLess && importDetails}
         <ImportItemsList
           onSelect={(item) => setSelectedItems((current) => toggleElement(current, item))}
           onToggleAll={toggleAll}
           toggling={loading}
           selectedItems={selectedItems}
           collectionImport={collectionImport}
-          header={mdOrLess && header}
+          header={mdOrLess && importDetails}
         />
       </div>
     </SimpleModal>

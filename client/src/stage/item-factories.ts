@@ -214,7 +214,7 @@ export async function createExternalMediaItems(
   return compact(items)
 }
 
-const externalMediaFactory: ItemFactory = async (source, _mediaType, tapestryId) => {
+const openverseFactory: ItemFactory = async (source, _mediaType, tapestryId) => {
   if (typeof source !== 'string' || !isHTTPURL(source)) return null
 
   const parsedOpenverseMedia = parseOpenverseMediaId(source)
@@ -249,6 +249,12 @@ const externalMediaFactory: ItemFactory = async (source, _mediaType, tapestryId)
       ],
     }
   }
+
+  return null
+}
+
+const wikimediaFactory: ItemFactory = async (source, _mediaType, tapestryId) => {
+  if (typeof source !== 'string' || !isHTTPURL(source)) return null
 
   const wikimediaTitle = parseWikimediaFileTitle(source)
   if (wikimediaTitle) {
@@ -329,7 +335,8 @@ export const ITEM_FACTORIES: ItemFactory[] = [
   createSimpleMediaItemFactory('audio', (_, mediaType) => !!mediaType?.startsWith('audio/')),
   linkFileFactory,
   textItemFactory,
-  externalMediaFactory,
+  openverseFactory,
+  wikimediaFactory,
   htmlFileItemFactory,
   iaFactory,
   webpageItemFactory,

@@ -1,8 +1,9 @@
 import { ImportItem } from '..'
 import { CollectionImport } from '../../../pages/tapestry/view-model'
-import { ExternalCollectionList } from './external-collection-list'
-import { IAPlaylistEntries } from './playlist'
-import { IASearchList } from './search-list'
+import { OpenverseCollectionList } from './openverse-collection-list'
+import { WikimediaCollectionList } from './wikimedia-collection-list'
+import { IAPlaylistEntries } from './ia-playlist'
+import { IASearchList } from './ia-search-list'
 import { ReactNode } from 'react'
 
 export interface ImportItemsListProps {
@@ -27,11 +28,11 @@ export function ImportItemsList({ collectionImport, ...props }: ImportItemsListP
   if (collectionImport.type === 'IASearchCollection') {
     return <IASearchList query={collectionImport.query} {...props} />
   }
-  if (
-    collectionImport.type === 'OpenverseCollection' ||
-    collectionImport.type === 'WikimediaCommonsCategory'
-  ) {
-    return <ExternalCollectionList collection={collectionImport} {...props} />
+  if (collectionImport.type === 'OpenverseCollection') {
+    return <OpenverseCollectionList collection={collectionImport} {...props} />
+  }
+  if (collectionImport.type === 'WikimediaCommonsCategory') {
+    return <WikimediaCollectionList collection={collectionImport} {...props} />
   }
   return <IAPlaylistEntries entries={collectionImport.entries} {...props} />
 }
