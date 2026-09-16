@@ -16,6 +16,7 @@ import {
   SelectionState,
 } from '../../../lib/rich-text-editor'
 import styles from './styles.module.css'
+import { max } from 'lodash'
 
 export function elementIdFromLink(
   link: string,
@@ -129,7 +130,7 @@ export function TextItemViewer({
   }
 
   return (
-    <div className={styles.editorWrapper}>
+    <>
       <RichTextEditor
         api={editorAPI}
         // setting value to unsavedContent prevents re-rendering of the editor with old text before the model updates
@@ -176,8 +177,16 @@ export function TextItemViewer({
         {...rteProps}
       />
       {!isInteractiveElement && hasScroll && (
-        <Icon icon="unfold_more" className={styles.scrollIndicator} />
+        <Icon
+          icon="unfold_more"
+          className={styles.scrollIndicator}
+          style={
+            {
+              '--scroll-indicator-size': `${max([24, 0.04 * dto.size.height])}px`,
+            } as React.CSSProperties
+          }
+        />
       )}
-    </div>
+    </>
   )
 }
