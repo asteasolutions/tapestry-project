@@ -14,6 +14,7 @@ import { useAsync } from '../../../lib/hooks/use-async'
 import { useResizeObserver } from '../../../lib/hooks/use-resize-observer'
 import classes from './styles.module.css'
 import { ToCButton } from './toc-button'
+import { IconOverlay } from '../../video-play-overlay'
 
 interface EPubState {
   reader: Reader
@@ -46,7 +47,9 @@ export interface BookItemViewerProps {
 
 export function BookItemViewer({ id, isZipURL }: BookItemViewerProps) {
   const { useStoreData } = useTapestryConfig()
-  const { source: epub } = useStoreData(`items.${id}.dto`) as BookItemDto
+  const dto = useStoreData(`items.${id}.dto`) as BookItemDto
+  const epub = dto.source
+  const isInteractive = useStoreData('interactiveElement')?.modelId === id
 
   const containerRef = useRef<HTMLDivElement>(null)
   const [epubState, setEpubState] = useState<EPubState | undefined>()
@@ -216,6 +219,8 @@ export function BookItemViewer({ id, isZipURL }: BookItemViewerProps) {
           )}
         </div>
       )}
+
+      {!isInteractive && <IconOverlay itemSize={dto.size} icon="menu_book" />}
     </div>
   )
 }

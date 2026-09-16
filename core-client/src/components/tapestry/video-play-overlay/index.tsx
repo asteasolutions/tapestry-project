@@ -4,7 +4,7 @@ import { Icon } from '../../lib/icon/index'
 
 interface IconOverlayProps {
   itemSize: Size
-  icon: 'videocam' | 'play_arrow' | 'picture_as_pdf'
+  icon: 'videocam' | 'play_arrow' | 'picture_as_pdf' | 'menu_book'
 }
 
 const ICON_STYLING: Record<IconOverlayProps['icon'], React.CSSProperties> = {
@@ -17,6 +17,10 @@ const ICON_STYLING: Record<IconOverlayProps['icon'], React.CSSProperties> = {
   },
   picture_as_pdf: {
     fontSize: '31px',
+    padding: '10px',
+  },
+  menu_book: {
+    fontSize: '50px',
     padding: '10px',
   },
 }
