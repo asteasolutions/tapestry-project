@@ -70,7 +70,8 @@ export function computeCurvePoints({
   function computeSemiCurvePoints({ point, hasArrow }: CurveEndpointParams, direction: Vector) {
     const arrowOffset =
       getArrowheadTriangleRadius(arrowheadSize) / 2 +
-      getArrowheadCenterOffset(arrowheadSize, getArrowheadCornerRadius(arrowheadSize))
+      getArrowheadCenterOffset(arrowheadSize, getArrowheadCornerRadius(arrowheadSize)) -
+      1
 
     const curveEndpoint = hasArrow ? translate(point, mul(arrowOffset, direction)) : point
     const dist = norm(mul(endpointDistance, direction)) / 3
