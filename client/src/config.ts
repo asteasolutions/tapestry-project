@@ -6,7 +6,6 @@ const parsedConfig = deepFreeze(
   z
     .object({
       VITE_API_URL: z.string(),
-      VITE_AUTH_PROVIDER: z.enum(['ia', 'google']).catch('google'),
       VITE_GOOGLE_CLIENT_ID: z.string(),
       VITE_BUG_REPORT_FORM_URL: z.string(),
       VITE_AI_CHAT_EXPIRES_IN: OptionalInt(3600), // default: one hour
@@ -17,7 +16,6 @@ const parsedConfig = deepFreeze(
     })
     .transform((input) => ({
       apiUrl: input.VITE_API_URL,
-      authProvider: input.VITE_AUTH_PROVIDER,
       googleClientId: input.VITE_GOOGLE_CLIENT_ID,
       bugReportFormUrl: input.VITE_BUG_REPORT_FORM_URL,
       aiChatExpiresIn: input.VITE_AI_CHAT_EXPIRES_IN,

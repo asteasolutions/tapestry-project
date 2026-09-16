@@ -1,7 +1,5 @@
 import { useState } from 'react'
 import { SimpleModal } from 'tapestry-core-client/src/components/lib/modal/index'
-import { auth } from '../..'
-import { IAAuthService } from '../service'
 import { Input } from 'tapestry-core-client/src/components/lib/input/index'
 import { Text } from 'tapestry-core-client/src/components/lib/text/index'
 import styles from './styles.module.css'
@@ -13,9 +11,11 @@ import { SvgIcon } from 'tapestry-core-client/src/components/lib/svg-icon/index'
 import { Tooltip } from 'tapestry-core-client/src/components/lib/tooltip/index'
 import { useAsyncAction } from 'tapestry-core-client/src/components/lib/hooks/use-async-action'
 import { Snackbar } from 'tapestry-core-client/src/components/lib/snackbar/index'
+import { auth } from '../..'
 
 interface IALoginDialogProps {
   onClose: () => void
+  onSuccess?: () => void
 }
 
 const REASON_MESSAGE_MAP: Record<ErrorReason, string> = {
@@ -24,7 +24,7 @@ const REASON_MESSAGE_MAP: Record<ErrorReason, string> = {
   InvalidIASession: 'Session expired',
 }
 
-export function IALoginDialog({ onClose }: IALoginDialogProps) {
+export function IALoginDialog({ onClose, onSuccess }: IALoginDialogProps) {
   const [form] = useState(() => uniqueId('form'))
 
   const [email, setEmail] = useState('')
@@ -34,8 +34,8 @@ export function IALoginDialog({ onClose }: IALoginDialogProps) {
 
   const { trigger, cancel, loading } = useAsyncAction(async ({ signal }) => {
     try {
-      const iaAuth = auth instanceof IAAuthService ? auth : null
-      await iaAuth?.login({ authType: 'iaCredentials', email, password }, signal)
+      await auth.login({ authType: 'iaCredentials', email, password }, signal)
+      onSuccess?.()
     } catch (error) {
       if (error instanceof APIError) {
         const { name, reason, message } = error.data

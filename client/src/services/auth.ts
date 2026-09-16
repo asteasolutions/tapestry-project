@@ -1,9 +1,9 @@
-import { UserDto } from 'tapestry-shared/src/data-transfer/resources/dtos/user'
-import { resource } from './rest-resources'
 import { Observable } from 'tapestry-core-client/src/lib/events/observable'
 import { CanceledError, GenericAbortSignal } from 'axios'
 import { SessionCreateDto } from 'tapestry-shared/src/data-transfer/resources/dtos/session'
+import { UserDto } from 'tapestry-shared/src/data-transfer/resources/dtos/user'
 import { APIError } from '../errors'
+import { resource } from '../services/rest-resources'
 
 interface Token {
   token: string
@@ -36,9 +36,7 @@ function defer<T = void>() {
   return { promise, resolve, reject, state }
 }
 
-export abstract class AuthService<
-  Credentials extends SessionCreateDto = SessionCreateDto,
-> extends Observable<AuthServiceState> {
+export class AuthService extends Observable<AuthServiceState> {
   private autoRefreshTimeout: number | undefined
   private preparing = defer()
   private _accessToken: Token | null = null
@@ -112,12 +110,32 @@ export abstract class AuthService<
     }
   }
 
-  async refresh(loadUser = false, signal?: GenericAbortSignal) {
-    await this.doLogin({ authType: 'refreshToken' }, loadUser, signal)
+  async refresh(loadUser = true, signal?: GenericAbortSignal) {
+    try {
+      await this.doLogin({ authType: 'refreshToken' }, loadUser, signal)
+    } catch (error) {
+      if (!(error instanceof CanceledError) && loadUser && !this.value.user) {
+        try {
+          await this.doLogin({ authType: 'iaCookies' }, true, signal)
+          return
+        } catch {
+          this.update((state) => {
+            state.user = null
+            state.isInitialized = true
+          })
+        }
+      } else if (!(error instanceof CanceledError)) {
+        this.update((state) => {
+          state.user = null
+          state.isInitialized = true
+        })
+      }
+      throw error
+    }
   }
 
-  login(_credentials: Credentials, _signal?: GenericAbortSignal): Promise<void> {
-    throw new Error('Not implemented')
+  login(credentials: SessionCreateDto, signal?: GenericAbortSignal): Promise<void> {
+    return this.doLogin(credentials, true, signal)
   }
 
   async logout(signal?: GenericAbortSignal) {
@@ -125,6 +143,7 @@ export abstract class AuthService<
 
     await resource('sessions').destroy({ id: this.value.user.id }, { signal })
     this._accessToken = null
+    clearTimeout(this.autoRefreshTimeout)
     this.update((state) => {
       state.user = null
     })
