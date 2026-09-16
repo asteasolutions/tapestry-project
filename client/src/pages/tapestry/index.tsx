@@ -15,7 +15,7 @@ interface TapestryIdState {
 
 export function TapestryPage() {
   const { id, edit } = useParams()
-  const location = useLocation()
+  const location = useLocation() as Location<Record<string, unknown> | undefined>
   const mode: InteractionMode = edit === 'edit' ? 'edit' : 'view'
 
   const { data: tapestry, error } = useAsync(
