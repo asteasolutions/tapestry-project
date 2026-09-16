@@ -189,6 +189,38 @@ export async function fetchWikimediaCollectionCount(
   }
 }
 
+const CATEGORY_THUMBNAIL_WIDTH = 300
+
+// Commons categories are templated, not prose, so `extracts` (Wikipedia's article-summary API)
+// always returns an empty string for them -- there is no cheap category description to show.
+// `pageimages` does work, resolving to a representative file already in the category.
+export async function fetchWikimediaCollectionThumbnail(
+  collection: WikimediaCollectionQuery,
+  signal?: AbortSignal,
+): Promise<string | null> {
+  try {
+    const url = new URL(COMMONS_API_URL)
+    url.searchParams.set('action', 'query')
+    url.searchParams.set('titles', collection.category)
+    url.searchParams.set('prop', 'pageimages')
+    url.searchParams.set('piprop', 'thumbnail')
+    url.searchParams.set('pithumbsize', String(CATEGORY_THUMBNAIL_WIDTH))
+    url.searchParams.set('format', 'json')
+    url.searchParams.set('origin', '*')
+
+    const res = await fetch(url, { signal })
+    if (!res.ok) return null
+
+    interface CategoryPage {
+      thumbnail?: { source: string }
+    }
+    const data = (await res.json()) as CommonsQueryResponse<CategoryPage>
+    return Object.values(data.query?.pages ?? {})[0]?.thumbnail?.source ?? null
+  } catch {
+    return null
+  }
+}
+
 interface CommonsCategoryPage {
   results: WikimediaMedia[]
   nextCursor: string | null

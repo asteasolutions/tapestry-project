@@ -1,8 +1,10 @@
 import { getIAItemThumbnailURL } from 'tapestry-core/src/internet-archive'
+import { fetchWikimediaCollectionThumbnail } from 'tapestry-core/src/wikimedia-commons'
 import { CollectionImport } from '../../../pages/tapestry/view-model'
 import styles from './styles.module.css'
 import { Text } from 'tapestry-core-client/src/components/lib/text/index'
 import { intlFormat } from 'date-fns'
+import { useEffect, useState } from 'react'
 import { Breakpoint, useResponsive } from '../../../providers/responsive-provider'
 
 const parser = new DOMParser()
@@ -87,30 +89,6 @@ type WikimediaCommonsCategoryImport = Extract<
   { type: 'WikimediaCommonsCategory' }
 >
 
-function CollectionDetailsLayout({
-  label,
-  total,
-  noun,
-}: {
-  label: string
-  total: number
-  noun: string
-}) {
-  const mdOrLess = useResponsive() <= Breakpoint.MD
-  const textVariant = mdOrLess ? 'bodyXs' : undefined
-
-  return (
-    <div className={styles.root}>
-      <Text variant={mdOrLess ? 'bodySm' : 'h6'} style={{ fontWeight: 'bold' }}>
-        {label}
-      </Text>
-      <Text variant={textVariant}>
-        {total} {noun}
-      </Text>
-    </div>
-  )
-}
-
 const OPENVERSE_MEDIA_TYPE_NOUN: Record<OpenverseCollectionImport['mediaType'], string> = {
   image: 'images',
   audio: 'audio items',
@@ -121,12 +99,18 @@ function openverseCollectionLabel(collection: OpenverseCollectionImport['collect
 }
 
 function OpenverseCollectionDetails({ collection }: { collection: OpenverseCollectionImport }) {
+  const mdOrLess = useResponsive() <= Breakpoint.MD
+  const textVariant = mdOrLess ? 'bodyXs' : undefined
+
   return (
-    <CollectionDetailsLayout
-      label={openverseCollectionLabel(collection.collection)}
-      total={collection.total}
-      noun={OPENVERSE_MEDIA_TYPE_NOUN[collection.mediaType]}
-    />
+    <div className={styles.root}>
+      <Text variant={mdOrLess ? 'bodySm' : 'h6'} style={{ fontWeight: 'bold' }}>
+        {openverseCollectionLabel(collection.collection)}
+      </Text>
+      <Text variant={textVariant}>
+        {collection.total} {OPENVERSE_MEDIA_TYPE_NOUN[collection.mediaType]}
+      </Text>
+    </div>
   )
 }
 
@@ -135,11 +119,29 @@ function WikimediaCommonsCategoryDetails({
 }: {
   collection: WikimediaCommonsCategoryImport
 }) {
+  const mdOrLess = useResponsive() <= Breakpoint.MD
+  const textVariant = mdOrLess ? 'bodyXs' : undefined
+  const [thumbnail, setThumbnail] = useState<string | null>(null)
+
+  useEffect(() => {
+    const controller = new AbortController()
+    void fetchWikimediaCollectionThumbnail(collection.collection, controller.signal).then(
+      setThumbnail,
+    )
+    return () => controller.abort()
+  }, [collection.collection])
+
   return (
-    <CollectionDetailsLayout
-      label={collection.collection.category}
-      total={collection.total}
-      noun="files"
-    />
+    <div className={styles.root}>
+      <div className={styles.header}>
+        {thumbnail && <img className={styles.thumbnail} loading="lazy" src={thumbnail} />}
+        <div className={styles.metadataContainer}>
+          <Text variant={mdOrLess ? 'bodySm' : 'h6'} style={{ fontWeight: 'bold' }}>
+            {collection.collection.category}
+          </Text>
+          <Text variant={textVariant}>{collection.total} files</Text>
+        </div>
+      </div>
+    </div>
   )
 }
