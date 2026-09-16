@@ -1,8 +1,7 @@
 import { ReactNode } from 'react'
 import { Icon } from 'tapestry-core-client/src/components/lib/icon/index'
 import { Checkbox } from 'tapestry-core-client/src/components/lib/checkbox'
-import { LazyList, WithId } from '../../../lazy-list'
-import { LazyListLoader, LazyListRequestItems } from '../../../lazy-list/lazy-list-loader'
+import { LazyList, LazyListProps, WithId } from '../../../lazy-list'
 import { LoadingLogoIcon } from '../../../loading-logo-icon'
 import { MAX_SELECTION } from '../..'
 import styles from './styles.module.css'
@@ -14,12 +13,15 @@ import styles from './styles.module.css'
  * item's thumbnail/title and its detail columns; the checkbox wiring, the mobile
  * details/desktop row switch, and the `LazyList` plumbing live here once.
  */
-export interface CollectionListProps<T extends WithId> {
-  requestItems: LazyListRequestItems<T>
-  windowSize: number
-  loadingEdgeProximity: number
-  autoReload?: boolean | number
-  onLoaderInitialized?: (loader: LazyListLoader<T>) => void
+export interface CollectionListProps<T extends WithId> extends Pick<
+  LazyListProps<T>,
+  | 'requestItems'
+  | 'windowSize'
+  | 'loadingEdgeProximity'
+  | 'autoReload'
+  | 'onLoaderInitialized'
+  | 'header'
+> {
   mdOrLess: boolean
   detailsHeader: ReactNode
   detailsGroupName: string
@@ -36,16 +38,10 @@ export interface CollectionListProps<T extends WithId> {
   isSelected: (item: T) => boolean
   onSelectItem: (item: T) => void
   selectedCount: number
-  header?: ReactNode
   emptyPlaceholder: ReactNode
 }
 
 export function CollectionList<T extends WithId>({
-  requestItems,
-  windowSize,
-  loadingEdgeProximity,
-  autoReload,
-  onLoaderInitialized,
   mdOrLess,
   detailsHeader,
   detailsGroupName,
@@ -56,17 +52,12 @@ export function CollectionList<T extends WithId>({
   isSelected,
   onSelectItem,
   selectedCount,
-  header,
   emptyPlaceholder,
+  ...lazyListProps
 }: CollectionListProps<T>) {
   return (
     <LazyList
-      windowSize={windowSize}
-      requestItems={requestItems}
-      loadingEdgeProximity={loadingEdgeProximity}
-      autoReload={autoReload}
-      onLoaderInitialized={onLoaderInitialized}
-      header={header}
+      {...lazyListProps}
       renderItem={(item) => {
         if (shouldRenderItem && !shouldRenderItem(item)) return null
 
