@@ -39,8 +39,7 @@ const ICON_TEXTURE_URLS: Record<IconName, URL> = {
   videoCam: new URL('../../assets/textures/videocam.ktx2', import.meta.url),
   playArrow: new URL('../../assets/textures/play-arrow.ktx2', import.meta.url),
   volumeUp: new URL('../../assets/textures/volume-up.ktx2', import.meta.url),
-  //todo:icons
-  book: new URL('../../assets/textures/menu-book.ktx2', import.meta.url),
+  book: new URL('../../assets/textures/menu_book.ktx2', import.meta.url),
   webpage: new URL('../../assets/textures/globe.ktx2', import.meta.url),
 }
 
