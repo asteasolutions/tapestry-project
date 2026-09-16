@@ -240,7 +240,7 @@ async function fetchWikimediaCategoryPage(
     url.searchParams.set('gcmtype', 'file')
     url.searchParams.set('prop', 'videoinfo')
     url.searchParams.set('viprop', VIDEO_INFO_PROPS)
-    url.searchParams.set('viurlwidth', '300')
+    url.searchParams.set('viurlwidth', '120')
     url.searchParams.set('format', 'json')
     url.searchParams.set('origin', '*')
     if (cursor) url.searchParams.set('gcmcontinue', cursor)
