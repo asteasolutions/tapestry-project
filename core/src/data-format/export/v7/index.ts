@@ -62,10 +62,8 @@ export const ImageItemSchemaV7 = z.object({
   ...V7Props,
   ...actionProps,
 })
-// The iiif type postdates V7. It has no V4-era ancestor to derive from. Its real shape
-// matches an image item, minus the click-action fields.
 export const IiifItemSchemaV7 = z.object({
-  ...ImageItemSchemaV7.omit({ type: true, actionType: true, action: true }).shape,
+  ...BookItemSchemaV7.omit({ type: true }).shape,
   type: z.literal('iiif'),
 })
 export const PDFItemSchemaV7 = z.object({
