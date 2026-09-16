@@ -22,8 +22,23 @@
   /* Shrink the canvas/slide picker rail (defaults to 15rem). Setting a height too
      stretches the thumbnails, since Clover derives a square from the width alone. */
   --clover-thumbnail-width: 80px;
-}
 
-.root :global(.clover-viewer-media-wrapper) {
-  padding-top: 8px;
+  :global(.clover-viewer-media-wrapper) {
+    padding-top: 8px;
+  }
+
+  :global(.clover-viewer-about-content) {
+    padding: 0;
+    overflow-wrap: anywhere;
+  }
+
+  :global(.clover-slider-header) {
+    padding-bottom: 8px;
+  }
+
+  :global(.clover-viewer-media-sequence) {
+    padding-bottom: 8px;
+    padding-left: 8px;
+    padding-right: 8px;
+  }
 }
