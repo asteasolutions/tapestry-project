@@ -14,7 +14,7 @@ import { LiteralColor } from '../../theme/types'
 import { drawRoundedRect } from '../../lib/pixi'
 import { getItemOverlayScale } from '../../view-model/utils'
 
-export type IconName = 'pdf' | 'videoCam' | 'playArrow' | 'volumeUp'
+export type IconName = 'pdf' | 'videoCam' | 'playArrow' | 'volumeUp' | 'book' | 'webpage'
 
 export interface ThumbnailIconProps {
   iconName: IconName
@@ -39,6 +39,9 @@ const ICON_TEXTURE_URLS: Record<IconName, URL> = {
   videoCam: new URL('../../assets/textures/videocam.ktx2', import.meta.url),
   playArrow: new URL('../../assets/textures/play-arrow.ktx2', import.meta.url),
   volumeUp: new URL('../../assets/textures/volume-up.ktx2', import.meta.url),
+  //todo:icons
+  book: new URL('../../assets/textures/menu-book.ktx2', import.meta.url),
+  webpage: new URL('../../assets/textures/globe.ktx2', import.meta.url),
 }
 
 const DEFAULT_ICON_SIZE = 24
