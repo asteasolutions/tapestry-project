@@ -25,7 +25,7 @@ export const IiifItemViewer = memo(({ id }: TapestryElementComponentProps) => {
     return (
       <div className={styles.root}>
         <ItemPlaceholder icon="image" thumbnailSrc={getPrimaryThumbnail(dto.thumbnail)}>
-          Loading…
+          Generating IIIF thumbnail…
         </ItemPlaceholder>
       </div>
     )
