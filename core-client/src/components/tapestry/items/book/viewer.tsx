@@ -14,7 +14,10 @@ import { useAsync } from '../../../lib/hooks/use-async'
 import { useResizeObserver } from '../../../lib/hooks/use-resize-observer'
 import classes from './styles.module.css'
 import { ToCButton } from './toc-button'
+import { ItemPlaceholder } from '../../item-placeholder'
 import { IconOverlay } from '../../video-play-overlay'
+import { LoadingSpinner } from '../../../lib/loading-spinner'
+import { getPrimaryThumbnail } from '../../../../view-model/utils'
 
 interface EPubState {
   reader: Reader
@@ -48,8 +51,8 @@ export interface BookItemViewerProps {
 export function BookItemViewer({ id, isZipURL }: BookItemViewerProps) {
   const { useStoreData } = useTapestryConfig()
   const dto = useStoreData(`items.${id}.dto`) as BookItemDto
+  const hasBeenActive = useStoreData(`items.${id}.hasBeenActive`)
   const epub = dto.source
-  const isInteractive = useStoreData('interactiveElement')?.modelId === id
 
   const containerRef = useRef<HTMLDivElement>(null)
   const [epubState, setEpubState] = useState<EPubState | undefined>()
@@ -141,7 +144,7 @@ export function BookItemViewer({ id, isZipURL }: BookItemViewerProps) {
 
   return (
     <div className={classes.root}>
-      {epubState && (
+      {hasBeenActive && epubState && (
         <div className="title-bar">
           <div>Chapter {`${epubState.currentChapter + 1} / ${epubState.totalChapters}`}</div>
           <div
@@ -157,7 +160,7 @@ export function BookItemViewer({ id, isZipURL }: BookItemViewerProps) {
         </div>
       )}
       <div ref={containerRef} className="epub-container" />
-      {epubState && (
+      {hasBeenActive && epubState && (
         <div>
           <div className="controls-container">
             {nav?.toc && (
@@ -220,7 +223,23 @@ export function BookItemViewer({ id, isZipURL }: BookItemViewerProps) {
         </div>
       )}
 
-      {!isInteractive && <IconOverlay itemSize={dto.size} icon="menu_book" />}
+      {!epubState && (
+        <div className={classes.loadingPlaceholder}>
+          <ItemPlaceholder
+            classes={{
+              root: classes.placeholder,
+              thumbnail: classes.thumbnail,
+            }}
+            icon="menu_book"
+            thumbnailSrc={getPrimaryThumbnail(dto)}
+            thumbnailOverlay={<IconOverlay itemSize={dto.size} icon="menu_book" />}
+          >
+            Click to load
+          </ItemPlaceholder>
+          {hasBeenActive && <LoadingSpinner size="100px" className={classes.spinner} />}
+          <IconOverlay itemSize={dto.size} icon={'menu_book'} />
+        </div>
+      )}
     </div>
   )
 }
