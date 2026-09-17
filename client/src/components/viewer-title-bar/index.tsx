@@ -82,6 +82,7 @@ export function ViewerTitleBar({ className, style }: PropsWithStyle) {
     <>
       {user && (
         <MenuItemButton
+          className={styles.secondaryButton}
           icon="bookmark"
           disabled={loadingBookmark}
           onClick={async () => {
@@ -99,6 +100,7 @@ export function ViewerTitleBar({ className, style }: PropsWithStyle) {
         </MenuItemButton>
       )}
       <ExportButton
+        className={styles.secondaryButton}
         disabled={!canForkTapestry}
         tooltip={
           canForkTapestry
@@ -124,6 +126,7 @@ export function ViewerTitleBar({ className, style }: PropsWithStyle) {
             setForkingTapestry(true)
           }
         }}
+        className={styles.primaryButton}
       >
         Make a copy
       </MenuItemButton>

@@ -22,3 +22,20 @@
   border-top-left-radius: 8px;
   border-bottom-left-radius: 8px;
 }
+
+.secondary-button {
+  font-weight: 600 !important;
+  & [class*='icon'] {
+    color: var(--theme-background-brand-secondary);
+  }
+}
+
+.primary-button {
+  font-weight: 600 !important;
+  background-color: var(--theme-background-brand-secondary);
+  color: var(--theme-text-primary-inverse);
+
+  & [class*='icon'] {
+    color: var(--theme-text-primary-inverse);
+  }
+}
