@@ -1,86 +1,58 @@
+import { ReactNode, useEffect, useState } from 'react'
 import { getIAItemThumbnailURL } from 'tapestry-core/src/internet-archive'
 import { fetchWikimediaCollectionThumbnail } from 'tapestry-core/src/wikimedia-commons'
 import { CollectionImport } from '../../../pages/tapestry/view-model'
 import styles from './styles.module.css'
 import { Text } from 'tapestry-core-client/src/components/lib/text/index'
 import { intlFormat } from 'date-fns'
-import { useEffect, useState } from 'react'
 import { Breakpoint, useResponsive } from '../../../providers/responsive-provider'
 
 const parser = new DOMParser()
 
-interface ImportDetailsProps {
-  import: CollectionImport
+interface DetailsLayoutProps {
+  thumbnail?: string | null
+  title: ReactNode
+  subtitle?: ReactNode
+  meta?: ReactNode
+  body?: ReactNode
 }
 
-// TODO: Extract a shared layout component. This removes the duplication between the
-// branches below.
-export function ImportDetails({ import: collectionImport }: ImportDetailsProps) {
+// The layout shared by every collection import's details panel: an optional thumbnail beside a
+// title/subtitle, an optional metadata row, and an optional longer body. Each collection type
+// below only differs in which of these optional pieces it has data for.
+function DetailsLayout({ thumbnail, title, subtitle, meta, body }: DetailsLayoutProps) {
   const mdOrLess = useResponsive() <= Breakpoint.MD
   const textVariant = mdOrLess ? 'bodyXs' : undefined
-
-  if (collectionImport.type === 'OpenverseCollection') {
-    return <OpenverseCollectionDetails collection={collectionImport} />
-  }
-
-  if (collectionImport.type === 'WikimediaCommonsCategory') {
-    return <WikimediaCommonsCategoryDetails collection={collectionImport} />
-  }
-
-  if (collectionImport.type === 'IASearchCollection') {
-    return (
-      <div className={styles.root}>
-        <div className={styles.header}>
-          <div className={styles.metadataContainer}>
-            <Text variant={mdOrLess ? 'bodySm' : 'h6'} lineClamp={2} style={{ fontWeight: 'bold' }}>
-              Search results
-            </Text>
-            <Text variant={textVariant} lineClamp={2}>
-              {collectionImport.total} results
-            </Text>
-          </div>
-        </div>
-        <Text variant={textVariant} component="div">
-          {collectionImport.query}
-        </Text>
-      </div>
-    )
-  }
-
-  const { id, metadata } = collectionImport
-  const description = parser.parseFromString(
-    metadata.summary ?? metadata.description ?? '',
-    'text/html',
-  ).documentElement.textContent
-
-  const isCollection = metadata.mediatype === 'collection'
 
   return (
     <div className={styles.root}>
       <div className={styles.header}>
-        <img className={styles.thumbnail} loading="lazy" src={getIAItemThumbnailURL(id)} />
+        {thumbnail && <img className={styles.thumbnail} loading="lazy" src={thumbnail} />}
         <div className={styles.metadataContainer}>
           <div>
             <Text variant={mdOrLess ? 'bodySm' : 'h6'} lineClamp={2} style={{ fontWeight: 'bold' }}>
-              {metadata.title}
+              {title}
             </Text>
-            <Text variant={textVariant} lineClamp={2}>
-              {isCollection ? metadata.uploader : metadata.creator}
-            </Text>
+            {subtitle !== undefined && (
+              <Text variant={textVariant} lineClamp={2}>
+                {subtitle}
+              </Text>
+            )}
           </div>
-          <div style={{ display: 'flex', gap: '12px' }}>
-            <Text variant={textVariant ?? 'bodySm'}>Publication date</Text>
-            <Text variant={textVariant ?? 'bodySm'}>
-              {intlFormat(metadata.publicdate, { day: 'numeric', month: 'short', year: 'numeric' })}
-            </Text>
-          </div>
+          {meta}
         </div>
       </div>
-      <Text variant={textVariant} component="div">
-        {description}
-      </Text>
+      {body !== undefined && (
+        <Text variant={textVariant} component="div">
+          {body}
+        </Text>
+      )}
     </div>
   )
+}
+
+interface ImportDetailsProps {
+  import: CollectionImport
 }
 
 type OpenverseCollectionImport = Extract<CollectionImport, { type: 'OpenverseCollection' }>
@@ -98,29 +70,11 @@ function openverseCollectionLabel(collection: OpenverseCollectionImport['collect
   return collection.type === 'tag' ? collection.tag : collection.source
 }
 
-function OpenverseCollectionDetails({ collection }: { collection: OpenverseCollectionImport }) {
-  const mdOrLess = useResponsive() <= Breakpoint.MD
-  const textVariant = mdOrLess ? 'bodyXs' : undefined
-
-  return (
-    <div className={styles.root}>
-      <Text variant={mdOrLess ? 'bodySm' : 'h6'} style={{ fontWeight: 'bold' }}>
-        {openverseCollectionLabel(collection.collection)}
-      </Text>
-      <Text variant={textVariant}>
-        {collection.total} {OPENVERSE_MEDIA_TYPE_NOUN[collection.mediaType]}
-      </Text>
-    </div>
-  )
-}
-
 function WikimediaCommonsCategoryDetails({
   collection,
 }: {
   collection: WikimediaCommonsCategoryImport
 }) {
-  const mdOrLess = useResponsive() <= Breakpoint.MD
-  const textVariant = mdOrLess ? 'bodyXs' : undefined
   const [thumbnail, setThumbnail] = useState<string | null>(null)
 
   useEffect(() => {
@@ -132,16 +86,62 @@ function WikimediaCommonsCategoryDetails({
   }, [collection.collection])
 
   return (
-    <div className={styles.root}>
-      <div className={styles.header}>
-        {thumbnail && <img className={styles.thumbnail} loading="lazy" src={thumbnail} />}
-        <div className={styles.metadataContainer}>
-          <Text variant={mdOrLess ? 'bodySm' : 'h6'} style={{ fontWeight: 'bold' }}>
-            {collection.collection.category}
+    <DetailsLayout
+      thumbnail={thumbnail}
+      title={collection.collection.category}
+      subtitle={`${collection.total} files`}
+    />
+  )
+}
+
+export function ImportDetails({ import: collectionImport }: ImportDetailsProps) {
+  const mdOrLess = useResponsive() <= Breakpoint.MD
+  const textVariant = mdOrLess ? 'bodyXs' : undefined
+
+  if (collectionImport.type === 'OpenverseCollection') {
+    return (
+      <DetailsLayout
+        title={openverseCollectionLabel(collectionImport.collection)}
+        subtitle={`${collectionImport.total} ${OPENVERSE_MEDIA_TYPE_NOUN[collectionImport.mediaType]}`}
+      />
+    )
+  }
+
+  if (collectionImport.type === 'WikimediaCommonsCategory') {
+    return <WikimediaCommonsCategoryDetails collection={collectionImport} />
+  }
+
+  if (collectionImport.type === 'IASearchCollection') {
+    return (
+      <DetailsLayout
+        title="Search results"
+        subtitle={`${collectionImport.total} results`}
+        body={collectionImport.query}
+      />
+    )
+  }
+
+  const { id, metadata } = collectionImport
+  const description = parser.parseFromString(
+    metadata.summary ?? metadata.description ?? '',
+    'text/html',
+  ).documentElement.textContent
+  const isCollection = metadata.mediatype === 'collection'
+
+  return (
+    <DetailsLayout
+      thumbnail={getIAItemThumbnailURL(id)}
+      title={metadata.title}
+      subtitle={isCollection ? metadata.uploader : metadata.creator}
+      meta={
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <Text variant={textVariant ?? 'bodySm'}>Publication date</Text>
+          <Text variant={textVariant ?? 'bodySm'}>
+            {intlFormat(metadata.publicdate, { day: 'numeric', month: 'short', year: 'numeric' })}
           </Text>
-          <Text variant={textVariant}>{collection.total} files</Text>
         </div>
-      </div>
-    </div>
+      }
+      body={description}
+    />
   )
 }
