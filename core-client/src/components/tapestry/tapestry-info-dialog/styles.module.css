@@ -1,6 +1,6 @@
 .root {
   &:global(.modal) {
-    width: 500px;
+    width: 600px;
     max-width: 90%;
   }
 
@@ -40,6 +40,14 @@
         }
       }
 
+      .owner-wrapper {
+        display: flex;
+        flex-direction: row;
+        justify-content: start;
+        align-items: center;
+        gap: 8px;
+      }
+
       .separator {
         margin: 0;
         border: none;
@@ -53,6 +61,11 @@
         justify-content: end;
         align-items: center;
         padding: 15px var(--padding-x);
+      }
+
+      .buttons-container > * {
+        min-width: fit-content;
+        justify-content: center;
       }
     }
   }

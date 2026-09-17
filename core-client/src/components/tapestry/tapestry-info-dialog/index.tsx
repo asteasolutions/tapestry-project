@@ -7,15 +7,17 @@ import { Text } from '../../../../src/components/lib/text/index'
 import styles from './styles.module.css'
 
 export interface TapestryInfoDialogProps {
-  tapestry: Pick<Tapestry, 'title' | 'thumbnail' | 'description' | 'createdAt'>
-  owner?: string
+  tapestry: Pick<Tapestry, 'title' | 'thumbnail' | 'description' | 'createdAt' | 'updatedAt'>
+  owner: string
+  ownerAvatar?: ReactNode
   onClose: () => void
   buttons?: ReactNode
 }
 
 export function TapestryInfoDialog({
-  tapestry: { thumbnail, title, description, createdAt },
+  tapestry: { thumbnail, title, description, createdAt, updatedAt },
   owner,
+  ownerAvatar,
   onClose,
   buttons,
 }: TapestryInfoDialogProps) {
@@ -23,7 +25,7 @@ export function TapestryInfoDialog({
     <Modal
       title={
         <Text variant="h5" style={{ fontWeight: 500 }}>
-          Tapestry info
+          About this tapestry
         </Text>
       }
       onClose={onClose}
@@ -46,12 +48,17 @@ export function TapestryInfoDialog({
         <div className={styles.details}>
           {owner && (
             <>
-              <Text variant="bodySm">Owner</Text>
-              <Text>{owner}</Text>
+              <Text variant="bodySm">Author</Text>
+              <div className={styles.ownerWrapper}>
+                {ownerAvatar}
+                <Text>{owner}</Text>
+              </div>
             </>
           )}
           <Text variant="bodySm">Created</Text>
           <Text>{intlFormat(createdAt, { dateStyle: 'medium' })}</Text>
+          <Text variant="bodySm">Last updated</Text>
+          <Text>{intlFormat(updatedAt, { dateStyle: 'medium' })}</Text>
           {description && (
             <>
               <Text variant="bodySm">Description</Text>
