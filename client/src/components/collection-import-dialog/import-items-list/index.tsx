@@ -8,8 +8,8 @@ import { ReactNode } from 'react'
 
 export interface ImportItemsListProps {
   onSelect: (item: ImportItem) => unknown
-  onToggleAll: (checked: boolean) => unknown
-  toggling: boolean
+  onSelectAll: (items: ImportItem[]) => unknown
+  onDeselectAll: () => unknown
   collectionImport: CollectionImport
   selectedItems: ImportItem[]
   header?: ReactNode

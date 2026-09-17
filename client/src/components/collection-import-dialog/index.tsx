@@ -3,7 +3,7 @@ import { compact } from 'lodash-es'
 import { useState } from 'react'
 import { useAsyncAction } from 'tapestry-core-client/src/components/lib/hooks/use-async-action'
 import { SimpleModal } from 'tapestry-core-client/src/components/lib/modal/index'
-import { fetchOpenverseCollectionResults, openverseMediaPageURL } from 'tapestry-core/src/openverse'
+import { openverseMediaPageURL } from 'tapestry-core/src/openverse'
 import { wikimediaFilePageURL, WikimediaMediaType } from 'tapestry-core/src/wikimedia-commons'
 import { IAMediaType } from 'tapestry-core/src/internet-archive'
 import { toggleElement } from 'tapestry-core/src/lib/array'
@@ -13,11 +13,9 @@ import { addAndPositionItems } from '../../pages/tapestry/view-model/store-comma
 import { setCollectionImports } from '../../pages/tapestry/view-model/store-commands/tapestry'
 import { createItemViewModel } from '../../pages/tapestry/view-model/utils'
 import { Breakpoint, useResponsive } from '../../providers/responsive-provider'
-import { fetchWikimediaCollectionResults } from '../../lib/external-media'
 import { createIAMediaItems, createExternalMediaItems } from '../../stage/item-factories'
 import { ImportDetails } from './import-details/index'
 import { ImportItemsList } from './import-items-list/index'
-import { requestSearchItems } from './import-items-list/ia-search-list/index'
 import styles from './styles.module.css'
 
 export interface ImportItem {
@@ -117,58 +115,6 @@ export function CollectionImportDialog() {
   const [importIndex, setImportIndex] = useState(0)
   const collectionImport = collectionImports[importIndex] as CollectionImport | undefined
 
-  const { trigger: toggleAll, loading } = useAsyncAction(async ({ signal }, check: boolean) => {
-    if (!collectionImport) {
-      return
-    }
-    if (!check) {
-      setSelectedItems([])
-      return
-    }
-
-    if (collectionImport.type === 'IAPlaylist') {
-      setSelectedItems(
-        collectionImport.entries.slice(0, MAX_SELECTION).map((e) => ({ id: e.filename })),
-      )
-    } else if (collectionImport.type === 'OpenverseCollection') {
-      const results = await fetchOpenverseCollectionResults(
-        collectionImport.mediaType,
-        collectionImport.collection,
-        1,
-        MAX_SELECTION,
-        signal,
-      )
-      setSelectedItems(
-        (results?.results ?? []).map((media) => ({ id: media.id, sourceUrl: media.url })),
-      )
-    } else if (collectionImport.type === 'WikimediaCommonsCategory') {
-      const results = await fetchWikimediaCollectionResults(
-        collectionImport.collection,
-        1,
-        MAX_SELECTION,
-        signal,
-      )
-      setSelectedItems(
-        (results?.results ?? []).map((media) => ({
-          id: media.id,
-          sourceUrl: media.url,
-          wikimediaMediaType: media.mediaType,
-        })),
-      )
-    } else {
-      const query =
-        collectionImport.type === 'IASearchCollection'
-          ? collectionImport.query
-          : `collection:${collectionImport.id}`
-      setSelectedItems(
-        (await requestSearchItems(query, 0, MAX_SELECTION, signal)).data.map((i) => ({
-          id: i.id,
-          mediaType: i.mediatype,
-        })),
-      )
-    }
-  })
-
   const { trigger: confirmSelection, loading: creatingItems } = useAsyncAction(async () => {
     if (!collectionImport) {
       return
@@ -222,8 +168,8 @@ export function CollectionImportDialog() {
         {!mdOrLess && importDetails}
         <ImportItemsList
           onSelect={(item) => setSelectedItems((current) => toggleElement(current, item))}
-          onToggleAll={toggleAll}
-          toggling={loading}
+          onSelectAll={setSelectedItems}
+          onDeselectAll={() => setSelectedItems([])}
           selectedItems={selectedItems}
           collectionImport={collectionImport}
           header={mdOrLess && importDetails}
