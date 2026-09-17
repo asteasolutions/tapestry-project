@@ -7,6 +7,7 @@ const parsedConfig = deepFreeze(
     .object({
       VITE_API_URL: z.string(),
       VITE_GOOGLE_CLIENT_ID: z.string(),
+      VITE_AUTH_PROVIDERS: z.string().default('google,ia'), // default: both Google and Internet Archive
       VITE_BUG_REPORT_FORM_URL: z.string(),
       VITE_AI_CHAT_EXPIRES_IN: OptionalInt(3600), // default: one hour
       VITE_WEBPAGE_LOADER_TIMEOUT: OptionalInt(3, (schema) => schema.nonnegative()),
@@ -17,6 +18,9 @@ const parsedConfig = deepFreeze(
     .transform((input) => ({
       apiUrl: input.VITE_API_URL,
       googleClientId: input.VITE_GOOGLE_CLIENT_ID,
+      authProviders: input.VITE_AUTH_PROVIDERS.split(',')
+        .map((p) => p.trim().toLowerCase())
+        .filter(Boolean),
       bugReportFormUrl: input.VITE_BUG_REPORT_FORM_URL,
       aiChatExpiresIn: input.VITE_AI_CHAT_EXPIRES_IN,
       webpageLoaderTimeout: input.VITE_WEBPAGE_LOADER_TIMEOUT,

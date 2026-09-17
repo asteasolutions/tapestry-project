@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { AuthService } from '../services/auth' // или точния път до сервиза
+import { AuthService } from '../services/auth'
 import { useObservable } from 'tapestry-core-client/src/components/lib/hooks/use-observable'
 import { SimpleModal } from 'tapestry-core-client/src/components/lib/modal/index'
 import { Input } from 'tapestry-core-client/src/components/lib/input/index'
@@ -8,6 +8,7 @@ import { Text } from 'tapestry-core-client/src/components/lib/text/index'
 import { uniqueId } from 'lodash-es'
 import { getErrorMessage } from '../errors'
 import { LoginMenu } from '../components/auth-dialog'
+import { AUTH_PROVIDERS } from './providers-registry'
 
 export const auth = new AuthService()
 
@@ -55,9 +56,12 @@ function RegistrationModal({ initialName }: RegistrationModalProps) {
 export function LoginButton() {
   const { pendingRegistration } = useObservable(auth)
 
+  const SingleProviderComponent = AUTH_PROVIDERS.length === 1 ? AUTH_PROVIDERS[0].component : null
+
   return (
     <>
-      <LoginMenu />
+      {SingleProviderComponent ? <SingleProviderComponent /> : <LoginMenu />}
+
       {pendingRegistration && (
         <RegistrationModal initialName={pendingRegistration.usernameSuggestion} />
       )}

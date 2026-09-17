@@ -1,3 +1,4 @@
+import { config } from '../config'
 import { GoogleLoginButton } from './google/login-button'
 import { IALoginButton } from './internet-archive/login-button'
 
@@ -6,16 +7,14 @@ export interface AuthProviderItem {
   component: React.ComponentType<{ onSuccess?: () => void }>
 }
 
-export const AUTH_PROVIDERS: AuthProviderItem[] = [
-  {
-    id: 'google',
-    component: GoogleLoginButton,
-  },
-  {
-    id: 'internet-archive',
-    component: IALoginButton,
-  },
+const PROVIDER_MAP: Record<string, AuthProviderItem> = {
+  google: { id: 'google', component: GoogleLoginButton },
+  ia: { id: 'internet-archive', component: IALoginButton },
   // TODO: Add more providers here as needed
-  // { id: 'bluesky', component: BlueskyLoginButton },
-  // { id: 'wikimedia', component: WikimediaLoginButton },
-]
+  // bluesky: { id: 'bluesky', component: BlueskyLoginButton },
+  // wikimedia: { id: 'wikimedia', component: WikimediaLoginButton },
+}
+
+export const AUTH_PROVIDERS: AuthProviderItem[] = config.authProviders
+  .map((id) => PROVIDER_MAP[id])
+  .filter(Boolean)
