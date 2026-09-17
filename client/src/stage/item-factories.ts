@@ -1,5 +1,22 @@
 import { isHTTPURL } from 'tapestry-core/src/utils'
-import { MediaItemSource, mediaSourceToBlob, convertHeicFile } from '../lib/media'
+import {
+  fetchOpenverseCollectionCount,
+  fetchOpenverseMedia,
+  parseOpenverseCollectionQuery,
+  parseOpenverseMediaId,
+} from 'tapestry-core/src/openverse'
+import {
+  fetchWikimediaCollectionCount,
+  fetchWikimediaMedia,
+  parseWikimediaCollectionQuery,
+  parseWikimediaFileTitle,
+} from 'tapestry-core/src/wikimedia-commons'
+import {
+  MediaItemSource,
+  resolveExternalMediaSource,
+  mediaSourceToBlob,
+  convertHeicFile,
+} from '../lib/media'
 import { createMediaItem, getMediaSourceText } from '../model/data/utils'
 import { ItemCreateDto } from 'tapestry-shared/src/data-transfer/resources/dtos/item'
 import { findWebSourceParser } from 'tapestry-core/src/web-sources'
@@ -19,8 +36,9 @@ import { MediaItemType, WebpageType } from 'tapestry-core/src/data-format/schema
 import { getUserListItems } from '../lib/internet-archive'
 import { parseMediaSource, parseStringTransferData } from './data-transfer-handler'
 import { fileTypeFromBlob, fileTypeFromBuffer } from 'file-type'
+import { compact } from 'lodash-es'
 import { parse } from 'ini'
-import { IAImport } from '../pages/tapestry/view-model'
+import { CollectionImport } from '../pages/tapestry/view-model'
 
 /**
  * Tries to extract a link from a url file. This is a shortcut file created on Windows in INI format
@@ -69,7 +87,7 @@ async function parseWeblocFile(source: File) {
  * An ItemFactory takes a MediaItemSource (File or URL) and tries to produce one or more tapestry items from it.
  * If a factory doesn't know how to handle a given source, it returns null.
  */
-export type ItemFactoryResult = { items: ItemCreateDto[]; iaImports: IAImport[] }
+export type ItemFactoryResult = { items: ItemCreateDto[]; collectionImports: CollectionImport[] }
 type ItemFactory = (
   source: MediaItemSource,
   mediaType: string | null,
@@ -83,7 +101,7 @@ function createSimpleMediaItemFactory(
   return async (source, mediaType, tapestryId) => {
     if (!sourceMatches(source, mediaType)) return null
 
-    return { items: [await createMediaItem(itemType, source, tapestryId)], iaImports: [] }
+    return { items: [await createMediaItem(itemType, source, tapestryId)], collectionImports: [] }
   }
 }
 
@@ -98,7 +116,7 @@ const textItemFactory: ItemFactory = async (source, mediaType, tapestryId) => {
 const htmlFileItemFactory: ItemFactory = async (source, mediaType, tapestryId) => {
   if (!mediaType?.startsWith('application/xhtml') && mediaType !== 'text/html') return null
 
-  return { items: [await createMediaItem('webpage', source, tapestryId)], iaImports: [] }
+  return { items: [await createMediaItem('webpage', source, tapestryId)], collectionImports: [] }
 }
 
 const webpageItemFactory: ItemFactory = async (source, _mediaType, tapestryId) => {
@@ -109,7 +127,7 @@ const webpageItemFactory: ItemFactory = async (source, _mediaType, tapestryId) =
   item.webpageType = parser.webpageType
   item.skipSourceResolution = true
 
-  return { items: [item], iaImports: [] }
+  return { items: [item], collectionImports: [] }
 }
 
 const IA_MEDIA_TYPE_MAP: Partial<Record<IAMediaType, WebpageType>> = {
@@ -136,7 +154,10 @@ const iaFactory: ItemFactory = async (source, _mediaType, tapestryId) => {
   if (searchQuery) {
     const total = await fetchIASearchCount(excludeIACollections(searchQuery))
     if (total === undefined) return null
-    return { items: [], iaImports: [{ type: 'IASearchCollection', query: searchQuery, total }] }
+    return {
+      items: [],
+      collectionImports: [{ type: 'IASearchCollection', query: searchQuery, total }],
+    }
   }
 
   const descriptor = parseInternetArchiveURL(source)
@@ -145,7 +166,7 @@ const iaFactory: ItemFactory = async (source, _mediaType, tapestryId) => {
   if (descriptor.urlType === 'user-list') {
     return {
       items: await createIAMediaItems(tapestryId, await getUserListItems(source)),
-      iaImports: [],
+      collectionImports: [],
     }
   }
 
@@ -153,21 +174,119 @@ const iaFactory: ItemFactory = async (source, _mediaType, tapestryId) => {
   const metadata = await getIAItemMetadata(id)
 
   if (metadata?.mediatype === 'collection') {
-    return { items: [], iaImports: [{ type: 'IACollection', metadata, id }] }
+    return { items: [], collectionImports: [{ type: 'IACollection', metadata, id }] }
   }
 
   if (metadata?.mediatype === 'movies' || metadata?.mediatype === 'audio') {
     const plst = (await getIAPlaylistEntries(descriptor.item)) ?? []
     if (plst.length > 1) {
       const entries = plst.map(({ title, orig, duration }) => ({ title, filename: orig, duration }))
-      return { items: [], iaImports: [{ type: 'IAPlaylist', id, metadata, entries }] }
+      return { items: [], collectionImports: [{ type: 'IAPlaylist', id, metadata, entries }] }
     }
   }
 
   return {
     items: await createIAMediaItems(tapestryId, await getNestedIAItems(descriptor.item)),
-    iaImports: [],
+    collectionImports: [],
   }
+}
+
+export async function createExternalMediaItems(
+  tapestryId: string,
+  media: { url: string; pageUrl: string; mediaType: MediaItemType }[],
+) {
+  const items = await Promise.all(
+    media.map(async ({ url, pageUrl, mediaType }) => {
+      try {
+        const item = await createMediaItem(
+          mediaType,
+          await resolveExternalMediaSource(url),
+          tapestryId,
+        )
+        item.notes = `Source: ${pageUrl}`
+        return item
+      } catch {
+        return null
+      }
+    }),
+  )
+
+  return compact(items)
+}
+
+const openverseFactory: ItemFactory = async (source, _mediaType, tapestryId) => {
+  if (typeof source !== 'string' || !isHTTPURL(source)) return null
+
+  const parsedOpenverseMedia = parseOpenverseMediaId(source)
+  if (parsedOpenverseMedia) {
+    const { mediaType: openverseMediaType, id } = parsedOpenverseMedia
+    const media = await fetchOpenverseMedia(openverseMediaType, id)
+    if (!media) return null
+
+    const items = await createExternalMediaItems(tapestryId, [
+      { url: media.url, pageUrl: source, mediaType: openverseMediaType },
+    ])
+    if (items.length === 0) return null
+
+    return { items, collectionImports: [] }
+  }
+
+  const parsedOpenverseCollection = parseOpenverseCollectionQuery(source)
+  if (parsedOpenverseCollection) {
+    const { mediaType: openverseMediaType, collection } = parsedOpenverseCollection
+    const total = await fetchOpenverseCollectionCount(openverseMediaType, collection)
+    if (total === undefined) return null
+
+    return {
+      items: [],
+      collectionImports: [
+        {
+          type: 'OpenverseCollection',
+          mediaType: openverseMediaType,
+          collection,
+          total,
+        },
+      ],
+    }
+  }
+
+  return null
+}
+
+const wikimediaFactory: ItemFactory = async (source, _mediaType, tapestryId) => {
+  if (typeof source !== 'string' || !isHTTPURL(source)) return null
+
+  const wikimediaTitle = parseWikimediaFileTitle(source)
+  if (wikimediaTitle) {
+    const media = await fetchWikimediaMedia(wikimediaTitle)
+    if (!media) return null
+
+    const items = await createExternalMediaItems(tapestryId, [
+      { url: media.url, pageUrl: source, mediaType: media.mediaType },
+    ])
+    if (items.length === 0) return null
+
+    return { items, collectionImports: [] }
+  }
+
+  const wikimediaCollection = parseWikimediaCollectionQuery(source)
+  if (wikimediaCollection) {
+    const total = await fetchWikimediaCollectionCount(wikimediaCollection)
+    if (total === undefined) return null
+
+    return {
+      items: [],
+      collectionImports: [
+        {
+          type: 'WikimediaCommonsCategory',
+          collection: wikimediaCollection,
+          total,
+        },
+      ],
+    }
+  }
+
+  return null
 }
 
 const HEIC_MEDIA_TYPES = ['image/heic', 'image/heif']
@@ -178,7 +297,10 @@ const heicImageFactory: ItemFactory = async (source, mediaType, tapestryId) => {
 
   const convertedFile = await convertHeicFile(await mediaSourceToBlob(source))
 
-  return { items: [await createMediaItem('image', convertedFile, tapestryId)], iaImports: [] }
+  return {
+    items: [await createMediaItem('image', convertedFile, tapestryId)],
+    collectionImports: [],
+  }
 }
 
 const linkFileFactory: ItemFactory = async (source, _, tapestryId) => {
@@ -213,6 +335,8 @@ export const ITEM_FACTORIES: ItemFactory[] = [
   createSimpleMediaItemFactory('audio', (_, mediaType) => !!mediaType?.startsWith('audio/')),
   linkFileFactory,
   textItemFactory,
+  openverseFactory,
+  wikimediaFactory,
   htmlFileItemFactory,
   iaFactory,
   webpageItemFactory,

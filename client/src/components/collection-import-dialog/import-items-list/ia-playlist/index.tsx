@@ -17,13 +17,14 @@ function formatDuration(durationSeconds: number) {
   return `${hours > 0 ? `${hours}:` : ''}${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
 }
 
-interface IAPlaylistEntriesProps extends Omit<ImportItemsListProps, 'iaImport'> {
+interface IAPlaylistEntriesProps extends Omit<ImportItemsListProps, 'collectionImport'> {
   entries: PlaylistEntry[]
 }
 
 export function IAPlaylistEntries({
   onSelect,
-  onToggleAll,
+  onSelectAll,
+  onDeselectAll,
   entries,
   selectedItems,
   header,
@@ -40,7 +41,11 @@ export function IAPlaylistEntries({
       <SelectAll
         classes={{ root: styles.selectAll, checkbox: styles.checkbox }}
         checked={hasSelection}
-        onChange={() => onToggleAll(!hasSelection)}
+        onChange={() =>
+          hasSelection
+            ? onDeselectAll()
+            : onSelectAll(entries.slice(0, MAX_SELECTION).map((e) => ({ id: e.filename })))
+        }
         total={entries.length}
         textVariant={textVariant}
       />
