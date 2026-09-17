@@ -116,19 +116,17 @@ export function WebpageItemViewer({
   const sandbox = useSandbox(src)
 
   return (
-    <>
-      <WebpageLoader item={dto} displayPage={displayWebpage} pageLoading={!!loading}>
-        <WebFrame
-          webpageType={dto.webpageType}
-          src={src}
-          sandbox={sandbox.join(' ')}
-          onLoad={() => setWebpageLoaded(true)}
-          key={`reload-${webpageReloadIndex}`}
-          allowFullScreen
-          allow="autoplay"
-          onPlaybackStateChange={(isPlaying) => dispatch(setItemIsPlaying(id, isPlaying))}
-        />
-      </WebpageLoader>
-    </>
+    <WebpageLoader item={dto} displayPage={displayWebpage} pageLoading={!!loading}>
+      <WebFrame
+        webpageType={dto.webpageType}
+        src={src}
+        sandbox={sandbox.join(' ')}
+        onLoad={() => setWebpageLoaded(true)}
+        key={`reload-${webpageReloadIndex}`}
+        allowFullScreen
+        allow="autoplay"
+        onPlaybackStateChange={(isPlaying) => dispatch(setItemIsPlaying(id, isPlaying))}
+      />
+    </WebpageLoader>
   )
 }

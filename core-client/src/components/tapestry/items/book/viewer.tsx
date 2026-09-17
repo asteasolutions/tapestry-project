@@ -14,10 +14,7 @@ import { useAsync } from '../../../lib/hooks/use-async'
 import { useResizeObserver } from '../../../lib/hooks/use-resize-observer'
 import classes from './styles.module.css'
 import { ToCButton } from './toc-button'
-import { ItemPlaceholder } from '../../item-placeholder'
 import { IconOverlay } from '../../video-play-overlay'
-import { LoadingSpinner } from '../../../lib/loading-spinner'
-import { getPrimaryThumbnail } from '../../../../view-model/utils'
 
 interface EPubState {
   reader: Reader
@@ -144,7 +141,7 @@ export function BookItemViewer({ id, isZipURL }: BookItemViewerProps) {
 
   return (
     <div className={classes.root}>
-      {hasBeenActive && epubState && (
+      {epubState && (
         <div className="title-bar">
           <div>Chapter {`${epubState.currentChapter + 1} / ${epubState.totalChapters}`}</div>
           <div
@@ -160,7 +157,7 @@ export function BookItemViewer({ id, isZipURL }: BookItemViewerProps) {
         </div>
       )}
       <div ref={containerRef} className="epub-container" />
-      {hasBeenActive && epubState && (
+      {epubState && (
         <div>
           <div className="controls-container">
             {nav?.toc && (
@@ -222,24 +219,7 @@ export function BookItemViewer({ id, isZipURL }: BookItemViewerProps) {
           )}
         </div>
       )}
-
-      {!epubState && (
-        <div className={classes.loadingPlaceholder}>
-          <ItemPlaceholder
-            classes={{
-              root: classes.placeholder,
-              thumbnail: classes.thumbnail,
-            }}
-            icon="menu_book"
-            thumbnailSrc={getPrimaryThumbnail(dto)}
-            thumbnailOverlay={<IconOverlay itemSize={dto.size} icon="menu_book" />}
-          >
-            Click to load
-          </ItemPlaceholder>
-          {hasBeenActive && <LoadingSpinner size="100px" className={classes.spinner} />}
-          <IconOverlay itemSize={dto.size} icon={'menu_book'} />
-        </div>
-      )}
+      {!hasBeenActive && <IconOverlay itemSize={dto.size} icon={'menu_book'} />}
     </div>
   )
 }
