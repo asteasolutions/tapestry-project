@@ -4,6 +4,7 @@ import { SessionCreateDto } from 'tapestry-shared/src/data-transfer/resources/dt
 import { UserDto } from 'tapestry-shared/src/data-transfer/resources/dtos/user'
 import { APIError } from '../errors'
 import { resource } from '../services/rest-resources'
+import { AUTH_PROVIDERS } from '../auth/providers-registry'
 
 interface Token {
   token: string
@@ -40,6 +41,7 @@ export class AuthService extends Observable<AuthServiceState> {
   private autoRefreshTimeout: number | undefined
   private preparing = defer()
   private _accessToken: Token | null = null
+  private isPrepared = false
 
   get accessToken() {
     return structuredClone(this._accessToken)
@@ -51,7 +53,12 @@ export class AuthService extends Observable<AuthServiceState> {
 
   /** Override in descendants to implement any preparation logic. */
   protected doPrepare() {
-    // Nothing.
+    if (this.isPrepared) return
+    this.isPrepared = true
+
+    for (const provider of AUTH_PROVIDERS) {
+      provider.prepare?.()
+    }
   }
 
   prepare() {
@@ -81,7 +88,12 @@ export class AuthService extends Observable<AuthServiceState> {
       const renewAfter = expiresAt - Date.now() - 10_000
       if (renewAfter > 0) {
         clearTimeout(this.autoRefreshTimeout)
-        this.autoRefreshTimeout = window.setTimeout(this.refresh.bind(this), renewAfter)
+        this.autoRefreshTimeout = window.setTimeout(
+          async function (this: AuthService) {
+            await this.refresh(false)
+          }.bind(this),
+          renewAfter,
+        )
       }
       this._accessToken = { token: accessToken, expiresAt }
       this.update((state) => {
@@ -110,7 +122,7 @@ export class AuthService extends Observable<AuthServiceState> {
     }
   }
 
-  async refresh(loadUser = true, signal?: GenericAbortSignal) {
+  async refresh(loadUser: boolean, signal?: GenericAbortSignal) {
     try {
       await this.doLogin({ authType: 'refreshToken' }, loadUser, signal)
     } catch (error) {

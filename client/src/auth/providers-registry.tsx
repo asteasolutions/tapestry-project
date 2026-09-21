@@ -1,3 +1,4 @@
+import { auth } from '.'
 import { config } from '../config'
 import { GoogleLoginButton } from './google/login-button'
 import { IALoginButton } from './internet-archive/login-button'
@@ -5,10 +6,29 @@ import { IALoginButton } from './internet-archive/login-button'
 export interface AuthProviderItem {
   id: string
   component: React.ComponentType<{ onSuccess?: () => void }>
+  prepare?: () => void
 }
 
 const PROVIDER_MAP: Record<string, AuthProviderItem> = {
-  google: { id: 'google', component: GoogleLoginButton },
+  google: {
+    id: 'google',
+    component: GoogleLoginButton,
+    prepare: () => {
+      if (typeof window.google.accounts.id !== 'undefined') {
+        window.google.accounts.id.initialize({
+          client_id: config.googleClientId,
+          context: 'signin',
+          ux_mode: 'popup',
+          callback: async (response: { credential: string }) => {
+            await auth.login({ authType: 'gsi', gsiCredential: response.credential })
+          },
+          auto_select: true,
+          itp_support: true,
+          use_fedcm_for_prompt: true,
+        })
+      }
+    },
+  },
   ia: { id: 'internet-archive', component: IALoginButton },
   // TODO: Add more providers here as needed
   // bluesky: { id: 'bluesky', component: BlueskyLoginButton },
