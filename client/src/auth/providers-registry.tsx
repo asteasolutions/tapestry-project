@@ -5,7 +5,10 @@ import { IALoginButton } from './internet-archive/login-button'
 
 export interface AuthProviderItem {
   id: string
-  component: React.ComponentType<{ onSuccess?: () => void }>
+  component: React.ComponentType<{
+    onSuccess?: () => void
+    isSingleProvider?: boolean
+  }>
   prepare?: () => void
 }
 

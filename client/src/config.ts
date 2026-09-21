@@ -5,7 +5,7 @@ import { treeifyError, z } from 'zod/v4'
 const AuthProviderEnum = z.enum(['google', 'ia'])
 const AuthProvidersSchema = z
   .string()
-  .default('google,ia') // default: both Google and Internet Archive
+  .transform((val) => (val.trim() === '' ? 'google,ia' : val)) // default: both Google and Internet Archive
   .transform((val) =>
     val
       .split(',')

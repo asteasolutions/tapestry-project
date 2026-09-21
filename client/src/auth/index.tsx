@@ -56,12 +56,16 @@ function RegistrationModal({ initialName }: RegistrationModalProps) {
 export function LoginButton() {
   const { pendingRegistration } = useObservable(auth)
 
+  const isSingleProvider = AUTH_PROVIDERS.length === 1
   const SingleProviderComponent = AUTH_PROVIDERS.length === 1 ? AUTH_PROVIDERS[0].component : null
 
   return (
     <>
-      {SingleProviderComponent ? <SingleProviderComponent /> : <LoginMenu />}
-
+      {SingleProviderComponent ? (
+        <SingleProviderComponent isSingleProvider={isSingleProvider} />
+      ) : (
+        <LoginMenu />
+      )}
       {pendingRegistration && (
         <RegistrationModal initialName={pendingRegistration.usernameSuggestion} />
       )}

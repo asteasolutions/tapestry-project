@@ -2,9 +2,14 @@ import { useEffect, useRef } from 'react'
 import styles from './styles.module.css'
 import { Breakpoint, useResponsive } from '../../providers/responsive-provider'
 
-export function GoogleLoginButton() {
+interface GoogleLoginButtonProps {
+  isSingleProvider?: boolean
+}
+
+export function GoogleLoginButton({ isSingleProvider = false }: GoogleLoginButtonProps) {
   const button = useRef<HTMLDivElement>(null)
-  const type = useResponsive() <= Breakpoint.SM ? 'icon' : 'standard'
+  const isMobile = useResponsive() <= Breakpoint.SM
+  const type = isMobile && isSingleProvider ? 'icon' : 'standard'
 
   useEffect(() => {
     if (button.current) {
@@ -15,10 +20,10 @@ export function GoogleLoginButton() {
         text: 'continue_with',
         size: 'large',
         logo_alignment: 'left',
-        width: 380,
+        width: isMobile && type === 'standard' ? 200 : 380,
       })
     }
-  }, [type])
+  }, [type, isMobile])
 
   return <div ref={button} className={styles.root} />
 }

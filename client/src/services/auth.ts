@@ -126,17 +126,7 @@ export class AuthService extends Observable<AuthServiceState> {
     try {
       await this.doLogin({ authType: 'refreshToken' }, loadUser, signal)
     } catch (error) {
-      if (!(error instanceof CanceledError) && loadUser && !this.value.user) {
-        try {
-          await this.doLogin({ authType: 'iaCookies' }, true, signal)
-          return
-        } catch {
-          this.update((state) => {
-            state.user = null
-            state.isInitialized = true
-          })
-        }
-      } else if (!(error instanceof CanceledError)) {
+      if (!(error instanceof CanceledError)) {
         this.update((state) => {
           state.user = null
           state.isInitialized = true
