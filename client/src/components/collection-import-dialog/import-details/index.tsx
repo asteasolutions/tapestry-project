@@ -1,9 +1,10 @@
-import { ReactNode, useEffect, useState } from 'react'
+import { ReactNode } from 'react'
 import { getIAItemThumbnailURL } from 'tapestry-core/src/internet-archive'
 import { fetchWikimediaCollectionThumbnail } from 'tapestry-core/src/wikimedia-commons'
 import { CollectionImport } from '../../../pages/tapestry/view-model'
 import styles from './styles.module.css'
 import { Text } from 'tapestry-core-client/src/components/lib/text/index'
+import { useAsync } from 'tapestry-core-client/src/components/lib/hooks/use-async'
 import { intlFormat } from 'date-fns'
 import { Breakpoint, useResponsive } from '../../../providers/responsive-provider'
 
@@ -51,97 +52,87 @@ function DetailsLayout({ thumbnail, title, subtitle, meta, body }: DetailsLayout
   )
 }
 
-interface ImportDetailsProps {
-  import: CollectionImport
-}
-
-type OpenverseCollectionImport = Extract<CollectionImport, { type: 'OpenverseCollection' }>
-type WikimediaCommonsCategoryImport = Extract<
-  CollectionImport,
-  { type: 'WikimediaCommonsCategory' }
->
-
-const OPENVERSE_MEDIA_TYPE_NOUN: Record<OpenverseCollectionImport['mediaType'], string> = {
-  image: 'images',
-  audio: 'audio items',
-}
-
-function openverseCollectionLabel(collection: OpenverseCollectionImport['collection']): string {
-  return collection.type === 'tag' ? collection.tag : collection.source
-}
-
 function WikimediaCommonsCategoryDetails({
   collection,
 }: {
-  collection: WikimediaCommonsCategoryImport
+  collection: Extract<CollectionImport, { type: 'WikimediaCommonsCategory' }>
 }) {
-  const [thumbnail, setThumbnail] = useState<string | null>(null)
-
-  useEffect(() => {
-    const controller = new AbortController()
-    void fetchWikimediaCollectionThumbnail(collection.collection, controller.signal).then(
-      setThumbnail,
-    )
-    return () => controller.abort()
-  }, [collection.collection])
+  const { data: thumbnail } = useAsync(
+    ({ signal }) => fetchWikimediaCollectionThumbnail(collection.category, signal),
+    [collection.category],
+  )
 
   return (
     <DetailsLayout
       thumbnail={thumbnail}
-      title={collection.collection.category}
+      title={collection.category}
       subtitle={`${collection.total} files`}
     />
   )
+}
+
+interface ImportDetailsProps {
+  import: CollectionImport
 }
 
 export function ImportDetails({ import: collectionImport }: ImportDetailsProps) {
   const mdOrLess = useResponsive() <= Breakpoint.MD
   const textVariant = mdOrLess ? 'bodyXs' : undefined
 
-  if (collectionImport.type === 'OpenverseCollection') {
-    return (
-      <DetailsLayout
-        title={openverseCollectionLabel(collectionImport.collection)}
-        subtitle={`${collectionImport.total} ${OPENVERSE_MEDIA_TYPE_NOUN[collectionImport.mediaType]}`}
-      />
-    )
+  switch (collectionImport.type) {
+    case 'OpenverseCollection':
+      return (
+        <DetailsLayout
+          title={
+            collectionImport.collection.type === 'tag'
+              ? collectionImport.collection.tag
+              : collectionImport.collection.source
+          }
+          subtitle={`${collectionImport.total} ${collectionImport.mediaType === 'image' ? 'images' : 'audio items'}`}
+        />
+      )
+
+    case 'WikimediaCommonsCategory':
+      return <WikimediaCommonsCategoryDetails collection={collectionImport} />
+
+    case 'IASearchCollection':
+      return (
+        <DetailsLayout
+          title="Search results"
+          subtitle={`${collectionImport.total} results`}
+          body={collectionImport.query}
+        />
+      )
+
+    case 'IACollection':
+    case 'IAPlaylist': {
+      const { id, metadata } = collectionImport
+      const description = parser.parseFromString(
+        metadata.summary ?? metadata.description ?? '',
+        'text/html',
+      ).documentElement.textContent
+      const isCollection = metadata.mediatype === 'collection'
+
+      return (
+        <DetailsLayout
+          thumbnail={getIAItemThumbnailURL(id)}
+          title={metadata.title}
+          subtitle={isCollection ? metadata.uploader : metadata.creator}
+          meta={
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <Text variant={textVariant ?? 'bodySm'}>Publication date</Text>
+              <Text variant={textVariant ?? 'bodySm'}>
+                {intlFormat(metadata.publicdate, {
+                  day: 'numeric',
+                  month: 'short',
+                  year: 'numeric',
+                })}
+              </Text>
+            </div>
+          }
+          body={description}
+        />
+      )
+    }
   }
-
-  if (collectionImport.type === 'WikimediaCommonsCategory') {
-    return <WikimediaCommonsCategoryDetails collection={collectionImport} />
-  }
-
-  if (collectionImport.type === 'IASearchCollection') {
-    return (
-      <DetailsLayout
-        title="Search results"
-        subtitle={`${collectionImport.total} results`}
-        body={collectionImport.query}
-      />
-    )
-  }
-
-  const { id, metadata } = collectionImport
-  const description = parser.parseFromString(
-    metadata.summary ?? metadata.description ?? '',
-    'text/html',
-  ).documentElement.textContent
-  const isCollection = metadata.mediatype === 'collection'
-
-  return (
-    <DetailsLayout
-      thumbnail={getIAItemThumbnailURL(id)}
-      title={metadata.title}
-      subtitle={isCollection ? metadata.uploader : metadata.creator}
-      meta={
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <Text variant={textVariant ?? 'bodySm'}>Publication date</Text>
-          <Text variant={textVariant ?? 'bodySm'}>
-            {intlFormat(metadata.publicdate, { day: 'numeric', month: 'short', year: 'numeric' })}
-          </Text>
-        </div>
-      }
-      body={description}
-    />
-  )
 }
