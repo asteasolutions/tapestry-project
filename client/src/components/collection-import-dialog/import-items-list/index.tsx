@@ -16,23 +16,22 @@ export interface ImportItemsListProps {
 }
 
 export function ImportItemsList({ collectionImport, ...props }: ImportItemsListProps) {
-  if (collectionImport.type === 'IACollection') {
-    return (
-      <IASearchList
-        query={`collection:${collectionImport.id}`}
-        emptyPlaceholder="No items in this collection"
-        {...props}
-      />
-    )
+  switch (collectionImport.type) {
+    case 'IACollection':
+      return (
+        <IASearchList
+          query={`collection:${collectionImport.id}`}
+          emptyPlaceholder="No items in this collection"
+          {...props}
+        />
+      )
+    case 'IASearchCollection':
+      return <IASearchList query={collectionImport.query} {...props} />
+    case 'OpenverseCollection':
+      return <OpenverseCollectionList collection={collectionImport} {...props} />
+    case 'WikimediaCommonsCategory':
+      return <WikimediaCollectionList collection={collectionImport} {...props} />
+    case 'IAPlaylist':
+      return <IAPlaylistEntries entries={collectionImport.entries} {...props} />
   }
-  if (collectionImport.type === 'IASearchCollection') {
-    return <IASearchList query={collectionImport.query} {...props} />
-  }
-  if (collectionImport.type === 'OpenverseCollection') {
-    return <OpenverseCollectionList collection={collectionImport} {...props} />
-  }
-  if (collectionImport.type === 'WikimediaCommonsCategory') {
-    return <WikimediaCollectionList collection={collectionImport} {...props} />
-  }
-  return <IAPlaylistEntries entries={collectionImport.entries} {...props} />
 }
