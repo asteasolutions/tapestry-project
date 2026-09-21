@@ -7,10 +7,6 @@ import styles from './styles.module.css'
 export function LoginMenu() {
   const [menuOpen, setMenuOpen] = useState(false)
 
-  const handleSuccess = () => {
-    setMenuOpen(false)
-  }
-
   return (
     <>
       <Button onClick={() => setMenuOpen(true)}>Log in</Button>
@@ -32,7 +28,7 @@ export function LoginMenu() {
                     </div>
                   )}
                   <div className={styles.providerRow}>
-                    <ProviderComponent onSuccess={handleSuccess} />
+                    <ProviderComponent />
                   </div>
                 </Fragment>
               )
