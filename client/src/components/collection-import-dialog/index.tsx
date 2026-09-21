@@ -46,34 +46,23 @@ async function createNewItems(
   items: ImportItem[],
   tapestryId: string,
 ) {
-  if (collectionImport.type === 'OpenverseCollection') {
-    const { mediaType } = collectionImport
-    return createExternalMediaItems(
-      tapestryId,
-      compact(
-        items.map(
-          ({ id, sourceUrl }) =>
-            sourceUrl && {
-              url: sourceUrl,
-              pageUrl: openverseMediaPageURL(mediaType, id),
-              mediaType,
-            },
-        ),
-      ),
-    )
-  }
-
-  if (collectionImport.type === 'WikimediaCommonsCategory') {
+  if (
+    collectionImport.type === 'OpenverseCollection' ||
+    collectionImport.type === 'WikimediaCommonsCategory'
+  ) {
+    const openverseMediaType =
+      collectionImport.type === 'OpenverseCollection' ? collectionImport.mediaType : undefined
     return createExternalMediaItems(
       tapestryId,
       compact(
         items.map(
           ({ id, sourceUrl, wikimediaMediaType }) =>
-            sourceUrl &&
-            wikimediaMediaType && {
+            sourceUrl && {
               url: sourceUrl,
-              pageUrl: wikimediaFilePageURL(id),
-              mediaType: wikimediaMediaType,
+              pageUrl: wikimediaMediaType
+                ? wikimediaFilePageURL(id)
+                : openverseMediaPageURL(openverseMediaType!, id),
+              mediaType: wikimediaMediaType ?? openverseMediaType!,
             },
         ),
       ),
