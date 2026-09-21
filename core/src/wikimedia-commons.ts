@@ -31,7 +31,9 @@ interface CommonsDerivative {
   width: number
 }
 
-interface CommonsVideoInfo {
+// `prop=videoinfo` is Commons' general per-file metadata endpoint -- despite the name, it's
+// returned (and needed) for every file type, not just video. See fetchWikimediaCollectionResults.
+interface CommonsItemInfo {
   url: string
   mime: string
   mediatype: string
@@ -43,26 +45,26 @@ interface CommonsVideoInfo {
 interface CommonsFilePage {
   pageid: number
   title: string
-  videoinfo?: CommonsVideoInfo[]
+  videoinfo?: CommonsItemInfo[]
 }
 
 interface CommonsQueryResponse<Page> {
   query?: { pages?: Record<string, Page> }
 }
 
-function thumbnailFor(videoInfo: CommonsVideoInfo): string | null {
-  if (!videoInfo.thumburl) return null
-  return new URL(videoInfo.thumburl).pathname.startsWith(COMMONS_GENERIC_ICON_PATH)
+function thumbnailFor(itemInfo: CommonsItemInfo): string | null {
+  if (!itemInfo.thumburl) return null
+  return new URL(itemInfo.thumburl).pathname.startsWith(COMMONS_GENERIC_ICON_PATH)
     ? null
-    : videoInfo.thumburl
+    : itemInfo.thumburl
 }
 
 // Modern browsers cannot decode Ogg Theora video. Safari cannot decode Ogg Vorbis audio.
 // Commons transcodes most VIDEO and AUDIO files into WebM and MP3. It reports these as
 // `derivatives`. Prefer a derivative over the original. Use the original only when no
 // derivative exists.
-function bestPlaybackURL(mediaType: WikimediaMediaType, videoInfo: CommonsVideoInfo): string {
-  const derivatives = videoInfo.derivatives ?? []
+function bestPlaybackURL(mediaType: WikimediaMediaType, itemInfo: CommonsItemInfo): string {
+  const derivatives = itemInfo.derivatives ?? []
 
   if (mediaType === 'video') {
     const webm = derivatives.filter((d) => d.type.startsWith('video/webm'))
@@ -78,22 +80,22 @@ function bestPlaybackURL(mediaType: WikimediaMediaType, videoInfo: CommonsVideoI
     if (mp3) return mp3.src
   }
 
-  return videoInfo.url
+  return itemInfo.url
 }
 
 function toWikimediaMedia(page: CommonsFilePage): WikimediaMedia | null {
-  const videoInfo = page.videoinfo?.[0]
-  if (!videoInfo) return null
+  const itemInfo = page.videoinfo?.[0]
+  if (!itemInfo) return null
 
-  const mediaType = itemTypeForFile(videoInfo.mediatype, videoInfo.mime)
+  const mediaType = itemTypeForFile(itemInfo.mediatype, itemInfo.mime)
   if (!mediaType) return null
 
   return {
     id: String(page.pageid),
-    url: bestPlaybackURL(mediaType, videoInfo),
-    thumbnail: thumbnailFor(videoInfo),
+    url: bestPlaybackURL(mediaType, itemInfo),
+    thumbnail: thumbnailFor(itemInfo),
     title: page.title,
-    uploader: videoInfo.user ?? null,
+    uploader: itemInfo.user ?? null,
     mediaType,
   }
 }
@@ -122,9 +124,7 @@ export function wikimediaFilePageURL(pageId: string): string {
   return `https://${COMMONS_HOST}/w/index.php?curid=${pageId}`
 }
 
-export type WikimediaCollectionQuery = { type: 'category'; category: string }
-
-export function parseWikimediaCollectionQuery(url: string): WikimediaCollectionQuery | null {
+export function parseWikimediaCollectionQuery(url: string): string | null {
   try {
     const parsed = new URL(url)
     if (parsed.hostname !== COMMONS_HOST) return null
@@ -132,13 +132,13 @@ export function parseWikimediaCollectionQuery(url: string): WikimediaCollectionQ
     const match = /^\/wiki\/(Category:.+)$/.exec(parsed.pathname)
     if (!match) return null
 
-    return { type: 'category', category: decodeURIComponent(match[1]) }
+    return decodeURIComponent(match[1])
   } catch {
     return null
   }
 }
 
-const VIDEO_INFO_PROPS = 'url|mime|mediatype|user|derivatives'
+const ITEM_INFO_PROPS = 'url|mime|mediatype|user|derivatives'
 
 export async function fetchWikimediaMedia(
   title: string,
@@ -149,7 +149,7 @@ export async function fetchWikimediaMedia(
     url.searchParams.set('action', 'query')
     url.searchParams.set('titles', title)
     url.searchParams.set('prop', 'videoinfo')
-    url.searchParams.set('viprop', VIDEO_INFO_PROPS)
+    url.searchParams.set('viprop', ITEM_INFO_PROPS)
     url.searchParams.set('format', 'json')
     url.searchParams.set('origin', '*')
 
@@ -165,13 +165,13 @@ export async function fetchWikimediaMedia(
 }
 
 export async function fetchWikimediaCollectionCount(
-  collection: WikimediaCollectionQuery,
+  category: string,
   signal?: AbortSignal,
 ): Promise<number | undefined> {
   try {
     const url = new URL(COMMONS_API_URL)
     url.searchParams.set('action', 'query')
-    url.searchParams.set('titles', collection.category)
+    url.searchParams.set('titles', category)
     url.searchParams.set('prop', 'categoryinfo')
     url.searchParams.set('format', 'json')
     url.searchParams.set('origin', '*')
@@ -195,13 +195,13 @@ const CATEGORY_THUMBNAIL_WIDTH = 300
 // always returns an empty string for them -- there is no cheap category description to show.
 // `pageimages` does work, resolving to a representative file already in the category.
 export async function fetchWikimediaCollectionThumbnail(
-  collection: WikimediaCollectionQuery,
+  category: string,
   signal?: AbortSignal,
 ): Promise<string | null> {
   try {
     const url = new URL(COMMONS_API_URL)
     url.searchParams.set('action', 'query')
-    url.searchParams.set('titles', collection.category)
+    url.searchParams.set('titles', category)
     url.searchParams.set('prop', 'pageimages')
     url.searchParams.set('piprop', 'thumbnail')
     url.searchParams.set('pithumbsize', String(CATEGORY_THUMBNAIL_WIDTH))
@@ -221,32 +221,34 @@ export async function fetchWikimediaCollectionThumbnail(
   }
 }
 
-interface CommonsCategoryPage {
-  results: WikimediaMedia[]
-  nextCursor: string | null
-}
-
-async function fetchWikimediaCategoryPage(
-  collection: WikimediaCollectionQuery,
-  cursor: string | null,
+/**
+ * Fetch one real page (up to COMMONS_PAGE_SIZE items) of a category's files, starting from an
+ * optional cursor. Commons categories paginate with an opaque cursor (`gcmcontinue`), not a page
+ * number -- there is no way to jump directly to an arbitrary page. Callers that need an
+ * arbitrary skip/limit window (e.g. a lazily-loaded list) walk this themselves, keeping track of
+ * each real page's cursor as they go.
+ */
+export async function fetchWikimediaCollectionResults(
+  category: string,
+  cursor?: string,
   signal?: AbortSignal,
-): Promise<CommonsCategoryPage | null> {
+): Promise<{ results: WikimediaMedia[]; nextCursor: string | undefined } | undefined> {
   try {
     const url = new URL(COMMONS_API_URL)
     url.searchParams.set('action', 'query')
     url.searchParams.set('generator', 'categorymembers')
-    url.searchParams.set('gcmtitle', collection.category)
+    url.searchParams.set('gcmtitle', category)
     url.searchParams.set('gcmlimit', String(COMMONS_PAGE_SIZE))
     url.searchParams.set('gcmtype', 'file')
     url.searchParams.set('prop', 'videoinfo')
-    url.searchParams.set('viprop', VIDEO_INFO_PROPS)
+    url.searchParams.set('viprop', ITEM_INFO_PROPS)
     url.searchParams.set('viurlwidth', '120')
     url.searchParams.set('format', 'json')
     url.searchParams.set('origin', '*')
     if (cursor) url.searchParams.set('gcmcontinue', cursor)
 
     const res = await fetch(url, { signal })
-    if (!res.ok) return null
+    if (!res.ok) return undefined
 
     interface CategoryMembersResponse extends CommonsQueryResponse<CommonsFilePage> {
       continue?: { gcmcontinue?: string }
@@ -258,55 +260,9 @@ async function fetchWikimediaCategoryPage(
       results: pages
         .map(toWikimediaMedia)
         .filter((media): media is WikimediaMedia => media !== null),
-      nextCursor: data.continue?.gcmcontinue ?? null,
+      nextCursor: data.continue?.gcmcontinue,
     }
   } catch {
-    return null
+    return undefined
   }
-}
-
-export interface WikimediaCursorStore {
-  get(realPage: number): Promise<string | null | undefined>
-  set(realPage: number, cursor: string | null): Promise<void>
-}
-
-export async function fetchWikimediaCollectionResults(
-  collection: WikimediaCollectionQuery,
-  page: number,
-  pageSize: number,
-  cursorStore: WikimediaCursorStore,
-  signal?: AbortSignal,
-): Promise<{ total: number; results: WikimediaMedia[] } | undefined> {
-  const skip = (page - 1) * pageSize
-  const firstRealPage = Math.floor(skip / COMMONS_PAGE_SIZE)
-  const lastRealPage = Math.floor((skip + pageSize - 1) / COMMONS_PAGE_SIZE)
-
-  const realPages: CommonsCategoryPage[] = []
-
-  for (let realPage = 0; realPage <= lastRealPage; realPage++) {
-    const needsResults = realPage >= firstRealPage
-    const nextCursorKnown =
-      realPage < lastRealPage && (await cursorStore.get(realPage + 1)) !== undefined
-    if (!needsResults && nextCursorKnown) continue
-
-    let cursor: string | null = null
-    if (realPage > 0) {
-      const cached = await cursorStore.get(realPage)
-      if (cached === null) break // the category ended before this page
-      if (cached === undefined) return undefined // a gap in the cursor chain; can't recover
-      cursor = cached
-    }
-
-    const fetched = await fetchWikimediaCategoryPage(collection, cursor, signal)
-    if (!fetched) return undefined
-
-    await cursorStore.set(realPage + 1, fetched.nextCursor)
-    if (needsResults) realPages.push(fetched)
-  }
-
-  const offset = skip % COMMONS_PAGE_SIZE
-  const combined = realPages.flatMap((realPage) => realPage.results)
-  const total = await fetchWikimediaCollectionCount(collection, signal)
-
-  return { total: total ?? combined.length, results: combined.slice(offset, offset + pageSize) }
 }

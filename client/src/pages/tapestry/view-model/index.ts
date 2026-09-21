@@ -5,7 +5,6 @@ import { UserAccess } from '../../../model/data/utils'
 import { PresentationStepDto } from 'tapestry-shared/src/data-transfer/resources/dtos/presentation-step'
 import { IAItemMetadata } from 'tapestry-core/src/internet-archive'
 import { OpenverseCollectionQuery, OpenverseMediaType } from 'tapestry-core/src/openverse'
-import { WikimediaCollectionQuery } from 'tapestry-core/src/wikimedia-commons'
 import { Point } from 'tapestry-core/src/data-format/schemas/common'
 import { RelEndpoint } from 'tapestry-core/src/data-format/schemas/rel'
 import {
@@ -172,7 +171,7 @@ export type CollectionImport =
     }
   | {
       type: 'WikimediaCommonsCategory'
-      collection: WikimediaCollectionQuery
+      category: string
       total: number
     }
   | {
