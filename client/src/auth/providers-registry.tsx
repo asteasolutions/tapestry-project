@@ -1,18 +1,19 @@
+import z from 'zod/v4'
 import { auth } from '.'
-import { config } from '../config'
+import { AuthProviderEnum, config } from '../config'
 import { GoogleLoginButton } from './google/login-button'
 import { IALoginButton } from './internet-archive/login-button'
 
 export interface AuthProviderItem {
   id: string
   component: React.ComponentType<{
-    onSuccess?: () => void
     isSingleProvider?: boolean
   }>
   prepare?: () => void
 }
+type AuthProvider = z.infer<typeof AuthProviderEnum>
 
-const PROVIDER_MAP: Record<string, AuthProviderItem> = {
+const PROVIDER_MAP: Record<AuthProvider, AuthProviderItem> = {
   google: {
     id: 'google',
     component: GoogleLoginButton,

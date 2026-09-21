@@ -8,8 +8,8 @@ interface GoogleLoginButtonProps {
 
 export function GoogleLoginButton({ isSingleProvider = false }: GoogleLoginButtonProps) {
   const button = useRef<HTMLDivElement>(null)
-  const isMobile = useResponsive() <= Breakpoint.SM
-  const type = isMobile && isSingleProvider ? 'icon' : 'standard'
+  const smOrLess = useResponsive() <= Breakpoint.SM
+  const type = smOrLess && isSingleProvider ? 'icon' : 'standard'
 
   useEffect(() => {
     if (button.current) {
@@ -20,10 +20,10 @@ export function GoogleLoginButton({ isSingleProvider = false }: GoogleLoginButto
         text: 'continue_with',
         size: 'large',
         logo_alignment: 'left',
-        width: isMobile && type === 'standard' ? 200 : 380,
+        width: smOrLess && type === 'standard' ? 200 : 380,
       })
     }
-  }, [type, isMobile])
+  }, [type, smOrLess])
 
   return <div ref={button} className={styles.root} />
 }

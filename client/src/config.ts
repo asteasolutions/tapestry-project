@@ -2,10 +2,11 @@ import { OptionalInt } from 'tapestry-core/src/data-format/schemas/common'
 import { deepFreeze } from 'tapestry-core/src/utils'
 import { treeifyError, z } from 'zod/v4'
 
-const AuthProviderEnum = z.enum(['google', 'ia'])
+export const AuthProviderEnum = z.enum(['google', 'ia'])
 const AuthProvidersSchema = z
   .string()
-  .transform((val) => (val.trim() === '' ? 'google,ia' : val)) // default: both Google and Internet Archive
+  .default('google')
+  .transform((val) => (val.trim() === '' ? 'google' : val)) // default to Google if no providers are specified
   .transform((val) =>
     val
       .split(',')
@@ -18,7 +19,7 @@ const parsedConfig = deepFreeze(
   z
     .object({
       VITE_API_URL: z.string(),
-      VITE_GOOGLE_CLIENT_ID: z.string(),
+      VITE_GOOGLE_CLIENT_ID: z.string().default(''),
       VITE_AUTH_PROVIDERS: AuthProvidersSchema,
       VITE_BUG_REPORT_FORM_URL: z.string(),
       VITE_AI_CHAT_EXPIRES_IN: OptionalInt(3600), // default: one hour

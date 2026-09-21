@@ -6,11 +6,7 @@ import IALogo from '../../assets/icons/ia-logo-circle-grey.svg?react'
 import { IALoginDialog } from './login-dialog'
 import styles from './styles.module.css'
 
-interface IALoginButtonProps {
-  onSuccess?: () => void
-}
-
-export function IALoginButton({ onSuccess }: IALoginButtonProps) {
+export function IALoginButton() {
   const [dialogOpen, setDialogOpen] = useState(false)
 
   return (
@@ -20,15 +16,7 @@ export function IALoginButton({ onSuccess }: IALoginButtonProps) {
         <Text>Continue with Internet Archive</Text>
       </Button>
 
-      {dialogOpen && (
-        <IALoginDialog
-          onClose={() => setDialogOpen(false)}
-          onSuccess={() => {
-            setDialogOpen(false)
-            onSuccess?.()
-          }}
-        />
-      )}
+      {dialogOpen && <IALoginDialog onClose={() => setDialogOpen(false)} />}
     </>
   )
 }

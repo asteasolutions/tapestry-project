@@ -15,7 +15,6 @@ import { auth } from '../..'
 
 interface IALoginDialogProps {
   onClose: () => void
-  onSuccess?: () => void
 }
 
 const REASON_MESSAGE_MAP: Record<ErrorReason, string> = {
@@ -24,7 +23,7 @@ const REASON_MESSAGE_MAP: Record<ErrorReason, string> = {
   InvalidIASession: 'Session expired',
 }
 
-export function IALoginDialog({ onClose, onSuccess }: IALoginDialogProps) {
+export function IALoginDialog({ onClose }: IALoginDialogProps) {
   const [form] = useState(() => uniqueId('form'))
 
   const [email, setEmail] = useState('')
@@ -35,7 +34,6 @@ export function IALoginDialog({ onClose, onSuccess }: IALoginDialogProps) {
   const { trigger, cancel, loading } = useAsyncAction(async ({ signal }) => {
     try {
       await auth.login({ authType: 'iaCredentials', email, password }, signal)
-      onSuccess?.()
     } catch (error) {
       if (error instanceof APIError) {
         const { name, reason, message } = error.data
