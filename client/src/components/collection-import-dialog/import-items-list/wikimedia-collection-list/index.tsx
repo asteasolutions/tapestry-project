@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react'
-import { WikimediaMedia } from 'tapestry-core/src/wikimedia-commons'
-import { fetchWikimediaCollectionResults } from '../../../../lib/wikimedia'
+import {
+  fetchWikimediaCollectionResults,
+  WikimediaMedia,
+} from 'tapestry-core/src/wikimedia-commons'
 import { ImportItemsListProps } from '..'
 import { CollectionImport } from '../../../../pages/tapestry/view-model'
 import { useResponsive, Breakpoint } from '../../../../providers/responsive-provider'
@@ -9,11 +11,12 @@ import { LazyListLoader } from '../../../lazy-list/lazy-list-loader'
 import { Text } from 'tapestry-core-client/src/components/lib/text/index'
 import { useObservable } from 'tapestry-core-client/src/components/lib/hooks/use-observable'
 import { useAsyncAction } from 'tapestry-core-client/src/components/lib/hooks/use-async-action'
-import { SelectAll } from '../select-all'
-import { CollectionList, CollectionListItem } from '../collection-list'
+import {
+  BaseCollectionList,
+  CollectionListItem,
+  CollectionSelectAll,
+} from '../base-collection-list'
 import { ImportItem, MAX_SELECTION } from '../..'
-import { requestExternalItems } from '../request-external-items'
-import styles from '../collection-list/styles.module.css'
 
 // Use this icon when a media item has no real thumbnail (Commons' generic per-extension icon,
 // already mapped to null in wikimedia-commons.ts).
@@ -46,7 +49,6 @@ export function WikimediaCollectionList({
   header,
 }: WikimediaCollectionListProps) {
   const mdOrLess = useResponsive() <= Breakpoint.MD
-  const textVariant = mdOrLess ? 'bodyXs' : undefined
 
   const [listLoader, setListLoader] = useState<LazyListLoader<WikimediaMedia> | null>(null)
   const state = useObservable(listLoader)
@@ -56,21 +58,30 @@ export function WikimediaCollectionList({
   const [loadFailed, setLoadFailed] = useState(false)
 
   const requestItems = useMemo(() => {
-    // Always report the count fetched up front. Do not derive the total from each page's own
-    // response. LazyListLoader treats a change in total as a change in the list. It then does a
-    // full reload and clears the current items. A failed page must not look like a smaller list.
+    // Commons paginates categories with an opaque cursor, not a page number -- there's no way to
+    // jump directly to an arbitrary skip. Walk forward from wherever this category's walk last
+    // left off, fetching one real page at a time and buffering everything fetched so far, until
+    // the buffer covers the requested window. Cursors (and the buffered items) live for as long
+    // as this component does; they don't go stale.
+    const fetched: WikimediaMedia[] = []
+    let nextCursor: string | undefined
+    let done = false
+
     return async (skip: number, limit: number, signal: AbortSignal) => {
-      const result = await requestExternalItems(
-        (page, pageSize, pageSignal) =>
-          fetchWikimediaCollectionResults(collection.collection, page, pageSize, pageSignal),
-        skip,
-        limit,
-        signal,
-      )
-      setLoadFailed(result.failed)
-      return { skip: result.skip, total: collection.total, data: result.data }
+      while (fetched.length < skip + limit && !done) {
+        const page = await fetchWikimediaCollectionResults(collection.category, nextCursor, signal)
+        if (!page) {
+          setLoadFailed(true)
+          return { skip, total: collection.total, data: fetched.slice(skip, skip + limit) }
+        }
+        fetched.push(...page.results)
+        nextCursor = page.nextCursor
+        done = nextCursor === undefined
+      }
+      setLoadFailed(false)
+      return { skip, total: collection.total, data: fetched.slice(skip, skip + limit) }
     }
-  }, [collection.collection, collection.total])
+  }, [collection.category, collection.total])
 
   const { trigger: selectAllItems, loading: selectingAll } = useAsyncAction(
     async ({ signal }: AbortController) => {
@@ -84,18 +95,17 @@ export function WikimediaCollectionList({
   const allSelected = maxSelectable !== undefined && selectedCount >= maxSelectable
 
   const selectAll = (
-    <SelectAll
+    <CollectionSelectAll
       checked={allSelected}
       onChange={() => (allSelected ? onDeselectAll() : selectAllItems())}
       total={total}
       loading={selectingAll}
-      classes={{ root: mdOrLess ? styles.mobileSelectAll : undefined, checkbox: styles.checkbox }}
-      textVariant={textVariant}
+      mdOrLess={mdOrLess}
     />
   )
 
   return (
-    <CollectionList
+    <BaseCollectionList
       windowSize={20}
       loadingEdgeProximity={5}
       requestItems={requestItems}

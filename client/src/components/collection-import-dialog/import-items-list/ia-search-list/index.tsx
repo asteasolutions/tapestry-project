@@ -7,16 +7,18 @@ import {
 import { ImportItemsListProps } from '..'
 import { useResponsive, Breakpoint } from '../../../../providers/responsive-provider'
 import { Text } from 'tapestry-core-client/src/components/lib/text/index'
-import { CollectionList, CollectionListItem } from '../collection-list'
+import {
+  BaseCollectionList,
+  CollectionListItem,
+  CollectionSelectAll,
+} from '../base-collection-list'
 import { useMemo, useState } from 'react'
 import { partial } from 'lodash-es'
 import { LazyListLoader } from '../../../lazy-list/lazy-list-loader'
 import { useObservable } from 'tapestry-core-client/src/components/lib/hooks/use-observable'
 import { useAsyncAction } from 'tapestry-core-client/src/components/lib/hooks/use-async-action'
-import { SelectAll } from '../select-all'
-import { paginateBySkipLimit } from '../paginate-by-skip-limit'
+import { paginateBySkipLimit } from '../paginate-utils'
 import { ImportItem, MAX_SELECTION } from '../..'
-import styles from '../collection-list/styles.module.css'
 
 function getSearchOpts(query: string) {
   return {
@@ -84,7 +86,6 @@ export function IASearchList({
   emptyPlaceholder = 'No results for this search',
 }: IASearchListProps) {
   const mdOrLess = useResponsive() <= Breakpoint.MD
-  const textVariant = mdOrLess ? 'bodyXs' : undefined
 
   const [listLoader, setListLoader] = useState<LazyListLoader<IASearchResultItem> | null>(null)
   const state = useObservable(listLoader)
@@ -103,18 +104,17 @@ export function IASearchList({
   const hasSelection = selectedCount > 0
 
   const selectAll = (
-    <SelectAll
+    <CollectionSelectAll
       checked={hasSelection}
       onChange={() => (hasSelection ? onDeselectAll() : selectAllItems())}
       total={total}
       loading={selectingAll}
-      classes={{ root: mdOrLess ? styles.mobileSelectAll : undefined, checkbox: styles.checkbox }}
-      textVariant={textVariant}
+      mdOrLess={mdOrLess}
     />
   )
 
   return (
-    <CollectionList
+    <BaseCollectionList
       windowSize={100}
       loadingEdgeProximity={15}
       requestItems={requestItems}

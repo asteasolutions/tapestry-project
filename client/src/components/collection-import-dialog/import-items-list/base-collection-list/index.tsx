@@ -8,6 +8,7 @@ import { TypographyName } from 'tapestry-core-client/src/theme/types'
 import { LazyList, LazyListProps, WithId } from '../../../lazy-list'
 import { LoadingLogoIcon } from '../../../loading-logo-icon'
 import { MAX_SELECTION } from '../..'
+import { SelectAll } from '../select-all'
 import styles from './styles.module.css'
 
 export type CollectionListColumn = 'creator' | 'license' | 'uploader' | 'published' | 'views'
@@ -30,7 +31,7 @@ const COLUMN_WIDTH: Record<CollectionListColumn, string> = {
 
 /** The generic, platform-agnostic shape one item's row needs to render. Every collection list
  * (Openverse, Wikimedia, IA search) maps its own native item type into this before handing it to
- * `CollectionList` — `id`/selection/creation still flow through the caller's own real item type. */
+ * `BaseCollectionList` — `id`/selection/creation still flow through the caller's own real item type. */
 export interface CollectionListItem {
   image?: string | null
   fallbackIcon?: IconName
@@ -82,15 +83,7 @@ function renderColumnValue(
   }
 }
 
-/**
- * The UI and lazy-loading shell shared by every collection import's item list (every
- * `ImportItemsList` branch except `IAPlaylistEntries`, which lists a fixed, already-loaded
- * array rather than paging a remote collection). Each caller supplies its own fetching and a
- * `toListItem` mapper into the generic `CollectionListItem` shape; item-row rendering (thumbnail
- * or fallback icon, title, detail columns), the checkbox wiring, the mobile details/desktop row
- * switch, the desktop column-header bar, and the `LazyList` plumbing all live here once.
- */
-export interface CollectionListProps<T extends WithId> extends Pick<
+export interface BaseCollectionListProps<T extends WithId> extends Pick<
   LazyListProps<T>,
   | 'requestItems'
   | 'windowSize'
@@ -113,7 +106,7 @@ export interface CollectionListProps<T extends WithId> extends Pick<
   emptyPlaceholder: ReactNode
 }
 
-export function CollectionList<T extends WithId>({
+export function BaseCollectionList<T extends WithId>({
   mdOrLess,
   columns,
   detailsGroupName,
@@ -126,7 +119,7 @@ export function CollectionList<T extends WithId>({
   selectedCount,
   emptyPlaceholder,
   ...lazyListProps
-}: CollectionListProps<T>) {
+}: BaseCollectionListProps<T>) {
   const textVariant = mdOrLess ? 'bodyXs' : undefined
 
   const detailsHeader = (
@@ -225,5 +218,33 @@ export function CollectionList<T extends WithId>({
         loadingIndicator={<LoadingLogoIcon className={styles.loadingIndicator} />}
       />
     </div>
+  )
+}
+
+interface CollectionSelectAllProps {
+  checked: boolean
+  onChange: () => unknown
+  total: number | undefined
+  loading?: boolean
+  mdOrLess: boolean
+}
+
+// The `SelectAll` checkbox, styled and classed the way every BaseCollectionList caller needs it.
+export function CollectionSelectAll({
+  checked,
+  onChange,
+  total,
+  loading,
+  mdOrLess,
+}: CollectionSelectAllProps) {
+  return (
+    <SelectAll
+      checked={checked}
+      onChange={onChange}
+      total={total}
+      loading={loading}
+      classes={{ root: mdOrLess ? styles.mobileSelectAll : undefined, checkbox: styles.checkbox }}
+      textVariant={mdOrLess ? 'bodyXs' : undefined}
+    />
   )
 }

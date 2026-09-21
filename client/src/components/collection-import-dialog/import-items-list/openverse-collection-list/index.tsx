@@ -8,11 +8,13 @@ import { LazyListLoader } from '../../../lazy-list/lazy-list-loader'
 import { Text } from 'tapestry-core-client/src/components/lib/text/index'
 import { useObservable } from 'tapestry-core-client/src/components/lib/hooks/use-observable'
 import { useAsyncAction } from 'tapestry-core-client/src/components/lib/hooks/use-async-action'
-import { SelectAll } from '../select-all'
-import { CollectionList, CollectionListItem } from '../collection-list'
+import {
+  BaseCollectionList,
+  CollectionListItem,
+  CollectionSelectAll,
+} from '../base-collection-list'
 import { ImportItem, MAX_SELECTION } from '../..'
-import { requestExternalItems } from '../request-external-items'
-import styles from '../collection-list/styles.module.css'
+import { requestExternalItems } from '../paginate-utils'
 
 const NO_THUMBNAIL_ICON: Record<'image' | 'audio', IconName> = {
   image: 'image',
@@ -38,7 +40,6 @@ export function OpenverseCollectionList({
   header,
 }: OpenverseCollectionListProps) {
   const mdOrLess = useResponsive() <= Breakpoint.MD
-  const textVariant = mdOrLess ? 'bodyXs' : undefined
 
   const [listLoader, setListLoader] = useState<LazyListLoader<OpenverseMedia> | null>(null)
   const state = useObservable(listLoader)
@@ -82,18 +83,17 @@ export function OpenverseCollectionList({
   const allSelected = maxSelectable !== undefined && selectedCount >= maxSelectable
 
   const selectAll = (
-    <SelectAll
+    <CollectionSelectAll
       checked={allSelected}
       onChange={() => (allSelected ? onDeselectAll() : selectAllItems())}
       total={total}
       loading={selectingAll}
-      classes={{ root: mdOrLess ? styles.mobileSelectAll : undefined, checkbox: styles.checkbox }}
-      textVariant={textVariant}
+      mdOrLess={mdOrLess}
     />
   )
 
   return (
-    <CollectionList
+    <BaseCollectionList
       windowSize={20}
       loadingEdgeProximity={5}
       requestItems={requestItems}
