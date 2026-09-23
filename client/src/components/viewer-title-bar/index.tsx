@@ -68,11 +68,7 @@ export function ViewerTitleBar({ className, style }: PropsWithStyle) {
     },
     {
       element: (
-        <IconButton
-          icon="more_vert"
-          aria-label="About tapestry"
-          onClick={() => setViewingInfo(true)}
-        />
+        <IconButton icon="info" aria-label="About tapestry" onClick={() => setViewingInfo(true)} />
       ),
       tooltip: { side: 'bottom', children: 'About tapestry' },
     },
