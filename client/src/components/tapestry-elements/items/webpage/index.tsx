@@ -22,7 +22,7 @@ import { useDispatch, useTapestryData } from '../../../../pages/tapestry/tapestr
 import { updateItem } from '../../../../pages/tapestry/view-model/store-commands/items'
 import { resource } from '../../../../services/rest-resources'
 import { TimeInput } from '../../../time-input'
-import { buildToolbarMenu } from '../../item-toolbar'
+import { buildToolbarMenu, ItemToolbarMenu } from '../../item-toolbar'
 import { PlayableShareMenu, shareMenu } from '../../item-toolbar/share-menu'
 import { useItemToolbar } from '../../item-toolbar/use-item-toolbar'
 import { TapestryItem } from '../tapestry-item'
@@ -208,9 +208,7 @@ export const WebpageItem = memo(({ id }: TapestryItemProps) => {
           : 'share',
       })
 
-      const fullscreenItems: (SimpleMenuItem | 'separator')[] = isPlayable
-        ? []
-        : [fullscreenButton, 'separator']
+      const fullscreenItems: ItemToolbarMenu = isPlayable ? [] : [fullscreenButton, 'separator']
 
       return isEditMode
         ? [
