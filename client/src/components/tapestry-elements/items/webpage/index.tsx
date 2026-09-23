@@ -207,6 +207,11 @@ export const WebpageItem = memo(({ id }: TapestryItemProps) => {
             })
           : 'share',
       })
+
+      const fullscreenItems: (SimpleMenuItem | 'separator')[] = isPlayable
+        ? []
+        : [fullscreenButton, 'separator']
+
       return isEditMode
         ? [
             {
@@ -223,13 +228,12 @@ export const WebpageItem = memo(({ id }: TapestryItemProps) => {
               tooltip: { side: 'bottom', children: 'Switch to Wayback Machine version' },
             },
             'separator',
-            fullscreenButton,
-            'separator',
+            ...fullscreenItems,
             refreshButton,
             'separator',
             ...controls,
           ]
-        : [fullscreenButton, 'separator', refreshButton, 'separator', ...controls]
+        : [...fullscreenItems, refreshButton, 'separator', ...controls]
     },
     moreMenuItems: [
       ...(webpageType === 'youtube' || webpageType === 'vimeo'
