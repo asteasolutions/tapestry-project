@@ -8,7 +8,7 @@ import styles from './styles.module.css'
 
 export interface TapestryInfoDialogProps {
   tapestry: Pick<Tapestry, 'title' | 'thumbnail' | 'description' | 'createdAt' | 'updatedAt'>
-  owner: string
+  owner?: string
   ownerAvatar?: ReactNode
   onClose: () => void
   buttons?: ReactNode
