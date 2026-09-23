@@ -56,6 +56,18 @@ function tryParseItems(text: string, tapestryId: string): ItemCreateDto[] | unde
   }
 }
 
+function isSelfReferencingURL(url: string): boolean {
+  try {
+    const current = new URL(window.location.href)
+    const pasted = new URL(url)
+    if (current.origin !== pasted.origin) return false
+    const normalize = (p: string) => p.replace(/\/edit$/, '').replace(/\/$/, '')
+    return normalize(current.pathname) === normalize(pasted.pathname)
+  } catch {
+    return false
+  }
+}
+
 function getStringTransferData(data: DataTransfer): string[] | string {
   // text/uri-list may contain multiple urls, each on separate line.
   // It can also contain comments - lines starting with #
@@ -93,7 +105,7 @@ export async function parseStringTransferData(
   }
 
   if (Array.isArray(text)) {
-    return parseSources(text, tapestryId)
+    return parseSources(text.filter((url) => !isSelfReferencingURL(url)), tapestryId)
   }
 
   const items = tryParseItems(text, tapestryId)
@@ -103,10 +115,10 @@ export async function parseStringTransferData(
 
   const lines = compact(text.trim().split(/\s*\n\s*/))
   if (lines.every((line) => isHTTPURL(line))) {
-    return parseSources(lines, tapestryId)
+    return parseSources(lines.filter((line) => !isSelfReferencingURL(line)), tapestryId)
   }
 
-  if (isHTTPURL(text)) {
+  if (isHTTPURL(text) && !isSelfReferencingURL(text)) {
     return parseSources([text], tapestryId)
   }
   if (isBlobURL(text)) {
