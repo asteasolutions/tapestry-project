@@ -35,6 +35,7 @@ import { Store } from 'tapestry-core-client/src/lib/store'
 import { idMapToArray } from 'tapestry-core/src/utils'
 
 export const DEFAULT_LAYER = 0
+const DEFAULT_LINKED_TAPESTRY_SIZE = { width: 1920, height: 930 }
 
 export function getMultiselectRectangle(
   selectionItems: EditableItemViewModel[],
@@ -183,7 +184,7 @@ export async function insertDataTransfer(
         if (parsedUrl.host === window.location.host) {
           return {
             ...item,
-            size: { width: 1920, height: 930 },
+            size: DEFAULT_LINKED_TAPESTRY_SIZE,
           }
         }
       }
