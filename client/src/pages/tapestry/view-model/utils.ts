@@ -35,7 +35,6 @@ import { Store } from 'tapestry-core-client/src/lib/store'
 import { idMapToArray } from 'tapestry-core/src/utils'
 
 export const DEFAULT_LAYER = 0
-const DEFAULT_LINKED_TAPESTRY_SIZE = { width: 1920, height: 930 }
 
 export function getMultiselectRectangle(
   selectionItems: EditableItemViewModel[],
@@ -174,25 +173,7 @@ export async function insertDataTransfer(
       dispatch(setIAImport(iaImports))
     }
 
-    const customSizedItems = items.map((item) => {
-      //If the imported item is a tapestry (the URL host is the same), the size of the item is fixed
-      const itemUrl = item.type === 'webpage' ? item.source : undefined
-
-      if (typeof itemUrl === 'string') {
-        const parsedUrl = new URL(itemUrl, window.location.href)
-
-        if (parsedUrl.host === window.location.host) {
-          return {
-            ...item,
-            size: DEFAULT_LINKED_TAPESTRY_SIZE,
-          }
-        }
-      }
-
-      return item
-    })
-
-    const viewModels = customSizedItems.map(createItemViewModel)
+    const viewModels = items.map(createItemViewModel)
     dispatch(
       viewModels.length !== 0 && addAndPositionItems(viewModels, { centerAt: point }),
       largeFiles.length !== 0 && setLargeFiles(largeFiles),
