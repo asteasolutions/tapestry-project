@@ -2,7 +2,7 @@ import clsx from 'clsx'
 import { useState } from 'react'
 import { Link } from 'react-router'
 import { PropsWithStyle } from 'tapestry-core-client/src/components/lib'
-import { IconButton, MenuItemButton } from 'tapestry-core-client/src/components/lib/buttons/index'
+import { Button, IconButton } from 'tapestry-core-client/src/components/lib/buttons/index'
 import { SvgIcon } from 'tapestry-core-client/src/components/lib/svg-icon/index'
 import { MenuItems, Toolbar } from 'tapestry-core-client/src/components/lib/toolbar/index'
 import { useViewportObstruction } from 'tapestry-core-client/src/components/tapestry/hooks/use-viewport-obstruction'
@@ -14,11 +14,12 @@ import { fullName } from '../../model/data/utils'
 import { useDispatch, useTapestryData } from '../../pages/tapestry/tapestry-providers'
 import { setSnackbar } from '../../pages/tapestry/view-model/store-commands/tapestry'
 import { dashboardPath } from '../../utils/paths'
-import { ExportButton } from '../editor-title-bar/export-button'
 import { ForkTapestryDialog } from '../fork-tapestry-dialog'
 import { JoinTapestriesModal } from '../join-tapestries-modal'
 import styles from './styles.module.css'
 import { Avatar } from '../avatar'
+import { useTapestryExport } from '../../hooks/use-tapestry-export'
+import { ExportProgressIndicator } from '../editor-title-bar/export-progress-indicator'
 
 export function ViewerTitleBar({ className, style }: PropsWithStyle) {
   const obstruction = useViewportObstruction({ clear: { top: true, left: true } })
@@ -43,6 +44,11 @@ export function ViewerTitleBar({ className, style }: PropsWithStyle) {
     'updatedAt',
     'owner',
   ])
+  const { progress, triggerExport } = useTapestryExport({
+    tapestryId: id,
+    onError: () => dispatch(setSnackbar({ text: 'Error during export', variant: 'error' })),
+    onSuccess: () => setViewingInfo(false),
+  })
   const { user } = useSession()
   const [joinPopup, setJoinPopup] = useState(false)
   const [forkingTapestry, setForkingTapestry] = useState(false)
@@ -74,10 +80,11 @@ export function ViewerTitleBar({ className, style }: PropsWithStyle) {
     },
   ] as const satisfies MenuItems
 
-  const buttons = (
+  const infoDialogButtons = (
     <>
       {user && (
-        <MenuItemButton
+        <Button
+          variant="secondary"
           className={styles.secondaryButton}
           icon="bookmark"
           disabled={loadingBookmark}
@@ -93,21 +100,24 @@ export function ViewerTitleBar({ className, style }: PropsWithStyle) {
           }}
         >
           {isBookmarked ? 'Remove Bookmark' : 'Add Bookmark'}
-        </MenuItemButton>
+        </Button>
       )}
-      <ExportButton
+      <Button
+        variant="secondary"
         className={styles.secondaryButton}
-        disabled={!canForkTapestry}
+        icon="upload"
+        disabled={!canForkTapestry || !!progress}
+        onClick={triggerExport}
         tooltip={
           canForkTapestry
             ? undefined
             : { children: "You don't have export permissions", side: 'bottom' }
         }
-        tapestryId={id}
-        onError={() => dispatch(setSnackbar({ text: 'Error during export', variant: 'error' }))}
-        onSuccess={() => setViewingInfo(false)}
-      />
-      <MenuItemButton
+      >
+        Export Zip file {progress && <ExportProgressIndicator progress={progress} />}
+      </Button>
+      <Button
+        variant="primary"
         icon="content_copy"
         disabled={!canForkTapestry}
         tooltip={
@@ -125,7 +135,7 @@ export function ViewerTitleBar({ className, style }: PropsWithStyle) {
         className={styles.primaryButton}
       >
         Make a copy
-      </MenuItemButton>
+      </Button>
     </>
   )
 
@@ -138,7 +148,7 @@ export function ViewerTitleBar({ className, style }: PropsWithStyle) {
           owner={fullName(owner)}
           ownerAvatar={owner.avatar ? <Avatar user={owner} size="small" /> : undefined}
           onClose={() => setViewingInfo(false)}
-          buttons={buttons}
+          buttons={infoDialogButtons}
         />
       )}
       {joinPopup && <JoinTapestriesModal onClose={() => setJoinPopup(false)} />}

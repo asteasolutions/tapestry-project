@@ -40,7 +40,7 @@
         }
       }
 
-      .owner-wrapper {
+      .owner-details {
         display: flex;
         flex-direction: row;
         justify-content: start;
@@ -61,11 +61,20 @@
         justify-content: end;
         align-items: center;
         padding: 15px var(--padding-x);
-      }
 
-      .buttons-container > * {
-        min-width: fit-content;
-        justify-content: center;
+        & > * {
+          min-width: fit-content;
+          justify-content: center;
+        }
+
+        @media screen and (width <= 480px) {
+          flex-direction: column;
+          align-items: stretch;
+
+          & > * {
+            width: 100%;
+          }
+        }
       }
     }
   }

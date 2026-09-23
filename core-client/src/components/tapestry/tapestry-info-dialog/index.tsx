@@ -49,7 +49,7 @@ export function TapestryInfoDialog({
           {owner && (
             <>
               <Text variant="bodySm">Author</Text>
-              <div className={styles.ownerWrapper}>
+              <div className={styles.ownerDetails}>
                 {ownerAvatar}
                 <Text>{owner}</Text>
               </div>
