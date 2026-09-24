@@ -1,4 +1,4 @@
-import { memo, useEffect, useRef, useState } from 'react'
+import { memo, useRef, useState } from 'react'
 import { IconButton } from 'tapestry-core-client/src/components/lib/buttons/index'
 import { useAsync } from 'tapestry-core-client/src/components/lib/hooks/use-async'
 import { usePropRef } from 'tapestry-core-client/src/components/lib/hooks/use-prop-ref'
@@ -32,6 +32,7 @@ import {
   WebFrameSwitchProps,
 } from 'tapestry-core-client/src/components/tapestry/items/webpage/web-frame'
 import { useConvertToPDF } from '../../../../hooks/use-convert-to-pdf'
+import { useItemFullscreen } from 'tapestry-core-client/src/components/lib/hooks/use-item-fullscreen'
 
 const checkedSources = new Map<string, boolean>()
 
@@ -97,13 +98,13 @@ type PatchSourceArgument =
 export const WebpageItem = memo(({ id }: TapestryItemProps) => {
   const apiRef = useRef<WebpageItemViewerApi>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const [isFullscreen, setIsFullscreen] = useState(false)
   const dto = useTapestryData(`items.${id}.dto`) as WebpageItemDto
   const isEditMode = useTapestryData('interactionMode') === 'edit'
   const webSourceParams = parseWebSource(dto)
   const { webpageType } = webSourceParams
 
   const { conversionStarted, convertToPDFMenuItem } = useConvertToPDF(id)
+  const { isFullscreen, fullscreenButton, exitFullscreenButton } = useItemFullscreen(containerRef)
 
   const dispatch = useDispatch()
   const patch = ({ webpageType, data }: PatchSourceArgument) =>
@@ -121,23 +122,6 @@ export const WebpageItem = memo(({ id }: TapestryItemProps) => {
   const { startTime, stopTime } = getPlaybackInterval(webSourceParams)
   const [showSaveToWBMPrompt, setShowSaveToWBMPrompt] = useState(false)
   const [isLoadingWBMSnapshots, setIsLoadingWBMSnapshots] = useState(false)
-
-  useEffect(() => {
-    const onFullscreenChange = () => {
-      setIsFullscreen(document.fullscreenElement === containerRef.current)
-    }
-    document.addEventListener('fullscreenchange', onFullscreenChange)
-    return () => document.removeEventListener('fullscreenchange', onFullscreenChange)
-  }, [])
-
-  const toggleFullscreen = () => {
-    if (!containerRef.current) return
-    if (document.fullscreenElement) {
-      void document.exitFullscreen()
-    } else {
-      void containerRef.current.requestFullscreen()
-    }
-  }
 
   function switchToWBM() {
     dispatch(
@@ -176,22 +160,6 @@ export const WebpageItem = memo(({ id }: TapestryItemProps) => {
     ),
     tooltip: { side: 'bottom', children: 'Refresh this webpage' },
   }
-
-  const fullscreenButton: SimpleMenuItem = {
-    element: (
-      <IconButton icon="open_in_full" aria-label="Enter fullscreen" onClick={toggleFullscreen} />
-    ),
-    tooltip: { side: 'bottom', children: 'Fullscreen' },
-  }
-
-  const exitFullscreenButton = (
-    <IconButton
-      icon="close_fullscreen"
-      aria-label="Exit fullscreen"
-      className={styles.exitFullscreenButton}
-      onClick={toggleFullscreen}
-    />
-  )
 
   const { toolbar } = useItemToolbar(id, {
     items: (ctrls) => {
@@ -267,17 +235,13 @@ export const WebpageItem = memo(({ id }: TapestryItemProps) => {
   })
 
   return (
-    <div ref={containerRef} className={isFullscreen ? styles.fullscreen : styles.container}>
-      {isFullscreen ? (
-        <>
+    <>
+      <TapestryItem id={id} halo={isFullscreen ? undefined : toolbar}>
+        <div ref={containerRef} className={styles.container}>
           <WebpageItemViewer id={id} WebFrame={Webpage} apiRef={apiRef} />
-          {exitFullscreenButton}
-        </>
-      ) : (
-        <TapestryItem id={id} halo={toolbar}>
-          <WebpageItemViewer id={id} WebFrame={Webpage} apiRef={apiRef} />
-        </TapestryItem>
-      )}
+          {isFullscreen && exitFullscreenButton}
+        </div>
+      </TapestryItem>
       {showSaveToWBMPrompt && (
         <SimpleModal
           title="This page hasn't been archived yet"
@@ -301,6 +265,6 @@ export const WebpageItem = memo(({ id }: TapestryItemProps) => {
           </Text>
         </SimpleModal>
       )}
-    </div>
+    </>
   )
 })
