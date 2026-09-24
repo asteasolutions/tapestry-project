@@ -6,7 +6,7 @@
   :global(.wrapper) {
     width: 100%;
     box-sizing: border-box;
-    border-radius: 0;
+    border-radius: 0 0 8px 8px;
 
     :global(.toolbar-row) {
       display: flex;

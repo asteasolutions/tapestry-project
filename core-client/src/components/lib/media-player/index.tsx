@@ -9,7 +9,7 @@ import { Id } from 'tapestry-core/src/data-format/schemas/common'
 
 type ComponentType = 'video' | 'audio'
 
-export interface VideoJSOptions {
+export interface MediaOptions {
   autoplay?: boolean | 'muted' | 'play' | 'any'
   src: string
   mediaType?: string
@@ -26,7 +26,7 @@ export interface VideoJSOptions {
 export interface MediaPlayerProps<T extends ComponentType> {
   id: Id
   component: T
-  options: VideoJSOptions
+  options: MediaOptions
   startTime: number
   stopTime?: number
   style?: CSSProperties
@@ -34,6 +34,7 @@ export interface MediaPlayerProps<T extends ComponentType> {
   onPause?: React.ReactEventHandler<HTMLVideoElement | HTMLAudioElement>
   onEnded?: React.ReactEventHandler<HTMLVideoElement | HTMLAudioElement>
   onSeeked?: React.ReactEventHandler<HTMLVideoElement | HTMLAudioElement>
+  isInteractive: boolean
   thumbnail?: string
 }
 
@@ -48,6 +49,7 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
   onPause,
   onEnded,
   onSeeked,
+  isInteractive,
   thumbnail,
 }: MediaPlayerProps<T>) {
   const mediaRef = useRef<HTMLVideoElement | HTMLAudioElement | null>(null)
@@ -256,7 +258,7 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
             onMouseLeave={() => setIsHovering(false)}
           >
             <ControlBar
-              isOpen={isAudio || isMoving || isHovering || !isPlaying}
+              isOpen={isInteractive && (isAudio || isMoving || isHovering || !isPlaying)}
               isPlaying={isPlaying}
               togglePlay={togglePlay}
               currentTime={currentTime}

@@ -3,6 +3,7 @@ import { Button, IconButton } from '../../buttons'
 import { MaybeMenuItem, Toolbar } from '../../toolbar'
 import styles from './styles.module.css'
 import { useState } from 'react'
+import { isMobile } from '../../../../lib/user-agent'
 
 interface ControlBarProps {
   isOpen: boolean
@@ -72,7 +73,7 @@ export function ControlBar({
       ),
       tooltip: { side: 'top', children: isPlaying ? 'Pause ' : 'Play' },
     },
-    {
+    !isMobile && {
       id: 'volume',
       ui: {
         element: (

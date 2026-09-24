@@ -1,7 +1,7 @@
 import { useMediaSource } from '../../../lib/hooks/use-media-source'
 import { memo, useCallback, useMemo, useRef, useState } from 'react'
 import { VideoItem as VideoItemDto } from 'tapestry-core/src/data-format/schemas/item'
-import { MediaPlayer, VideoJSOptions, MediaPlayerProps } from '../../../lib/media-player'
+import { MediaPlayer, MediaOptions, MediaPlayerProps } from '../../../lib/media-player'
 import { captureVideoFrame } from '../../../../lib/dom'
 import { useMediaParams } from '../../hooks/use-media-params'
 import { Id } from 'tapestry-core/src/data-format/schemas/common'
@@ -68,7 +68,7 @@ export const VideoItemPlayer = memo(
       [dto.thumbnail, thumbnail],
     )
 
-    const options = useMemo<VideoJSOptions>(
+    const options = useMemo<MediaOptions>(
       () => ({
         src,
         mediaType,
@@ -98,6 +98,7 @@ export const VideoItemPlayer = memo(
               void captureFrame(e.currentTarget)
             }
           }}
+          isInteractive={isInteractive}
           thumbnail={thumbnail || primaryThumbnail}
           // The video is hidden in order to optimize the Safari layering algorithm
           //MediaPlayer handles display: none of the video
