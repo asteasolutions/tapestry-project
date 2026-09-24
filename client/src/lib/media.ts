@@ -98,6 +98,7 @@ const DEFAULT_WEBPAGE_SIZE: Size = {
   width: 400,
   height: 500,
 }
+const EMBEDDED_TAPESTRY_ITEM_SIZE: Size = { width: 1920, height: 930 }
 
 export async function getWebpageItemSize(source: MediaItemSource): Promise<Size> {
   if (source instanceof File) {
@@ -123,6 +124,11 @@ export async function getWebpageItemSize(source: MediaItemSource): Promise<Size>
       width: DEFAULT_VIDEO_WIDTH,
       height: DEFAULT_VIDEO_WIDTH * (9 / 16),
     }
+  }
+
+  //If the imported item is a tapestry (the URL host is the same), the size of the item is fixed
+  if (host === window.location.host) {
+    return EMBEDDED_TAPESTRY_ITEM_SIZE
   }
 
   return Promise.resolve(DEFAULT_WEBPAGE_SIZE)
