@@ -55,7 +55,7 @@ export class AuthService extends Observable<AuthServiceState> {
     super({ user: null, isInitialized: false, pendingRegistration: undefined })
   }
 
-  protected doPrepare() {
+  private doPrepare() {
     for (const provider of AUTH_PROVIDERS) {
       provider.prepare?.()
     }
@@ -68,11 +68,7 @@ export class AuthService extends Observable<AuthServiceState> {
     }
   }
 
-  protected async doLogin(
-    params: SessionCreateDto,
-    loadUser: boolean,
-    signal?: GenericAbortSignal,
-  ) {
+  private async doLogin(params: SessionCreateDto, loadUser: boolean, signal?: GenericAbortSignal) {
     await this.preparing.promise
 
     try {
