@@ -16,7 +16,7 @@ jobs:
           ENVIRONMENT_NAME: dev
           HOST: tapestries-dev
           AI_CHAT_EXPIRES_IN: ${{ vars.AI_CHAT_EXPIRES_IN }}
-          AUTH_PROVIDER: ${{ vars.AUTH_PROVIDER }}
+          AUTH_PROVIDERS: ${{ vars.AUTH_PROVIDERS }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
