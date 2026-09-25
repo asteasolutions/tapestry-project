@@ -16,7 +16,7 @@ import { CollaboratorCursors } from '../../components/collaborator-cursors'
 import { CollaboratorIndicators } from '../../components/collaborator-indicators'
 import { DoingWorkIndicator } from '../../components/doing-work-indicator'
 import { EditorTitleBar } from '../../components/editor-title-bar'
-import { HandleIAImportDialog } from '../../components/handle-ia-import-dialog'
+import { CollectionImportDialog } from '../../components/collection-import-dialog'
 import { LargeFileUploadDialog } from '../../components/large-file-upload-dialog'
 import { LeaveTapestryDialog } from '../../components/leave-tapestry-dialog'
 import { OfflineIndicator } from '../../components/offline-indicator'
@@ -144,7 +144,7 @@ export function Tapestry({ initialThumbnails }: TapestryProps) {
       <OfflineIndicator className={styles.offlineIndicator} />
       <LeaveTapestryDialog />
       <LargeFileUploadDialog />
-      <HandleIAImportDialog />
+      <CollectionImportDialog />
     </div>
   )
 }

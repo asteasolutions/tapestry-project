@@ -4,6 +4,7 @@ import { Rectangle, Size } from 'tapestry-core/src/lib/geometry'
 import { UserAccess } from '../../../model/data/utils'
 import { PresentationStepDto } from 'tapestry-shared/src/data-transfer/resources/dtos/presentation-step'
 import { IAItemMetadata } from 'tapestry-core/src/internet-archive'
+import { OpenverseCollectionQuery, OpenverseMediaType } from 'tapestry-core/src/openverse'
 import { Point } from 'tapestry-core/src/data-format/schemas/common'
 import { RelEndpoint } from 'tapestry-core/src/data-format/schemas/rel'
 import {
@@ -150,7 +151,7 @@ export interface PlaylistEntry {
   title: string
 }
 
-export type IAImport =
+export type CollectionImport =
   | {
       type: 'IACollection'
       id: string
@@ -161,6 +162,17 @@ export type IAImport =
       id: string
       metadata: IAItemMetadata['metadata']
       entries: PlaylistEntry[]
+    }
+  | {
+      type: 'OpenverseCollection'
+      mediaType: OpenverseMediaType
+      collection: OpenverseCollectionQuery
+      total: number
+    }
+  | {
+      type: 'WikimediaCommonsCategory'
+      category: string
+      total: number
     }
   | {
       type: 'IASearchCollection'
@@ -201,7 +213,7 @@ export interface EditableTapestryViewModel
   readonly commentThread?: CommentThread
   readonly largeFiles: File[]
   readonly presentationOrderState?: PresentationOrderState | null
-  readonly iaImports: IAImport[]
+  readonly collectionImports: CollectionImport[]
   readonly pendingRequests: number
   readonly newRelPreview?: EditableRelViewModel | null
   readonly hideEditControls?: boolean
