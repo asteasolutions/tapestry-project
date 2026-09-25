@@ -18,6 +18,7 @@ import {
 } from 'tapestry-core-client/src/components/tapestry/help-pane/guide-pane'
 import { thru } from 'lodash-es'
 import {
+  Action,
   ActionsSection,
   CustomKeys,
   DEFAULT_ACTIONS,
@@ -40,17 +41,25 @@ const EDITOR_GUIDE: GuideSection[] = [
   }),
 ]
 
+const commonActions: Record<string, Action[]> = {
+  'General shortcuts': [{ name: 'Switch between modes', shortcut: 'E' }],
+}
+
 const VIEWER_ACTIONS = deepFreeze(
   thru(structuredClone(DEFAULT_ACTIONS), (actions) => {
     const general = actions.find((s) => s.title === 'General shortcuts')
-    general?.actions.push({ name: 'Switch between modes', shortcut: 'E' })
+    general?.actions.push(...commonActions[general.title])
+
+    const navigation = actions.find((s) => s.title === 'Navigation')
+    navigation?.actions.push({ name: 'Navigate presentation', shortcut: CustomKeys.Presentation })
     return actions
   }),
 )
 
-const EDITOR_ACTIONS: ActionsSection[] = thru(structuredClone(VIEWER_ACTIONS), (actions) => {
+const EDITOR_ACTIONS: ActionsSection[] = thru(structuredClone(DEFAULT_ACTIONS), (actions) => {
   const general = actions.find((s) => s.title === 'General shortcuts')
   general?.actions.push(
+    ...commonActions[general.title],
     { name: 'Undo', shortcut: 'meta + Z' },
     { name: 'Redo', shortcut: 'meta + shift + Z | meta + Y' },
     { name: 'Add text', shortcut: 'T' },

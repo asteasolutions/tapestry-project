@@ -2,6 +2,7 @@ import { deepFreeze } from 'tapestry-core/src/utils'
 import { Icon, IconName } from '../../../../../src/components/lib/icon/index'
 import { Text } from '../../../../../src/components/lib/text/index'
 import styles from './styles.module.css'
+import { metaKey } from '../../../../lib/user-agent'
 
 interface Tip {
   icon: IconName
@@ -29,6 +30,10 @@ export const DEFAULT_GUIDE: GuideSection[] = deepFreeze([
           {
             icon: 'mouse',
             text: 'Control + Mouse scroll to zoom',
+          },
+          {
+            icon: 'touch_double',
+            text: `Double-click to zoom in (hold ${metaKey} to zoom out)`,
           },
           {
             icon: 'drag_pan',

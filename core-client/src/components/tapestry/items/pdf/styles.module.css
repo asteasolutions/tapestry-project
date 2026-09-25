@@ -40,14 +40,6 @@
   .thumbnail {
     object-position: top;
   }
-
-  .overlay {
-    position: absolute;
-    color: var(--theme-icon-inverse);
-    background-color: var(--theme-background-inverse);
-    padding: 10px;
-    border-radius: 4px;
-  }
 }
 
 .loading-placeholder {

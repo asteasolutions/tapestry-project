@@ -22,7 +22,7 @@ import { Multiselection } from '../../components/tapestry-elements/multiselectio
 import { Rel } from '../../components/tapestry-elements/rel'
 import { APIError } from '../../errors'
 import { useTapestryPath } from '../../hooks/use-tapestry-path'
-import { UserAccess, userAccess } from '../../model/data/utils'
+import { loadInitialThumbnails, UserAccess, userAccess } from '../../model/data/utils'
 import { resource } from '../../services/rest-resources'
 import { dashboardPath } from '../../utils/paths'
 import { Tapestry } from './tapestry'
@@ -33,6 +33,9 @@ import {
 } from './tapestry-providers'
 import { InteractionMode } from './view-model'
 import { TapestryDataSync } from './view-model/tapestry-data-sync'
+import { ThumbnailContainer } from 'tapestry-core-client/src/stage/renderer/thumbnail-container'
+
+const INITIAL_THUMBNAILS_LOAD_TIMEOUT = 4_500
 
 function getErrorMessage(error: unknown) {
   if (error instanceof APIError) {
@@ -104,11 +107,7 @@ export function TapestryLoader({ id, mode }: TapestryLoaderProps) {
     }
   }, [id, user])
 
-  const {
-    data: tapestryDataSync,
-    loading,
-    error,
-  } = useAsync(
+  const { data: tapestryData, error } = useAsync(
     async ({ signal }, onCleanup) => {
       if (!id) return
 
@@ -133,13 +132,21 @@ export function TapestryLoader({ id, mode }: TapestryLoaderProps) {
 
       await dataSync.init(signal)
 
-      return dataSync
+      const initialThumbnails = await loadInitialThumbnails(
+        dataSync.store.get('items'),
+        INITIAL_THUMBNAILS_LOAD_TIMEOUT,
+      )
+
+      await ThumbnailContainer.loadIconTextures()
+
+      return { tapestryDataSync: dataSync, initialThumbnails }
     },
     // We want to refetch the tapestry when the session expires (and therefore the user id gets nullified)
     // We do not want to reload the tapestry when the view/edit param changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [id, user?.id],
   )
+  const { tapestryDataSync, initialThumbnails } = tapestryData ?? {}
 
   if (error) {
     return (
@@ -151,12 +158,8 @@ export function TapestryLoader({ id, mode }: TapestryLoaderProps) {
     )
   }
 
-  if (!id || loading) {
-    return <LoadingLogo />
-  }
-
   if (!tapestryDataSync) {
-    return 'Tapestry not found'
+    return <LoadingLogo />
   }
 
   return (
@@ -165,7 +168,7 @@ export function TapestryLoader({ id, mode }: TapestryLoaderProps) {
     >
       <TapestryStoreContext value={tapestryDataSync.store}>
         <TapestryConfigContext value={config}>
-          <Tapestry />
+          <Tapestry initialThumbnails={initialThumbnails} />
         </TapestryConfigContext>
       </TapestryStoreContext>
     </TapestryDataSyncCommandsProvider>

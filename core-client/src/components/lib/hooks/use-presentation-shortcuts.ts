@@ -1,7 +1,10 @@
 import { useKeyboardShortcuts } from './use-keyboard-shortcuts'
 import { useTapestryConfig } from '../../tapestry'
 import { getAdjacentPresentationSteps } from '../../../view-model/utils'
-import { focusPresentationStep } from '../../../view-model/store-commands/viewport'
+import {
+  defaultBounceAnimation,
+  focusPresentationStep,
+} from '../../../view-model/store-commands/viewport'
 import { useSingleGroupSelection } from './use-single-group-selection'
 import { getPresentationSequence } from 'tapestry-core/src/utils'
 import { mapValues } from 'lodash'
@@ -18,12 +21,9 @@ export function usePresentationShortcuts(enable = true) {
     : undefined
 
   useKeyboardShortcuts(
-    enable
+    enable && adjacentPresentationSteps
       ? {
           'ArrowRight | PageDown | ArrowLeft | PageUp': (e) => {
-            if (!adjacentPresentationSteps) {
-              return
-            }
             const isNext = e.code === 'ArrowRight' || e.code === 'PageDown'
             const presentation =
               isNext && adjacentPresentationSteps.next
@@ -34,10 +34,10 @@ export function usePresentationShortcuts(enable = true) {
 
             if (presentation) {
               dispatch(
-                focusPresentationStep(adjacentPresentationSteps[presentation]!.dto, {
-                  zoomEffect: 'bounce',
-                  duration: 1,
-                }),
+                focusPresentationStep(
+                  adjacentPresentationSteps[presentation]!.dto,
+                  defaultBounceAnimation,
+                ),
               )
             }
           },
@@ -46,9 +46,9 @@ export function usePresentationShortcuts(enable = true) {
             const sequence = getPresentationSequence(mapValues(presentationSteps, (vm) => vm?.dto))
 
             const step =
-              e.code === 'Home' && adjacentPresentationSteps?.prev
+              e.code === 'Home' && adjacentPresentationSteps.prev
                 ? sequence[0]
-                : e.code === 'End' && adjacentPresentationSteps?.next
+                : e.code === 'End' && adjacentPresentationSteps.next
                   ? sequence[sequence.length - 1]
                   : undefined
 

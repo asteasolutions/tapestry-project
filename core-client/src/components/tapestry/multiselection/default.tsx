@@ -17,7 +17,9 @@ export function DefaultMultiselection() {
   const selectedGroup = useSingleGroupSelection()
 
   const toolbar = useMultiselectMenu(
-    selectedGroup ? ['focus', 'separator', 'presentation'] : ['focus'],
+    selectedGroup
+      ? ['focus', 'separator', 'presentation', 'separator', 'deselect']
+      : ['focus', 'separator', 'deselect'],
     selectedGroup?.dto.id,
   )
 

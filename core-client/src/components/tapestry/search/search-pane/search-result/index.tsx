@@ -8,6 +8,7 @@ import { Text } from '../../../../../../src/components/lib/text/index'
 import { toggleOutline } from '../../../../../view-model/store-commands/tapestry'
 import { isBlobURL } from '../../../../../view-model/utils'
 import styles from './styles.module.css'
+import { InternalNavigationState } from '../../../../../stage/controller/item-controller'
 
 export interface SearchResultProps {
   type: 'text' | 'media'
@@ -36,7 +37,7 @@ export function SearchResult({
   return (
     <Link
       to={{ search: `focus=${id}` }}
-      state={{ timestamp: new Date() }}
+      state={{ timestamp: Date.now() } satisfies InternalNavigationState}
       className={clsx(styles.root, { [styles.highlighted]: highlighted })}
       onFocus={() => dispatch(toggleOutline(id))}
       onMouseOver={() => dispatch(toggleOutline(id))}

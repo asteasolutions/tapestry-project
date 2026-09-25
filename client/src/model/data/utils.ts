@@ -23,6 +23,7 @@ import {
   TapestryAssetUrlCreateDto,
 } from 'tapestry-shared/src/data-transfer/resources/dtos/asset-url'
 import {
+  EDIT_VIEWPORT_LIMITS,
   EditableTapestryViewModel,
   InteractionMode,
   TapestryWithOwner,
@@ -35,10 +36,16 @@ import {
   MediaItemSource,
 } from '../../lib/media'
 import { resource } from '../../services/rest-resources'
-import { isFunction, omit } from 'lodash-es'
+import { isFunction, minBy, omit } from 'lodash-es'
 import mime from 'mime'
 import axios, { AxiosProgressEvent } from 'axios'
-import { arrayToIdMap, fileExtension, isMediaItem } from 'tapestry-core/src/utils'
+import {
+  arrayToIdMap,
+  fileExtension,
+  IdMap,
+  idMapToArray,
+  isMediaItem,
+} from 'tapestry-core/src/utils'
 import { userSettings } from '../../services/user-settings'
 import { itemUpload } from '../../services/item-upload'
 import { PublicUserProfileDto } from 'tapestry-shared/src/data-transfer/resources/dtos/user'
@@ -53,7 +60,17 @@ import {
 } from 'tapestry-shared/src/data-transfer/resources/dtos/presentation-step'
 import { FetchContentTypeProxyDto } from 'tapestry-shared/src/data-transfer/resources/dtos/proxy'
 import { ItemType, MediaItemType } from 'tapestry-core/src/data-format/schemas/item'
-import { viewModelFromTapestry } from 'tapestry-core-client/src/view-model/utils'
+import {
+  DEFAULT_VIEWPORT_LIMITS,
+  viewModelFromTapestry,
+} from 'tapestry-core-client/src/view-model/utils'
+import { DEFAULT_LAYER } from '../../pages/tapestry/view-model/utils'
+import { ItemViewModel } from 'tapestry-core-client/src/view-model'
+import {
+  ItemThumbnailController,
+  LoadedRendition,
+} from 'tapestry-core-client/src/stage/controller/item-thumbnail-controller'
+import { fetchBitmap } from 'tapestry-core-client/src/lib/file'
 
 export const EDITABLE_TAPESTRY_PROPS = [
   'background',
@@ -74,6 +91,7 @@ const BASE_EDITABLE_ITEM_PROPS = [
   'type',
   'groupId',
   'notes',
+  'layer',
 ] as const satisfies (keyof ItemDto & keyof ItemUpdateDto)[]
 
 export const EDITABLE_TEXT_ITEM_PROPS = [
@@ -99,6 +117,8 @@ export const EDITABLE_MEDIA_ITEM_PROPS = [
   'stopTime',
   'webpageType',
   'defaultPage',
+  'action',
+  'actionType',
 ] as const satisfies (KeysOfUnion<MediaItemDto> & KeysOfUnion<MediaItemUpdateDto>)[]
 export type EditableMediaItemProps = (typeof EDITABLE_MEDIA_ITEM_PROPS)[number]
 
@@ -165,6 +185,8 @@ export function fromTapestryDto(
 ): EditableTapestryViewModel {
   const presentationStepViewModels = presentationSteps.map((dto) => ({ dto }))
 
+  const viewportLimits = mode === 'edit' ? EDIT_VIEWPORT_LIMITS : DEFAULT_VIEWPORT_LIMITS
+
   const baseViewModel = viewModelFromTapestry(
     {
       ...tapestry,
@@ -174,6 +196,7 @@ export function fromTapestryDto(
       groups: [],
     },
     [],
+    viewportLimits,
   )
   const editableTapestryViewModel: EditableTapestryViewModel = {
     ...baseViewModel,
@@ -226,19 +249,20 @@ export function createTextItem(text = '', tapestryId: string): TextItemCreateDto
     position: ORIGIN,
     tapestryId,
     backgroundColor: textItemColor,
+    layer: DEFAULT_LAYER,
   }
 }
 
 export function createActionButtonItem(text = '', tapestryId: string): ActionButtonItemCreateDto {
   return {
     type: 'actionButton',
-    actionType: 'externalLink',
     dropShadow: false,
     position: ORIGIN,
     size: itemSizes.actionButton,
     backgroundColor: userSettings.getTapestrySettings(tapestryId).textItemColor,
     tapestryId,
     text,
+    layer: DEFAULT_LAYER,
   }
 }
 
@@ -309,7 +333,8 @@ export async function createMediaItem<T extends MediaItemType>(
     dropShadow: true,
     position: ORIGIN,
     tapestryId,
-  } as MediaItemCreateDto & { type: T }
+    layer: DEFAULT_LAYER,
+  } satisfies MediaItemCreateDto as MediaItemCreateDto & { type: T }
 }
 
 // TODO: Handle the scenario where the source is an S3 object and therefore needs to be cloned.
@@ -380,4 +405,35 @@ export function userAccess(
 
 export function fullName({ givenName, familyName }: PublicUserProfileDto) {
   return `${givenName} ${familyName}`
+}
+
+export async function loadInitialThumbnails(
+  items: IdMap<ItemViewModel>,
+  timeout?: number,
+): Promise<IdMap<LoadedRendition>> {
+  const renditionPromises: Promise<{ rendition: LoadedRendition; itemId: string }>[] = []
+  const timeoutSignal = timeout ? AbortSignal.timeout(timeout) : undefined
+  for (const item of idMapToArray(items)) {
+    const thumbnailRenditions = item.dto.thumbnail?.renditions ?? []
+    const rendition = minBy(thumbnailRenditions, ({ size }) => size.width)
+    if (!rendition) {
+      // No thumbnail to load
+      continue
+    }
+    renditionPromises.push(
+      fetchBitmap(rendition.source, undefined, timeoutSignal).then((bitmap) => ({
+        rendition: {
+          snapshotId: ItemThumbnailController.generateSnapshotId(),
+          bitmap,
+          meta: rendition,
+        },
+        itemId: item.dto.id,
+      })),
+    )
+  }
+  const renditionResults = (await Promise.allSettled(renditionPromises))
+    .filter((promise) => promise.status === 'fulfilled')
+    .map((p) => p.value)
+
+  return Object.fromEntries(renditionResults.map((result) => [result.itemId, result.rendition]))
 }

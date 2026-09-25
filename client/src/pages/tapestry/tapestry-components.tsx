@@ -9,5 +9,5 @@ export function TapestryEditorCanvas({ className, style }: PropsWithStyle) {
 
   usePresentationShortcuts(isView)
 
-  return <TapestryCanvas classes={{ root: className }} style={style} orderByPosition={isView} />
+  return <TapestryCanvas classes={{ root: className }} style={style} />
 }

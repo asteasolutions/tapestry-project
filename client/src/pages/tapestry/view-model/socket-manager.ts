@@ -20,7 +20,7 @@ export type TapestryUpdated = TypedEvent<'tapestry-updated', TapestryUpdate>
 export class SocketManager extends TypedEventTarget<TapestryUpdated | RTCSignallerEvent> {
   private socket: Socket<ServerToClientEvents, ClientToServerEvents> = io(
     new URL(config.apiUrl).origin,
-    { path: SOCKET_PATH, autoConnect: false, auth: (cb) => cb({ token: auth.token }) },
+    { path: SOCKET_PATH, autoConnect: false, auth: (cb) => cb({ token: auth.accessToken?.token }) },
   )
   private isSignallerActivated = false
 
@@ -48,7 +48,6 @@ export class SocketManager extends TypedEventTarget<TapestryUpdated | RTCSignall
       'rtc-signaling-message',
       this.tapestryId,
       (request: RTCSignalingMessage) => {
-        this.isSignallerActivated = true
         this.dispatchEvent('signaller-connected', { assignedPeerId: request.senderId })
         this.socket.on('rtc-signaling-message', (message) => this.onSignallerMessage(message))
       },
@@ -79,7 +78,10 @@ export class SocketManager extends TypedEventTarget<TapestryUpdated | RTCSignall
 
   activateSignaller() {
     if (!this.isSignallerActivated) {
-      this.subscribeToSignalingService()
+      this.isSignallerActivated = true
+      if (this.connected) {
+        this.subscribeToSignalingService()
+      }
     }
   }
 

@@ -82,14 +82,20 @@ export function MultiselectMenu({ selectionBounds, selectedGroup }: MultiselectM
   const menuItems: MultiselectMenuItem[] = [
     ...(isEdit ? ([gridButton, 'separator', ...groupMenus, 'separator'] as const) : []),
     'focus',
-    !!groupId && {
-      element: <CopyLinkButton id={groupId} />,
-      tooltip: { side: 'bottom', children: 'Get link' },
-    },
-    ...(isEdit ? (['separator', moreMenu, 'separator'] as const) : []),
-    !!groupId && 'presentation',
-    isEdit && !!groupId && 'separator',
-    isEdit && moveHandle,
+    ...(groupId
+      ? ([
+          'separator',
+          {
+            element: <CopyLinkButton id={groupId} />,
+            tooltip: { side: 'bottom', children: 'Get link' },
+          },
+        ] as const)
+      : []),
+    ...(isEdit ? (['separator', moreMenu] as const) : []),
+    ...(groupId ? (['separator', 'presentation'] as const) : []),
+    ...(isEdit ? (['separator', moveHandle] as const) : []),
+    'separator',
+    'deselect',
   ]
 
   const toolbarItems = useMultiselectMenu(menuItems, groupId)

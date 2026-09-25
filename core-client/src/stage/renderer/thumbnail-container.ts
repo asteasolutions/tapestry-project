@@ -11,8 +11,10 @@ import { ORIGIN, Rectangle, Size } from 'tapestry-core/src/lib/geometry'
 import { ShadowNineSlice } from './shadow-texture-cache'
 import { isEqual } from 'lodash-es'
 import { LiteralColor } from '../../theme/types'
+import { drawRoundedRect } from '../../lib/pixi'
+import { getItemOverlayScale } from '../../view-model/utils'
 
-export type IconName = 'pdf' | 'videoCam' | 'playArrow' | 'volumeUp'
+export type IconName = 'pdf' | 'videoCam' | 'playArrow' | 'volumeUp' | 'book' | 'webpage'
 
 export interface ThumbnailIconProps {
   iconName: IconName
@@ -37,12 +39,15 @@ const ICON_TEXTURE_URLS: Record<IconName, URL> = {
   videoCam: new URL('../../assets/textures/videocam.ktx2', import.meta.url),
   playArrow: new URL('../../assets/textures/play-arrow.ktx2', import.meta.url),
   volumeUp: new URL('../../assets/textures/volume-up.ktx2', import.meta.url),
+  book: new URL('../../assets/textures/menu_book.ktx2', import.meta.url),
+  webpage: new URL('../../assets/textures/globe.ktx2', import.meta.url),
 }
 
 const DEFAULT_ICON_SIZE = 24
 
 export class ThumbnailContainer extends Container {
   private static iconTextures?: Record<IconName, Texture>
+  private static placeholderTexture = Texture.WHITE
 
   private state: ThumbnailContainerState
   private shadowSprite?: NineSliceSprite
@@ -52,7 +57,7 @@ export class ThumbnailContainer extends Container {
   private iconBackground?: Graphics
   private iconSprite?: Sprite
   private renderedIconProps?: ThumbnailIconProps
-  private renderedIconBackgroundProps?: { color: LiteralColor; radius: number }
+  private renderedIconBackgroundProps?: { color: LiteralColor; size: number }
 
   constructor(
     texture: Texture | null,
@@ -99,8 +104,10 @@ export class ThumbnailContainer extends Container {
     this.iconTextures = undefined
   }
 
-  private createSprite(texture: Texture) {
-    const sprite = new Sprite(texture)
+  private createSprite(texture: Texture | 'placeholder') {
+    const sprite = new Sprite(
+      texture === 'placeholder' ? ThumbnailContainer.placeholderTexture : texture,
+    )
     sprite.width = this.state.size.width
     sprite.height = this.state.size.height
     return sprite
@@ -117,7 +124,7 @@ export class ThumbnailContainer extends Container {
     this.updateIconPosition()
   }
 
-  set texture(newTexture: Texture | null) {
+  set texture(newTexture: Texture | 'placeholder' | null) {
     if (this.thumbnail) {
       this.thumbnailContainer.removeChild(this.thumbnail)
       this.thumbnail.destroy()
@@ -126,8 +133,8 @@ export class ThumbnailContainer extends Container {
     if (newTexture) {
       this.thumbnail = this.createSprite(newTexture)
       this.thumbnailContainer.addChild(this.thumbnail)
+      this.fitThumbnail()
     }
-    this.fitThumbnail()
   }
 
   private roundCorners() {
@@ -190,8 +197,8 @@ export class ThumbnailContainer extends Container {
 
   private updateIconBackground() {
     const { icon } = this.state
-    const radius = (icon?.props.size ?? DEFAULT_ICON_SIZE) / 2
-    const newProps = icon?.background ? { color: icon.background, radius } : undefined
+    const size = (icon?.props.size ?? DEFAULT_ICON_SIZE) / 2
+    const newProps = icon?.background ? { color: icon.background, size } : undefined
     if (isEqual(newProps, this.renderedIconBackgroundProps)) return
 
     this.renderedIconBackgroundProps = newProps
@@ -208,7 +215,9 @@ export class ThumbnailContainer extends Container {
       this.thumbnailContainer.addChild(this.iconBackground)
     }
 
-    this.iconBackground.circle(radius, radius, radius).fill({ color: newProps.color, alpha: 0.5 })
+    drawRoundedRect(this.iconBackground, 0, 0, size, size, {
+      bottomLeft: this.state.borderRadius * Math.max(1, getItemOverlayScale(this.state.size)),
+    }).fill({ color: newProps.color, alpha: 0.5 })
   }
 
   private updateIconTexture() {
@@ -233,15 +242,17 @@ export class ThumbnailContainer extends Container {
   }
 
   private updateIconPosition() {
-    const center = new Rectangle(ORIGIN, this.state.size).center
+    const backgroundSize = this.renderedIconBackgroundProps?.size
 
     if (this.iconBackground) {
-      const radius = this.renderedIconBackgroundProps!.radius
-      this.iconBackground.position.set(center.x - radius, center.y - radius)
+      this.iconBackground.position.set(this.state.size.width - backgroundSize!, 0)
     }
     if (this.iconSprite) {
       this.iconSprite.anchor = 0.5
-      this.iconSprite.position = center
+      this.iconSprite.position = {
+        x: this.state.size.width - backgroundSize! / 2,
+        y: backgroundSize! / 2,
+      }
     }
   }
 }

@@ -25,6 +25,14 @@ export interface Viewport {
   readonly lastUpdateTimestamp?: number
   readonly ready: boolean
   readonly isZoomingLocked?: boolean
+  //Minimum ratio of the viewport, which should be filled with content when zoomed out.
+  //- Example value: 0.75 (requires 75% of content visible)
+  readonly minZoomContentRatio: number
+
+  //Maximum fraction of the viewport dimensions allowed to overflow outside the content bounds when panning.
+  //Restricts how far the canvas can be translated relative to the screen.
+  //- Example value: 0.55 (Max 55% off-canvas - guarantees at least 45% of the screen covers content)
+  readonly maxTranslationRatio: number
 }
 
 export type PointerMode = 'pan' | 'select'
@@ -129,6 +137,7 @@ export interface TapestryViewModel<
    * these optimizations are used when displaying the tapestry or not.
    */
   readonly disableOptimizations?: boolean
+  readonly thumbnailsInitialized?: boolean
   readonly hideControls?: boolean
   readonly outlinedItemId?: string
   readonly searchTerm?: string | null

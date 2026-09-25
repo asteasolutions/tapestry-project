@@ -1,5 +1,5 @@
 import { WritableDraft } from 'immer'
-import { chunk, zip } from 'lodash-es'
+import { chunk, maxBy, zip } from 'lodash-es'
 import {
   getBoundingRectangle,
   MULTISELECT_RECTANGLE_PADDING,
@@ -22,6 +22,7 @@ import {
   EditableItemViewModel,
   EditablePresentationStepViewModel,
   EditableRelViewModel,
+  EditableTapestryViewModel,
   ItemUIComponent,
   MultiselectionUIComponent,
   SelectionResizeState,
@@ -30,6 +31,10 @@ import {
 import { DeserializeResult } from '../../../stage/data-transfer-handler'
 import { addAndPositionItems } from './store-commands/items'
 import { setIAImport, setLargeFiles, setSnackbar } from './store-commands/tapestry'
+import { Store } from 'tapestry-core-client/src/lib/store'
+import { idMapToArray } from 'tapestry-core/src/utils'
+
+export const DEFAULT_LAYER = 0
 
 export function getMultiselectRectangle(
   selectionItems: EditableItemViewModel[],
@@ -180,4 +185,9 @@ export async function insertDataTransfer(
       model.pendingRequests--
     })
   }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function getMaxLayer(store: Store<EditableTapestryViewModel, any>) {
+  return maxBy(idMapToArray(store.get('items')), 'dto.layer')?.dto.layer ?? DEFAULT_LAYER
 }

@@ -272,6 +272,11 @@ export function mul(multiplier: number, vector: Vector): Vector {
   }
 }
 
+// angle between the x-axis and v
+export function angleX(v: Vector) {
+  return Math.atan2(v.dy, v.dx)
+}
+
 export function norm(v: Vector) {
   return Math.hypot(v.dx, v.dy)
 }
@@ -326,6 +331,10 @@ export function coordMax(...vectors: Vector[]): Vector {
     dx: Math.max(...vectors.map((v) => v.dx)),
     dy: Math.max(...vectors.map((v) => v.dy)),
   }
+}
+
+export function clampCoords(vector: Vector, min: Vector, max: Vector): Vector {
+  return coordMax(min, coordMin(vector, max))
 }
 
 export function resizeToWidth(size: Size, width: number): Size {

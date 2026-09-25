@@ -40,7 +40,7 @@
         content: attr(data-placeholder);
         float: left;
         height: 0;
-        font-size: 32px;
+        font-size: 16px;
         font-weight: 400;
         pointer-events: none;
       }

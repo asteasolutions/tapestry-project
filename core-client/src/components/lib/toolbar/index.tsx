@@ -76,13 +76,19 @@ export interface ToolbarRowProps {
   selectedSubmenu?: string[]
 }
 
+function filterDuplicateSeparators(items: MenuItem[]) {
+  return items.filter(
+    (item, index) => index === 0 || item !== 'separator' || items[index - 1] !== 'separator',
+  )
+}
+
 function ToolbarRow({ items, selectedSubmenu }: ToolbarRowProps) {
   const [openSubmenu, ...openNestedSubmenus] = selectedSubmenu ?? []
 
   return (
     <div className="toolbar-row">
       {Array.isArray(items)
-        ? compact(items).map((item, index) =>
+        ? filterDuplicateSeparators(compact(items)).map((item, index) =>
             hasSubmenu(item) ? (
               <div className={clsx('submenu-item', item.id)} key={index}>
                 <SimpleMenuItem ui={item.ui} />

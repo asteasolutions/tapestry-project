@@ -178,6 +178,7 @@ function createTapestryAssistantTools({ tapestryId, userId }: AIChatContext): To
                 y: row * (size.height + margin),
               },
               dropShadow: true,
+              layer: 0,
             }
           })
           const tapestryId = await createTapestry(

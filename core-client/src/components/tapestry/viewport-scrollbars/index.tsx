@@ -5,17 +5,20 @@ import { idMapToArray } from 'tapestry-core/src/utils'
 import { useTapestryConfig } from '..'
 import { getScrollbarPositions } from '../../../../src/view-model/utils'
 import styles from './styles.module.css'
+import { useRecentlyChanged } from '../hooks/use-recently-changed'
+
+const SCROLLBAR_DISAPPEAR_DELAY = 500
 
 export function ViewportScrollbars() {
   const { useStoreData } = useTapestryConfig()
-
   const { viewport, items } = useStoreData(['viewport', 'items'])
+
   const scrollbarPositionsRef = useRef<ReturnType<typeof getScrollbarPositions>>({
     horizontal: { offset: 0, size: 0 },
     vertical: { offset: 0, size: 0 },
   })
 
-  const isVisible = Date.now() - (viewport.lastUpdateTimestamp ?? 0) < 500
+  const isVisible = useRecentlyChanged(viewport.lastUpdateTimestamp, SCROLLBAR_DISAPPEAR_DELAY)
 
   // Avoid heavy scrollbar position re-calculation in case the scrollbars are not visible
   if (isVisible) {

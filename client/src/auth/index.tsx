@@ -1,12 +1,5 @@
-import { ComponentType, createElement, useState } from 'react'
-import { config } from '../config'
+import { useState } from 'react'
 import { AuthService } from '../services/auth'
-import { GoogleAuthService } from './google/service'
-import { IAAuthService } from './internet-archive/service'
-import { OrcidAuthService } from './orcid/service'
-import { IALoginButton } from './internet-archive/login-button'
-import { GoogleLoginButton } from './google/login-button'
-import { OrcidLoginButton } from './orcid/login-button'
 import { useObservable } from 'tapestry-core-client/src/components/lib/hooks/use-observable'
 import { SimpleModal } from 'tapestry-core-client/src/components/lib/modal/index'
 import { Input } from 'tapestry-core-client/src/components/lib/input/index'
@@ -14,20 +7,10 @@ import { useAsyncAction } from 'tapestry-core-client/src/components/lib/hooks/us
 import { Text } from 'tapestry-core-client/src/components/lib/text/index'
 import { uniqueId } from 'lodash-es'
 import { getErrorMessage } from '../errors'
+import { LoginMenu } from '../components/auth-dialog'
+import { AUTH_PROVIDERS } from './providers-registry'
 
-type ProviderName = typeof config.authProvider
-
-const AUTH_SERVICES: Record<ProviderName, new () => AuthService> = {
-  ia: IAAuthService,
-  google: GoogleAuthService,
-  orcid: OrcidAuthService,
-}
-
-const LOGIN_BUTTONS: Record<ProviderName, ComponentType<LoginButtonProps>> = {
-  ia: IALoginButton,
-  google: GoogleLoginButton,
-  orcid: OrcidLoginButton,
-}
+export const auth = new AuthService()
 
 interface RegistrationModalProps {
   initialName: string
@@ -70,17 +53,19 @@ function RegistrationModal({ initialName }: RegistrationModalProps) {
   )
 }
 
-interface LoginButtonProps {
-  className?: string
-}
-
-export const auth = new AUTH_SERVICES[config.authProvider]()
 export function LoginButton() {
   const { pendingRegistration } = useObservable(auth)
 
+  const isSingleProvider = AUTH_PROVIDERS.length === 1
+  const SingleProviderComponent = AUTH_PROVIDERS.length === 1 ? AUTH_PROVIDERS[0].component : null
+
   return (
     <>
-      {createElement(LOGIN_BUTTONS[config.authProvider])}
+      {SingleProviderComponent ? (
+        <SingleProviderComponent isSingleProvider={isSingleProvider} />
+      ) : (
+        <LoginMenu />
+      )}
       {pendingRegistration && (
         <RegistrationModal initialName={pendingRegistration.usernameSuggestion} />
       )}

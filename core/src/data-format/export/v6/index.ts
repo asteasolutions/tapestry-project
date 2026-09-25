@@ -4,9 +4,9 @@ import {
   MediaItemSchema as MediaItemSchemaV5,
   ActionButtonItemSchema as ActionButtonItemSchemaV5,
 } from '../v5'
-import { TextItemSchema as TextItemSchemaV4 } from '../v4'
+import { TextItemSchemaV4 as TextItemSchemaV4 } from '../v4'
 
-const ActionButtonItemSchema = z.object({
+export const ActionButtonItemSchemaV6 = z.object({
   ...ActionButtonItemSchemaV5.shape,
   actionType: z.enum(['internalLink', 'externalLink']),
 })
@@ -14,7 +14,7 @@ const ActionButtonItemSchema = z.object({
 const ItemSchema = z.discriminatedUnion('type', [
   ...MediaItemSchemaV5.options,
   TextItemSchemaV4,
-  ActionButtonItemSchema,
+  ActionButtonItemSchemaV6,
 ])
 
 export const ExportV6Schema = z.object({

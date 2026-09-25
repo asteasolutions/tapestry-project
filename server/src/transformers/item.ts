@@ -4,7 +4,7 @@ import { HexColor } from 'tapestry-core/src/data-format/schemas/common.js'
 import { ItemDto } from 'tapestry-shared/src/data-transfer/resources/dtos/item.js'
 import { extractInternallyHostedS3Key, s3Service } from '../services/s3-service.js'
 import { isHTTPURL } from 'tapestry-core/src/utils.js'
-import { MEDIA_ITEM_TYPES } from 'tapestry-core/src/data-format/schemas/item.js'
+import { ACTION_ITEM_TYPES, MEDIA_ITEM_TYPES } from 'tapestry-core/src/data-format/schemas/item.js'
 import { ImageAssetRenditionDto } from 'tapestry-shared/src/data-transfer/resources/dtos/image-assets.js'
 
 export async function parseDBItemSource(source: string) {
@@ -50,6 +50,7 @@ export async function itemDbToDto(dbItem: Item): Promise<ItemDto> {
     groupId: dbItem.groupId,
     notes: dbItem.notes,
     scheduledThumbnailProcessing: dbItem.scheduledThumbnailProcessing,
+    layer: dbItem.layer,
   }
   const { type } = dbItem
 
@@ -66,7 +67,7 @@ export async function itemDbToDto(dbItem: Item): Promise<ItemDto> {
     return {
       ...commonProps,
       type,
-      actionType: dbItem.actionType!,
+      actionType: dbItem.actionType,
       action: dbItem.action,
       text: dbItem.text!,
       backgroundColor: dbItem.backgroundColor as HexColor | null,
@@ -94,7 +95,17 @@ export async function itemDbToDto(dbItem: Item): Promise<ItemDto> {
     }
   }
 
-  if (type === 'image' || type === 'book') {
+  if (type === 'image') {
+    return {
+      ...commonProps,
+      type,
+      ...commonMediaItemProps,
+      actionType: dbItem.actionType,
+      action: dbItem.action,
+    }
+  }
+
+  if (type === 'book') {
     return {
       ...commonProps,
       type,
@@ -136,6 +147,7 @@ const DB_TO_DTO_FIELD_MAP: Record<ItemDBField, string> = {
   defaultPage: 'defaultPage',
   actionType: 'actionType',
   action: 'action',
+  layer: 'layer',
 }
 
 export function itemDtoToDb(item: Partial<ItemDto>): Item
@@ -152,7 +164,8 @@ export function itemDtoToDb<O extends ItemDBField>(
     if ((omit as string[] | undefined)?.includes(field)) return false
 
     if (field === 'text' || field === 'backgroundColor') return !isMediaItem
-    if (field === 'action' || field === 'actionType') return item.type === 'actionButton'
+    if (field === 'action' || field === 'actionType')
+      return (ACTION_ITEM_TYPES as (string | undefined)[]).includes(item.type)
     if (field === 'source') return isMediaItem
     if (field === 'startTime' || field === 'stopTime')
       return item.type === 'video' || item.type === 'audio'

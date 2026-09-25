@@ -14,6 +14,11 @@ import { Range } from 'tapestry-core/src/lib/algebra.js'
 import { ItemViewModel, RelViewModel, RelEndpointName } from './index.js'
 import { IdMap } from 'tapestry-core/src/utils.js'
 import { clamp } from 'lodash-es'
+import {
+  getArrowheadCenterOffset,
+  getArrowheadCornerRadius,
+  getArrowheadTriangleRadius,
+} from '../stage/renderer/rel-renderer.js'
 
 export const REL_ARROWHEAD_SIZES: Record<LineWeight, number> = {
   light: 15,
@@ -49,16 +54,26 @@ interface CurveParams {
   from: CurveEndpointParams
   to: CurveEndpointParams
   controlPointOffsetRange: Range
-  lineWidth: number
+  arrowheadSize?: number
 }
 
-export function computeCurvePoints({ from, to, controlPointOffsetRange, lineWidth }: CurveParams) {
+export function computeCurvePoints({
+  from,
+  to,
+  controlPointOffsetRange,
+  arrowheadSize = 0,
+}: CurveParams) {
   const curvePoints: Partial<CurvePoints> = {}
 
   const endpointDistance = distance(from.point, to.point)
 
   function computeSemiCurvePoints({ point, hasArrow }: CurveEndpointParams, direction: Vector) {
-    const curveEndpoint = hasArrow ? translate(point, mul(lineWidth / 2, direction)) : point
+    const arrowOffset =
+      getArrowheadTriangleRadius(arrowheadSize) / 2 +
+      getArrowheadCenterOffset(arrowheadSize, getArrowheadCornerRadius(arrowheadSize)) -
+      1
+
+    const curveEndpoint = hasArrow ? translate(point, mul(arrowOffset, direction)) : point
     const dist = norm(mul(endpointDistance, direction)) / 3
     const controlPoint = translate(
       curveEndpoint,
@@ -108,6 +123,7 @@ export function computeCurvePoints({ from, to, controlPointOffsetRange, lineWidt
 
 export function computeRelCurvePoints<R extends RelViewModel>(
   relViewModel: R,
+  relScale: number,
   items: IdMap<ItemViewModel>,
   getArrowEndpoint = (relViewModel: R, endpoint: 'from' | 'to') =>
     defaultGetArrowEndpoint(relViewModel, endpoint, items),
@@ -123,15 +139,15 @@ export function computeRelCurvePoints<R extends RelViewModel>(
     from: {
       point: getArrowEndpoint(relViewModel, 'from'),
       direction: computeAnchoredCurveDirection(relViewModel, 'from'),
-      hasArrow: from.arrowhead === 'none',
+      hasArrow: from.arrowhead === 'arrow',
     },
     to: {
       point: getArrowEndpoint(relViewModel, 'to'),
       direction: computeAnchoredCurveDirection(relViewModel, 'to'),
-      hasArrow: to.arrowhead === 'none',
+      hasArrow: to.arrowhead === 'arrow',
     },
     controlPointOffsetRange,
-    lineWidth: REL_LINE_WIDTHS[weight],
+    arrowheadSize: REL_ARROWHEAD_SIZES[weight] * relScale,
   })
 }
 

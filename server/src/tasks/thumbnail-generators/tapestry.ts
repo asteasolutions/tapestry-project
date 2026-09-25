@@ -8,22 +8,11 @@ import { generateThumbnail } from './image.js'
 import { Page, ScreenshotOptions } from 'puppeteer'
 import { Item } from '@prisma/client'
 import { innerFit } from 'tapestry-core/src/lib/geometry.js'
-import { initWebpage, inNewBrowserPage, WebpageConfig } from '../utils.js'
+import { initWebpage, inNewBrowserPage, pageEval, WebpageConfig } from '../utils.js'
 
+// the width of the thumbnail as displayed in the UI * max desktop DPI
+const TAPESTRY_THUMBNAIL_WIDTH = 500 * 2
 const MAX_ITEM_SIZE = 2000
-
-// Helper function that wraps Puppeteer's page.evaluate to avoid TS errors for missing browser (DOM) types
-async function pageEval<T extends unknown[], R>(
-  page: Page,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  callback: (global: any, ...args: T) => R,
-  ...args: T
-) {
-  // @ts-expect-error This will be executed in a browser context
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return
-  const globalHandle = await page.evaluateHandle(() => window)
-  return page.evaluate(callback, globalHandle, ...args)
-}
 
 async function takeItemScreenshot(page: Page, item: Item) {
   const size = innerFit(item, { width: MAX_ITEM_SIZE, height: MAX_ITEM_SIZE })
@@ -96,7 +85,7 @@ export async function* takeTapestryScreenshots(
   tapestryPath: string,
   userId: string,
   site: Omit<WebpageConfig, 'url' | 'setupContext'>,
-  options: ScreenshotOptions,
+  options?: ScreenshotOptions,
 ) {
   const url = new URL(tapestryPath, config.server.viewerUrl)
   url.searchParams.set('deopt', '1')
@@ -127,7 +116,9 @@ export async function* takeTapestryScreenshots(
 
     // First take a screenshot of the whole tapestry
     const screenshot = await page.screenshot(options)
-    let item = yield await generateThumbnail(Buffer.from(screenshot))
+    let item = yield await generateThumbnail(Buffer.from(screenshot), {
+      maxDim: TAPESTRY_THUMBNAIL_WIDTH,
+    })
 
     if (!item) return
 

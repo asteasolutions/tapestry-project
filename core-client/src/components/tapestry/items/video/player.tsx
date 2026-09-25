@@ -14,7 +14,7 @@ import { useAutoplay } from '../../hooks/use-autoplay'
 import Player from 'video.js/dist/types/player'
 import { Id } from 'tapestry-core/src/data-format/schemas/common'
 import { useTapestryConfig } from '../..'
-import { VideoPlayOverlay } from '../../video-play-overlay'
+import { IconOverlay } from '../../video-play-overlay'
 import styles from './styles.module.css'
 import { getPrimaryThumbnail } from '../../../../view-model/utils'
 import { setItemIsPlaying } from '../../../../view-model/store-commands/tapestry'
@@ -128,9 +128,7 @@ export const VideoItemPlayer = memo(
             }}
           />
         )}
-        {!isInteractive && player?.paused() && (
-          <VideoPlayOverlay itemSize={dto.size} type="play_arrow" />
-        )}
+        {!isInteractive && player?.paused() && <IconOverlay itemSize={dto.size} icon="videocam" />}
       </div>
     )
   },

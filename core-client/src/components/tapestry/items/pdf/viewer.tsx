@@ -21,12 +21,12 @@ import { useAsync } from '../../../lib/hooks/use-async'
 import { useDebounced } from '../../../lib/hooks/use-debounced'
 import { useIsIntersecting } from '../../../lib/hooks/use-intersection-observer'
 import { usePropRef } from '../../../lib/hooks/use-prop-ref'
-import { Icon } from '../../../lib/icon/index'
 import { LoadingSpinner } from '../../../lib/loading-spinner/index'
 import { ItemPlaceholder } from '../../item-placeholder'
 import styles from './styles.module.css'
 import { useStartPage } from '../../hooks/use-start-page'
 import { getPrimaryThumbnail } from '../../../../view-model/utils'
+import { IconOverlay } from '../../video-play-overlay'
 
 const PDF_OPTIONS: Options = {
   disableStream: true,
@@ -123,7 +123,9 @@ export function PdfItemViewer({ id, onDocumentLoaded, onPageChanged, apiRef }: P
 
   useImperativeHandle(apiRef, () => ({ navigateToPage }))
 
-  useEffect(() => navigateToPage(initialPage, 'instant'), [initialPage, navigateToPage])
+  useEffect(() => {
+    navigateToPage(initialPage, 'instant')
+  }, [initialPage, navigateToPage])
 
   return (
     <>
@@ -169,7 +171,7 @@ export function PdfItemViewer({ id, onDocumentLoaded, onPageChanged, apiRef }: P
             }}
             icon="picture_as_pdf"
             thumbnailSrc={getPrimaryThumbnail(dto)}
-            thumbnailOverlay={<Icon icon="picture_as_pdf" className={styles.overlay} />}
+            thumbnailOverlay={<IconOverlay itemSize={dto.size} icon="picture_as_pdf" />}
           >
             Click to load
           </ItemPlaceholder>

@@ -97,3 +97,43 @@ export function drawDashedPolyline(graphics: Graphics, points: Point[], dash: nu
     }
   }
 }
+
+export function drawRoundedRect(
+  graphics: Graphics,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  borderRadius: {
+    topLeft?: number
+    topRight?: number
+    bottomRight?: number
+    bottomLeft?: number
+  },
+) {
+  const { topLeft = 0, topRight = 0, bottomRight = 0, bottomLeft = 0 } = borderRadius
+
+  graphics.moveTo(x + topLeft, y)
+
+  graphics.lineTo(x + width - topRight, y)
+  if (topRight > 0) {
+    graphics.arcTo(x + width, y, x + width, y + topRight, topRight)
+  }
+
+  graphics.lineTo(x + width, y + height - bottomRight)
+  if (bottomRight > 0) {
+    graphics.arcTo(x + width, y + height, x + width - bottomRight, y + height, bottomRight)
+  }
+
+  graphics.lineTo(x + bottomLeft, y + height)
+  if (bottomLeft > 0) {
+    graphics.arcTo(x, y + height, x, y + height - bottomLeft, bottomLeft)
+  }
+
+  graphics.lineTo(x, y + topLeft)
+  if (topLeft > 0) {
+    graphics.arcTo(x, y, x + topLeft, y, topLeft)
+  }
+
+  return graphics.closePath()
+}

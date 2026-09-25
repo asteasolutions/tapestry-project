@@ -29,6 +29,7 @@ function ForkProcessDialog({ jobId, onClose }: ForkProcessDialogProps) {
     action: () => resource('tapestryCreateJob').read({ id: jobId }),
     interval: 1000,
     asyncActionOptions: { clearDataOnReload: false },
+    leading: true,
   })
   return (
     <Modal onClose={onClose} title="Copying Tapestry">

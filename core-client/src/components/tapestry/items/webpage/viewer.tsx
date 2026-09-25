@@ -28,9 +28,13 @@ export const ALLOWED_ORIGINS = [
   'https://player.vimeo.com',
 ]
 
+const ALLOWED_DOMAINS = ['.wikipedia.org']
+
 function sameOriginAllowed(url: string) {
-  const { origin } = new URL(url)
-  return ALLOWED_ORIGINS.includes(origin)
+  const { origin, hostname } = new URL(url)
+  return (
+    ALLOWED_ORIGINS.includes(origin) || ALLOWED_DOMAINS.some((domain) => hostname.endsWith(domain))
+  )
 }
 
 function useSandbox(src: string) {

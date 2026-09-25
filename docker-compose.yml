@@ -4,7 +4,7 @@ services:
       dockerfile: ./Dockerfile.client
       args:
         VITE_API_URL: https://${HOST}-api.asteasolutions.net/api
-        VITE_AUTH_PROVIDER: ${AUTH_PROVIDER}
+        VITE_AUTH_PROVIDERS: ${AUTH_PROVIDERS}
         VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
         VITE_ORCID_CLIENT_ID: ${ORCID_CLIENT_ID}
         VITE_ORCID_BASE_URL: ${ORCID_BASE_URL}

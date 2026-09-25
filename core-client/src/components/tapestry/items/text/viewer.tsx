@@ -2,7 +2,7 @@ import clsx from 'clsx'
 import { RefObject, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { Icon } from 'tapestry-core-client/src/components/lib/icon/index'
 import { useFocusElement } from 'tapestry-core-client/src/components/tapestry/hooks/use-focus-element'
-import { iterateParents, matchHighlight, MatchRanges } from 'tapestry-core-client/src/lib/dom'
+import { matchHighlight, MatchRanges } from 'tapestry-core-client/src/lib/dom'
 import { TRANSPARENT } from 'tapestry-core-client/src/theme'
 import { Id } from 'tapestry-core/src/data-format/schemas/common'
 import { IdMap } from 'tapestry-core/src/utils'
@@ -28,22 +28,38 @@ export function elementIdFromLink(
   const currentTapestryPath = `${location.origin}${location.pathname}`.replace(/(\/edit)?$/, '')
   return link.startsWith(currentTapestryPath) && !!element ? elementId : null
 }
+const SCROLL_TOLERANCE_PX = 20
+const SCROLL_INDICATOR_MIN_SIZE = 24
+const SCROLL_INDICATOR_RATIO = 0.03
 
 function useHasScroll(editorRef: RefObject<RichTextEditorApi | undefined>) {
-  const [hasScroll, setHasScroll] = useState(compute)
+  const [hasScroll, setHasScroll] = useState(false)
   function compute() {
     const editor = editorRef.current
     if (!editor) {
       return false
     }
-    return editor.editor().view.dom.scrollHeight > editor.editor().view.dom.clientHeight
+    const { scrollHeight, clientHeight } = editor.editor().view.dom
+    return scrollHeight - clientHeight > SCROLL_TOLERANCE_PX
   }
-  return { hasScroll, check: () => setHasScroll(compute()) }
+
+  function check() {
+    void document.fonts.ready.then(() => setHasScroll(compute()))
+  }
+
+  return { hasScroll, check }
 }
 
 export interface TextItemViewerProps extends Partial<RichTextEditorProps> {
   id: Id
   preventInternalLinkHandling?: boolean
+}
+
+function getScrollIndicatorSize(itemHeight: number, itemWidth: number) {
+  return Math.max(
+    SCROLL_INDICATOR_MIN_SIZE,
+    SCROLL_INDICATOR_RATIO * Math.max(itemHeight, itemWidth),
+  )
 }
 
 export function TextItemViewer({
@@ -109,6 +125,7 @@ export function TextItemViewer({
   }, [isInteractiveElement, wasInteractiveElement])
 
   const { hasScroll, check } = useHasScroll(editorAPI)
+  const indicatorSize = getScrollIndicatorSize(dto.size.height, dto.size.width)
 
   // TODO: Updating tiptap will allow us to render a router Link in the editor
   // instead of manually handling link clicks
@@ -151,12 +168,12 @@ export function TextItemViewer({
             events?.onSelectionChanged?.(state)
           },
           onClick: (e) => {
-            const maybeAnchor = iterateParents(e.target as HTMLElement, (e) => e.tagName !== 'A')
+            const maybeAnchor = (e.target as HTMLElement).closest('a')
             if (
               maybeAnchor &&
               !selection?.text &&
               !preventInternalLinkHandling &&
-              tryNavigatingToElement(maybeAnchor as HTMLAnchorElement)
+              tryNavigatingToElement(maybeAnchor)
             ) {
               e.preventDefault()
               return
@@ -169,7 +186,15 @@ export function TextItemViewer({
         {...rteProps}
       />
       {!isInteractiveElement && hasScroll && (
-        <Icon icon="unfold_more" className={styles.scrollIndicator} />
+        <Icon
+          icon="unfold_more"
+          className={styles.scrollIndicator}
+          style={
+            {
+              '--scroll-indicator-size': `${indicatorSize}px`,
+            } as React.CSSProperties
+          }
+        />
       )}
     </>
   )

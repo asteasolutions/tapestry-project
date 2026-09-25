@@ -101,7 +101,7 @@ export const WebpageItem = memo(({ id }: TapestryItemProps) => {
   const webSourceParams = parseWebSource(dto)
   const { webpageType } = webSourceParams
 
-  const { conversionStarted, convertToPDFToolbarElement } = useConvertToPDF(id)
+  const { conversionStarted, convertToPDFMenuItem } = useConvertToPDF(id)
 
   const dispatch = useDispatch()
   const patch = ({ webpageType, data }: PatchSourceArgument) =>
@@ -190,15 +190,12 @@ export const WebpageItem = memo(({ id }: TapestryItemProps) => {
             'separator',
             refreshButton,
             'separator',
-            ...(!(webpageType && PLAYABLE_WEBPAGE_TYPES.includes(webpageType))
-              ? ([convertToPDFToolbarElement, 'separator'] as const)
-              : []),
             ...controls,
           ]
         : [refreshButton, 'separator', ...controls]
     },
-    moreMenuItems:
-      webpageType === 'youtube' || webpageType === 'vimeo'
+    moreMenuItems: [
+      ...(webpageType === 'youtube' || webpageType === 'vimeo'
         ? [
             <TimeInput
               onChange={(value) => patch({ webpageType: webpageType, data: { startTime: value } })}
@@ -223,7 +220,11 @@ export const WebpageItem = memo(({ id }: TapestryItemProps) => {
                 value={startTime ?? null}
               />,
             ]
-          : undefined,
+          : []),
+      ...(!(webpageType && PLAYABLE_WEBPAGE_TYPES.includes(webpageType))
+        ? [convertToPDFMenuItem]
+        : []),
+    ],
   })
 
   return (

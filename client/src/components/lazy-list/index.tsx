@@ -20,7 +20,10 @@ export interface LazyListProps<T extends WithId> extends Partial<LazyListLoaderC
   // Normally the lazy list starts with the first item at the top and the user scrolls down to view more items.
   // If reversed, the list will start with the first item at the bottom and the user needs to scroll up instead.
   reversed?: boolean
+  segmentLength?: number
+  autoScrollFirstElements?: boolean
   className?: string
+  style?: React.CSSProperties
   onLoaderInitialized?: (loader: LazyListLoader<T>) => void
   header?: ReactNode
 }
@@ -49,7 +52,10 @@ export function LazyList<T extends WithId>({
   emptyPlaceholder,
   loadingIndicator,
   reversed,
+  segmentLength,
+  autoScrollFirstElements,
   className,
+  style,
   onLoaderInitialized,
   header,
   ...loaderConfigInit
@@ -62,8 +68,8 @@ export function LazyList<T extends WithId>({
   const initCallbackRef = usePropRef(onLoaderInitialized)
 
   useEffect(() => {
-    void loader.setRequestItems(requestItems)
-  }, [requestItems, loader])
+    void loader.setRequestItems(requestItems, segmentLength)
+  }, [requestItems, segmentLength, loader])
 
   useEffect(() => {
     initCallbackRef.current?.(loader)
@@ -75,7 +81,7 @@ export function LazyList<T extends WithId>({
     const scrolledToFirstElement = reversed
       ? itemOffsetsRef.current.bottomOffset < AUTOSCROLL_EDGE_TOLERANCE
       : list.scrollTop < AUTOSCROLL_EDGE_TOLERANCE
-    if (scrolledToFirstElement && skip === 0) {
+    if (autoScrollFirstElements && scrolledToFirstElement && skip === 0) {
       // If the list is scrolled to the first item, auto-scroll to the edge
       list.scrollTo({ top: reversed ? list.scrollHeight - list.clientHeight : 0 })
     } else {
@@ -95,7 +101,7 @@ export function LazyList<T extends WithId>({
       )
       list.scrollTo({ top: list.scrollTop - mostCommonDisplacement })
     }
-  }, [data, skip, reversed])
+  }, [data, skip, reversed, autoScrollFirstElements])
 
   const items = reversed ? data.toReversed() : data
 
@@ -114,7 +120,7 @@ export function LazyList<T extends WithId>({
   const loadingAfter = data.length + skip < total
 
   return (
-    <div ref={listRef} onScroll={onScroll} className={clsx('lazy-list', className)}>
+    <div ref={listRef} onScroll={onScroll} className={clsx('lazy-list', className)} style={style}>
       {header}
       {(reversed ? loadingAfter : loadingBefore) && <LoadingDots />}
       <div className="list-items-container">

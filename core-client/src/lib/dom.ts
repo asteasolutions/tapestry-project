@@ -31,17 +31,6 @@ export function capturesPointerEvents(element: HTMLElement | null) {
   return !!element?.closest('[data-captures-pointer-events]')
 }
 
-export function iterateParents(
-  element: HTMLElement | null | undefined,
-  cb: (el: HTMLElement) => boolean,
-) {
-  let node = element
-  while (node && cb(node)) {
-    node = node.parentElement
-  }
-  return node
-}
-
 export function hasRangeSelection() {
   return document.getSelection()?.type === 'Range'
 }

@@ -21,21 +21,22 @@ The application is configured via environment variables. The env variables for t
 
 #### Authentication Providers
 
-The application doesn't have built-in user registration and authentication capabilities and depends on external authentication providers. Currently there are three supported providers: Internet Archive, Google, and ORCID. The application can use one of them at a time. This is configured via the `VITE_AUTH_PROVIDER` variable in the `client` project.
+The application doesn't have built-in user registration and authentication capabilities and depends on external authentication providers. Currently there are three supported providers: Internet Archive, Google, and ORCID. The application can use one or more of them. This is configured via the `VITE_AUTH_PROVIDERS` variable in the `client` project. To set multiple,
+separate them with a comma like this `google,ia,orcid`.
 
 ##### Internet Archive Login
 
-If `VITE_AUTH_PROVIDER` is set to `ia`, the Tapestries frontend will provide a username/password form for users to log in. In this form users can enter any valid credentials for [Internet Archive](https://archive.org). No further configuration is necessary for this to work.
+If `VITE_AUTH_PROVIDERS` is set to `ia`, the Tapestries frontend will provide a username/password form for users to log in. In this form users can enter any valid credentials for [Internet Archive](https://archive.org). No further configuration is necessary for this to work.
 
 It is also possible to configure the Tapestry application to use shared sessions with `archive.org`, i.e. users who have already logged into `archive.org` get logged into Tapestries automatically. For this purpose, the Tapestry application needs to be deployed to a subdomain of `archive.org` and the `IA_ACCOUNT_ID` and `IA_SECRET` env variables for the server need to be configured with an account that has permissions to use the IA xauthn API.
 
 ##### Google Login
 
-If `VITE_AUTH_PROVIDER` is set to `google`, the Tapestries frontend will display a "Sign in With Google" button. The application uses Google Identity Services for this workflow and needs a valid OAuth2.0 client ID to be provided via the `GOOGLE_CLIENT_ID` env variable for the backend and `VITE_GOOGLE_CLIENT_ID` for the frontend. Follow this guide to obtain a Google Client ID: https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid#get_your_google_api_client_id
+If `VITE_AUTH_PROVIDERS` is set to `google`, the Tapestries frontend will display a "Sign in With Google" button. The application uses Google Identity Services for this workflow and needs a valid OAuth2.0 client ID to be provided via the `GOOGLE_CLIENT_ID` env variable for the backend and `VITE_GOOGLE_CLIENT_ID` for the frontend. Follow this guide to obtain a Google Client ID: https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid#get_your_google_api_client_id
 
 ##### ORCID Login
 
-If `VITE_AUTH_PROVIDER` is set to `orcid`, the Tapestries frontend will display a "Sign in with ORCID" button. The application uses ORCID's [OAuth 2.0 "Get an authenticated ORCID iD"](https://info.orcid.org/documentation/api-tutorials/api-tutorial-get-and-authenticated-orcid-id/) flow: the frontend redirects the user to ORCID, ORCID redirects back with an authorization code, and the backend exchanges that code for the authenticated ORCID iD. Register an application at https://orcid.org/developer-tools to obtain a client ID and secret, and set the redirect URI to the Tapestries app origin.
+If `VITE_AUTH_PROVIDERS` is set to `orcid`, the Tapestries frontend will display a "Sign in with ORCID" button. The application uses ORCID's [OAuth 2.0 "Get an authenticated ORCID iD"](https://info.orcid.org/documentation/api-tutorials/api-tutorial-get-and-authenticated-orcid-id/) flow: the frontend redirects the user to ORCID, ORCID redirects back with an authorization code, and the backend exchanges that code for the authenticated ORCID iD. Register an application at https://orcid.org/developer-tools to obtain a client ID and secret, and set the redirect URI to the Tapestries app origin.
 
 Configure the backend with `ORCID_CLIENT_ID` and `ORCID_CLIENT_SECRET`, and the frontend with `VITE_ORCID_CLIENT_ID`. By default production ORCID (`https://orcid.org`) is used; set `ORCID_BASE_URL` / `VITE_ORCID_BASE_URL` to `https://sandbox.orcid.org` for testing against the sandbox. The OAuth callback defaults to the app's own origin but can be overridden with `ORCID_REDIRECT_URI` / `VITE_ORCID_REDIRECT_URI`. Note that the `/authenticate` scope only returns the user's ORCID iD and name (no email), so Tapestries derives a stable placeholder email from the ORCID iD.
 

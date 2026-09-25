@@ -1,5 +1,4 @@
 import clsx from 'clsx'
-import { orderBy } from 'lodash-es'
 import { useEffect } from 'react'
 import { Rel } from 'tapestry-core/src/data-format/schemas/rel'
 import { LinearTransform, Rectangle } from 'tapestry-core/src/lib/geometry'
@@ -11,20 +10,52 @@ import {
   useTapestryConfig,
 } from '../../../components/tapestry'
 import { themeToDOMWriter } from '../../../theme/theme-to-dom-writer'
-import { ItemViewModel } from '../../../view-model'
+import { ItemViewModel, TapestryViewModel } from '../../../view-model'
 import { getBounds, isItemInSelection, isMultiselection } from '../../../view-model/utils'
 import { PropsWithStyle } from '../../lib'
 import styles from './styles.module.css'
 import { cssTransformForLocation } from '../../../stage/utils'
 import { ItemType } from 'tapestry-core/src/data-format/schemas/item'
 import { isMac, isMobile } from '../../../lib/user-agent'
+import { sortByPath } from 'tapestry-core/src/lib/array'
 
-export interface TapestryCanvasProps extends PropsWithStyle<
-  object,
-  'root' | 'itemLocator' | 'relLocator'
-> {
-  orderByPosition?: boolean
+const ITEMS_WITHOUT_THUMBNAIL_PLACEHOLDER: ItemType[] = ['text', 'actionButton']
+
+function shouldDisplayThumbnailPlaceholder(item: ItemViewModel) {
+  return (
+    (item.dto.thumbnail?.renditions.length ?? 0) > 0 &&
+    !item.snapshotId &&
+    !ITEMS_WITHOUT_THUMBNAIL_PLACEHOLDER.includes(item.dto.type)
+  )
 }
+
+export function shouldDisplayDom(
+  {
+    disableOptimizations,
+    thumbnailsInitialized,
+    isInteractive,
+  }: Pick<TapestryViewModel, 'disableOptimizations' | 'thumbnailsInitialized'> & {
+    isInteractive: boolean
+  },
+  item: ItemViewModel,
+) {
+  return (
+    disableOptimizations ||
+    isInteractive ||
+    item.isPlaying ||
+    (thumbnailsInitialized ? !item.snapshotId : !shouldDisplayThumbnailPlaceholder(item))
+  )
+}
+
+const PERSIST_ITEM_TYPES: ItemType[] = ['audio', 'video', 'book', 'pdf', 'text', 'webpage']
+
+export function hasPersistedState(item: ItemViewModel) {
+  return (
+    item.hasBeenActive && (PERSIST_ITEM_TYPES as (string | undefined)[]).includes(item.dto.type)
+  )
+}
+
+export const displayPersistedState = !(isMobile && isMac)
 
 interface TapestryElementLocatorProps extends PropsWithStyle {
   id: string
@@ -32,14 +63,6 @@ interface TapestryElementLocatorProps extends PropsWithStyle {
   component: TapestryElementComponent
   transform: LinearTransform
 }
-
-const PERSIST_ITEM_TYPES: ItemType[] = ['audio', 'video', 'book', 'pdf', 'text', 'webpage']
-
-export function hasPersistentState(itemType: ItemType) {
-  return (PERSIST_ITEM_TYPES as (string | undefined)[]).includes(itemType)
-}
-
-export const displayPersistedState = !(isMobile && isMac)
 
 function TapestryElementLocator({
   id,
@@ -49,19 +72,20 @@ function TapestryElementLocator({
   transform,
 }: TapestryElementLocatorProps) {
   const { useStoreData } = useTapestryConfig()
-  const { interactiveElement, selection, disableOptimizations } = useStoreData([
-    'interactiveElement',
-    'selection',
-    'disableOptimizations',
-  ])
+  const { interactiveElement, selection, disableOptimizations, thumbnailsInitialized } =
+    useStoreData([
+      'interactiveElement',
+      'selection',
+      'disableOptimizations',
+      'thumbnailsInitialized',
+    ])
   const item = useStoreData(`items.${id}`)
   const isInteractive = id === interactiveElement?.modelId
   const isInSelection = isItemInSelection(item, selection)
-  const hasBeenActive = !!item?.hasBeenActive
-  const shouldDisplayDom =
-    disableOptimizations || isInteractive || item?.isPlaying || !item?.snapshotId
+  const displayDom =
+    !item || shouldDisplayDom({ disableOptimizations, thumbnailsInitialized, isInteractive }, item)
 
-  if (!shouldDisplayDom && !(hasBeenActive && hasPersistentState(item.dto.type))) {
+  if (!displayDom && !hasPersistedState(item)) {
     // The item should currently be hidden since it is not interactive and a placeholder will be displayed instead.
     // In this case we don't want to keep this item in the DOM at all. The only exception is if the user has interacted
     // with the item and we want to preserve its internal state. In this case we want to keep the item in the DOM but
@@ -72,7 +96,7 @@ function TapestryElementLocator({
   return (
     <div
       style={
-        shouldDisplayDom || displayPersistedState
+        displayDom || displayPersistedState
           ? {
               position: 'absolute',
               top: `${top}px`,
@@ -124,7 +148,9 @@ function getRelBounds(rel: Rel, items: IdMap<ItemViewModel>) {
   return getBounds(rel, { [fromItem.dto.id]: fromItem, [toItem.dto.id]: toItem })
 }
 
-export function TapestryCanvas({ classes, style, orderByPosition }: TapestryCanvasProps) {
+export type TapestryCanvasProps = PropsWithStyle<object, 'root' | 'itemLocator' | 'relLocator'>
+
+export function TapestryCanvas({ classes, style }: TapestryCanvasProps) {
   const { useStoreData, components } = useTapestryConfig()
   const transform = useStoreData('viewport.transform', ['translation', 'scale'])
   const viewportReady = useStoreData('viewport.ready')
@@ -140,9 +166,7 @@ export function TapestryCanvas({ classes, style, orderByPosition }: TapestryCanv
   }
 
   const itemsArray = idMapToArray(items)
-  const orderedItems = orderByPosition
-    ? orderBy(itemsArray, ['dto.position.y', 'dto.position.x'])
-    : itemsArray
+  const orderedItems = sortByPath(itemsArray, 'dto.layer')
 
   function renderItem(item: ItemViewModel) {
     let component: TapestryElementComponent

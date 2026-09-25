@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Item" ADD COLUMN     "layer" INTEGER NOT NULL DEFAULT 0;

@@ -1,7 +1,6 @@
 .collaborators-cursors-container {
   position: absolute;
   inset: 0;
-  transform-origin: 0% 0%;
 
   .cursor-container {
     position: absolute;

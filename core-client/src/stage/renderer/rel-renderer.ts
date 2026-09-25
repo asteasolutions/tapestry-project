@@ -1,6 +1,12 @@
 import { Graphics, Point, StrokeStyle } from 'pixi.js'
 import { TapestryElementRenderer } from './tapestry-element-renderer'
-import { mul, Point as TapestryPoint, translate, Vector } from 'tapestry-core/src/lib/geometry'
+import {
+  angleX,
+  mul,
+  Point as TapestryPoint,
+  translate,
+  Vector,
+} from 'tapestry-core/src/lib/geometry'
 import { Store } from '../../lib/store/index'
 import { IdMap } from 'tapestry-core/src/utils'
 import { isHoveredElement } from '../utils'
@@ -14,13 +20,13 @@ import { ItemViewModel, RelViewModel, TapestryViewModel } from '../../view-model
 import { TapestryStage } from '..'
 import { ThemeName } from '../../theme/themes'
 import { log } from 'tapestry-core/src/lib/algebra'
+import { clamp } from 'lodash'
 
-const DEFAULT_REL_Z_INDEX = 0
 const LINE_SMOOTHNESS = 0.7
 
 const SCALE_LOG_BASE = 1.3
-const MAX_LINE_STROKE_VISIBLE_SHRINK = 0.35
-const MAX_ARROW_VISIBLE_SHRINK = 0.15
+const LOCK_VISIBLE_SIZE_AT_SCALE = 0.4
+const MAX_REL_SCALE = 5
 
 export function drawCurve(gfx: Graphics, curve: Curve, part: 'full' | 'head' | 'tail' = 'full') {
   const start = part === 'tail' ? curve.points.middle : curve.points.start
@@ -46,14 +52,25 @@ export function drawCurve(gfx: Graphics, curve: Curve, part: 'full' | 'head' | '
   return gfx
 }
 
+export function getArrowheadTriangleRadius(arrowheadSize: number) {
+  return arrowheadSize / 2
+}
+
+export function getArrowheadCornerRadius(arrowheadSize: number) {
+  return arrowheadSize / 8
+}
+
+export function getArrowheadCenterOffset(arrowheadSize: number, arrowheadCornerRadius: number) {
+  return getArrowheadTriangleRadius(arrowheadSize) - arrowheadCornerRadius * (Math.sqrt(2) - 1)
+}
+
 export interface RelRenderState<R extends RelViewModel> {
   viewModel: R
   fromItem?: ItemViewModel
   toItem?: ItemViewModel
   isHighlighted: boolean
   theme: ThemeName
-  lineStrokeScale: number
-  arrowScale: number
+  relScale: number
 }
 
 export class RelRenderer<R extends RelViewModel> extends TapestryElementRenderer<
@@ -68,7 +85,6 @@ export class RelRenderer<R extends RelViewModel> extends TapestryElementRenderer
 
   constructor(store: Store<TapestryViewModel>, stage: TapestryStage, viewModel: R) {
     super(store, stage, viewModel)
-    this.pixiContainer.zIndex = DEFAULT_REL_Z_INDEX
     this.line = new Graphics({ label: 'line', eventMode: 'auto' })
     this.pixiContainer.addChild(this.line)
     this.lineHighlightFrom = new Graphics({ label: 'line-highlight-from', eventMode: 'static' })
@@ -81,8 +97,8 @@ export class RelRenderer<R extends RelViewModel> extends TapestryElementRenderer
     this.pixiContainer.addChild(this.toArrowhead)
   }
 
-  protected computeRelCurvePoints(viewModel: R, items: IdMap<ItemViewModel>) {
-    return computeRelCurvePoints(viewModel, items)
+  protected computeRelCurvePoints(viewModel: R, relScale: number, items: IdMap<ItemViewModel>) {
+    return computeRelCurvePoints(viewModel, relScale, items)
   }
 
   protected obtainRenderState(viewModel: R, store: Store<TapestryViewModel>): RelRenderState<R> {
@@ -104,8 +120,7 @@ export class RelRenderer<R extends RelViewModel> extends TapestryElementRenderer
         isInteractive ||
         (isHoveredElement(pointerInteractionTarget) && pointerInteractionTarget.modelId === id),
       theme: store.get('theme'),
-      lineStrokeScale: Math.max(1, MAX_LINE_STROKE_VISIBLE_SHRINK / discreteScale),
-      arrowScale: Math.max(1, MAX_ARROW_VISIBLE_SHRINK / discreteScale),
+      relScale: clamp(LOCK_VISIBLE_SIZE_AT_SCALE / discreteScale, 1, MAX_REL_SCALE),
     }
   }
 
@@ -126,18 +141,18 @@ export class RelRenderer<R extends RelViewModel> extends TapestryElementRenderer
 
     if (!state.fromItem || !state.toItem) return
 
-    const curve = this.computeRelCurvePoints(state.viewModel, {
+    const curve = this.computeRelCurvePoints(state.viewModel, state.relScale, {
       [state.fromItem.dto.id]: state.fromItem,
       [state.toItem.dto.id]: state.toItem,
     })
 
-    const arrowHeadSize = REL_ARROWHEAD_SIZES[weight] * state.arrowScale
-    const lineStrokeWidth = REL_LINE_WIDTHS[weight] * state.lineStrokeScale
+    const arrowHeadSize = REL_ARROWHEAD_SIZES[weight] * state.relScale
+    const lineStrokeWidth = REL_LINE_WIDTHS[weight] * state.relScale
 
     // Instead of a single cubic Bezier curve, draw two quadratic Bezier curves joined in the middle.
     // This way we will have two separate segments of the curve and we will be able to handle
     // user interactions with them more easily.
-    drawCurve(this.line, curve).stroke({ width: lineStrokeWidth, color, cap: 'square' })
+    drawCurve(this.line, curve).stroke({ width: lineStrokeWidth, color, cap: 'butt' })
 
     const highlightStrokeStyle: StrokeStyle = {
       width: 4 * lineStrokeWidth,
@@ -151,25 +166,11 @@ export class RelRenderer<R extends RelViewModel> extends TapestryElementRenderer
     this.lineHighlightFrom.alpha = this.lineHighlightTo.alpha = state.isHighlighted ? 0.1 : 0
 
     if (from.arrowhead === 'arrow') {
-      this.drawArrowhead(
-        this.fromArrowhead,
-        curve.from,
-        curve.fromDirection,
-        arrowHeadSize,
-        color,
-        lineStrokeWidth,
-      )
+      this.drawArrowhead(this.fromArrowhead, curve.from, curve.fromDirection, arrowHeadSize, color)
     }
 
     if (to.arrowhead === 'arrow') {
-      this.drawArrowhead(
-        this.toArrowhead,
-        curve.to,
-        curve.toDirection,
-        arrowHeadSize,
-        color,
-        lineStrokeWidth,
-      )
+      this.drawArrowhead(this.toArrowhead, curve.to, curve.toDirection, arrowHeadSize, color)
     }
   }
 
@@ -179,36 +180,14 @@ export class RelRenderer<R extends RelViewModel> extends TapestryElementRenderer
     dir: Vector,
     size: number,
     color: string,
-    strokeWidth: number,
   ) {
-    const middle = translate(point, mul(strokeWidth / 2, dir))
+    const corner = getArrowheadCornerRadius(size)
+    const triangleRadius = getArrowheadTriangleRadius(size)
+    const middle = translate(point, mul(getArrowheadCenterOffset(size, corner), dir))
     const midpoint = new Point(middle.x, middle.y)
-    const direction = new Point(dir.dx, dir.dy)
-    const degrees = Math.PI / 5
-    const cos = Math.cos(degrees)
-    const sin = Math.sin(degrees)
-    const arrowCorner1 = midpoint.add(
-      new Point(
-        (direction.dot({ x: cos, y: sin }) * size) / cos,
-        (direction.dot({ x: -sin, y: cos }) * size) / cos,
-      ),
-    )
-    const arrowCorner2 = midpoint.add(
-      new Point(
-        (direction.dot({ x: cos, y: -sin }) * size) / cos,
-        (direction.dot({ x: sin, y: cos }) * size) / cos,
-      ),
-    )
 
     graphics
-      .moveTo(arrowCorner1.x, arrowCorner1.y)
-      .lineTo(midpoint.x, midpoint.y)
-      .lineTo(arrowCorner2.x, arrowCorner2.y)
-      .stroke({
-        color,
-        cap: 'butt',
-        join: 'miter',
-        width: strokeWidth,
-      })
+      .roundPoly(midpoint.x, midpoint.y, triangleRadius, 3, corner, angleX(dir) + Math.PI / 6)
+      .fill({ color })
   }
 }
