@@ -132,7 +132,6 @@ export function ViewerTitleBar({ className, style }: PropsWithStyle) {
             setForkingTapestry(true)
           }
         }}
-        className={styles.primaryButton}
       >
         Make a copy
       </Button>

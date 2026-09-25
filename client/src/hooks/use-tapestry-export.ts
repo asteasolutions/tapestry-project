@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useState } from 'react'
 import { ZodError } from 'zod/v4'
 import { download } from 'tapestry-core-client/src/lib/file'
 import { TapestryExporter, ProgressEvent } from '../services/tapestry-exporter'
@@ -12,7 +12,7 @@ export interface UseTapestryExportOptions {
 export function useTapestryExport({ tapestryId, onError, onSuccess }: UseTapestryExportOptions) {
   const [progress, setProgress] = useState<ProgressEvent>()
 
-  const triggerExport = useCallback(async () => {
+  const triggerExport = async () => {
     if (progress) {
       return
     }
@@ -30,7 +30,7 @@ export function useTapestryExport({ tapestryId, onError, onSuccess }: UseTapestr
       download(url, `${title}.zip`)
       onSuccess()
     })
-  }, [tapestryId, onError, onSuccess, progress])
+  }
 
   return {
     progress,

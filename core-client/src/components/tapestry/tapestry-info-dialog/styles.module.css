@@ -37,15 +37,15 @@
           grid-template-columns: 100px auto;
           gap: 7px;
           align-items: baseline;
-        }
-      }
 
-      .owner-details {
-        display: flex;
-        flex-direction: row;
-        justify-content: start;
-        align-items: center;
-        gap: 8px;
+          .owner-details {
+            display: flex;
+            flex-direction: row;
+            justify-content: start;
+            align-items: center;
+            gap: 8px;
+          }
+        }
       }
 
       .separator {
@@ -62,12 +62,7 @@
         align-items: center;
         padding: 15px var(--padding-x);
 
-        & > * {
-          min-width: fit-content;
-          justify-content: center;
-        }
-
-        @media screen and (width <= 480px) {
+        @media screen and (width <= 380px) {
           flex-direction: column;
           align-items: stretch;
 

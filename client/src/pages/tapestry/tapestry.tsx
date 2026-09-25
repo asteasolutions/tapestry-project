@@ -78,17 +78,6 @@ export function Tapestry({ initialThumbnails }: TapestryProps) {
   const documentTitle = `Tapestry - ${title}`
   const dispatch = useDispatch()
 
-  useEffect(() => {
-    if (title) {
-      dispatch(
-        setSnackbar({
-          text: `Opened "${title}" by ${fullName(owner)}`,
-          duration: 3,
-        }),
-      )
-    }
-  }, [])
-
   const store = useTapestryStore()
   const tapestryDataSyncCommandsRef = usePropRef(useTapestryDataSyncCommands())
   useStageInit(sceneRef, {
@@ -117,6 +106,16 @@ export function Tapestry({ initialThumbnails }: TapestryProps) {
         tapestryDataSyncCommandsRef.current,
         initialThumbnails,
       ),
+    onInit: () => {
+      if (title) {
+        dispatch(
+          setSnackbar({
+            text: `Opened "${title}" by ${fullName(owner)}`,
+            duration: 3,
+          }),
+        )
+      }
+    },
   })
 
   useInteractionModeUrlParam()
