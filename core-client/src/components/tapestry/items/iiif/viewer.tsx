@@ -48,6 +48,15 @@ export const IiifItemViewer = memo(({ id }: TapestryElementComponentProps) => {
             // A deep-zoom image sits on a fixed, opaque backdrop, not a themed one.
             background: '#fff',
             canvasBackgroundColor: '#fff',
+            // Clover defaults <video>/<audio> to crossOrigin="anonymous", which requires a
+            // real Access-Control-Allow-Origin on the final response (after any redirect).
+            // Some real-world sources send CORS on their redirect but not on the file itself
+            // -- e.g. archive.org's own /download/ redirect does, but the datanode host it
+            // redirects to doesn't for at least .mp4 (verified: it does for .ogv on the same
+            // host). Dropping crossOrigin lets ordinary, non-CORS media playback work against
+            // sources like that, at the cost of cross-origin WebVTT captions (which do need
+            // crossOrigin) not working -- an acceptable trade for AV playback over captions.
+            crossOrigin: undefined,
             customLoadingComponent: IiifLoadingSpinner,
             openSeadragon: {
               crossOriginPolicy: 'Anonymous',
