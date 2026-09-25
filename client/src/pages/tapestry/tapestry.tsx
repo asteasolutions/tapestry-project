@@ -83,7 +83,7 @@ export function Tapestry({ initialThumbnails }: TapestryProps) {
       dispatch(
         setSnackbar({
           text: `Opened "${title}" by ${fullName(owner)}`,
-          duration: 5,
+          duration: 3,
         }),
       )
     }
