@@ -19,7 +19,7 @@ function extractVideoThumbnailFromFile(filePath: string, startTime = 1, width = 
     "-f", "image2pipe",
     "-vcodec", "mjpeg",
     "pipe:1",
-  ];
+  ]
 
   return spawn('ffmpeg', args)
 }

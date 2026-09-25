@@ -45,6 +45,7 @@ function isMediaItem(i: Item) {
     i.type === 'audio' ||
     i.type === 'book' ||
     i.type === 'image' ||
+    i.type === 'iiif' ||
     i.type === 'pdf' ||
     i.type === 'video' ||
     i.type === 'webpage'

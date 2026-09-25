@@ -9,6 +9,7 @@ import {
   BookItemSchema as BaseBookItemSchema,
   PdfItemSchema as BasePdfItemSchema,
   ImageItemSchema as BaseImageItemSchema,
+  IiifItemSchema as BaseIiifItemSchema,
   WebpageItemSchema as BaseWebpageItemSchema,
 } from 'tapestry-core/src/data-format/schemas/item.js'
 import { IdentifiableSchema, SizeSchema } from 'tapestry-core/src/data-format/schemas/common.js'
@@ -117,6 +118,12 @@ export const [
   ImageItemUpdateSchema,
 ] = constructMediaItemSchemas(BaseImageItemSchema.shape)
 export const [
+  IiifItemSchema,
+  IiifItemCreateSchema,
+  IiifItemCreateInTapestrySchema,
+  IiifItemUpdateSchema,
+] = constructMediaItemSchemas(BaseIiifItemSchema.shape)
+export const [
   PdfItemSchema,
   PdfItemCreateSchema,
   PdfItemCreateInTapestrySchema,
@@ -139,6 +146,7 @@ export const MediaItemSchema = z.discriminatedUnion('type', [
   AudioItemSchema,
   BookItemSchema,
   ImageItemSchema,
+  IiifItemSchema,
   PdfItemSchema,
   VideoItemSchema,
   WebpageItemSchema,
@@ -148,6 +156,7 @@ export const MediaItemCreateSchema = z.discriminatedUnion('type', [
   AudioItemCreateSchema,
   BookItemCreateSchema,
   ImageItemCreateSchema,
+  IiifItemCreateSchema,
   PdfItemCreateSchema,
   VideoItemCreateSchema,
   WebpageItemCreateSchema,
@@ -157,6 +166,7 @@ export const MediaItemCreateInTapestrySchema = z.discriminatedUnion('type', [
   AudioItemCreateInTapestrySchema,
   BookItemCreateInTapestrySchema,
   ImageItemCreateInTapestrySchema,
+  IiifItemCreateInTapestrySchema,
   PdfItemCreateInTapestrySchema,
   VideoItemCreateInTapestrySchema,
   WebpageItemCreateInTapestrySchema,
@@ -166,6 +176,7 @@ export const MediaItemUpdateSchema = z.discriminatedUnion('type', [
   AudioItemUpdateSchema,
   BookItemUpdateSchema,
   ImageItemUpdateSchema,
+  IiifItemUpdateSchema,
   PdfItemUpdateSchema,
   VideoItemUpdateSchema,
   WebpageItemUpdateSchema,
