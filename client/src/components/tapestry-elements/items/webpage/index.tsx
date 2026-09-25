@@ -97,15 +97,14 @@ type PatchSourceArgument =
 
 export const WebpageItem = memo(({ id }: TapestryItemProps) => {
   const apiRef = useRef<WebpageItemViewerApi>(null)
-  const containerRef = useRef<HTMLDivElement>(null)
   const dto = useTapestryData(`items.${id}.dto`) as WebpageItemDto
   const isEditMode = useTapestryData('interactionMode') === 'edit'
   const webSourceParams = parseWebSource(dto)
   const { webpageType } = webSourceParams
 
   const { conversionStarted, convertToPDFMenuItem } = useConvertToPDF(id)
-  const { isFullscreen, fullscreenButton, exitFullscreenButton } = useItemFullscreen(containerRef)
-
+  const { containerRef, isFullscreen, fullscreenButton, exitFullscreenButton } =
+    useItemFullscreen<HTMLDivElement>()
   const dispatch = useDispatch()
   const patch = ({ webpageType, data }: PatchSourceArgument) =>
     dispatch(
@@ -237,7 +236,7 @@ export const WebpageItem = memo(({ id }: TapestryItemProps) => {
   return (
     <>
       <TapestryItem id={id} halo={isFullscreen ? undefined : toolbar}>
-        <div ref={containerRef} className={styles.container}>
+        <div ref={containerRef} className={styles.fullscreenController}>
           <WebpageItemViewer id={id} WebFrame={Webpage} apiRef={apiRef} />
           {isFullscreen && exitFullscreenButton}
         </div>

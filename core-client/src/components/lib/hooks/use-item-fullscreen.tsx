@@ -1,8 +1,9 @@
-import { useEffect, useState, type RefObject } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { IconButton } from '../buttons/index'
 import { SimpleMenuItem } from '../toolbar'
 
-export function useItemFullscreen(containerRef: RefObject<HTMLElement | null>) {
+export function useItemFullscreen<T extends HTMLElement = HTMLDivElement>() {
+  const containerRef = useRef<T>(null)
   const [isFullscreen, setIsFullscreen] = useState(false)
 
   useEffect(() => {
@@ -11,7 +12,7 @@ export function useItemFullscreen(containerRef: RefObject<HTMLElement | null>) {
     }
     document.addEventListener('fullscreenchange', onFullscreenChange)
     return () => document.removeEventListener('fullscreenchange', onFullscreenChange)
-  }, [containerRef])
+  }, [])
 
   const toggleFullscreen = () => {
     if (!containerRef.current) return
@@ -38,5 +39,5 @@ export function useItemFullscreen(containerRef: RefObject<HTMLElement | null>) {
     />
   )
 
-  return { isFullscreen, fullscreenButton, exitFullscreenButton }
+  return { containerRef, isFullscreen, fullscreenButton, exitFullscreenButton }
 }
