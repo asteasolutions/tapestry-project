@@ -22,7 +22,7 @@ import { useDispatch, useTapestryData } from '../../../../pages/tapestry/tapestr
 import { updateItem } from '../../../../pages/tapestry/view-model/store-commands/items'
 import { resource } from '../../../../services/rest-resources'
 import { TimeInput } from '../../../time-input'
-import { buildToolbarMenu } from '../../item-toolbar'
+import { buildToolbarMenu, ItemToolbarMenu } from '../../item-toolbar'
 import { PlayableShareMenu, shareMenu } from '../../item-toolbar/share-menu'
 import { useItemToolbar } from '../../item-toolbar/use-item-toolbar'
 import { TapestryItem } from '../tapestry-item'
@@ -32,6 +32,7 @@ import {
   WebFrameSwitchProps,
 } from 'tapestry-core-client/src/components/tapestry/items/webpage/web-frame'
 import { useConvertToPDF } from '../../../../hooks/use-convert-to-pdf'
+import { useItemFullscreen } from 'tapestry-core-client/src/components/lib/hooks/use-item-fullscreen'
 
 const checkedSources = new Map<string, boolean>()
 
@@ -102,7 +103,8 @@ export const WebpageItem = memo(({ id }: TapestryItemProps) => {
   const { webpageType } = webSourceParams
 
   const { conversionStarted, convertToPDFMenuItem } = useConvertToPDF(id)
-
+  const { containerRef, isFullscreen, fullscreenButton, exitFullscreenButton } =
+    useItemFullscreen<HTMLDivElement>()
   const dispatch = useDispatch()
   const patch = ({ webpageType, data }: PatchSourceArgument) =>
     dispatch(
@@ -172,6 +174,9 @@ export const WebpageItem = memo(({ id }: TapestryItemProps) => {
             })
           : 'share',
       })
+
+      const fullscreenItems: ItemToolbarMenu = isPlayable ? [] : [fullscreenButton, 'separator']
+
       return isEditMode
         ? [
             {
@@ -188,11 +193,12 @@ export const WebpageItem = memo(({ id }: TapestryItemProps) => {
               tooltip: { side: 'bottom', children: 'Switch to Wayback Machine version' },
             },
             'separator',
+            ...fullscreenItems,
             refreshButton,
             'separator',
             ...controls,
           ]
-        : [refreshButton, 'separator', ...controls]
+        : [...fullscreenItems, refreshButton, 'separator', ...controls]
     },
     moreMenuItems: [
       ...(webpageType === 'youtube' || webpageType === 'vimeo'
@@ -229,8 +235,11 @@ export const WebpageItem = memo(({ id }: TapestryItemProps) => {
 
   return (
     <>
-      <TapestryItem id={id} halo={toolbar}>
-        <WebpageItemViewer id={id} WebFrame={Webpage} apiRef={apiRef} />
+      <TapestryItem id={id} halo={isFullscreen ? undefined : toolbar}>
+        <div ref={containerRef} className={styles.fullscreenController}>
+          <WebpageItemViewer id={id} WebFrame={Webpage} apiRef={apiRef} />
+          {isFullscreen && exitFullscreenButton}
+        </div>
       </TapestryItem>
       {showSaveToWBMPrompt && (
         <SimpleModal
