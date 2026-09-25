@@ -114,6 +114,9 @@ export class AuthService extends Observable<AuthServiceState> {
   }
 
   async refresh(loadUser: boolean, signal?: GenericAbortSignal) {
+    for (const provider of AUTH_PROVIDERS) {
+      if (await provider.tryCompleteLogin?.(signal)) return
+    }
     await this.doLogin({ authType: 'refreshToken' }, loadUser, signal)
   }
 
