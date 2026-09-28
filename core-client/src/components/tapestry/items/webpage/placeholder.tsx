@@ -16,7 +16,7 @@ export function WebpagePlaceholder({
 
   return (
     <div className={styles.placeholder}>
-      {showVideoPlayOverlay && <IconOverlay itemSize={size} icon="videocam" />}
+      <IconOverlay itemSize={size} icon={showVideoPlayOverlay ? 'videocam' : 'globe'} />
       <ItemPlaceholder icon="hourglass_top" thumbnailSrc={getPrimaryThumbnail(thumbnail)}>
         Generating thumbnail...
       </ItemPlaceholder>

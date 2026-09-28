@@ -15,7 +15,9 @@ async function storeThumbnailRendition(
   tx?: Prisma.TransactionClient,
 ) {
   try {
-    console.log(`Generating thumbnail rendition for item ${item.id}...`)
+    console.log(
+      `Generating thumbnail rendition for item ${item.id} in tapestry ${item.tapestryId}...`,
+    )
     const output = await generate(item)
     if (!output) {
       console.log(`[${item.id}] Thumbnail generation failed.`)

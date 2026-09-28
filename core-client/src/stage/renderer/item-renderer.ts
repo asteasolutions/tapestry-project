@@ -26,7 +26,7 @@ export interface ItemRenderState<I extends ItemViewModel> {
 }
 
 type Icons = Record<
-  'videoWebpage' | 'video' | 'audio' | 'pdf',
+  'videoWebpage' | 'video' | 'audio' | 'pdf' | 'book' | 'webpage',
   (
     color: LiteralColor | undefined,
     background: LiteralColor | undefined,
@@ -89,6 +89,36 @@ const ICONS: Icons = {
         background,
         props: {
           iconName: 'pdf',
+          size,
+          color,
+          fontSize: Math.round(0.3 * size),
+        },
+      },
+    }
+  },
+  book: (color, background, scale) => {
+    const size = roundToPrecision(100 * scale, ICON_SIZE_STEP)
+    return {
+      minSize: 100,
+      icon: {
+        background,
+        props: {
+          iconName: 'book',
+          size,
+          color,
+          fontSize: Math.round(0.3 * size),
+        },
+      },
+    }
+  },
+  webpage: (color, background, scale) => {
+    const size = roundToPrecision(100 * scale, ICON_SIZE_STEP)
+    return {
+      minSize: 100,
+      icon: {
+        background,
+        props: {
+          iconName: 'webpage',
           size,
           color,
           fontSize: Math.round(0.3 * size),
@@ -189,7 +219,11 @@ export class ItemRenderer<I extends ItemViewModel> extends TapestryElementRender
 
     const iconKey: keyof Icons | undefined = isVideoWebpage
       ? 'videoWebpage'
-      : type === 'audio' || type === 'video' || type === 'pdf'
+      : type === 'audio' ||
+          type === 'video' ||
+          type === 'pdf' ||
+          type === 'book' ||
+          type === 'webpage'
         ? type
         : undefined
 
