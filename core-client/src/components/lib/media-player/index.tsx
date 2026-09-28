@@ -4,7 +4,6 @@ import { usePropRef } from '../hooks/use-prop-ref'
 import styles from './styles.module.css'
 import { ControlBar } from './control-bar'
 import clsx from 'clsx'
-import { createPortal } from 'react-dom'
 import { Id } from 'tapestry-core/src/data-format/schemas/common'
 
 type ComponentType = 'video' | 'audio'
@@ -174,7 +173,7 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
     if (document.fullscreenElement) {
       await document.exitFullscreen()
     } else {
-      const fullscreenContainer = portal ?? mediaRef.current?.parentElement
+      const fullscreenContainer = mediaRef.current?.parentElement
       if (fullscreenContainer) {
         await fullscreenContainer.requestFullscreen()
       }
@@ -190,8 +189,6 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
       onVolumeChange(previousVolumeRef.current > 0 ? previousVolumeRef.current : 1)
     }
   }
-
-  const portal = document.querySelector(`[data-model-id="${id}"]`)
 
   return (
     <div
@@ -232,7 +229,6 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
           <source src={options.src} type={options.mediaType || 'video/mp4'} />
         </video>
       )}
-
       {thumbnail && (
         <img
           src={thumbnail}
@@ -249,32 +245,28 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
           }}
         />
       )}
-
-      {portal &&
-        createPortal(
-          <div
-            className={styles.controlBar}
-            onMouseEnter={() => setIsHovering(true)}
-            onMouseLeave={() => setIsHovering(false)}
-          >
-            <ControlBar
-              isOpen={isInteractive && (isAudio || isMoving || isHovering || !isPlaying)}
-              isPlaying={isPlaying}
-              togglePlay={togglePlay}
-              currentTime={currentTime}
-              duration={duration}
-              isOver={isOver}
-              onSeek={onSeek}
-              volume={volume}
-              onVolumeChange={onVolumeChange}
-              toggleMute={toggleMute}
-              playbackRate={playbackRate}
-              onPlaybackRateChange={onPlaybackRateChange}
-              toggleFullScreen={isAudio ? undefined : toggleFullscreen}
-            />
-          </div>,
-          portal,
-        )}
+      <div
+        className={styles.controlBar}
+        onMouseEnter={() => setIsHovering(true)}
+        onMouseLeave={() => setIsHovering(false)}
+      >
+        <ControlBar
+          isOpen={isInteractive && (isAudio || isMoving || isHovering || !isPlaying)}
+          isPlaying={isPlaying}
+          togglePlay={togglePlay}
+          currentTime={currentTime}
+          duration={duration}
+          isOver={isOver}
+          onSeek={onSeek}
+          volume={volume}
+          onVolumeChange={onVolumeChange}
+          toggleMute={toggleMute}
+          playbackRate={playbackRate}
+          onPlaybackRateChange={onPlaybackRateChange}
+          toggleFullScreen={toggleFullscreen}
+          mediaId={id}
+        />
+      </div>
     </div>
   )
 }

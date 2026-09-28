@@ -56,6 +56,7 @@ export const AudioItemPlayer = memo(
         onPause={onStop}
         onEnded={onStop}
         isInteractive={isInteractive}
+        thumbnail={customThumbnail}
         style={{ display: 'block', width: '100%', height: '100%', ...style }}
         {...playerProps}
       />
