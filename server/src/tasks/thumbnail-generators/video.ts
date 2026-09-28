@@ -1,18 +1,15 @@
-import { unlink } from 'node:fs'
-import { noop } from 'lodash-es'
-import { downloadToTempFile, spawn } from '../utils'
+import { spawn } from '../utils'
 import { ThumbnailRenditionOutput } from '.'
 import { generateThumbnail } from './image'
-import { MAX_SOURCE_FILE_SIZE } from 'tapestry-shared/src/utils'
 
-function extractVideoThumbnailFromFile(filePath: string, startTime = 1, width = 320) {
+function extractVideoThumbnailFromUrl(videoUrl: string, startTime = 1, width = 320) {
   // prettier-ignore
   const args = [
     "-hide_banner",
     "-loglevel", "error",
     "-nostdin",
     "-ss", String(startTime),
-    "-i", filePath,
+    "-i", videoUrl,
     "-frames:v", "1",
     "-an", "-sn", "-dn",
     // scale with aspect preserved; -2 makes height even
@@ -30,12 +27,6 @@ export async function generateVideoThumbnail(
   startTime: number | undefined,
   width: number,
 ): Promise<ThumbnailRenditionOutput> {
-  let tmpFile = ''
-  try {
-    tmpFile = await downloadToTempFile(videoUrl, { maxBytes: MAX_SOURCE_FILE_SIZE })
-    const frame = await extractVideoThumbnailFromFile(tmpFile, startTime, width)
-    return generateThumbnail(frame)
-  } finally {
-    unlink(tmpFile, noop)
-  }
+  const frame = await extractVideoThumbnailFromUrl(videoUrl, startTime, width)
+  return generateThumbnail(frame)
 }
