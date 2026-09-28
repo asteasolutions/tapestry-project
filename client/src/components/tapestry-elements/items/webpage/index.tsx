@@ -13,7 +13,6 @@ import {
   WebpageItemViewer,
   WebpageItemViewerApi,
 } from 'tapestry-core-client/src/components/tapestry/items/webpage/viewer'
-import { WebpageType } from 'tapestry-core/src/data-format/schemas/item'
 import { parseWebSource, WEB_SOURCE_PARSERS } from 'tapestry-core/src/web-sources'
 import { WebpageItemDto } from 'tapestry-shared/src/data-transfer/resources/dtos/item'
 import { TapestryItemProps } from '..'
