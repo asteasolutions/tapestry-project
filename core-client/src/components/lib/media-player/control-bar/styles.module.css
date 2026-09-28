@@ -44,9 +44,17 @@
   writing-mode: vertical-lr;
   direction: rtl;
   position: absolute;
+  z-index: 2;
+}
+
+.volume-slider-fullscreen {
+  bottom: 50px;
+  left: 0;
+}
+
+.volume-slider-normal {
   bottom: 48px;
   left: 58px;
-  z-index: 2;
 }
 
 .playback-rate {
@@ -62,6 +70,14 @@
   background-color: var(--theme-background-primary);
   position: absolute;
   z-index: 2;
+}
+
+.playback-rate-buttons-fullscreen {
+  bottom: 50px;
+  left: 0;
+}
+
+.playback-rate-buttons-normal {
   bottom: 48px;
   right: 50px;
 }

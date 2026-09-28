@@ -75,9 +75,48 @@ export function ControlBar({
     setSelectedSubmenu('')
   }
 
-  const portal = document.fullscreenElement
-    ? (document.fullscreenElement as HTMLElement)
-    : document.querySelector(`[data-model-id="${mediaId}"]`)
+  const portal = document.querySelector(`[data-model-id="${mediaId}"]`)
+
+  const volumeSubmenu = (
+    <input
+      type="range"
+      min={0}
+      max={1}
+      step={0.01}
+      value={volume}
+      onMouseEnter={() => handleMouseEnter('volume')}
+      onMouseLeave={handleMouseLeave}
+      onChange={(e) => onVolumeChange(Number(e.target.value))}
+      className={clsx(
+        styles.volumeSlider,
+        document.fullscreenElement ? styles.volumeSliderFullscreen : styles.volumeSliderNormal,
+      )}
+    />
+  )
+
+  const playbackRateSubmenu = (
+    <div
+      className={clsx(
+        styles.playbackRateButtons,
+        document.fullscreenElement
+          ? styles.playbackRateButtonsFullscreen
+          : styles.playbackRateButtonsNormal,
+      )}
+    >
+      {PLAYBACK_RATES.map((rate) => (
+        <Button
+          key={rate}
+          aria-label={`${rate}x rate`}
+          variant="secondary"
+          onClick={() => onRateSelect(rate)}
+          className={styles.playbackRate}
+          style={{ fontSize: '12px' }}
+        >
+          {`${rate}x`}
+        </Button>
+      ))}
+    </div>
+  )
 
   const items: MaybeMenuItem[] = [
     {
@@ -108,21 +147,7 @@ export function ControlBar({
       },
       direction: 'column',
       submenu: [
-        portal &&
-          createPortal(
-            <input
-              type="range"
-              min={0}
-              max={1}
-              step={0.01}
-              value={volume}
-              onMouseEnter={() => handleMouseEnter('volume')}
-              onMouseLeave={handleMouseLeave}
-              onChange={(e) => onVolumeChange(Number(e.target.value))}
-              className={styles.volumeSlider}
-            />,
-            portal,
-          ),
+        document.fullscreenElement ? volumeSubmenu : portal && createPortal(volumeSubmenu, portal),
       ],
     },
     <div className={styles.progress}>
@@ -149,7 +174,6 @@ export function ControlBar({
             variant="clear"
             onClick={() => selectSubmenu('rate')}
             isActive={selectedSubmenu.startsWith('rate')}
-            onMouseDown={(e) => e.preventDefault()}
             className={styles.playbackRate}
           >
             {`${playbackRate}x`}
@@ -159,24 +183,9 @@ export function ControlBar({
       },
       direction: 'column',
       submenu: [
-        portal &&
-          createPortal(
-            <div className={styles.playbackRateButtons}>
-              {PLAYBACK_RATES.map((rate) => (
-                <Button
-                  key={rate}
-                  aria-label={`${rate}x rate`}
-                  variant="secondary"
-                  onClick={() => onRateSelect(rate)}
-                  className={styles.playbackRate}
-                  style={{ fontSize: '12px' }}
-                >
-                  {`${rate}x`}
-                </Button>
-              ))}
-            </div>,
-            portal,
-          ),
+        document.fullscreenElement
+          ? playbackRateSubmenu
+          : portal && createPortal(playbackRateSubmenu, portal),
       ],
     },
     {
