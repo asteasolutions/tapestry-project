@@ -1,6 +1,6 @@
+import { MAX_SOURCE_FILE_SIZE } from 'tapestry-shared/src/utils'
 import { useDispatch, useTapestryData } from '../../pages/tapestry/tapestry-providers'
 import { setLargeFiles } from '../../pages/tapestry/view-model/store-commands/tapestry'
-import { MAX_FILE_SIZE } from '../../stage/data-transfer-handler'
 import { SimpleModal } from 'tapestry-core-client/src/components/lib/modal/index'
 import { Text } from 'tapestry-core-client/src/components/lib/text/index'
 
@@ -17,7 +17,9 @@ export function LargeFileUploadDialog() {
       cancel={{ onClick: () => dispatch(setLargeFiles([])), text: 'OK', variant: 'primary' }}
       title="Upload limit exceeded"
     >
-      <Text>The following files exceed the limit of {MAX_FILE_SIZE / (1000 * 1000)} MB:</Text>
+      <Text>
+        The following files exceed the limit of {MAX_SOURCE_FILE_SIZE / (1000 * 1000)} MB:
+      </Text>
       <ul>
         {files.map((f) => (
           <Text component="li" key={f.name}>

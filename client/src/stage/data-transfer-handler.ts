@@ -11,10 +11,9 @@ import { compact, omit, partition, set } from 'lodash-es'
 import z from 'zod/v4'
 import { IAImport } from '../pages/tapestry/view-model'
 import { isBlobURL } from 'tapestry-core-client/src/view-model/utils'
+import { MAX_SOURCE_FILE_SIZE } from 'tapestry-shared/src/utils'
 
-export const MAX_FILE_SIZE = 500 * 1000 * 1000 // 500 MB
-
-function isFileEligible(file: File, maxSize = MAX_FILE_SIZE) {
+function isFileEligible(file: File, maxSize = MAX_SOURCE_FILE_SIZE) {
   return file.size <= maxSize
 }
 
