@@ -57,6 +57,8 @@ async function invokeLoginProvider(
     authType: 'registerUser',
     registrationToken: rawRequest.cookies[REGISTRATION_TOKEN_COOKIE_NAME] as string | undefined,
     username: request.username,
+    firstName: request.firstName,
+    lastName: request.lastName,
   })
   rawResponse.clearCookie(REGISTRATION_TOKEN_COOKIE_NAME, SECURE_COOKIE_OPTIONS)
   return userId

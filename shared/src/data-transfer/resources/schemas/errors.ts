@@ -43,6 +43,8 @@ export const UserDoesNotExistsErrorResponseSchema = z.object({
   ...BaseErrorResponseSchema.omit({ name: true }).shape,
   name: z.literal('UserDoesNotExistsError'),
   usernameSuggestion: z.string(),
+  firstName: z.string(),
+  lastName: z.string(),
 })
 
 export const ErrorResponseSchema = z.discriminatedUnion('name', [

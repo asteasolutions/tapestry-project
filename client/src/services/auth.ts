@@ -11,10 +11,18 @@ interface Token {
   expiresAt: number
 }
 
+export interface RegisterData {
+  username: string
+  firstName?: string
+  lastName?: string
+}
+
 export interface AuthServiceState {
   user: UserDto | null
   isInitialized: boolean
-  pendingRegistration: { usernameSuggestion: string } | undefined
+  pendingRegistration:
+    | { usernameSuggestion: string; firstName?: string; lastName?: string }
+    | undefined
 }
 
 interface Deferred<T> {
@@ -105,6 +113,8 @@ export class AuthService extends Observable<AuthServiceState> {
           } else if (errorName === 'UserDoesNotExistsError') {
             state.pendingRegistration = {
               usernameSuggestion: error.data.usernameSuggestion,
+              firstName: error.data.firstName,
+              lastName: error.data.lastName,
             }
           }
         }
@@ -132,8 +142,17 @@ export class AuthService extends Observable<AuthServiceState> {
     })
   }
 
-  register(username: string, signal?: GenericAbortSignal) {
-    return this.doLogin({ authType: 'registerUser', username }, true, signal)
+  register(data: RegisterData, signal?: GenericAbortSignal) {
+    return this.doLogin(
+      {
+        authType: 'registerUser',
+        username: data.username,
+        firstName: data.firstName,
+        lastName: data.lastName,
+      },
+      true,
+      signal,
+    )
   }
 
   cancelRegistration() {
