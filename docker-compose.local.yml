@@ -4,7 +4,7 @@ services:
       dockerfile: ./Dockerfile.client
       args:
         VITE_API_URL: http://localhost:3000/api
-        VITE_AUTH_PROVIDER: google
+        VITE_AUTH_PROVIDERS: google
         VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
         VITE_BUG_REPORT_FORM_URL: ${BUG_REPORT_FORM_URL}
         VITE_AI_CHAT_EXPIRES_IN: ${AI_CHAT_EXPIRES_IN}

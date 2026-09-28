@@ -20,12 +20,13 @@ import { ItemViewModel, RelViewModel, TapestryViewModel } from '../../view-model
 import { TapestryStage } from '..'
 import { ThemeName } from '../../theme/themes'
 import { log } from 'tapestry-core/src/lib/algebra'
+import { clamp } from 'lodash'
 
-const DEFAULT_REL_Z_INDEX = 0
 const LINE_SMOOTHNESS = 0.7
 
 const SCALE_LOG_BASE = 1.3
-const MIN_REL_VISIBLE_SCALING = 0.4
+const LOCK_VISIBLE_SIZE_AT_SCALE = 0.4
+const MAX_REL_SCALE = 5
 
 export function drawCurve(gfx: Graphics, curve: Curve, part: 'full' | 'head' | 'tail' = 'full') {
   const start = part === 'tail' ? curve.points.middle : curve.points.start
@@ -51,6 +52,18 @@ export function drawCurve(gfx: Graphics, curve: Curve, part: 'full' | 'head' | '
   return gfx
 }
 
+export function getArrowheadTriangleRadius(arrowheadSize: number) {
+  return arrowheadSize / 2
+}
+
+export function getArrowheadCornerRadius(arrowheadSize: number) {
+  return arrowheadSize / 8
+}
+
+export function getArrowheadCenterOffset(arrowheadSize: number, arrowheadCornerRadius: number) {
+  return getArrowheadTriangleRadius(arrowheadSize) - arrowheadCornerRadius * (Math.sqrt(2) - 1)
+}
+
 export interface RelRenderState<R extends RelViewModel> {
   viewModel: R
   fromItem?: ItemViewModel
@@ -72,7 +85,6 @@ export class RelRenderer<R extends RelViewModel> extends TapestryElementRenderer
 
   constructor(store: Store<TapestryViewModel>, stage: TapestryStage, viewModel: R) {
     super(store, stage, viewModel)
-    this.pixiContainer.zIndex = DEFAULT_REL_Z_INDEX
     this.line = new Graphics({ label: 'line', eventMode: 'auto' })
     this.pixiContainer.addChild(this.line)
     this.lineHighlightFrom = new Graphics({ label: 'line-highlight-from', eventMode: 'static' })
@@ -108,7 +120,7 @@ export class RelRenderer<R extends RelViewModel> extends TapestryElementRenderer
         isInteractive ||
         (isHoveredElement(pointerInteractionTarget) && pointerInteractionTarget.modelId === id),
       theme: store.get('theme'),
-      relScale: Math.max(1, MIN_REL_VISIBLE_SCALING / discreteScale),
+      relScale: clamp(LOCK_VISIBLE_SIZE_AT_SCALE / discreteScale, 1, MAX_REL_SCALE),
     }
   }
 
@@ -169,9 +181,9 @@ export class RelRenderer<R extends RelViewModel> extends TapestryElementRenderer
     size: number,
     color: string,
   ) {
-    const corner = size / 8
-    const triangleRadius = size / 2
-    const middle = translate(point, mul(triangleRadius - corner * (Math.sqrt(2) - 1), dir))
+    const corner = getArrowheadCornerRadius(size)
+    const triangleRadius = getArrowheadTriangleRadius(size)
+    const middle = translate(point, mul(getArrowheadCenterOffset(size, corner), dir))
     const midpoint = new Point(middle.x, middle.y)
 
     graphics
