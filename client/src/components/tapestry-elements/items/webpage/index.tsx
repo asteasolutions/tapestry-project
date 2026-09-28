@@ -33,10 +33,9 @@ import {
 } from 'tapestry-core-client/src/components/tapestry/items/webpage/web-frame'
 import { useConvertToPDF } from '../../../../hooks/use-convert-to-pdf'
 import { useItemFullscreen } from 'tapestry-core-client/src/components/lib/hooks/use-item-fullscreen'
+import { PLAYABLE_WEBPAGE_TYPES } from 'tapestry-core-client/src/components/tapestry/items/webpage'
 
 const checkedSources = new Map<string, boolean>()
-
-const PLAYABLE_WEBPAGE_TYPES: WebpageType[] = ['iaAudio', 'iaVideo', 'vimeo', 'youtube']
 
 function Webpage({ src, onLoad, ...props }: WebFrameSwitchProps) {
   const onLoadRef = usePropRef(onLoad)
