@@ -23,6 +23,9 @@ import { useTextboxLink } from '../../../../hooks/use-textbox-link'
 
 const BACKGROUND_COLORS: Record<LiteralColor, string> = COLOR_PRESETS
 
+function removeBlankLinesAtEnd(text: string) {
+  return text.replace(/(?:<p>(?:\s|&nbsp;|<br\s*\/?>)*<\/p>)+$/gi, '')
+}
 export const FOREGROUND_COLORS = omit(BACKGROUND_COLORS, TRANSPARENT)
 
 export const TextItem = memo(({ id }: TapestryItemProps) => {
@@ -67,7 +70,7 @@ export const TextItem = memo(({ id }: TapestryItemProps) => {
     setShowFormatToolbar(false)
 
     if (unsavedContent !== null) {
-      dispatch(updateItem(id, { dto: { text: unsavedContent } }))
+      dispatch(updateItem(id, { dto: { text: removeBlankLinesAtEnd(unsavedContent) } }))
       setUnsavedContent(null)
     }
   }, [isEditable, dispatch, id, unsavedContent])
