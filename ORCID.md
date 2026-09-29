@@ -43,7 +43,7 @@ environment.
 
 | Variable | Side | Purpose |
 | --- | --- | --- |
-| `AUTH_PROVIDER=orcid` | both | Selects ORCID. Mapped to the client as `VITE_AUTH_PROVIDER`. |
+| `AUTH_PROVIDERS=orcid` | both | Selects ORCID (comma-separate to enable alongside `ia`/`google`, e.g. `google,orcid`). Mapped to the client as `VITE_AUTH_PROVIDERS`. |
 | `ORCID_CLIENT_ID` | server + client | OAuth client ID. Mapped to the client as `VITE_ORCID_CLIENT_ID`. |
 | `ORCID_CLIENT_SECRET` | server | OAuth client secret. **Server only** — never sent to the client. |
 | `ORCID_BASE_URL` | server + client | `https://orcid.org` (default) or `https://sandbox.orcid.org`. Mapped as `VITE_ORCID_BASE_URL`. |
@@ -52,7 +52,7 @@ environment.
 Example sandbox block:
 
 ```dotenv
-AUTH_PROVIDER=orcid
+AUTH_PROVIDERS=orcid
 ORCID_CLIENT_ID=APP-XXXXXXXXXXXXXXXX
 ORCID_CLIENT_SECRET=00000000-0000-0000-0000-000000000000
 ORCID_BASE_URL=https://sandbox.orcid.org
