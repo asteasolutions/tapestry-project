@@ -92,7 +92,7 @@ export async function* takeTapestryScreenshots(
   const { windowSize, timeout } = site
   console.log(`Taking screenshots of ${src}...`)
   yield* inNewBrowserPage(async function* (page, context): AsyncGenerator<
-    ThumbnailRenditionOutput,
+    ThumbnailRenditionOutput | undefined,
     void,
     Item | null
   > {
@@ -126,9 +126,7 @@ export async function* takeTapestryScreenshots(
 
     while (item) {
       const thumbnail = await takeItemScreenshot(page, item)
-      if (thumbnail) {
-        item = yield thumbnail
-      }
+      item = yield thumbnail ?? undefined
     }
   })
 }
