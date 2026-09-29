@@ -4,17 +4,13 @@ import { ImportItemsListProps } from '..'
 import { CollectionImport } from '../../../../pages/tapestry/view-model'
 import { useResponsive, Breakpoint } from '../../../../providers/responsive-provider'
 import { IconName } from 'tapestry-core-client/src/components/lib/icon/index'
-import { LazyListLoader } from '../../../lazy-list/lazy-list-loader'
 import { Text } from 'tapestry-core-client/src/components/lib/text/index'
-import { useObservable } from 'tapestry-core-client/src/components/lib/hooks/use-observable'
-import { useAsyncAction } from 'tapestry-core-client/src/components/lib/hooks/use-async-action'
 import {
   BaseCollectionList,
   CollectionListItem,
-  CollectionSelectAll,
+  paginateBySkipLimit,
 } from '../base-collection-list'
-import { ImportItem, MAX_SELECTION } from '../..'
-import { requestExternalItems } from '../paginate-utils'
+import { OpenverseSelectedItem } from '../..'
 
 const NO_THUMBNAIL_ICON: Record<'image' | 'audio', IconName> = {
   image: 'image',
@@ -23,11 +19,17 @@ const NO_THUMBNAIL_ICON: Record<'image' | 'audio', IconName> = {
 
 export type OpenverseCollectionImport = Extract<CollectionImport, { type: 'OpenverseCollection' }>
 
-interface OpenverseCollectionListProps extends Omit<ImportItemsListProps, 'collectionImport'> {
+interface OpenverseCollectionListProps extends Omit<
+  ImportItemsListProps,
+  'collectionImport' | 'selectedItems' | 'onSelect' | 'onSelectAll'
+> {
   collection: OpenverseCollectionImport
+  selectedItems: OpenverseSelectedItem[]
+  onSelect: (item: OpenverseSelectedItem) => unknown
+  onSelectAll: (items: OpenverseSelectedItem[]) => unknown
 }
 
-function toImportItem(item: OpenverseMedia): ImportItem {
+function toImportItem(item: OpenverseMedia): OpenverseSelectedItem {
   return { id: item.id, sourceUrl: item.url }
 }
 
@@ -40,12 +42,6 @@ export function OpenverseCollectionList({
   header,
 }: OpenverseCollectionListProps) {
   const mdOrLess = useResponsive() <= Breakpoint.MD
-
-  const [listLoader, setListLoader] = useState<LazyListLoader<OpenverseMedia> | null>(null)
-  const state = useObservable(listLoader)
-  const total = state?.total
-
-  const [undecodableIds, setUndecodableIds] = useState<Set<string>>(new Set())
   const [loadFailed, setLoadFailed] = useState(false)
 
   const requestItems = useMemo(() => {
@@ -53,7 +49,7 @@ export function OpenverseCollectionList({
     // response. LazyListLoader treats a change in total as a change in the list. It then does a
     // full reload and clears the current items. A failed page must not look like a smaller list.
     return async (skip: number, limit: number, signal: AbortSignal) => {
-      const result = await requestExternalItems(
+      const { data, firstPage, secondPage } = await paginateBySkipLimit(
         (page, pageSize, pageSignal) =>
           fetchOpenverseCollectionResults(
             collection.mediaType,
@@ -62,60 +58,30 @@ export function OpenverseCollectionList({
             pageSize,
             pageSignal,
           ),
+        (result) => result.results,
         skip,
         limit,
         signal,
       )
-      setLoadFailed(result.failed)
-      return { skip: result.skip, total: collection.total, data: result.data }
+      setLoadFailed(
+        firstPage.result === undefined || (secondPage !== undefined && !secondPage.result),
+      )
+      return { skip, total: collection.total, data }
     }
   }, [collection.mediaType, collection.collection, collection.total])
-
-  const { trigger: selectAllItems, loading: selectingAll } = useAsyncAction(
-    async ({ signal }: AbortController) => {
-      const result = await requestItems(0, MAX_SELECTION, signal)
-      onSelectAll(result.data.map(toImportItem))
-    },
-  )
-
-  const selectedCount = selectedItems.length
-  const maxSelectable = total === undefined ? undefined : Math.min(total, MAX_SELECTION)
-  const allSelected = maxSelectable !== undefined && selectedCount >= maxSelectable
-
-  const selectAll = (
-    <CollectionSelectAll
-      checked={allSelected}
-      onChange={() => (allSelected ? onDeselectAll() : selectAllItems())}
-      total={total}
-      loading={selectingAll}
-      mdOrLess={mdOrLess}
-    />
-  )
 
   return (
     <BaseCollectionList
       windowSize={20}
       loadingEdgeProximity={5}
       requestItems={requestItems}
-      onLoaderInitialized={setListLoader}
       // Openverse rate-limits aggressively. Nothing here needs a background refresh while the
       // picker is open, only real user-driven pagination.
       autoReload={false}
       mdOrLess={mdOrLess}
       columns={['creator', 'license']}
       detailsGroupName="openverse-collection-list"
-      selectAll={selectAll}
-      header={
-        mdOrLess ? (
-          <>
-            {!state?.skip && header}
-            {selectAll}
-          </>
-        ) : (
-          header
-        )
-      }
-      shouldRenderItem={(item) => !undecodableIds.has(item.id)}
+      header={header}
       toListItem={(item): CollectionListItem => ({
         image: item.thumbnail,
         fallbackIcon: NO_THUMBNAIL_ICON[collection.mediaType],
@@ -123,10 +89,11 @@ export function OpenverseCollectionList({
         creator: item.creator ?? undefined,
         license: item.license,
       })}
-      onImageError={(item) => setUndecodableIds((current) => new Set(current).add(item.id))}
-      isSelected={(item) => !!selectedItems.find((i) => i.id === item.id)}
-      onSelectItem={(item) => onSelect(toImportItem(item))}
-      selectedCount={selectedCount}
+      toImportItem={toImportItem}
+      selectedItems={selectedItems}
+      onSelect={onSelect}
+      onSelectAll={onSelectAll}
+      onDeselectAll={onDeselectAll}
       emptyPlaceholder={
         <Text>
           {loadFailed

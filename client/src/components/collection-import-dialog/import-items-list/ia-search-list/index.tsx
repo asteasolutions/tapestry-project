@@ -10,15 +10,11 @@ import { Text } from 'tapestry-core-client/src/components/lib/text/index'
 import {
   BaseCollectionList,
   CollectionListItem,
-  CollectionSelectAll,
+  paginateBySkipLimit,
 } from '../base-collection-list'
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { partial } from 'lodash-es'
-import { LazyListLoader } from '../../../lazy-list/lazy-list-loader'
-import { useObservable } from 'tapestry-core-client/src/components/lib/hooks/use-observable'
-import { useAsyncAction } from 'tapestry-core-client/src/components/lib/hooks/use-async-action'
-import { paginateBySkipLimit } from '../paginate-utils'
-import { ImportItem, MAX_SELECTION } from '../..'
+import { IASelectedItem } from '../..'
 
 function getSearchOpts(query: string) {
   return {
@@ -67,13 +63,19 @@ export async function requestSearchItems(
   }
 }
 
-function toImportItem(item: IASearchResultItem): ImportItem {
+function toImportItem(item: IASearchResultItem): IASelectedItem {
   return { id: item.id, mediaType: item.mediatype }
 }
 
-interface IASearchListProps extends Omit<ImportItemsListProps, 'collectionImport'> {
+interface IASearchListProps extends Omit<
+  ImportItemsListProps,
+  'collectionImport' | 'selectedItems' | 'onSelect' | 'onSelectAll'
+> {
   query: string
   emptyPlaceholder?: string
+  selectedItems: IASelectedItem[]
+  onSelect: (item: IASelectedItem) => unknown
+  onSelectAll: (items: IASelectedItem[]) => unknown
 }
 
 export function IASearchList({
@@ -87,52 +89,17 @@ export function IASearchList({
 }: IASearchListProps) {
   const mdOrLess = useResponsive() <= Breakpoint.MD
 
-  const [listLoader, setListLoader] = useState<LazyListLoader<IASearchResultItem> | null>(null)
-  const state = useObservable(listLoader)
-  const total = state?.total
-
   const requestItems = useMemo(() => partial(requestSearchItems, query), [query])
-
-  const { trigger: selectAllItems, loading: selectingAll } = useAsyncAction(
-    async ({ signal }: AbortController) => {
-      const result = await requestItems(0, MAX_SELECTION, signal)
-      onSelectAll(result.data.map(toImportItem))
-    },
-  )
-
-  const selectedCount = selectedItems.length
-  const hasSelection = selectedCount > 0
-
-  const selectAll = (
-    <CollectionSelectAll
-      checked={hasSelection}
-      onChange={() => (hasSelection ? onDeselectAll() : selectAllItems())}
-      total={total}
-      loading={selectingAll}
-      mdOrLess={mdOrLess}
-    />
-  )
 
   return (
     <BaseCollectionList
       windowSize={100}
       loadingEdgeProximity={15}
       requestItems={requestItems}
-      onLoaderInitialized={setListLoader}
       mdOrLess={mdOrLess}
       columns={['creator', 'published', 'views']}
       detailsGroupName="IA-search-list"
-      selectAll={selectAll}
-      header={
-        mdOrLess ? (
-          <>
-            {!state?.skip && header}
-            {selectAll}
-          </>
-        ) : (
-          header
-        )
-      }
+      header={header}
       toListItem={(item): CollectionListItem => ({
         image: getIAItemThumbnailURL(item.id),
         title: item.title,
@@ -140,9 +107,11 @@ export function IASearchList({
         published: item.publicdate,
         views: item.downloads,
       })}
-      isSelected={(item) => !!selectedItems.find((i) => i.id === item.id)}
-      onSelectItem={(item) => onSelect(toImportItem(item))}
-      selectedCount={selectedCount}
+      toImportItem={toImportItem}
+      selectedItems={selectedItems}
+      onSelect={onSelect}
+      onSelectAll={onSelectAll}
+      onDeselectAll={onDeselectAll}
       emptyPlaceholder={<Text>{emptyPlaceholder}</Text>}
     />
   )

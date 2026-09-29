@@ -1,11 +1,13 @@
 import clsx from 'clsx'
-import { CSSProperties, ReactNode } from 'react'
+import { CSSProperties, ReactNode, useState } from 'react'
 import { intlFormat } from 'date-fns'
 import { Icon, IconName } from 'tapestry-core-client/src/components/lib/icon/index'
 import { Checkbox } from 'tapestry-core-client/src/components/lib/checkbox'
 import { Text } from 'tapestry-core-client/src/components/lib/text/index'
 import { TypographyName } from 'tapestry-core-client/src/theme/types'
+import { useObservable } from 'tapestry-core-client/src/components/lib/hooks/use-observable'
 import { LazyList, LazyListProps, WithId } from '../../../lazy-list'
+import { LazyListLoader } from '../../../lazy-list/lazy-list-loader'
 import { LoadingLogoIcon } from '../../../loading-logo-icon'
 import { MAX_SELECTION } from '../..'
 import { SelectAll } from '../select-all'
@@ -83,44 +85,83 @@ function renderColumnValue(
   }
 }
 
-export interface BaseCollectionListProps<T extends WithId> extends Pick<
+// A thumbnail that falls back to a generic icon both when there's no image URL at all and when a
+// real image URL fails to load. Handled locally (rather than filtering the failed item out of the
+// list entirely, as this used to) so the lazy list's loaded window stays in sync with what it
+// actually requested -- removing an item after the fact desyncs its indices from the server.
+function ItemThumbnail({
+  image,
+  fallbackIcon,
+  title,
+}: Pick<CollectionListItem, 'image' | 'fallbackIcon' | 'title'>) {
+  const [failed, setFailed] = useState(false)
+  return image && !failed ? (
+    <img className={styles.itemImage} src={image} alt={title} onError={() => setFailed(true)} />
+  ) : (
+    <Icon
+      component="div"
+      icon={fallbackIcon ?? 'image'}
+      className={clsx(styles.itemImage, styles.noThumbnailIcon)}
+    />
+  )
+}
+
+export interface BaseCollectionListProps<T extends WithId, S extends { id: string }> extends Pick<
   LazyListProps<T>,
-  | 'requestItems'
-  | 'windowSize'
-  | 'loadingEdgeProximity'
-  | 'autoReload'
-  | 'onLoaderInitialized'
-  | 'header'
+  'requestItems' | 'windowSize' | 'loadingEdgeProximity' | 'autoReload'
 > {
   mdOrLess: boolean
   columns: CollectionListColumn[]
   detailsGroupName: string
-  selectAll: ReactNode
-  /** Skip rendering an item entirely, e.g. one whose thumbnail failed to load. Default: always render. */
-  shouldRenderItem?: (item: T) => boolean
+  header?: ReactNode
   toListItem: (item: T) => CollectionListItem
-  onImageError?: (item: T) => void
-  isSelected: (item: T) => boolean
-  onSelectItem: (item: T) => void
-  selectedCount: number
+  toImportItem: (item: T) => S
+  selectedItems: S[]
+  onSelect: (item: S) => unknown
+  onSelectAll: (items: S[]) => unknown
+  onDeselectAll: () => unknown
   emptyPlaceholder: ReactNode
 }
 
-export function BaseCollectionList<T extends WithId>({
+export function BaseCollectionList<T extends WithId, S extends { id: string }>({
   mdOrLess,
   columns,
   detailsGroupName,
-  selectAll,
-  shouldRenderItem,
+  header,
   toListItem,
-  onImageError,
-  isSelected,
-  onSelectItem,
-  selectedCount,
+  toImportItem,
+  selectedItems,
+  onSelect,
+  onSelectAll,
+  onDeselectAll,
   emptyPlaceholder,
   ...lazyListProps
-}: BaseCollectionListProps<T>) {
+}: BaseCollectionListProps<T, S>) {
   const textVariant = mdOrLess ? 'bodyXs' : undefined
+
+  const [listLoader, setListLoader] = useState<LazyListLoader<T> | null>(null)
+  const state = useObservable(listLoader)
+  const total = state?.total
+
+  const selectedCount = selectedItems.length
+  const maxSelectable = total === undefined ? undefined : Math.min(total, MAX_SELECTION)
+  const allSelected = maxSelectable !== undefined && selectedCount >= maxSelectable
+
+  const selectAll = (
+    <SelectAll
+      checked={allSelected}
+      onChange={() => {
+        if (allSelected) {
+          onDeselectAll()
+        } else if (state) {
+          onSelectAll(state.data.slice(0, MAX_SELECTION).map(toImportItem))
+        }
+      }}
+      total={total}
+      classes={{ root: mdOrLess ? styles.mobileSelectAll : undefined, checkbox: styles.checkbox }}
+      textVariant={textVariant}
+    />
+  )
 
   const detailsHeader = (
     <>
@@ -150,34 +191,34 @@ export function BaseCollectionList<T extends WithId>({
       )}
       <LazyList
         {...lazyListProps}
+        onLoaderInitialized={setListLoader}
+        header={
+          mdOrLess ? (
+            <>
+              {!state?.skip && header}
+              {selectAll}
+            </>
+          ) : (
+            header
+          )
+        }
         renderItem={(item) => {
-          if (shouldRenderItem && !shouldRenderItem(item)) return null
-
           const listItem = toListItem(item)
-          const checked = isSelected(item)
+          const checked = !!selectedItems.find((i) => i.id === item.id)
           const itemSummary = (
             <Checkbox
               checked={checked}
-              onChange={() => onSelectItem(item)}
+              onChange={() => onSelect(toImportItem(item))}
               classes={{ checkbox: styles.checkbox }}
               disabled={!checked && selectedCount >= MAX_SELECTION}
               label={{
                 content: (
                   <>
-                    {listItem.image ? (
-                      <img
-                        className={styles.itemImage}
-                        src={listItem.image}
-                        alt={listItem.title}
-                        onError={() => onImageError?.(item)}
-                      />
-                    ) : (
-                      <Icon
-                        component="div"
-                        icon={listItem.fallbackIcon ?? 'image'}
-                        className={clsx(styles.itemImage, styles.noThumbnailIcon)}
-                      />
-                    )}
+                    <ItemThumbnail
+                      image={listItem.image}
+                      fallbackIcon={listItem.fallbackIcon}
+                      title={listItem.title}
+                    />
                     <Text lineClamp={2} variant={textVariant}>
                       {listItem.title}
                     </Text>
@@ -221,30 +262,43 @@ export function BaseCollectionList<T extends WithId>({
   )
 }
 
-interface CollectionSelectAllProps {
-  checked: boolean
-  onChange: () => unknown
-  total: number | undefined
-  loading?: boolean
-  mdOrLess: boolean
+interface FetchedPage<Result> {
+  page: number
+  result: Result | undefined
 }
 
-// The `SelectAll` checkbox, styled and classed the way every BaseCollectionList caller needs it.
-export function CollectionSelectAll({
-  checked,
-  onChange,
-  total,
-  loading,
-  mdOrLess,
-}: CollectionSelectAllProps) {
-  return (
-    <SelectAll
-      checked={checked}
-      onChange={onChange}
-      total={total}
-      loading={loading}
-      classes={{ root: mdOrLess ? styles.mobileSelectAll : undefined, checkbox: styles.checkbox }}
-      textVariant={mdOrLess ? 'bodyXs' : undefined}
-    />
-  )
+/**
+ * Bridge a numbered-page API (IA's advanced search, or a proxied external platform) to
+ * `LazyList`'s arbitrary `skip`/`limit` windowing. A requested window rarely lines up with a
+ * page boundary, so fetch the one or two server pages that cover it and slice out the window.
+ */
+export async function paginateBySkipLimit<Result, Item>(
+  fetchPage: (page: number, pageSize: number, signal: AbortSignal) => Promise<Result | undefined>,
+  getItems: (result: Result) => Item[],
+  skip: number,
+  limit: number,
+  signal: AbortSignal,
+): Promise<{
+  skip: number
+  data: Item[]
+  firstPage: FetchedPage<Result>
+  secondPage?: FetchedPage<Result>
+}> {
+  const firstPageNumber = Math.floor(skip / limit) + 1
+  const firstPageResult = await fetchPage(firstPageNumber, limit, signal)
+
+  const extra = skip % limit
+  const secondPageResult = extra ? await fetchPage(firstPageNumber + 1, limit, signal) : undefined
+
+  const data = [
+    ...(firstPageResult ? getItems(firstPageResult) : []),
+    ...(secondPageResult ? getItems(secondPageResult) : []),
+  ].slice(extra, extra + limit)
+
+  return {
+    skip,
+    data,
+    firstPage: { page: firstPageNumber, result: firstPageResult },
+    ...(extra ? { secondPage: { page: firstPageNumber + 1, result: secondPageResult } } : {}),
+  }
 }

@@ -7,7 +7,7 @@ import { Checkbox } from 'tapestry-core-client/src/components/lib/checkbox'
 import { Text } from 'tapestry-core-client/src/components/lib/text/index'
 import styles from './styles.module.css'
 import { SelectAll } from '../select-all'
-import { MAX_SELECTION } from '../..'
+import { MAX_SELECTION, PlaylistSelectedItem } from '../..'
 
 function formatDuration(durationSeconds: number) {
   durationSeconds = Math.floor(durationSeconds)
@@ -17,8 +17,14 @@ function formatDuration(durationSeconds: number) {
   return `${hours > 0 ? `${hours}:` : ''}${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
 }
 
-interface IAPlaylistEntriesProps extends Omit<ImportItemsListProps, 'collectionImport'> {
+interface IAPlaylistEntriesProps extends Omit<
+  ImportItemsListProps,
+  'collectionImport' | 'selectedItems' | 'onSelect' | 'onSelectAll'
+> {
   entries: PlaylistEntry[]
+  selectedItems: PlaylistSelectedItem[]
+  onSelect: (item: PlaylistSelectedItem) => unknown
+  onSelectAll: (items: PlaylistSelectedItem[]) => unknown
 }
 
 export function IAPlaylistEntries({
