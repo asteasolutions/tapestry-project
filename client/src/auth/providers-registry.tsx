@@ -1,8 +1,11 @@
 import z from 'zod/v4'
+import { GenericAbortSignal } from 'axios'
 import { auth } from '.'
 import { AuthProviderEnum, config } from '../config'
 import { GoogleLoginButton } from './google/login-button'
 import { IALoginButton } from './internet-archive/login-button'
+import { OrcidLoginButton } from './orcid/login-button'
+import { tryCompleteOrcidLogin } from './orcid/service'
 
 export interface AuthProviderItem {
   id: string
@@ -10,6 +13,12 @@ export interface AuthProviderItem {
     isSingleProvider?: boolean
   }>
   prepare?: () => void
+  /**
+   * Called at the start of every AuthService.refresh() attempt, before the normal
+   * refresh-token flow. Return true if this completed a login itself (e.g. exchanging an
+   * OAuth redirect code), so the normal refresh-token flow is skipped for this attempt.
+   */
+  tryCompleteLogin?: (signal?: GenericAbortSignal) => Promise<boolean>
 }
 type AuthProvider = z.infer<typeof AuthProviderEnum>
 
@@ -34,6 +43,7 @@ const PROVIDER_MAP: Record<AuthProvider, AuthProviderItem> = {
     },
   },
   ia: { id: 'internet-archive', component: IALoginButton },
+  orcid: { id: 'orcid', component: OrcidLoginButton, tryCompleteLogin: tryCompleteOrcidLogin },
   // TODO: Add more providers here as needed
   // bluesky: { id: 'bluesky', component: BlueskyLoginButton },
   // wikimedia: { id: 'wikimedia', component: WikimediaLoginButton },
