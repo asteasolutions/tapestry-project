@@ -3,6 +3,7 @@ import { pdfjs } from 'react-pdf'
 import { urlToBlob } from 'tapestry-core-client/src/lib/file'
 import { aspectRatio, clampSize, innerFit, Size } from 'tapestry-core/src/lib/geometry'
 import { WEB_SOURCE_PARSERS } from 'tapestry-core/src/web-sources'
+import { resource } from '../services/rest-resources'
 
 export type MediaItemSource = File | string
 
@@ -98,7 +99,120 @@ const DEFAULT_WEBPAGE_SIZE: Size = {
   width: 400,
   height: 500,
 }
-const EMBEDDED_TAPESTRY_ITEM_SIZE: Size = { width: 1920, height: 930 }
+const EMBEDDED_TAPESTRY_MAX_SIDE_SIZE = 700
+const EMBEDDED_TAPESTRY_ITEM_SIZE: Size = {
+  width: EMBEDDED_TAPESTRY_MAX_SIDE_SIZE,
+  height: EMBEDDED_TAPESTRY_MAX_SIDE_SIZE / 2,
+}
+const TOOLBAR_PADDING = 150
+
+type TapestryRoute =
+  | { type: 'slug'; username: string; slug: string }
+  | { type: 'invitation'; invitationId: string }
+  | { type: 'id'; tapestryId: string }
+  | null
+
+function parseTapestryUrl(source: string): TapestryRoute {
+  const url = new URL(source)
+
+  //path by invitation: .../?invitation=invitationId
+  const invitationId = url.searchParams.get('invitation')
+  if (invitationId) {
+    return { type: 'invitation', invitationId }
+  }
+
+  const pathname = url.pathname.replace(/^\/+|\/+$/g, '')
+  const segments = pathname.split('/')
+
+  //path by username and slug: .../u/:username/:slug
+  if (segments[0] === 'u' && segments[1] && segments[2]) {
+    return { type: 'slug', username: segments[1], slug: segments[2] }
+  }
+
+  //path by id:  .../t/:tapestryId
+  if (segments[0] === 't' && segments[1]) {
+    return { type: 'id', tapestryId: segments[1] }
+  }
+
+  return null
+}
+
+async function getEmbeddedTapestrySize(source: string): Promise<Size> {
+  const route = parseTapestryUrl(source)
+
+  if (!route) {
+    return DEFAULT_WEBPAGE_SIZE
+  }
+
+  const tapestry = await (async () => {
+    switch (route.type) {
+      case 'slug': {
+        return resource('tapestries').read(
+          {
+            id: `${route.username}/${route.slug}`,
+          },
+          { include: ['items'] },
+        )
+      }
+
+      case 'invitation': {
+        const invitation = await resource('tapestryInvitations').read(
+          { id: route.invitationId },
+          { include: ['tapestry.items'] },
+        )
+        return invitation.tapestry
+      }
+
+      case 'id': {
+        return await resource('tapestries').read(
+          {
+            id: route.tapestryId,
+          },
+          { include: ['items'] },
+        )
+      }
+    }
+  })()
+
+  if (!tapestry) {
+    return DEFAULT_WEBPAGE_SIZE
+  }
+
+  //Do we want this? the start view can be too zoomed in, or zoomed out
+  // if (tapestry.startView) {
+  //   return tapestry.startView.size
+  // }
+
+  let minX = Infinity
+  let minY = Infinity
+  let maxX = -Infinity
+  let maxY = -Infinity
+
+  if (tapestry.items) {
+    for (const item of tapestry.items) {
+      minX = Math.min(minX, item.position.x)
+      minY = Math.min(minY, item.position.y)
+
+      maxX = Math.max(maxX, item.size.width + item.position.x)
+      maxY = Math.max(maxY, item.size.height + item.position.y)
+    }
+
+    const width = maxX - minX
+    const height = maxY - minY
+
+    return width >= height
+      ? {
+          width: EMBEDDED_TAPESTRY_MAX_SIDE_SIZE,
+          height: (EMBEDDED_TAPESTRY_MAX_SIDE_SIZE * height) / width + TOOLBAR_PADDING,
+        }
+      : {
+          width: (EMBEDDED_TAPESTRY_MAX_SIDE_SIZE * width) / height,
+          height: EMBEDDED_TAPESTRY_MAX_SIDE_SIZE + TOOLBAR_PADDING,
+        }
+  }
+
+  return EMBEDDED_TAPESTRY_ITEM_SIZE
+}
 
 export async function getWebpageItemSize(source: MediaItemSource): Promise<Size> {
   if (source instanceof File) {
@@ -126,9 +240,8 @@ export async function getWebpageItemSize(source: MediaItemSource): Promise<Size>
     }
   }
 
-  //If the imported item is a tapestry (the URL host is the same), the size of the item is fixed
   if (host === window.location.host) {
-    return EMBEDDED_TAPESTRY_ITEM_SIZE
+    return getEmbeddedTapestrySize(source)
   }
 
   return Promise.resolve(DEFAULT_WEBPAGE_SIZE)
