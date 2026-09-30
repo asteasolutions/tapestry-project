@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import {
   fetchWikimediaCategoryResults,
   wikimediaFilePageURL,
@@ -37,7 +37,6 @@ export function WikimediaCollectionList({
   ...props
 }: WikimediaCollectionListProps) {
   const mdOrLess = useResponsive() <= Breakpoint.MD
-  const [loadFailed, setLoadFailed] = useState(false)
 
   const requestItems = useMemo(() => {
     // Commons paginates categories with an opaque cursor, not a page number -- there's no way to
@@ -52,15 +51,11 @@ export function WikimediaCollectionList({
     return async (skip: number, limit: number, signal: AbortSignal) => {
       while (fetched.length < skip + limit && !done) {
         const page = await fetchWikimediaCategoryResults(collection.category, nextCursor, signal)
-        if (!page) {
-          setLoadFailed(true)
-          return { skip, total: collection.total, data: fetched.slice(skip, skip + limit) }
-        }
+        if (!page) break
         fetched.push(...page.results)
         nextCursor = page.nextCursor
         done = nextCursor === undefined
       }
-      setLoadFailed(false)
       return { skip, total: collection.total, data: fetched.slice(skip, skip + limit) }
     }
   }, [collection.category, collection.total])
@@ -91,13 +86,7 @@ export function WikimediaCollectionList({
           size: item.width && item.height ? { width: item.width, height: item.height } : undefined,
         })
       }
-      emptyPlaceholder={
-        <Text>
-          {loadFailed
-            ? "Couldn't load items right now — try again in a moment"
-            : 'No files in this category'}
-        </Text>
-      }
+      emptyPlaceholder={<Text>No files in this category</Text>}
     />
   )
 }

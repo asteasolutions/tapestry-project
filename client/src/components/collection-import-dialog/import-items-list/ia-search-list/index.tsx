@@ -14,7 +14,7 @@ import {
 } from '../base-collection-list'
 import { useMemo } from 'react'
 import { partial } from 'lodash-es'
-import { createIAMediaItem } from '../../../../stage/item-factories'
+import { createIAMediaItems } from '../../../../stage/item-factories'
 
 function getSearchOpts(query: string) {
   return {
@@ -96,9 +96,12 @@ export function IASearchList({
         published: item.publicdate,
         views: item.downloads,
       })}
-      toTapestryItem={(item: IASearchResultItem) =>
-        createIAMediaItem(tapestryId, { id: item.id, mediaType: item.mediatype })
-      }
+      toTapestryItem={async (item: IASearchResultItem) => {
+        const [created] = await createIAMediaItems(tapestryId, [
+          { id: item.id, mediaType: item.mediatype },
+        ])
+        return created
+      }}
       emptyPlaceholder={<Text>{emptyPlaceholder}</Text>}
     />
   )

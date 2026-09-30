@@ -59,7 +59,7 @@ export async function getImageItemSize(
   source: MediaItemSource | Size,
   width?: number,
 ): Promise<Size> {
-  const naturalSize: Size = isMediaItemSource(source)
+  const intrinsicSize: Size = isMediaItemSource(source)
     ? await loadImageFromBlob(await mediaSourceToBlob(source))
     : source
   const defaultImageWidth = 300
@@ -67,13 +67,13 @@ export async function getImageItemSize(
 
   return getClampedItemSize({
     width: imageWidth,
-    height: imageWidth / aspectRatio(naturalSize),
+    height: imageWidth / aspectRatio(intrinsicSize),
   })
 }
 
 const DEFAULT_VIDEO_WIDTH = 500
 
-function loadVideoNaturalSize(source: MediaItemSource): Promise<Size> {
+function videoIntrinsicSize(source: MediaItemSource): Promise<Size> {
   return new Promise((resolve) => {
     const video = document.createElement('video')
     video.src = mediaSourceToSrc(source)
@@ -86,15 +86,17 @@ function loadVideoNaturalSize(source: MediaItemSource): Promise<Size> {
 }
 
 export async function getVideoItemSize(source: MediaItemSource | Size): Promise<Size> {
-  const naturalSize = isMediaItemSource(source) ? await loadVideoNaturalSize(source) : source
+  const intrinsicSize = isMediaItemSource(source) ? await videoIntrinsicSize(source) : source
 
   return {
     width: DEFAULT_VIDEO_WIDTH,
-    height: (DEFAULT_VIDEO_WIDTH * naturalSize.height) / naturalSize.width,
+    height: (DEFAULT_VIDEO_WIDTH * intrinsicSize.height) / intrinsicSize.width,
   }
 }
 
-export async function getPDFItemSize(source: MediaItemSource): Promise<Size> {
+export async function getPDFItemSize(source: MediaItemSource | Size): Promise<Size> {
+  if (!isMediaItemSource(source)) return source
+
   const src = mediaSourceToSrc(source)
 
   const doc = await pdfjs.getDocument(src).promise
@@ -115,7 +117,9 @@ const DEFAULT_WEBPAGE_SIZE: Size = {
 }
 const EMBEDDED_TAPESTRY_ITEM_SIZE: Size = { width: 1920, height: 930 }
 
-export async function getWebpageItemSize(source: MediaItemSource): Promise<Size> {
+export async function getWebpageItemSize(source: MediaItemSource | Size): Promise<Size> {
+  if (!isMediaItemSource(source)) return source
+
   if (source instanceof File) {
     return DEFAULT_WEBPAGE_SIZE
   }

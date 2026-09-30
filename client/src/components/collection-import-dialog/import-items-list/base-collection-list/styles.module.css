@@ -38,7 +38,7 @@
     }
 
     .item-index {
-      min-width: 30px;
+      /* min-width is computed per-row (depends on how many digits the index has) -- see index.tsx */
       text-align: end;
     }
 

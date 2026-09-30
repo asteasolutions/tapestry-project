@@ -1,16 +1,13 @@
 import { ReactNode } from 'react'
 import { getIAItemThumbnailURL } from 'tapestry-core/src/internet-archive'
-import {
-  fetchWikimediaCategoryDescription,
-  fetchWikimediaCategoryThumbnail,
-} from 'tapestry-core/src/wikimedia-commons'
+import { fetchWikimediaCategoryDetails } from 'tapestry-core/src/wikimedia-commons'
 import { CollectionImport } from '../../../pages/tapestry/view-model'
 import styles from './styles.module.css'
 import { Text } from 'tapestry-core-client/src/components/lib/text/index'
 import { useAsync } from 'tapestry-core-client/src/components/lib/hooks/use-async'
 import { intlFormat } from 'date-fns'
 import { Breakpoint, useResponsive } from '../../../providers/responsive-provider'
-import { Thumbnail } from '../thumbnail'
+import { ImageWrapper } from '../image-wrapper'
 
 const parser = new DOMParser()
 
@@ -30,14 +27,18 @@ function DetailsLayout({ thumbnail, title, subtitle, meta, body }: DetailsLayout
   return (
     <div className={styles.root}>
       <div className={styles.header}>
-        {thumbnail && <Thumbnail className={styles.thumbnail} fit="contain" image={thumbnail} />}
+        {thumbnail && <ImageWrapper className={styles.thumbnail} image={thumbnail} />}
         <div className={styles.metadataContainer}>
           <div>
-            <Text variant={mdOrLess ? 'bodySm' : 'h6'} lineClamp={2} style={{ fontWeight: 'bold' }}>
+            <Text
+              variant={mdOrLess ? 'bodySm' : 'h6'}
+              lineClamp={2}
+              style={{ fontWeight: 'bold', overflowWrap: 'anywhere' }}
+            >
               {title}
             </Text>
             {subtitle !== undefined && (
-              <Text variant={textVariant} lineClamp={2}>
+              <Text variant={textVariant} lineClamp={2} style={{ overflowWrap: 'anywhere' }}>
                 {subtitle}
               </Text>
             )}
@@ -59,21 +60,17 @@ function WikimediaCommonsCategoryDetails({
 }: {
   collection: Extract<CollectionImport, { type: 'WikimediaCommonsCategory' }>
 }) {
-  const { data: thumbnail } = useAsync(
-    ({ signal }) => fetchWikimediaCategoryThumbnail(collection.category, signal),
-    [collection.category],
-  )
-  const { data: description } = useAsync(
-    ({ signal }) => fetchWikimediaCategoryDescription(collection.category, signal),
+  const { data: details } = useAsync(
+    ({ signal }) => fetchWikimediaCategoryDetails(collection.category, signal),
     [collection.category],
   )
 
   return (
     <DetailsLayout
-      thumbnail={thumbnail}
+      thumbnail={details?.thumbnail}
       title={collection.category}
       subtitle={`${collection.total} files`}
-      body={description}
+      body={details?.description}
     />
   )
 }

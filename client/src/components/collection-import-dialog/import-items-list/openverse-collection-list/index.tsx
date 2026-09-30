@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import {
   fetchOpenverseCollectionResults,
   openverseMediaPageURL,
@@ -34,14 +34,13 @@ export function OpenverseCollectionList({
   ...props
 }: OpenverseCollectionListProps) {
   const mdOrLess = useResponsive() <= Breakpoint.MD
-  const [loadFailed, setLoadFailed] = useState(false)
 
   const requestItems = useMemo(() => {
     // Always report the count fetched up front. Do not derive the total from each page's own
     // response. LazyListLoader treats a change in total as a change in the list. It then does a
     // full reload and clears the current items. A failed page must not look like a smaller list.
     return async (skip: number, limit: number, signal: AbortSignal) => {
-      const { data, firstPage, secondPage } = await paginateBySkipLimit(
+      const { data } = await paginateBySkipLimit(
         (page, pageSize, pageSignal) =>
           fetchOpenverseCollectionResults(
             collection.mediaType,
@@ -54,9 +53,6 @@ export function OpenverseCollectionList({
         skip,
         limit,
         signal,
-      )
-      setLoadFailed(
-        firstPage.result === undefined || (secondPage !== undefined && !secondPage.result),
       )
       return { skip, total: collection.total, data }
     }
@@ -89,9 +85,7 @@ export function OpenverseCollectionList({
       }
       emptyPlaceholder={
         <Text>
-          {loadFailed
-            ? "Couldn't load items right now — try again in a moment"
-            : `No ${collection.mediaType === 'image' ? 'images' : 'audio items'} in this collection`}
+          {`No ${collection.mediaType === 'image' ? 'images' : 'audio items'} in this collection`}
         </Text>
       }
     />

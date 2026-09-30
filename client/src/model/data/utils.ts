@@ -236,7 +236,7 @@ export const itemSizes = {
   video: getVideoItemSize,
   webpage: getWebpageItemSize,
   text: { height: 200, width: 400 },
-} as const satisfies Record<ItemType, Size | ((file: MediaItemSource) => Promise<Size>)>
+} as const satisfies Record<ItemType, Size | ((file: MediaItemSource | Size) => Promise<Size>)>
 
 export function createTextItem(text = '', tapestryId: string): TextItemCreateDto {
   const { textItemColor } = userSettings.getTapestrySettings(tapestryId)
@@ -319,16 +319,8 @@ async function getMediaItemSize(
   source: MediaItemSource,
   knownSize?: Size,
 ): Promise<Size> {
-  // Only image/video actually measure the source to compute a size -- for those two, a
-  // caller-supplied size (e.g. straight from a platform's own search metadata) skips that
-  // entirely. audio/pdf/webpage/book/text either use a fixed size or need the real source
-  // regardless (a PDF's page size, a webpage's own layout), so a knownSize wouldn't apply to them.
-  if (knownSize) {
-    if (type === 'image') return getImageItemSize(knownSize)
-    if (type === 'video') return getVideoItemSize(knownSize)
-  }
   const sizeGetter = itemSizes[type]
-  return isFunction(sizeGetter) ? await sizeGetter(source) : sizeGetter
+  return isFunction(sizeGetter) ? await sizeGetter(knownSize ?? source) : sizeGetter
 }
 
 export async function createMediaItem<T extends MediaItemType>(
@@ -350,10 +342,7 @@ export async function createMediaItem<T extends MediaItemType>(
   } satisfies MediaItemCreateDto as MediaItemCreateDto & { type: T }
 }
 
-// For a source imported from another platform (Openverse, Wikimedia Commons) -- source is the
-// real media URL to store, originalSource is the platform page it came from (kept as a note),
-// and size, when the caller already knows it (e.g. straight from that platform's own search
-// metadata), skips createMediaItem's own measure-the-source step entirely.
+// Creates an item from a source on another platform, keeping the platform page as a note.
 export async function createDerivedSourceMediaItem(
   tapestryId: string,
   media: { source: string; originalSource: string; mediaType: MediaItemType; size?: Size },

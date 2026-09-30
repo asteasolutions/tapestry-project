@@ -11,7 +11,7 @@ import { ItemCreateDto } from 'tapestry-shared/src/data-transfer/resources/dtos/
 import { LazyList, LazyListProps, WithId } from '../../../lazy-list'
 import { LazyListLoader } from '../../../lazy-list/lazy-list-loader'
 import { LoadingLogoIcon } from '../../../loading-logo-icon'
-import { Thumbnail } from '../../thumbnail'
+import { ImageWrapper } from '../../image-wrapper'
 import { CreateItemsFromSelection, MAX_SELECTION } from '../..'
 import { SelectAll } from '../select-all'
 import styles from './styles.module.css'
@@ -39,7 +39,8 @@ export async function paginateBySkipLimit<Result, Item>(
   const firstPageResult = await fetchPage(firstPageNumber, limit, signal)
 
   const extra = skip % limit
-  const secondPageResult = extra ? await fetchPage(firstPageNumber + 1, limit, signal) : undefined
+  const secondPageResult =
+    extra && firstPageResult ? await fetchPage(firstPageNumber + 1, limit, signal) : undefined
 
   const data = [
     ...(firstPageResult ? getItems(firstPageResult) : []),
@@ -50,7 +51,9 @@ export async function paginateBySkipLimit<Result, Item>(
     skip,
     data,
     firstPage: { page: firstPageNumber, result: firstPageResult },
-    ...(extra ? { secondPage: { page: firstPageNumber + 1, result: secondPageResult } } : {}),
+    ...(extra && firstPageResult
+      ? { secondPage: { page: firstPageNumber + 1, result: secondPageResult } }
+      : {}),
   }
 }
 
@@ -77,7 +80,7 @@ const COLUMN_WIDTH: Record<CollectionListColumn, string> = {
   uploader: '130px',
   published: '110px',
   views: '60px',
-  dimensions: '90px',
+  dimensions: '110px',
 }
 
 // The platform-agnostic row shape every collection list maps its own item type into.
@@ -132,7 +135,7 @@ function renderColumnValue(
       )
     case 'dimensions':
       return (
-        <Text variant={textVariant}>
+        <Text variant={textVariant} style={{ overflowWrap: 'anywhere' }}>
           {item.dimensions && `${item.dimensions.width}×${item.dimensions.height}`}
         </Text>
       )
@@ -181,7 +184,7 @@ export function BaseCollectionList<T extends WithId>({
 
   // Cache of everything fetched so far, indexed by absolute position, so autoReload's periodic
   // re-request of an already-loaded window is served from here instead of hitting the rate-limited
-  // external APIs again. Gaps get explicit `undefined` entries, not sparse holes.
+  // external APIs again. Assumes the list only ever requests sequential windows (no gaps).
   const cacheRef = useRef<(T | undefined)[]>([])
   const totalRef = useRef<number | undefined>(undefined)
 
@@ -200,9 +203,6 @@ export function BaseCollectionList<T extends WithId>({
       const response = await requestItems(skip, limit, signal)
       totalRef.current = response.total
 
-      for (let i = cache.length; i < skip; i++) {
-        cache[i] = undefined
-      }
       response.data.forEach((item, i) => {
         cache[skip + i] = item
       })
@@ -287,12 +287,10 @@ export function BaseCollectionList<T extends WithId>({
             header
           )
         }
-        renderItem={(item, index) => {
-          // LazyList always calls renderItem with a real index; it's only optional in the shared
-          // type because most of LazyList's other consumers don't need it.
-          const rowIndex = index!
+        renderItem={(item, rowIndex) => {
           const listItem = toListItem(item)
           const checked = selectedIndices.has(rowIndex)
+          const indexDigits = String(rowIndex + 1).length
           const itemSummary = (
             <Checkbox
               checked={checked}
@@ -302,10 +300,14 @@ export function BaseCollectionList<T extends WithId>({
               label={{
                 content: (
                   <>
-                    <Text variant={textVariant} className={styles.itemIndex}>
+                    <Text
+                      variant={textVariant}
+                      className={styles.itemIndex}
+                      style={{ minWidth: `${Math.min(30, (indexDigits + 1) * 10)}px` }}
+                    >
                       {rowIndex + 1}.
                     </Text>
-                    <Thumbnail
+                    <ImageWrapper
                       className={styles.itemImage}
                       image={listItem.image}
                       fallbackIcon={listItem.fallbackIcon}

@@ -14,7 +14,7 @@ export interface WithId {
 
 export interface LazyListProps<T extends WithId> extends Partial<LazyListLoaderConfig> {
   requestItems: LazyListRequestItems<T>
-  renderItem: (item: T, index?: number) => ReactNode
+  renderItem: (item: T, index: number) => ReactNode
   emptyPlaceholder: ReactNode
   loadingIndicator: ReactNode
   // Normally the lazy list starts with the first item at the top and the user scrolls down to view more items.

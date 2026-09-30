@@ -199,62 +199,48 @@ export async function fetchWikimediaPageCount(
 
 const CATEGORY_THUMBNAIL_WIDTH = 300
 
-// `pageimages` resolves to a representative file already in the category.
-export async function fetchWikimediaCategoryThumbnail(
-  category: string,
-  signal?: AbortSignal,
-): Promise<string | null> {
-  try {
-    const url = new URL(COMMONS_API_URL)
-    url.searchParams.set('action', 'query')
-    url.searchParams.set('titles', category)
-    url.searchParams.set('prop', 'pageimages')
-    url.searchParams.set('piprop', 'thumbnail')
-    url.searchParams.set('pithumbsize', String(CATEGORY_THUMBNAIL_WIDTH))
-    url.searchParams.set('format', 'json')
-    url.searchParams.set('origin', '*')
-
-    const res = await fetch(url, { signal })
-    if (!res.ok) return null
-
-    interface CategoryPage {
-      thumbnail?: { source: string }
-    }
-    const data = (await res.json()) as CommonsQueryResponse<CategoryPage>
-    return Object.values(data.query?.pages ?? {})[0]?.thumbnail?.source ?? null
-  } catch {
-    return null
-  }
+export interface WikimediaCategoryDetails {
+  thumbnail: string | null
+  // `extracts` (Wikipedia's article-summary API) returns real prose for a category page whose own
+  // wikitext has an article-like intro, and blank HTML for one that doesn't -- both are real,
+  // common outcomes, not a sign the API failed.
+  description: string | null
 }
 
-// `extracts` (Wikipedia's article-summary API) returns real prose for a category page whose own
-// wikitext has an article-like intro, and blank HTML (e.g. "<p><br/></p>") for one that doesn't --
-// both are real, common outcomes, not a sign the API failed.
-export async function fetchWikimediaCategoryDescription(
+// pageimages/extracts are combined into one request -- verified real: MediaWiki's action=query
+// supports multiple props (prop=pageimages|extracts) in a single call.
+export async function fetchWikimediaCategoryDetails(
   category: string,
   signal?: AbortSignal,
-): Promise<string | null> {
+): Promise<WikimediaCategoryDetails> {
+  const empty = { thumbnail: null, description: null }
   try {
     const url = new URL(COMMONS_API_URL)
     url.searchParams.set('action', 'query')
     url.searchParams.set('titles', category)
-    url.searchParams.set('prop', 'extracts')
+    url.searchParams.set('prop', 'pageimages|extracts')
+    url.searchParams.set('piprop', 'thumbnail')
+    url.searchParams.set('pithumbsize', String(CATEGORY_THUMBNAIL_WIDTH))
     url.searchParams.set('exintro', 'true')
     url.searchParams.set('explaintext', 'true')
     url.searchParams.set('format', 'json')
     url.searchParams.set('origin', '*')
 
     const res = await fetch(url, { signal })
-    if (!res.ok) return null
+    if (!res.ok) return empty
 
     interface CategoryPage {
+      thumbnail?: { source: string }
       extract?: string
     }
     const data = (await res.json()) as CommonsQueryResponse<CategoryPage>
-    const extract = Object.values(data.query?.pages ?? {})[0]?.extract?.trim()
-    return extract || null
+    const page = Object.values(data.query?.pages ?? {})[0] ?? {}
+    return {
+      thumbnail: page.thumbnail?.source ?? null,
+      description: page.extract?.trim() || null,
+    }
   } catch {
-    return null
+    return empty
   }
 }
 

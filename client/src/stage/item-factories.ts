@@ -35,7 +35,6 @@ import { MediaItemType, WebpageType } from 'tapestry-core/src/data-format/schema
 import { getUserListItems } from '../lib/internet-archive'
 import { parseMediaSource, parseStringTransferData } from './data-transfer-handler'
 import { fileTypeFromBlob, fileTypeFromBuffer } from 'file-type'
-import { compact } from 'lodash-es'
 import { parse } from 'ini'
 import { CollectionImport } from '../pages/tapestry/view-model'
 
@@ -134,16 +133,16 @@ const IA_MEDIA_TYPE_MAP: Partial<Record<IAMediaType, WebpageType>> = {
   movies: 'iaVideo',
 }
 
-export async function createIAMediaItem(tapestryId: string, iaItem: IAItem) {
-  const item = await createMediaItem('webpage', iaItemEmbedURL(iaItem), tapestryId)
-  item.webpageType = IA_MEDIA_TYPE_MAP[iaItem.mediaType] ?? null
-  item.skipSourceResolution = true
-
-  return item
-}
-
 export async function createIAMediaItems(tapestryId: string, iaItems: IAItem[]) {
-  return Promise.all(iaItems.map((iaItem) => createIAMediaItem(tapestryId, iaItem)))
+  return Promise.all(
+    iaItems.map(async (iaItem) => {
+      const item = await createMediaItem('webpage', iaItemEmbedURL(iaItem), tapestryId)
+      item.webpageType = IA_MEDIA_TYPE_MAP[iaItem.mediaType] ?? null
+      item.skipSourceResolution = true
+
+      return item
+    }),
+  )
 }
 
 const iaFactory: ItemFactory = async (source, _mediaType, tapestryId) => {
@@ -184,13 +183,6 @@ const iaFactory: ItemFactory = async (source, _mediaType, tapestryId) => {
   return { items: await createIAMediaItems(tapestryId, await getNestedIAItems(descriptor.item)) }
 }
 
-export async function createExternalMediaItems(
-  tapestryId: string,
-  media: { source: string; originalSource: string; mediaType: MediaItemType }[],
-) {
-  return compact(await Promise.all(media.map((m) => createDerivedSourceMediaItem(tapestryId, m))))
-}
-
 const openverseFactory: ItemFactory = async (source, _mediaType, tapestryId) => {
   if (typeof source !== 'string' || !isHTTPURL(source)) return null
 
@@ -200,12 +192,14 @@ const openverseFactory: ItemFactory = async (source, _mediaType, tapestryId) => 
     const media = await fetchOpenverseMedia(openverseMediaType, id)
     if (!media) return null
 
-    const items = await createExternalMediaItems(tapestryId, [
-      { source: media.url, originalSource: source, mediaType: openverseMediaType },
-    ])
-    if (items.length === 0) return null
+    const item = await createDerivedSourceMediaItem(tapestryId, {
+      source: media.url,
+      originalSource: source,
+      mediaType: openverseMediaType,
+    })
+    if (!item) return null
 
-    return { items }
+    return { items: [item] }
   }
 
   const parsedOpenverseCollection = parseOpenverseCollectionQuery(source)
@@ -238,12 +232,14 @@ const wikimediaFactory: ItemFactory = async (source, _mediaType, tapestryId) => 
     const media = await fetchWikimediaMedia(wikimediaTitle)
     if (!media) return null
 
-    const items = await createExternalMediaItems(tapestryId, [
-      { source: media.url, originalSource: source, mediaType: media.mediaType },
-    ])
-    if (items.length === 0) return null
+    const item = await createDerivedSourceMediaItem(tapestryId, {
+      source: media.url,
+      originalSource: source,
+      mediaType: media.mediaType,
+    })
+    if (!item) return null
 
-    return { items }
+    return { items: [item] }
   }
 
   const category = parseWikimediaCategoryQuery(source)
