@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import {
   fetchWikimediaCollectionResults,
+  wikimediaFilePageURL,
   WikimediaMedia,
 } from 'tapestry-core/src/wikimedia-commons'
 import { ImportItemsListProps } from '..'
@@ -9,7 +10,7 @@ import { useResponsive, Breakpoint } from '../../../../providers/responsive-prov
 import { IconName } from 'tapestry-core-client/src/components/lib/icon/index'
 import { Text } from 'tapestry-core-client/src/components/lib/text/index'
 import { BaseCollectionList, CollectionListItem } from '../base-collection-list'
-import { WikimediaSelectedItem } from '../..'
+import { createExternalMediaItem } from '../../../../stage/item-factories'
 
 // Use this icon when a media item has no real thumbnail (Commons' generic per-extension icon,
 // already mapped to null in wikimedia-commons.ts).
@@ -25,27 +26,15 @@ export type WikimediaCommonsCategoryImport = Extract<
   { type: 'WikimediaCommonsCategory' }
 >
 
-interface WikimediaCollectionListProps extends Omit<
-  ImportItemsListProps,
-  'collectionImport' | 'selectedItems' | 'onSelect' | 'onSelectAll'
-> {
+interface WikimediaCollectionListProps extends Omit<ImportItemsListProps, 'collectionImport'> {
   collection: WikimediaCommonsCategoryImport
-  selectedItems: WikimediaSelectedItem[]
-  onSelect: (item: WikimediaSelectedItem) => unknown
-  onSelectAll: (items: WikimediaSelectedItem[]) => unknown
-}
-
-function toImportItem(item: WikimediaMedia): WikimediaSelectedItem {
-  return { id: item.id, sourceUrl: item.url, wikimediaMediaType: item.mediaType }
 }
 
 export function WikimediaCollectionList({
-  onSelect,
-  onSelectAll,
-  onDeselectAll,
   collection,
-  selectedItems,
   header,
+  tapestryId,
+  ...props
 }: WikimediaCollectionListProps) {
   const mdOrLess = useResponsive() <= Breakpoint.MD
   const [loadFailed, setLoadFailed] = useState(false)
@@ -78,12 +67,10 @@ export function WikimediaCollectionList({
 
   return (
     <BaseCollectionList
-      windowSize={20}
+      {...props}
+      windowSize={25}
       loadingEdgeProximity={5}
       requestItems={requestItems}
-      // Commons rate-limits aggressively. Nothing here needs a background refresh while the
-      // picker is open, only real user-driven pagination.
-      autoReload={false}
       mdOrLess={mdOrLess}
       columns={['uploader']}
       detailsGroupName="wikimedia-collection-list"
@@ -94,11 +81,13 @@ export function WikimediaCollectionList({
         title: item.title,
         uploader: item.uploader ?? undefined,
       })}
-      toImportItem={toImportItem}
-      selectedItems={selectedItems}
-      onSelect={onSelect}
-      onSelectAll={onSelectAll}
-      onDeselectAll={onDeselectAll}
+      toTapestryItem={(item: WikimediaMedia) =>
+        createExternalMediaItem(tapestryId, {
+          url: item.url,
+          pageUrl: wikimediaFilePageURL(item.id),
+          mediaType: item.mediaType,
+        })
+      }
       emptyPlaceholder={
         <Text>
           {loadFailed

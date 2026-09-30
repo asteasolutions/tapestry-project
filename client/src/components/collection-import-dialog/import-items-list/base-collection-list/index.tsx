@@ -1,17 +1,60 @@
 import clsx from 'clsx'
-import { CSSProperties, ReactNode, useState } from 'react'
+import { compact } from 'lodash-es'
+import { CSSProperties, ReactNode, RefObject, useMemo, useRef, useState } from 'react'
 import { intlFormat } from 'date-fns'
 import { Icon, IconName } from 'tapestry-core-client/src/components/lib/icon/index'
 import { Checkbox } from 'tapestry-core-client/src/components/lib/checkbox'
 import { Text } from 'tapestry-core-client/src/components/lib/text/index'
 import { TypographyName } from 'tapestry-core-client/src/theme/types'
 import { useObservable } from 'tapestry-core-client/src/components/lib/hooks/use-observable'
+import { ItemCreateDto } from 'tapestry-shared/src/data-transfer/resources/dtos/item'
 import { LazyList, LazyListProps, WithId } from '../../../lazy-list'
 import { LazyListLoader } from '../../../lazy-list/lazy-list-loader'
 import { LoadingLogoIcon } from '../../../loading-logo-icon'
-import { MAX_SELECTION } from '../..'
+import { CreateItemsFromSelection, MAX_SELECTION } from '../..'
 import { SelectAll } from '../select-all'
 import styles from './styles.module.css'
+
+interface FetchedPage<Result> {
+  page: number
+  result: Result | undefined
+}
+
+/**
+ * Bridge a numbered-page API (IA's advanced search, or a proxied external platform) to
+ * `LazyList`'s arbitrary `skip`/`limit` windowing. A requested window rarely lines up with a
+ * page boundary, so fetch the one or two server pages that cover it and slice out the window.
+ */
+export async function paginateBySkipLimit<Result, Item>(
+  fetchPage: (page: number, pageSize: number, signal: AbortSignal) => Promise<Result | undefined>,
+  getItems: (result: Result) => Item[],
+  skip: number,
+  limit: number,
+  signal: AbortSignal,
+): Promise<{
+  skip: number
+  data: Item[]
+  firstPage: FetchedPage<Result>
+  secondPage?: FetchedPage<Result>
+}> {
+  const firstPageNumber = Math.floor(skip / limit) + 1
+  const firstPageResult = await fetchPage(firstPageNumber, limit, signal)
+
+  const extra = skip % limit
+  const secondPageResult = extra ? await fetchPage(firstPageNumber + 1, limit, signal) : undefined
+
+  const data = [
+    ...(firstPageResult ? getItems(firstPageResult) : []),
+    ...(secondPageResult ? getItems(secondPageResult) : []),
+  ].slice(extra, extra + limit)
+
+  return {
+    skip,
+    data,
+    firstPage: { page: firstPageNumber, result: firstPageResult },
+    ...(extra ? { secondPage: { page: firstPageNumber + 1, result: secondPageResult } } : {}),
+  }
+}
 
 export type CollectionListColumn = 'creator' | 'license' | 'uploader' | 'published' | 'views'
 
@@ -106,7 +149,7 @@ function ItemThumbnail({
   )
 }
 
-export interface BaseCollectionListProps<T extends WithId, S extends { id: string }> extends Pick<
+export interface BaseCollectionListProps<T extends WithId> extends Pick<
   LazyListProps<T>,
   'requestItems' | 'windowSize' | 'loadingEdgeProximity' | 'autoReload'
 > {
@@ -115,35 +158,92 @@ export interface BaseCollectionListProps<T extends WithId, S extends { id: strin
   detailsGroupName: string
   header?: ReactNode
   toListItem: (item: T) => CollectionListItem
-  toImportItem: (item: T) => S
-  selectedItems: S[]
-  onSelect: (item: S) => unknown
-  onSelectAll: (items: S[]) => unknown
-  onDeselectAll: () => unknown
+  /** Maps one fetched item straight to a creatable tapestry item DTO (or null if it can't be
+   * imported, e.g. a source that failed to load) -- the actual network call this makes, if any,
+   * is entirely up to the caller. */
+  toTapestryItem: (item: T) => Promise<ItemCreateDto | null>
+  selectedIndices: Set<number>
+  selectItems: (indices: number[]) => void
+  deselectItem: (index: number) => void
+  deselectAllItems: () => void
+  createItemsFromSelectionRef: RefObject<CreateItemsFromSelection | undefined>
   emptyPlaceholder: ReactNode
 }
 
-export function BaseCollectionList<T extends WithId, S extends { id: string }>({
+export function BaseCollectionList<T extends WithId>({
   mdOrLess,
   columns,
   detailsGroupName,
   header,
   toListItem,
-  toImportItem,
-  selectedItems,
-  onSelect,
-  onSelectAll,
-  onDeselectAll,
+  toTapestryItem,
+  selectedIndices,
+  selectItems,
+  deselectItem,
+  deselectAllItems,
+  createItemsFromSelectionRef,
   emptyPlaceholder,
+  requestItems,
   ...lazyListProps
-}: BaseCollectionListProps<T, S>) {
+}: BaseCollectionListProps<T>) {
   const textVariant = mdOrLess ? 'bodyXs' : undefined
 
   const [listLoader, setListLoader] = useState<LazyListLoader<T> | null>(null)
   const state = useObservable(listLoader)
   const total = state?.total
 
-  const selectedCount = selectedItems.length
+  // A windowed cache of everything fetched so far, indexed by absolute list position. autoReload
+  // re-requests the currently-visible window every few seconds -- without this, that would hit
+  // the same rate-limited external APIs (Wikimedia/Openverse) repeatedly for data that hasn't
+  // gone anywhere. A cache hit (every requested index already fetched) skips the network
+  // entirely; anything else falls through to a real request, which also backfills the cache.
+  // Gaps between the old cached range and a newly-fetched one are filled with explicit
+  // `undefined` entries (not left as sparse holes) so a later "are all these defined" check is
+  // reliable. Real trade-off: an already-fully-cached window will never notice if the underlying
+  // collection's contents changed server-side, since a cache hit never re-fetches it.
+  const cacheRef = useRef<(T | undefined)[]>([])
+  const totalRef = useRef<number | undefined>(undefined)
+
+  const cachedRequestItems = useMemo(() => {
+    return async (skip: number, limit: number, signal: AbortSignal) => {
+      const cache = cacheRef.current
+      const cachedWindow = cache.slice(skip, skip + limit)
+      if (
+        totalRef.current !== undefined &&
+        cachedWindow.length === limit &&
+        cachedWindow.every((item): item is T => item !== undefined)
+      ) {
+        return { skip, total: totalRef.current, data: cachedWindow }
+      }
+
+      const response = await requestItems(skip, limit, signal)
+      totalRef.current = response.total
+
+      for (let i = cache.length; i < skip; i++) {
+        cache[i] = undefined
+      }
+      response.data.forEach((item, i) => {
+        cache[skip + i] = item
+      })
+
+      return response
+    }
+  }, [requestItems])
+
+  // Always kept in sync with the latest selection/cache, same "assign a ref during render"
+  // pattern usePropRef already uses elsewhere in this codebase -- a one-time "set if still
+  // undefined" assignment would freeze this closure to whatever the selection was on first
+  // render and silently ignore every later selection change.
+  createItemsFromSelectionRef.current = async () => {
+    const cache = cacheRef.current
+    const items = [...selectedIndices]
+      .sort((a, b) => a - b)
+      .map((i) => cache[i])
+      .filter((item): item is T => item !== undefined)
+    return compact(await Promise.all(items.map(toTapestryItem)))
+  }
+
+  const selectedCount = selectedIndices.size
   const maxSelectable = total === undefined ? undefined : Math.min(total, MAX_SELECTION)
   const allSelected = maxSelectable !== undefined && selectedCount >= maxSelectable
 
@@ -152,10 +252,15 @@ export function BaseCollectionList<T extends WithId, S extends { id: string }>({
       checked={allSelected}
       onChange={() => {
         if (allSelected) {
-          onDeselectAll()
-        } else if (state) {
-          onSelectAll(state.data.slice(0, MAX_SELECTION).map(toImportItem))
+          deselectAllItems()
+          return
         }
+        const cache = cacheRef.current
+        let cachedFromStart = 0
+        while (cachedFromStart < cache.length && cache[cachedFromStart] !== undefined) {
+          cachedFromStart++
+        }
+        selectItems(Array.from({ length: Math.min(cachedFromStart, MAX_SELECTION) }, (_, i) => i))
       }}
       total={total}
       classes={{ root: mdOrLess ? styles.mobileSelectAll : undefined, checkbox: styles.checkbox }}
@@ -191,6 +296,7 @@ export function BaseCollectionList<T extends WithId, S extends { id: string }>({
       )}
       <LazyList
         {...lazyListProps}
+        requestItems={cachedRequestItems}
         onLoaderInitialized={setListLoader}
         header={
           mdOrLess ? (
@@ -202,13 +308,13 @@ export function BaseCollectionList<T extends WithId, S extends { id: string }>({
             header
           )
         }
-        renderItem={(item) => {
+        renderItem={(item, index) => {
           const listItem = toListItem(item)
-          const checked = !!selectedItems.find((i) => i.id === item.id)
+          const checked = selectedIndices.has(index)
           const itemSummary = (
             <Checkbox
               checked={checked}
-              onChange={() => onSelect(toImportItem(item))}
+              onChange={() => (checked ? deselectItem(index) : selectItems([index]))}
               classes={{ checkbox: styles.checkbox }}
               disabled={!checked && selectedCount >= MAX_SELECTION}
               label={{
@@ -260,45 +366,4 @@ export function BaseCollectionList<T extends WithId, S extends { id: string }>({
       />
     </div>
   )
-}
-
-interface FetchedPage<Result> {
-  page: number
-  result: Result | undefined
-}
-
-/**
- * Bridge a numbered-page API (IA's advanced search, or a proxied external platform) to
- * `LazyList`'s arbitrary `skip`/`limit` windowing. A requested window rarely lines up with a
- * page boundary, so fetch the one or two server pages that cover it and slice out the window.
- */
-export async function paginateBySkipLimit<Result, Item>(
-  fetchPage: (page: number, pageSize: number, signal: AbortSignal) => Promise<Result | undefined>,
-  getItems: (result: Result) => Item[],
-  skip: number,
-  limit: number,
-  signal: AbortSignal,
-): Promise<{
-  skip: number
-  data: Item[]
-  firstPage: FetchedPage<Result>
-  secondPage?: FetchedPage<Result>
-}> {
-  const firstPageNumber = Math.floor(skip / limit) + 1
-  const firstPageResult = await fetchPage(firstPageNumber, limit, signal)
-
-  const extra = skip % limit
-  const secondPageResult = extra ? await fetchPage(firstPageNumber + 1, limit, signal) : undefined
-
-  const data = [
-    ...(firstPageResult ? getItems(firstPageResult) : []),
-    ...(secondPageResult ? getItems(secondPageResult) : []),
-  ].slice(extra, extra + limit)
-
-  return {
-    skip,
-    data,
-    firstPage: { page: firstPageNumber, result: firstPageResult },
-    ...(extra ? { secondPage: { page: firstPageNumber + 1, result: secondPageResult } } : {}),
-  }
 }

@@ -1,5 +1,9 @@
 import { useMemo, useState } from 'react'
-import { fetchOpenverseCollectionResults, OpenverseMedia } from 'tapestry-core/src/openverse'
+import {
+  fetchOpenverseCollectionResults,
+  openverseMediaPageURL,
+  OpenverseMedia,
+} from 'tapestry-core/src/openverse'
 import { ImportItemsListProps } from '..'
 import { CollectionImport } from '../../../../pages/tapestry/view-model'
 import { useResponsive, Breakpoint } from '../../../../providers/responsive-provider'
@@ -10,7 +14,7 @@ import {
   CollectionListItem,
   paginateBySkipLimit,
 } from '../base-collection-list'
-import { OpenverseSelectedItem } from '../..'
+import { createExternalMediaItem } from '../../../../stage/item-factories'
 
 const NO_THUMBNAIL_ICON: Record<'image' | 'audio', IconName> = {
   image: 'image',
@@ -19,27 +23,15 @@ const NO_THUMBNAIL_ICON: Record<'image' | 'audio', IconName> = {
 
 export type OpenverseCollectionImport = Extract<CollectionImport, { type: 'OpenverseCollection' }>
 
-interface OpenverseCollectionListProps extends Omit<
-  ImportItemsListProps,
-  'collectionImport' | 'selectedItems' | 'onSelect' | 'onSelectAll'
-> {
+interface OpenverseCollectionListProps extends Omit<ImportItemsListProps, 'collectionImport'> {
   collection: OpenverseCollectionImport
-  selectedItems: OpenverseSelectedItem[]
-  onSelect: (item: OpenverseSelectedItem) => unknown
-  onSelectAll: (items: OpenverseSelectedItem[]) => unknown
-}
-
-function toImportItem(item: OpenverseMedia): OpenverseSelectedItem {
-  return { id: item.id, sourceUrl: item.url }
 }
 
 export function OpenverseCollectionList({
-  onSelect,
-  onSelectAll,
-  onDeselectAll,
   collection,
-  selectedItems,
   header,
+  tapestryId,
+  ...props
 }: OpenverseCollectionListProps) {
   const mdOrLess = useResponsive() <= Breakpoint.MD
   const [loadFailed, setLoadFailed] = useState(false)
@@ -72,12 +64,10 @@ export function OpenverseCollectionList({
 
   return (
     <BaseCollectionList
-      windowSize={20}
+      {...props}
+      windowSize={25}
       loadingEdgeProximity={5}
       requestItems={requestItems}
-      // Openverse rate-limits aggressively. Nothing here needs a background refresh while the
-      // picker is open, only real user-driven pagination.
-      autoReload={false}
       mdOrLess={mdOrLess}
       columns={['creator', 'license']}
       detailsGroupName="openverse-collection-list"
@@ -89,11 +79,13 @@ export function OpenverseCollectionList({
         creator: item.creator ?? undefined,
         license: item.license,
       })}
-      toImportItem={toImportItem}
-      selectedItems={selectedItems}
-      onSelect={onSelect}
-      onSelectAll={onSelectAll}
-      onDeselectAll={onDeselectAll}
+      toTapestryItem={(item: OpenverseMedia) =>
+        createExternalMediaItem(tapestryId, {
+          url: item.url,
+          pageUrl: openverseMediaPageURL(collection.mediaType, item.id),
+          mediaType: collection.mediaType,
+        })
+      }
       emptyPlaceholder={
         <Text>
           {loadFailed

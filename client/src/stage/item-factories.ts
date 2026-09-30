@@ -130,16 +130,16 @@ const IA_MEDIA_TYPE_MAP: Partial<Record<IAMediaType, WebpageType>> = {
   movies: 'iaVideo',
 }
 
-export async function createIAMediaItems(tapestryId: string, iaItems: IAItem[]) {
-  return Promise.all(
-    iaItems.map(async (iaItem) => {
-      const item = await createMediaItem('webpage', iaItemEmbedURL(iaItem), tapestryId)
-      item.webpageType = IA_MEDIA_TYPE_MAP[iaItem.mediaType] ?? null
-      item.skipSourceResolution = true
+export async function createIAMediaItem(tapestryId: string, iaItem: IAItem) {
+  const item = await createMediaItem('webpage', iaItemEmbedURL(iaItem), tapestryId)
+  item.webpageType = IA_MEDIA_TYPE_MAP[iaItem.mediaType] ?? null
+  item.skipSourceResolution = true
 
-      return item
-    }),
-  )
+  return item
+}
+
+export async function createIAMediaItems(tapestryId: string, iaItems: IAItem[]) {
+  return Promise.all(iaItems.map((iaItem) => createIAMediaItem(tapestryId, iaItem)))
 }
 
 const iaFactory: ItemFactory = async (source, _mediaType, tapestryId) => {
@@ -180,23 +180,24 @@ const iaFactory: ItemFactory = async (source, _mediaType, tapestryId) => {
   return { items: await createIAMediaItems(tapestryId, await getNestedIAItems(descriptor.item)) }
 }
 
+export async function createExternalMediaItem(
+  tapestryId: string,
+  media: { url: string; pageUrl: string; mediaType: MediaItemType },
+) {
+  try {
+    const item = await createMediaItem(media.mediaType, media.url, tapestryId)
+    item.notes = `Source: ${media.pageUrl}`
+    return item
+  } catch {
+    return null
+  }
+}
+
 export async function createExternalMediaItems(
   tapestryId: string,
   media: { url: string; pageUrl: string; mediaType: MediaItemType }[],
 ) {
-  const items = await Promise.all(
-    media.map(async ({ url, pageUrl, mediaType }) => {
-      try {
-        const item = await createMediaItem(mediaType, url, tapestryId)
-        item.notes = `Source: ${pageUrl}`
-        return item
-      } catch {
-        return null
-      }
-    }),
-  )
-
-  return compact(items)
+  return compact(await Promise.all(media.map((m) => createExternalMediaItem(tapestryId, m))))
 }
 
 const openverseFactory: ItemFactory = async (source, _mediaType, tapestryId) => {

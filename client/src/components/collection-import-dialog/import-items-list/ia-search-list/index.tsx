@@ -14,7 +14,7 @@ import {
 } from '../base-collection-list'
 import { useMemo } from 'react'
 import { partial } from 'lodash-es'
-import { IASelectedItem } from '../..'
+import { createIAMediaItem } from '../../../../stage/item-factories'
 
 function getSearchOpts(query: string) {
   return {
@@ -63,29 +63,17 @@ export async function requestSearchItems(
   }
 }
 
-function toImportItem(item: IASearchResultItem): IASelectedItem {
-  return { id: item.id, mediaType: item.mediatype }
-}
-
-interface IASearchListProps extends Omit<
-  ImportItemsListProps,
-  'collectionImport' | 'selectedItems' | 'onSelect' | 'onSelectAll'
-> {
+interface IASearchListProps extends Omit<ImportItemsListProps, 'collectionImport'> {
   query: string
   emptyPlaceholder?: string
-  selectedItems: IASelectedItem[]
-  onSelect: (item: IASelectedItem) => unknown
-  onSelectAll: (items: IASelectedItem[]) => unknown
 }
 
 export function IASearchList({
-  onSelect,
-  onSelectAll,
-  onDeselectAll,
   query,
-  selectedItems,
   header,
   emptyPlaceholder = 'No results for this search',
+  tapestryId,
+  ...props
 }: IASearchListProps) {
   const mdOrLess = useResponsive() <= Breakpoint.MD
 
@@ -93,6 +81,7 @@ export function IASearchList({
 
   return (
     <BaseCollectionList
+      {...props}
       windowSize={100}
       loadingEdgeProximity={15}
       requestItems={requestItems}
@@ -107,11 +96,9 @@ export function IASearchList({
         published: item.publicdate,
         views: item.downloads,
       })}
-      toImportItem={toImportItem}
-      selectedItems={selectedItems}
-      onSelect={onSelect}
-      onSelectAll={onSelectAll}
-      onDeselectAll={onDeselectAll}
+      toTapestryItem={(item: IASearchResultItem) =>
+        createIAMediaItem(tapestryId, { id: item.id, mediaType: item.mediatype })
+      }
       emptyPlaceholder={<Text>{emptyPlaceholder}</Text>}
     />
   )

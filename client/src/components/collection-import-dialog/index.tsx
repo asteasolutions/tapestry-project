@@ -1,51 +1,19 @@
 import clsx from 'clsx'
-import { compact } from 'lodash-es'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useAsyncAction } from 'tapestry-core-client/src/components/lib/hooks/use-async-action'
 import { SimpleModal } from 'tapestry-core-client/src/components/lib/modal/index'
-import { openverseMediaPageURL } from 'tapestry-core/src/openverse'
-import { wikimediaFilePageURL, WikimediaMediaType } from 'tapestry-core/src/wikimedia-commons'
-import { IAMediaType } from 'tapestry-core/src/internet-archive'
-import { toggleElement } from 'tapestry-core/src/lib/array'
+import { ItemCreateDto } from 'tapestry-shared/src/data-transfer/resources/dtos/item'
 import { useDispatch, useTapestryData } from '../../pages/tapestry/tapestry-providers'
 import { CollectionImport } from '../../pages/tapestry/view-model/index'
 import { addAndPositionItems } from '../../pages/tapestry/view-model/store-commands/items'
 import { setCollectionImports } from '../../pages/tapestry/view-model/store-commands/tapestry'
 import { createItemViewModel } from '../../pages/tapestry/view-model/utils'
 import { Breakpoint, useResponsive } from '../../providers/responsive-provider'
-import { createIAMediaItems, createExternalMediaItems } from '../../stage/item-factories'
 import { ImportDetails } from './import-details/index'
 import { ImportItemsList } from './import-items-list/index'
 import styles from './styles.module.css'
 
-export interface IASelectedItem {
-  id: string
-  mediaType?: IAMediaType
-}
-
-export interface OpenverseSelectedItem {
-  id: string
-  sourceUrl: string
-}
-
-export interface WikimediaSelectedItem {
-  id: string
-  sourceUrl: string
-  wikimediaMediaType: WikimediaMediaType
-}
-
-export interface PlaylistSelectedItem {
-  id: string
-}
-
-export type ImportItems =
-  | { type: 'IACollection'; itemsData: IASelectedItem[] }
-  | { type: 'IASearchCollection'; itemsData: IASelectedItem[] }
-  | { type: 'OpenverseCollection'; itemsData: OpenverseSelectedItem[] }
-  | { type: 'WikimediaCommonsCategory'; itemsData: WikimediaSelectedItem[] }
-  | { type: 'IAPlaylist'; itemsData: PlaylistSelectedItem[] }
-
-type AnySelectedItem = ImportItems['itemsData'][number]
+export type CreateItemsFromSelection = () => Promise<ItemCreateDto[]>
 
 const COLLECTION_IMPORT_TITLE_MAP: Record<CollectionImport['type'], string> = {
   IACollection: 'Choose collection items',
@@ -63,52 +31,6 @@ const COLLECTION_IMPORT_CLASS_MAP: Record<CollectionImport['type'], string> = {
   IASearchCollection: styles.collectionList,
 }
 
-async function createNewItems<T extends CollectionImport['type']>(
-  collectionImport: CollectionImport,
-  items: Extract<ImportItems, { type: T }>['itemsData'],
-  tapestryId: string,
-) {
-  switch (collectionImport.type) {
-    case 'OpenverseCollection':
-      return createExternalMediaItems(
-        tapestryId,
-        (items as OpenverseSelectedItem[]).map(({ sourceUrl, id }) => ({
-          url: sourceUrl,
-          pageUrl: openverseMediaPageURL(collectionImport.mediaType, id),
-          mediaType: collectionImport.mediaType,
-        })),
-      )
-    case 'WikimediaCommonsCategory':
-      return createExternalMediaItems(
-        tapestryId,
-        (items as WikimediaSelectedItem[]).map(({ sourceUrl, id, wikimediaMediaType }) => ({
-          url: sourceUrl,
-          pageUrl: wikimediaFilePageURL(id),
-          mediaType: wikimediaMediaType,
-        })),
-      )
-    case 'IACollection':
-    case 'IASearchCollection':
-      return createIAMediaItems(
-        tapestryId,
-        compact(
-          (items as IASelectedItem[]).map(({ id, mediaType }) => mediaType && { id, mediaType }),
-        ),
-      )
-    case 'IAPlaylist': {
-      const { id, metadata } = collectionImport
-      return createIAMediaItems(
-        tapestryId,
-        (items as PlaylistSelectedItem[]).map(({ id: file }) => ({
-          id,
-          mediaType: metadata.mediatype,
-          pathParams: [encodeURIComponent(file)],
-        })),
-      )
-    }
-  }
-}
-
 function getTitle(imports: CollectionImport[], index: number) {
   const total = imports.length
   const title = COLLECTION_IMPORT_TITLE_MAP[imports[index].type]
@@ -117,39 +39,25 @@ function getTitle(imports: CollectionImport[], index: number) {
 
 export const MAX_SELECTION = 50
 
-// selectedItems is reset to null every time the active collectionImport changes (see onClose), so
-// its `type` always agrees with the current collectionImport's type at runtime -- even though
-// TypeScript tracks them as two independent values here and downstream in ImportItemsList.
-function toggleSelection(
-  current: ImportItems | null,
-  type: CollectionImport['type'],
-  item: AnySelectedItem,
-): ImportItems {
-  const itemsData = (current?.type === type ? current.itemsData : []) as AnySelectedItem[]
-  return { type, itemsData: toggleElement(itemsData, item) } as ImportItems
-}
-
 export function CollectionImportDialog() {
   const { collectionImports, id: tapestryId } = useTapestryData(['collectionImports', 'id'])
   const dispatch = useDispatch()
-  const [selectedItems, setSelectedItems] = useState<ImportItems | null>(null)
+  const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set())
+  const createItemsFromSelectionRef = useRef<CreateItemsFromSelection>(undefined)
   const mdOrLess = useResponsive() <= Breakpoint.MD
 
   const [importIndex, setImportIndex] = useState(0)
   const collectionImport = collectionImports[importIndex] as CollectionImport | undefined
 
   const { trigger: confirmSelection, loading: creatingItems } = useAsyncAction(async () => {
-    if (!collectionImport || !selectedItems) {
+    if (!collectionImport || !createItemsFromSelectionRef.current) {
       return
     }
-    const selection = selectedItems
     dispatch((model) => {
       model.pendingRequests++
     })
     try {
-      const viewModels = (
-        await createNewItems(collectionImport, selection.itemsData, tapestryId)
-      ).map(createItemViewModel)
+      const viewModels = (await createItemsFromSelectionRef.current()).map(createItemViewModel)
       dispatch(viewModels.length > 0 && addAndPositionItems(viewModels))
       onClose()
     } finally {
@@ -164,7 +72,7 @@ export function CollectionImportDialog() {
   }
 
   const onClose = () => {
-    setSelectedItems(null)
+    setSelectedIndices(new Set())
     if (importIndex === collectionImports.length - 1) {
       dispatch(setCollectionImports([]))
       setImportIndex(0)
@@ -174,7 +82,7 @@ export function CollectionImportDialog() {
   }
 
   const importDetails = <ImportDetails import={collectionImport} />
-  const selectedCount = selectedItems?.itemsData.length ?? 0
+  const selectedCount = selectedIndices.size
 
   return (
     <SimpleModal
@@ -192,16 +100,20 @@ export function CollectionImportDialog() {
       <div className={styles.content}>
         {!mdOrLess && importDetails}
         <ImportItemsList
-          onSelect={(item) =>
-            setSelectedItems((current) => toggleSelection(current, collectionImport.type, item))
+          selectedIndices={selectedIndices}
+          selectItems={(indices) =>
+            setSelectedIndices((current) => new Set([...indices, ...current.values()]))
           }
-          onSelectAll={(itemsData) =>
-            setSelectedItems({ type: collectionImport.type, itemsData } as ImportItems)
+          deselectItem={(index) =>
+            setSelectedIndices((current) => {
+              const next = new Set(current)
+              next.delete(index)
+              return next
+            })
           }
-          onDeselectAll={() => setSelectedItems(null)}
-          selectedItems={
-            selectedItems?.type === collectionImport.type ? selectedItems.itemsData : []
-          }
+          deselectAllItems={() => setSelectedIndices(new Set())}
+          createItemsFromSelectionRef={createItemsFromSelectionRef}
+          tapestryId={tapestryId}
           collectionImport={collectionImport}
           header={mdOrLess && importDetails}
         />
