@@ -17,6 +17,9 @@ export interface OpenverseMedia {
   title: string
   creator: string | null
   license: string
+  /** Only present for images -- Openverse's audio results have no visual dimensions. */
+  width?: number
+  height?: number
 }
 
 interface OpenverseMediaListResponse {

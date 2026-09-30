@@ -38,8 +38,6 @@ export function IAPlaylistEntries({
   const textVariant = mdOrLess ? 'bodyXs' : undefined
   const { entries } = collectionImport
 
-  // Same "always assign a fresh closure during render" pattern as base-collection-list -- entries
-  // is a plain, already-fully-loaded array here (no lazy loading/cache needed for a playlist).
   createItemsFromSelectionRef.current = async () => {
     const selected = [...selectedIndices].sort((a, b) => a - b).map((i) => entries[i])
     return createIAMediaItems(

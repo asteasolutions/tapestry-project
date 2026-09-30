@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import {
-  fetchWikimediaCollectionResults,
+  fetchWikimediaCategoryResults,
   wikimediaFilePageURL,
   WikimediaMedia,
 } from 'tapestry-core/src/wikimedia-commons'
@@ -10,7 +10,7 @@ import { useResponsive, Breakpoint } from '../../../../providers/responsive-prov
 import { IconName } from 'tapestry-core-client/src/components/lib/icon/index'
 import { Text } from 'tapestry-core-client/src/components/lib/text/index'
 import { BaseCollectionList, CollectionListItem } from '../base-collection-list'
-import { createExternalMediaItem } from '../../../../stage/item-factories'
+import { createDerivedSourceMediaItem } from '../../../../model/data/utils'
 
 // Use this icon when a media item has no real thumbnail (Commons' generic per-extension icon,
 // already mapped to null in wikimedia-commons.ts).
@@ -51,7 +51,7 @@ export function WikimediaCollectionList({
 
     return async (skip: number, limit: number, signal: AbortSignal) => {
       while (fetched.length < skip + limit && !done) {
-        const page = await fetchWikimediaCollectionResults(collection.category, nextCursor, signal)
+        const page = await fetchWikimediaCategoryResults(collection.category, nextCursor, signal)
         if (!page) {
           setLoadFailed(true)
           return { skip, total: collection.total, data: fetched.slice(skip, skip + limit) }
@@ -72,7 +72,7 @@ export function WikimediaCollectionList({
       loadingEdgeProximity={5}
       requestItems={requestItems}
       mdOrLess={mdOrLess}
-      columns={['uploader']}
+      columns={['uploader', 'dimensions']}
       detailsGroupName="wikimedia-collection-list"
       header={header}
       toListItem={(item): CollectionListItem => ({
@@ -80,12 +80,15 @@ export function WikimediaCollectionList({
         fallbackIcon: NO_THUMBNAIL_ICON[item.mediaType],
         title: item.title,
         uploader: item.uploader ?? undefined,
+        dimensions:
+          item.width && item.height ? { width: item.width, height: item.height } : undefined,
       })}
       toTapestryItem={(item: WikimediaMedia) =>
-        createExternalMediaItem(tapestryId, {
-          url: item.url,
-          pageUrl: wikimediaFilePageURL(item.id),
+        createDerivedSourceMediaItem(tapestryId, {
+          source: item.url,
+          originalSource: wikimediaFilePageURL(item.id),
           mediaType: item.mediaType,
+          size: item.width && item.height ? { width: item.width, height: item.height } : undefined,
         })
       }
       emptyPlaceholder={

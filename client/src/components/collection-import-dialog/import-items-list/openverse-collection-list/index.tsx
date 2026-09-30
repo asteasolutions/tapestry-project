@@ -14,7 +14,7 @@ import {
   CollectionListItem,
   paginateBySkipLimit,
 } from '../base-collection-list'
-import { createExternalMediaItem } from '../../../../stage/item-factories'
+import { createDerivedSourceMediaItem } from '../../../../model/data/utils'
 
 const NO_THUMBNAIL_ICON: Record<'image' | 'audio', IconName> = {
   image: 'image',
@@ -80,10 +80,11 @@ export function OpenverseCollectionList({
         license: item.license,
       })}
       toTapestryItem={(item: OpenverseMedia) =>
-        createExternalMediaItem(tapestryId, {
-          url: item.url,
-          pageUrl: openverseMediaPageURL(collection.mediaType, item.id),
+        createDerivedSourceMediaItem(tapestryId, {
+          source: item.url,
+          originalSource: openverseMediaPageURL(collection.mediaType, item.id),
           mediaType: collection.mediaType,
+          size: item.width && item.height ? { width: item.width, height: item.height } : undefined,
         })
       }
       emptyPlaceholder={

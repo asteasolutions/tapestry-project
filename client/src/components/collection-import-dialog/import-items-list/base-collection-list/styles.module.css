@@ -16,6 +16,7 @@
 
   :global(.lazy-list) {
     flex-grow: 1;
+    scrollbar-width: thin;
 
     :global(.list-items-container) {
       padding-top: 8px;
@@ -36,19 +37,15 @@
       grid-template-columns: auto 15px;
     }
 
-    .item-image {
-      height: 60px;
-      width: 60px;
-      object-fit: cover;
-      background-color: var(--theme-background-disabled);
+    .item-index {
+      min-width: 30px;
+      text-align: end;
+    }
 
-      &.no-thumbnail-icon {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 18px;
-        color: var(--theme-text-tertiary-inverse);
-      }
+    .item-image {
+      height: 50px;
+      width: 50px;
+      flex-shrink: 0;
     }
   }
 

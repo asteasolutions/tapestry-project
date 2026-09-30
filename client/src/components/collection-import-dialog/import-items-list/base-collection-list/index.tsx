@@ -11,6 +11,7 @@ import { ItemCreateDto } from 'tapestry-shared/src/data-transfer/resources/dtos/
 import { LazyList, LazyListProps, WithId } from '../../../lazy-list'
 import { LazyListLoader } from '../../../lazy-list/lazy-list-loader'
 import { LoadingLogoIcon } from '../../../loading-logo-icon'
+import { Thumbnail } from '../../thumbnail'
 import { CreateItemsFromSelection, MAX_SELECTION } from '../..'
 import { SelectAll } from '../select-all'
 import styles from './styles.module.css'
@@ -20,11 +21,8 @@ interface FetchedPage<Result> {
   result: Result | undefined
 }
 
-/**
- * Bridge a numbered-page API (IA's advanced search, or a proxied external platform) to
- * `LazyList`'s arbitrary `skip`/`limit` windowing. A requested window rarely lines up with a
- * page boundary, so fetch the one or two server pages that cover it and slice out the window.
- */
+// Bridges a numbered-page API to LazyList's skip/limit windowing, fetching the one or two real
+// pages that cover the requested window.
 export async function paginateBySkipLimit<Result, Item>(
   fetchPage: (page: number, pageSize: number, signal: AbortSignal) => Promise<Result | undefined>,
   getItems: (result: Result) => Item[],
@@ -56,7 +54,13 @@ export async function paginateBySkipLimit<Result, Item>(
   }
 }
 
-export type CollectionListColumn = 'creator' | 'license' | 'uploader' | 'published' | 'views'
+export type CollectionListColumn =
+  | 'creator'
+  | 'license'
+  | 'uploader'
+  | 'published'
+  | 'views'
+  | 'dimensions'
 
 const COLUMN_LABEL: Record<CollectionListColumn, string> = {
   creator: 'Creator',
@@ -64,6 +68,7 @@ const COLUMN_LABEL: Record<CollectionListColumn, string> = {
   uploader: 'Uploader',
   published: 'Published',
   views: 'Views',
+  dimensions: 'Dimensions',
 }
 
 const COLUMN_WIDTH: Record<CollectionListColumn, string> = {
@@ -72,11 +77,10 @@ const COLUMN_WIDTH: Record<CollectionListColumn, string> = {
   uploader: '130px',
   published: '110px',
   views: '60px',
+  dimensions: '90px',
 }
 
-/** The generic, platform-agnostic shape one item's row needs to render. Every collection list
- * (Openverse, Wikimedia, IA search) maps its own native item type into this before handing it to
- * `BaseCollectionList` — `id`/selection/creation still flow through the caller's own real item type. */
+// The platform-agnostic row shape every collection list maps its own item type into.
 export interface CollectionListItem {
   image?: string | null
   fallbackIcon?: IconName
@@ -86,6 +90,7 @@ export interface CollectionListItem {
   uploader?: string
   published?: string
   views?: number
+  dimensions?: { width: number; height: number }
 }
 
 function renderColumnValue(
@@ -125,28 +130,13 @@ function renderColumnValue(
             }).format(item.views)}
         </Text>
       )
+    case 'dimensions':
+      return (
+        <Text variant={textVariant}>
+          {item.dimensions && `${item.dimensions.width}×${item.dimensions.height}`}
+        </Text>
+      )
   }
-}
-
-// A thumbnail that falls back to a generic icon both when there's no image URL at all and when a
-// real image URL fails to load. Handled locally (rather than filtering the failed item out of the
-// list entirely, as this used to) so the lazy list's loaded window stays in sync with what it
-// actually requested -- removing an item after the fact desyncs its indices from the server.
-function ItemThumbnail({
-  image,
-  fallbackIcon,
-  title,
-}: Pick<CollectionListItem, 'image' | 'fallbackIcon' | 'title'>) {
-  const [failed, setFailed] = useState(false)
-  return image && !failed ? (
-    <img className={styles.itemImage} src={image} alt={title} onError={() => setFailed(true)} />
-  ) : (
-    <Icon
-      component="div"
-      icon={fallbackIcon ?? 'image'}
-      className={clsx(styles.itemImage, styles.noThumbnailIcon)}
-    />
-  )
 }
 
 export interface BaseCollectionListProps<T extends WithId> extends Pick<
@@ -158,9 +148,6 @@ export interface BaseCollectionListProps<T extends WithId> extends Pick<
   detailsGroupName: string
   header?: ReactNode
   toListItem: (item: T) => CollectionListItem
-  /** Maps one fetched item straight to a creatable tapestry item DTO (or null if it can't be
-   * imported, e.g. a source that failed to load) -- the actual network call this makes, if any,
-   * is entirely up to the caller. */
   toTapestryItem: (item: T) => Promise<ItemCreateDto | null>
   selectedIndices: Set<number>
   selectItems: (indices: number[]) => void
@@ -192,15 +179,9 @@ export function BaseCollectionList<T extends WithId>({
   const state = useObservable(listLoader)
   const total = state?.total
 
-  // A windowed cache of everything fetched so far, indexed by absolute list position. autoReload
-  // re-requests the currently-visible window every few seconds -- without this, that would hit
-  // the same rate-limited external APIs (Wikimedia/Openverse) repeatedly for data that hasn't
-  // gone anywhere. A cache hit (every requested index already fetched) skips the network
-  // entirely; anything else falls through to a real request, which also backfills the cache.
-  // Gaps between the old cached range and a newly-fetched one are filled with explicit
-  // `undefined` entries (not left as sparse holes) so a later "are all these defined" check is
-  // reliable. Real trade-off: an already-fully-cached window will never notice if the underlying
-  // collection's contents changed server-side, since a cache hit never re-fetches it.
+  // Cache of everything fetched so far, indexed by absolute position, so autoReload's periodic
+  // re-request of an already-loaded window is served from here instead of hitting the rate-limited
+  // external APIs again. Gaps get explicit `undefined` entries, not sparse holes.
   const cacheRef = useRef<(T | undefined)[]>([])
   const totalRef = useRef<number | undefined>(undefined)
 
@@ -230,10 +211,8 @@ export function BaseCollectionList<T extends WithId>({
     }
   }, [requestItems])
 
-  // Always kept in sync with the latest selection/cache, same "assign a ref during render"
-  // pattern usePropRef already uses elsewhere in this codebase -- a one-time "set if still
-  // undefined" assignment would freeze this closure to whatever the selection was on first
-  // render and silently ignore every later selection change.
+  // Reassigned every render (not just once) so it always reflects the latest selection -- same
+  // "keep a ref synced" pattern as usePropRef.
   createItemsFromSelectionRef.current = async () => {
     const cache = cacheRef.current
     const items = [...selectedIndices]
@@ -309,18 +288,25 @@ export function BaseCollectionList<T extends WithId>({
           )
         }
         renderItem={(item, index) => {
+          // LazyList always calls renderItem with a real index; it's only optional in the shared
+          // type because most of LazyList's other consumers don't need it.
+          const rowIndex = index!
           const listItem = toListItem(item)
-          const checked = selectedIndices.has(index)
+          const checked = selectedIndices.has(rowIndex)
           const itemSummary = (
             <Checkbox
               checked={checked}
-              onChange={() => (checked ? deselectItem(index) : selectItems([index]))}
+              onChange={() => (checked ? deselectItem(rowIndex) : selectItems([rowIndex]))}
               classes={{ checkbox: styles.checkbox }}
               disabled={!checked && selectedCount >= MAX_SELECTION}
               label={{
                 content: (
                   <>
-                    <ItemThumbnail
+                    <Text variant={textVariant} className={styles.itemIndex}>
+                      {rowIndex + 1}.
+                    </Text>
+                    <Thumbnail
+                      className={styles.itemImage}
                       image={listItem.image}
                       fallbackIcon={listItem.fallbackIcon}
                       title={listItem.title}

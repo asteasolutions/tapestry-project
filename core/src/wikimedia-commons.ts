@@ -23,6 +23,9 @@ export interface WikimediaMedia {
   title: string
   uploader: string | null
   mediaType: WikimediaMediaType
+  /** Only meaningful for images -- video/audio/pdf files don't report a natural width/height here. */
+  width?: number
+  height?: number
 }
 
 interface CommonsDerivative {
@@ -32,7 +35,7 @@ interface CommonsDerivative {
 }
 
 // `prop=videoinfo` is Commons' general per-file metadata endpoint -- despite the name, it's
-// returned (and needed) for every file type, not just video. See fetchWikimediaCollectionResults.
+// returned (and needed) for every file type, not just video. See fetchWikimediaCategoryResults.
 interface CommonsItemInfo {
   url: string
   mime: string
@@ -40,6 +43,8 @@ interface CommonsItemInfo {
   user?: string
   thumburl?: string
   derivatives?: CommonsDerivative[]
+  width?: number
+  height?: number
 }
 
 interface CommonsFilePage {
@@ -94,9 +99,12 @@ function toWikimediaMedia(page: CommonsFilePage): WikimediaMedia | null {
     id: String(page.pageid),
     url: bestPlaybackURL(mediaType, itemInfo),
     thumbnail: thumbnailFor(itemInfo),
-    title: page.title,
+    // Every file page's title carries the "File:" namespace prefix -- not useful to show.
+    title: page.title.replace(/^File:/, ''),
     uploader: itemInfo.user ?? null,
     mediaType,
+    width: itemInfo.width,
+    height: itemInfo.height,
   }
 }
 
@@ -124,7 +132,7 @@ export function wikimediaFilePageURL(pageId: string): string {
   return `https://${COMMONS_HOST}/w/index.php?curid=${pageId}`
 }
 
-export function parseWikimediaCollectionQuery(url: string): string | null {
+export function parseWikimediaCategoryQuery(url: string): string | null {
   try {
     const parsed = new URL(url)
     if (parsed.hostname !== COMMONS_HOST) return null
@@ -138,7 +146,7 @@ export function parseWikimediaCollectionQuery(url: string): string | null {
   }
 }
 
-const ITEM_INFO_PROPS = 'url|mime|mediatype|user|derivatives'
+const ITEM_INFO_PROPS = 'url|mime|mediatype|user|derivatives|size'
 
 export async function fetchWikimediaMedia(
   title: string,
@@ -164,7 +172,7 @@ export async function fetchWikimediaMedia(
   }
 }
 
-export async function fetchWikimediaCollectionCount(
+export async function fetchWikimediaPageCount(
   category: string,
   signal?: AbortSignal,
 ): Promise<number | undefined> {
@@ -191,10 +199,8 @@ export async function fetchWikimediaCollectionCount(
 
 const CATEGORY_THUMBNAIL_WIDTH = 300
 
-// Commons categories are templated, not prose, so `extracts` (Wikipedia's article-summary API)
-// always returns an empty string for them -- there is no cheap category description to show.
-// `pageimages` does work, resolving to a representative file already in the category.
-export async function fetchWikimediaCollectionThumbnail(
+// `pageimages` resolves to a representative file already in the category.
+export async function fetchWikimediaCategoryThumbnail(
   category: string,
   signal?: AbortSignal,
 ): Promise<string | null> {
@@ -221,6 +227,37 @@ export async function fetchWikimediaCollectionThumbnail(
   }
 }
 
+// `extracts` (Wikipedia's article-summary API) returns real prose for a category page whose own
+// wikitext has an article-like intro, and blank HTML (e.g. "<p><br/></p>") for one that doesn't --
+// both are real, common outcomes, not a sign the API failed.
+export async function fetchWikimediaCategoryDescription(
+  category: string,
+  signal?: AbortSignal,
+): Promise<string | null> {
+  try {
+    const url = new URL(COMMONS_API_URL)
+    url.searchParams.set('action', 'query')
+    url.searchParams.set('titles', category)
+    url.searchParams.set('prop', 'extracts')
+    url.searchParams.set('exintro', 'true')
+    url.searchParams.set('explaintext', 'true')
+    url.searchParams.set('format', 'json')
+    url.searchParams.set('origin', '*')
+
+    const res = await fetch(url, { signal })
+    if (!res.ok) return null
+
+    interface CategoryPage {
+      extract?: string
+    }
+    const data = (await res.json()) as CommonsQueryResponse<CategoryPage>
+    const extract = Object.values(data.query?.pages ?? {})[0]?.extract?.trim()
+    return extract || null
+  } catch {
+    return null
+  }
+}
+
 /**
  * Fetch one real page (up to COMMONS_PAGE_SIZE items) of a category's files, starting from an
  * optional cursor. Commons categories paginate with an opaque cursor (`gcmcontinue`), not a page
@@ -228,7 +265,7 @@ export async function fetchWikimediaCollectionThumbnail(
  * arbitrary skip/limit window (e.g. a lazily-loaded list) walk this themselves, keeping track of
  * each real page's cursor as they go.
  */
-export async function fetchWikimediaCollectionResults(
+export async function fetchWikimediaCategoryResults(
   category: string,
   cursor?: string,
   signal?: AbortSignal,

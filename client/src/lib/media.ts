@@ -51,32 +51,47 @@ function getClampedItemSize(size: Size) {
   return clampSize(size, MIN_ITEM_SIZE, MAX_ITEM_SIZE)
 }
 
-export async function getImageItemSize(source: MediaItemSource, width?: number): Promise<Size> {
-  const image = await loadImageFromBlob(await mediaSourceToBlob(source))
+function isMediaItemSource(source: MediaItemSource | Size): source is MediaItemSource {
+  return source instanceof File || typeof source === 'string'
+}
+
+export async function getImageItemSize(
+  source: MediaItemSource | Size,
+  width?: number,
+): Promise<Size> {
+  const naturalSize: Size = isMediaItemSource(source)
+    ? await loadImageFromBlob(await mediaSourceToBlob(source))
+    : source
   const defaultImageWidth = 300
   const imageWidth = width ?? defaultImageWidth
 
   return getClampedItemSize({
     width: imageWidth,
-    height: imageWidth / aspectRatio(image),
+    height: imageWidth / aspectRatio(naturalSize),
   })
 }
 
 const DEFAULT_VIDEO_WIDTH = 500
 
-export async function getVideoItemSize(source: MediaItemSource): Promise<Size> {
+function loadVideoNaturalSize(source: MediaItemSource): Promise<Size> {
   return new Promise((resolve) => {
     const video = document.createElement('video')
     video.src = mediaSourceToSrc(source)
 
     video.onloadedmetadata = () => {
       URL.revokeObjectURL(video.src)
-      resolve({
-        width: DEFAULT_VIDEO_WIDTH,
-        height: (DEFAULT_VIDEO_WIDTH * video.videoHeight) / video.videoWidth,
-      })
+      resolve({ width: video.videoWidth, height: video.videoHeight })
     }
   })
+}
+
+export async function getVideoItemSize(source: MediaItemSource | Size): Promise<Size> {
+  const naturalSize = isMediaItemSource(source) ? await loadVideoNaturalSize(source) : source
+
+  return {
+    width: DEFAULT_VIDEO_WIDTH,
+    height: (DEFAULT_VIDEO_WIDTH * naturalSize.height) / naturalSize.width,
+  }
 }
 
 export async function getPDFItemSize(source: MediaItemSource): Promise<Size> {

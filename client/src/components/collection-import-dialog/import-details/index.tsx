@@ -1,12 +1,16 @@
 import { ReactNode } from 'react'
 import { getIAItemThumbnailURL } from 'tapestry-core/src/internet-archive'
-import { fetchWikimediaCollectionThumbnail } from 'tapestry-core/src/wikimedia-commons'
+import {
+  fetchWikimediaCategoryDescription,
+  fetchWikimediaCategoryThumbnail,
+} from 'tapestry-core/src/wikimedia-commons'
 import { CollectionImport } from '../../../pages/tapestry/view-model'
 import styles from './styles.module.css'
 import { Text } from 'tapestry-core-client/src/components/lib/text/index'
 import { useAsync } from 'tapestry-core-client/src/components/lib/hooks/use-async'
 import { intlFormat } from 'date-fns'
 import { Breakpoint, useResponsive } from '../../../providers/responsive-provider'
+import { Thumbnail } from '../thumbnail'
 
 const parser = new DOMParser()
 
@@ -18,9 +22,7 @@ interface DetailsLayoutProps {
   body?: ReactNode
 }
 
-// The layout shared by every collection import's details panel: an optional thumbnail beside a
-// title/subtitle, an optional metadata row, and an optional longer body. Each collection type
-// below only differs in which of these optional pieces it has data for.
+// The layout shared by every collection import's details panel.
 function DetailsLayout({ thumbnail, title, subtitle, meta, body }: DetailsLayoutProps) {
   const mdOrLess = useResponsive() <= Breakpoint.MD
   const textVariant = mdOrLess ? 'bodyXs' : undefined
@@ -28,7 +30,7 @@ function DetailsLayout({ thumbnail, title, subtitle, meta, body }: DetailsLayout
   return (
     <div className={styles.root}>
       <div className={styles.header}>
-        {thumbnail && <img className={styles.thumbnail} loading="lazy" src={thumbnail} />}
+        {thumbnail && <Thumbnail className={styles.thumbnail} fit="contain" image={thumbnail} />}
         <div className={styles.metadataContainer}>
           <div>
             <Text variant={mdOrLess ? 'bodySm' : 'h6'} lineClamp={2} style={{ fontWeight: 'bold' }}>
@@ -58,7 +60,11 @@ function WikimediaCommonsCategoryDetails({
   collection: Extract<CollectionImport, { type: 'WikimediaCommonsCategory' }>
 }) {
   const { data: thumbnail } = useAsync(
-    ({ signal }) => fetchWikimediaCollectionThumbnail(collection.category, signal),
+    ({ signal }) => fetchWikimediaCategoryThumbnail(collection.category, signal),
+    [collection.category],
+  )
+  const { data: description } = useAsync(
+    ({ signal }) => fetchWikimediaCategoryDescription(collection.category, signal),
     [collection.category],
   )
 
@@ -67,6 +73,7 @@ function WikimediaCommonsCategoryDetails({
       thumbnail={thumbnail}
       title={collection.category}
       subtitle={`${collection.total} files`}
+      body={description}
     />
   )
 }
