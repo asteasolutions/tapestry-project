@@ -111,19 +111,11 @@ const TOOLBAR_PADDING = 100
 
 type TapestryRoute =
   | { type: 'slug'; username: string; slug: string }
-  | { type: 'invitation'; invitationId: string }
   | { type: 'id'; tapestryId: string }
   | null
 
 function parseTapestryUrl(source: string): TapestryRoute {
   const url = new URL(source)
-
-  //path by invitation: .../?invitation=invitationId
-  const invitationId = url.searchParams.get('invitation')
-  if (invitationId) {
-    return { type: 'invitation', invitationId }
-  }
-
   const pathname = url.pathname.replace(/^\/+|\/+$/g, '')
   const segments = pathname.split('/')
 
@@ -152,14 +144,6 @@ function fetchTapestry(route: TapestryRoute) {
               },
               { include: ['items'] },
             )
-          }
-
-          case 'invitation': {
-            const invitation = await resource('tapestryInvitations').read(
-              { id: route.invitationId },
-              { include: ['tapestry.items'] },
-            )
-            return invitation.tapestry
           }
 
           case 'id': {
