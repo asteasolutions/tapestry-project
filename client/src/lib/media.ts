@@ -51,46 +51,61 @@ function getClampedItemSize(size: Size) {
   return clampSize(size, MIN_ITEM_SIZE, MAX_ITEM_SIZE)
 }
 
-export async function getImageItemSize(source: MediaItemSource, width?: number): Promise<Size> {
-  const image = await loadImageFromBlob(await mediaSourceToBlob(source))
+function isMediaItemSource(source: MediaItemSource | Size): source is MediaItemSource {
+  return source instanceof File || typeof source === 'string'
+}
+
+export async function getImageItemSize(
+  source: MediaItemSource | Size,
+  width?: number,
+): Promise<Size> {
+  const intrinsicSize: Size = isMediaItemSource(source)
+    ? await loadImageFromBlob(await mediaSourceToBlob(source))
+    : source
   const defaultImageWidth = 300
   const imageWidth = width ?? defaultImageWidth
 
   return getClampedItemSize({
     width: imageWidth,
-    height: imageWidth / aspectRatio(image),
+    height: imageWidth / aspectRatio(intrinsicSize),
   })
 }
 
 const DEFAULT_VIDEO_WIDTH = 500
 
-export async function getVideoItemSize(source: MediaItemSource): Promise<Size> {
+function videoIntrinsicSize(source: MediaItemSource): Promise<Size> {
   return new Promise((resolve) => {
     const video = document.createElement('video')
     video.src = mediaSourceToSrc(source)
 
     video.onloadedmetadata = () => {
       URL.revokeObjectURL(video.src)
-      resolve({
-        width: DEFAULT_VIDEO_WIDTH,
-        height: (DEFAULT_VIDEO_WIDTH * video.videoHeight) / video.videoWidth,
-      })
+      resolve({ width: video.videoWidth, height: video.videoHeight })
     }
   })
 }
 
-export async function getPDFItemSize(source: MediaItemSource): Promise<Size> {
-  const src = mediaSourceToSrc(source)
+export async function getVideoItemSize(source: MediaItemSource | Size): Promise<Size> {
+  const intrinsicSize = isMediaItemSource(source) ? await videoIntrinsicSize(source) : source
 
-  const doc = await pdfjs.getDocument(src).promise
-  const { width, height } = (await doc.getPage(1)).getViewport({ scale: 1 })
-  const aspectRatio = height / width
+  return {
+    width: DEFAULT_VIDEO_WIDTH,
+    height: (DEFAULT_VIDEO_WIDTH * intrinsicSize.height) / intrinsicSize.width,
+  }
+}
 
+async function getPDFPageSize(source: MediaItemSource): Promise<Size> {
+  const doc = await pdfjs.getDocument(mediaSourceToSrc(source)).promise
+  return (await doc.getPage(1)).getViewport({ scale: 1 })
+}
+
+export async function getPDFItemSize(source: MediaItemSource | Size): Promise<Size> {
+  const intrinsicSize = isMediaItemSource(source) ? await getPDFPageSize(source) : source
   const defaultPDFWidth = 300
 
   return getClampedItemSize({
     width: defaultPDFWidth,
-    height: defaultPDFWidth * aspectRatio,
+    height: defaultPDFWidth / aspectRatio(intrinsicSize),
   })
 }
 
@@ -100,7 +115,9 @@ const DEFAULT_WEBPAGE_SIZE: Size = {
 }
 const EMBEDDED_TAPESTRY_ITEM_SIZE: Size = { width: 1920, height: 930 }
 
-export async function getWebpageItemSize(source: MediaItemSource): Promise<Size> {
+export async function getWebpageItemSize(source: MediaItemSource | Size): Promise<Size> {
+  if (!isMediaItemSource(source)) return getClampedItemSize(source)
+
   if (source instanceof File) {
     return DEFAULT_WEBPAGE_SIZE
   }

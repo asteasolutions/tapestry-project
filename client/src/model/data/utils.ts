@@ -218,7 +218,7 @@ export function fromTapestryDto(
     pendingRequests: 0,
     userAccess,
     largeFiles: [],
-    iaImports: [],
+    collectionImports: [],
     collaborators: {},
   }
 
@@ -236,7 +236,7 @@ export const itemSizes = {
   video: getVideoItemSize,
   webpage: getWebpageItemSize,
   text: { height: 200, width: 400 },
-} as const satisfies Record<ItemType, Size | ((file: MediaItemSource) => Promise<Size>)>
+} as const satisfies Record<ItemType, Size | ((file: MediaItemSource | Size) => Promise<Size>)>
 
 export function createTextItem(text = '', tapestryId: string): TextItemCreateDto {
   const { textItemColor } = userSettings.getTapestrySettings(tapestryId)
@@ -314,7 +314,10 @@ export async function getItemSize(item: ItemDto): Promise<Size> {
   return itemSizes[item.type]
 }
 
-async function getMediaItemSize(type: MediaItemType, source: MediaItemSource): Promise<Size> {
+async function getMediaItemSize(
+  type: MediaItemType,
+  source: MediaItemSource | Size,
+): Promise<Size> {
   const sizeGetter = itemSizes[type]
   return isFunction(sizeGetter) ? await sizeGetter(source) : sizeGetter
 }
@@ -323,8 +326,9 @@ export async function createMediaItem<T extends MediaItemType>(
   type: T,
   source: MediaItemSource,
   tapestryId: string,
+  knownSize?: Size,
 ) {
-  const size = await getMediaItemSize(type, source)
+  const size = await getMediaItemSize(type, knownSize ?? source)
   return {
     type,
     size,
@@ -335,6 +339,20 @@ export async function createMediaItem<T extends MediaItemType>(
     tapestryId,
     layer: DEFAULT_LAYER,
   } satisfies MediaItemCreateDto as MediaItemCreateDto & { type: T }
+}
+
+// Creates an item from a source on another platform, keeping the platform page as a note.
+export async function createDerivedSourceMediaItem(
+  tapestryId: string,
+  media: { source: string; originalSource: string; mediaType: MediaItemType; size?: Size },
+) {
+  try {
+    const item = await createMediaItem(media.mediaType, media.source, tapestryId, media.size)
+    item.notes = `Source: ${media.originalSource}`
+    return item
+  } catch {
+    return null
+  }
 }
 
 // TODO: Handle the scenario where the source is an S3 object and therefore needs to be cloned.
