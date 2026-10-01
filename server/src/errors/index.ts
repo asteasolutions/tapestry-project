@@ -118,14 +118,17 @@ export class UserDoesNotExistError
   implements UserDoesNotExistsErrorResponse
 {
   public usernameSuggestion: string
-  public firstName: string
-  public lastName: string
+  public firstNameSuggestion?: string
+  public lastNameSuggestion?: string
 
-  constructor(public jwt: RegisterJWTData) {
+  constructor(
+    public jwt: RegisterJWTData,
+    suggestions: { firstNameSuggestion?: string; lastNameSuggestion?: string } = {},
+  ) {
     super(404, 'User not found', 'UserDoesNotExistsError')
     this.usernameSuggestion = jwt.email.split('@')[0]
-    this.firstName = jwt.givenName
-    this.lastName = jwt.familyName
+    this.firstNameSuggestion = suggestions.firstNameSuggestion
+    this.lastNameSuggestion = suggestions.lastNameSuggestion
   }
 }
 

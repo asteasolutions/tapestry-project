@@ -13,19 +13,19 @@ import { AUTH_PROVIDERS } from './providers-registry'
 export const auth = new AuthService()
 
 interface RegistrationModalProps {
-  initialName: string
+  initialUsername: string
   initialFirstName?: string
   initialLastName?: string
 }
 
 function RegistrationModal({
-  initialName,
+  initialUsername,
   initialFirstName = '',
   initialLastName = '',
 }: RegistrationModalProps) {
   const [form] = useState(() => uniqueId('form'))
   const [formData, setFormData] = useState({
-    username: initialName,
+    username: initialUsername,
     firstName: initialFirstName,
     lastName: initialLastName,
   })
@@ -107,9 +107,9 @@ export function LoginButton() {
       )}
       {pendingRegistration && (
         <RegistrationModal
-          initialName={pendingRegistration.usernameSuggestion}
-          initialFirstName={pendingRegistration.firstName}
-          initialLastName={pendingRegistration.lastName}
+          initialUsername={pendingRegistration.usernameSuggestion}
+          initialFirstName={pendingRegistration.firstNameSuggestion}
+          initialLastName={pendingRegistration.lastNameSuggestion}
         />
       )}
     </>

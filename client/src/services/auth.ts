@@ -21,7 +21,7 @@ export interface AuthServiceState {
   user: UserDto | null
   isInitialized: boolean
   pendingRegistration:
-    | { usernameSuggestion: string; firstName?: string; lastName?: string }
+    | { usernameSuggestion: string; firstNameSuggestion?: string; lastNameSuggestion?: string }
     | undefined
 }
 
@@ -113,8 +113,8 @@ export class AuthService extends Observable<AuthServiceState> {
           } else if (errorName === 'UserDoesNotExistsError') {
             state.pendingRegistration = {
               usernameSuggestion: error.data.usernameSuggestion,
-              firstName: error.data.firstName,
-              lastName: error.data.lastName,
+              firstNameSuggestion: error.data.firstNameSuggestion,
+              lastNameSuggestion: error.data.lastNameSuggestion,
             }
           }
         }
@@ -147,8 +147,8 @@ export class AuthService extends Observable<AuthServiceState> {
       {
         authType: 'registerUser',
         username: data.username,
-        firstName: data.firstName,
-        lastName: data.lastName,
+        firstName: data.firstName?.trim() || undefined,
+        lastName: data.lastName?.trim() || undefined,
       },
       true,
       signal,

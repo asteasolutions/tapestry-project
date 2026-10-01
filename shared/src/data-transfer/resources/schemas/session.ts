@@ -18,7 +18,7 @@ export const SessionCreateSchema = z.discriminatedUnion('authType', [
   z.object({
     authType: z.literal('registerUser'),
     username: z.preprocess(trimString, z.string().nonempty().regex(usernameRegex)),
-    firstName: z.preprocess(trimString, z.string().max(100)).optional(),
-    lastName: z.preprocess(trimString, z.string().max(100)).optional(),
+    firstName: z.preprocess(trimString, z.string().nonempty().max(100)).optional(),
+    lastName: z.preprocess(trimString, z.string().nonempty().max(100)).optional(),
   }),
 ])

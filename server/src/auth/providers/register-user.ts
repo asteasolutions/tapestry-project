@@ -22,8 +22,8 @@ export class RegisterUserAuthProvider implements AuthProvider<RegisterUserCreden
       const user = await prisma.user.create({
         data: {
           ...payload,
-          givenName: firstName?.trim() ?? payload.givenName,
-          familyName: lastName?.trim() ?? payload.familyName,
+          givenName: firstName ?? '',
+          familyName: lastName ?? '',
           username,
         },
       })
