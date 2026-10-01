@@ -233,7 +233,7 @@ export const WebpageItem = memo(({ id }: TapestryItemProps) => {
 
   return (
     <>
-      <TapestryItem id={id} halo={isFullscreen ? undefined : toolbar}>
+      <TapestryItem id={id} halo={!isFullscreen && toolbar}>
         <div ref={containerRef} className={styles.fullscreenController}>
           <WebpageItemViewer id={id} WebFrame={Webpage} apiRef={apiRef} />
           {isFullscreen && exitFullscreenButton}

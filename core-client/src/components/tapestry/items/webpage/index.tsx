@@ -24,7 +24,7 @@ export const WebpageItem = memo(({ id }: TapestryElementComponentProps) => {
     <TapestryItem
       id={id}
       halo={
-        isFullscreen ? undefined : (
+        isFullscreen && (
           <ItemToolbar tapestryItemId={id} items={isPlayable ? [] : [fullscreenButton]} />
         )
       }
