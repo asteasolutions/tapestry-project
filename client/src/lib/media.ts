@@ -103,88 +103,73 @@ const DEFAULT_WEBPAGE_SIZE: Size = {
   height: 500,
 }
 const EMBEDDED_TAPESTRY_MAX_SIDE_SIZE = 700
-const EMBEDDED_TAPESTRY_ITEM_SIZE: Size = {
+const EMBEDDED_TAPESTRY_DEFAULT_SIZE: Size = {
   width: EMBEDDED_TAPESTRY_MAX_SIDE_SIZE,
   height: EMBEDDED_TAPESTRY_MAX_SIDE_SIZE / 2,
 }
-const TOOLBAR_PADDING = 100
+const EMBEDDED_TAPESTRY_TOOLBAR_PADDING = 100
 
-type TapestryRoute =
-  | { type: 'slug'; username: string; slug: string }
-  | { type: 'id'; tapestryId: string }
-  | null
-
-function parseTapestryUrl(source: string): TapestryRoute {
+async function fetchTapestry(source: string) {
   const url = new URL(source)
-  const pathname = url.pathname.replace(/^\/+|\/+$/g, '')
-  const segments = pathname.split('/')
+  const segments = url.pathname.replace(/^\/?/, '').split('/')
 
   //path by username and slug: .../u/:username/:slug
   if (segments[0] === 'u' && segments[1] && segments[2]) {
-    return { type: 'slug', username: segments[1], slug: segments[2] }
+    return resource('tapestries').read(
+      {
+        id: `${segments[1]}/${segments[2]}`,
+      },
+      { include: ['items'] },
+    )
   }
 
   //path by id:  .../t/:tapestryId
   if (segments[0] === 't' && segments[1]) {
-    return { type: 'id', tapestryId: segments[1] }
+    return await resource('tapestries').read(
+      {
+        id: segments[1],
+      },
+      { include: ['items'] },
+    )
   }
-
-  return null
-}
-
-function fetchTapestry(route: TapestryRoute) {
-  return route === null
-    ? route
-    : (async () => {
-        switch (route.type) {
-          case 'slug': {
-            return resource('tapestries').read(
-              {
-                id: `${route.username}/${route.slug}`,
-              },
-              { include: ['items'] },
-            )
-          }
-
-          case 'id': {
-            return await resource('tapestries').read(
-              {
-                id: route.tapestryId,
-              },
-              { include: ['items'] },
-            )
-          }
-        }
-      })()
+  return
 }
 
 async function getEmbeddedTapestrySize(source: string): Promise<Size> {
-  const route = parseTapestryUrl(source)
-  if (!route) {
-    return EMBEDDED_TAPESTRY_ITEM_SIZE
+  const tapestry = await fetchTapestry(source)
+  if (!tapestry) {
+    return EMBEDDED_TAPESTRY_DEFAULT_SIZE
   }
+  let width = 0
+  let height = 0
 
-  const tapestry = await fetchTapestry(route)
-  if (!tapestry?.items || tapestry.items.length === 0) {
-    return EMBEDDED_TAPESTRY_ITEM_SIZE
+  if (tapestry.startView) {
+    width = tapestry.startView.size.width
+    height = tapestry.startView.size.height
+  } else {
+    if (!tapestry.items || tapestry.items.length === 0) {
+      return EMBEDDED_TAPESTRY_DEFAULT_SIZE
+    }
+
+    const viewModels = tapestry.items.map((item) => createItemViewModel(duplicateItem(item)))
+    const rectangle = getBoundingRectangle(viewModels)
+    width = rectangle.width
+    height = rectangle.height
   }
-
-  const viewModels = tapestry.items.map((item) => createItemViewModel(duplicateItem(item)))
-  const { width, height } = getBoundingRectangle(viewModels)
 
   if (width <= 0 || height <= 0) {
-    return EMBEDDED_TAPESTRY_ITEM_SIZE
+    return EMBEDDED_TAPESTRY_DEFAULT_SIZE
   }
 
-  return width >= height
-    ? {
-        width: EMBEDDED_TAPESTRY_MAX_SIDE_SIZE,
-        height: (EMBEDDED_TAPESTRY_MAX_SIDE_SIZE * height) / width + TOOLBAR_PADDING,
-      }
-    : {
-        width: (EMBEDDED_TAPESTRY_MAX_SIDE_SIZE * width) / height,
-        height: EMBEDDED_TAPESTRY_MAX_SIDE_SIZE + TOOLBAR_PADDING,
-      }
+  const fittedSize = innerFit(
+    { width, height },
+    { width: EMBEDDED_TAPESTRY_MAX_SIDE_SIZE, height: EMBEDDED_TAPESTRY_MAX_SIDE_SIZE },
+  )
+
+  return {
+    width: fittedSize.width,
+    height: fittedSize.height + EMBEDDED_TAPESTRY_TOOLBAR_PADDING,
+  }
 }
 
 export async function getWebpageItemSize(source: MediaItemSource): Promise<Size> {
