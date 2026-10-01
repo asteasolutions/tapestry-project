@@ -15,14 +15,14 @@
 
     .thumbnail {
       flex-shrink: 0;
-      height: 150px;
-      width: 150px;
+      max-height: 150px;
       border: 1px solid var(--theme-border-disabled);
       border-radius: 10px;
+      object-fit: contain;
 
       @media screen and (width <= 900px) {
-        height: 100px;
-        width: 100px;
+        max-height: 100px;
+        max-width: 130px;
       }
     }
 

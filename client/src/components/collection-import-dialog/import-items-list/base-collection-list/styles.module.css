@@ -42,10 +42,18 @@
       text-align: end;
     }
 
+    /* Shared by ImageLoader's img and its fallback Icon -- only one of the two is ever rendered. */
     .item-image {
       height: 50px;
       width: 50px;
       flex-shrink: 0;
+      object-fit: cover;
+      background-color: var(--theme-background-disabled);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: var(--theme-text-tertiary-inverse);
     }
   }
 

@@ -11,51 +11,10 @@ import { ItemCreateDto } from 'tapestry-shared/src/data-transfer/resources/dtos/
 import { LazyList, LazyListProps, WithId } from '../../../lazy-list'
 import { LazyListLoader } from '../../../lazy-list/lazy-list-loader'
 import { LoadingLogoIcon } from '../../../loading-logo-icon'
-import { ImageWrapper } from '../../image-wrapper'
+import { ImageLoader } from '../../image-loader'
 import { CreateItemsFromSelection, MAX_SELECTION } from '../..'
 import { SelectAll } from '../select-all'
 import styles from './styles.module.css'
-
-interface FetchedPage<Result> {
-  page: number
-  result: Result | undefined
-}
-
-// Bridges a numbered-page API to LazyList's skip/limit windowing, fetching the one or two real
-// pages that cover the requested window.
-export async function paginateBySkipLimit<Result, Item>(
-  fetchPage: (page: number, pageSize: number, signal: AbortSignal) => Promise<Result | undefined>,
-  getItems: (result: Result) => Item[],
-  skip: number,
-  limit: number,
-  signal: AbortSignal,
-): Promise<{
-  skip: number
-  data: Item[]
-  firstPage: FetchedPage<Result>
-  secondPage?: FetchedPage<Result>
-}> {
-  const firstPageNumber = Math.floor(skip / limit) + 1
-  const firstPageResult = await fetchPage(firstPageNumber, limit, signal)
-
-  const extra = skip % limit
-  const secondPageResult =
-    extra && firstPageResult ? await fetchPage(firstPageNumber + 1, limit, signal) : undefined
-
-  const data = [
-    ...(firstPageResult ? getItems(firstPageResult) : []),
-    ...(secondPageResult ? getItems(secondPageResult) : []),
-  ].slice(extra, extra + limit)
-
-  return {
-    skip,
-    data,
-    firstPage: { page: firstPageNumber, result: firstPageResult },
-    ...(extra && firstPageResult
-      ? { secondPage: { page: firstPageNumber + 1, result: secondPageResult } }
-      : {}),
-  }
-}
 
 export type CollectionListColumn =
   | 'creator'
@@ -185,23 +144,20 @@ export function BaseCollectionList<T extends WithId>({
   // Cache of everything fetched so far, indexed by absolute position, so autoReload's periodic
   // re-request of an already-loaded window is served from here instead of hitting the rate-limited
   // external APIs again. Assumes the list only ever requests sequential windows (no gaps).
-  const cacheRef = useRef<(T | undefined)[]>([])
-  const totalRef = useRef<number | undefined>(undefined)
+  const cacheRef = useRef<T[]>([])
 
   const cachedRequestItems = useMemo(() => {
+    let finalTotal: number | undefined
+
     return async (skip: number, limit: number, signal: AbortSignal) => {
       const cache = cacheRef.current
       const cachedWindow = cache.slice(skip, skip + limit)
-      if (
-        totalRef.current !== undefined &&
-        cachedWindow.length === limit &&
-        cachedWindow.every((item): item is T => item !== undefined)
-      ) {
-        return { skip, total: totalRef.current, data: cachedWindow }
+      if (finalTotal !== undefined && cachedWindow.length === limit) {
+        return { skip, total: finalTotal, data: cachedWindow }
       }
 
       const response = await requestItems(skip, limit, signal)
-      totalRef.current = response.total
+      finalTotal = response.total
 
       response.data.forEach((item, i) => {
         cache[skip + i] = item
@@ -215,10 +171,7 @@ export function BaseCollectionList<T extends WithId>({
   // "keep a ref synced" pattern as usePropRef.
   createItemsFromSelectionRef.current = async () => {
     const cache = cacheRef.current
-    const items = [...selectedIndices]
-      .sort((a, b) => a - b)
-      .map((i) => cache[i])
-      .filter((item): item is T => item !== undefined)
+    const items = [...selectedIndices].sort((a, b) => a - b).map((i) => cache[i])
     return compact(await Promise.all(items.map(toTapestryItem)))
   }
 
@@ -234,12 +187,8 @@ export function BaseCollectionList<T extends WithId>({
           deselectAllItems()
           return
         }
-        const cache = cacheRef.current
-        let cachedFromStart = 0
-        while (cachedFromStart < cache.length && cache[cachedFromStart] !== undefined) {
-          cachedFromStart++
-        }
-        selectItems(Array.from({ length: Math.min(cachedFromStart, MAX_SELECTION) }, (_, i) => i))
+        const cachedCount = cacheRef.current.length
+        selectItems(Array.from({ length: Math.min(cachedCount, MAX_SELECTION) }, (_, i) => i))
       }}
       total={total}
       classes={{ root: mdOrLess ? styles.mobileSelectAll : undefined, checkbox: styles.checkbox }}
@@ -303,11 +252,11 @@ export function BaseCollectionList<T extends WithId>({
                     <Text
                       variant={textVariant}
                       className={styles.itemIndex}
-                      style={{ minWidth: `${Math.min(30, (indexDigits + 1) * 10)}px` }}
+                      style={{ minWidth: `${Math.max(30, (indexDigits + 1) * 10)}px` }}
                     >
                       {rowIndex + 1}.
                     </Text>
-                    <ImageWrapper
+                    <ImageLoader
                       className={styles.itemImage}
                       image={listItem.image}
                       fallbackIcon={listItem.fallbackIcon}

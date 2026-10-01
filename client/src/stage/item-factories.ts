@@ -6,7 +6,7 @@ import {
   parseOpenverseMediaId,
 } from 'tapestry-core/src/openverse'
 import {
-  fetchWikimediaPageCount,
+  fetchWikimediaCategoryDetails,
   fetchWikimediaMedia,
   parseWikimediaCategoryQuery,
   parseWikimediaFileTitle,
@@ -230,7 +230,7 @@ const wikimediaFactory: ItemFactory = async (source, _mediaType, tapestryId) => 
   const wikimediaTitle = parseWikimediaFileTitle(source)
   if (wikimediaTitle) {
     const media = await fetchWikimediaMedia(wikimediaTitle)
-    if (!media) return null
+    if (!media?.mediaType) return null
 
     const item = await createDerivedSourceMediaItem(tapestryId, {
       source: media.url,
@@ -244,12 +244,14 @@ const wikimediaFactory: ItemFactory = async (source, _mediaType, tapestryId) => 
 
   const category = parseWikimediaCategoryQuery(source)
   if (category) {
-    const total = await fetchWikimediaPageCount(category)
+    const { total, thumbnail, description } = await fetchWikimediaCategoryDetails(category)
     if (total === undefined) return null
 
     return {
       items: [],
-      collectionImports: [{ type: 'WikimediaCommonsCategory', category, total }],
+      collectionImports: [
+        { type: 'WikimediaCommonsCategory', category, total, thumbnail, description },
+      ],
     }
   }
 

@@ -7,11 +7,7 @@ import {
 import { ImportItemsListProps } from '..'
 import { useResponsive, Breakpoint } from '../../../../providers/responsive-provider'
 import { Text } from 'tapestry-core-client/src/components/lib/text/index'
-import {
-  BaseCollectionList,
-  CollectionListItem,
-  paginateBySkipLimit,
-} from '../base-collection-list'
+import { BaseCollectionList, CollectionListItem } from '../base-collection-list'
 import { useMemo } from 'react'
 import { partial } from 'lodash-es'
 import { createIAMediaItems } from '../../../../stage/item-factories'
@@ -39,6 +35,47 @@ interface IASearchResultItem {
   creator?: string | undefined
   publicdate: string
   downloads: number
+}
+
+interface FetchedPage<Result> {
+  page: number
+  result: Result | undefined
+}
+
+// Bridges IA's numbered-page search API to LazyList's skip/limit windowing, fetching the one or
+// two real pages that cover the requested window.
+async function paginateBySkipLimit<Result, Item>(
+  fetchPage: (page: number, pageSize: number, signal: AbortSignal) => Promise<Result | undefined>,
+  getItems: (result: Result) => Item[],
+  skip: number,
+  limit: number,
+  signal: AbortSignal,
+): Promise<{
+  skip: number
+  data: Item[]
+  firstPage: FetchedPage<Result>
+  secondPage?: FetchedPage<Result>
+}> {
+  const firstPageNumber = Math.floor(skip / limit) + 1
+  const firstPageResult = await fetchPage(firstPageNumber, limit, signal)
+
+  const extra = skip % limit
+  const secondPageResult =
+    extra && firstPageResult ? await fetchPage(firstPageNumber + 1, limit, signal) : undefined
+
+  const data = [
+    ...(firstPageResult ? getItems(firstPageResult) : []),
+    ...(secondPageResult ? getItems(secondPageResult) : []),
+  ].slice(extra, extra + limit)
+
+  return {
+    skip,
+    data,
+    firstPage: { page: firstPageNumber, result: firstPageResult },
+    ...(extra && firstPageResult
+      ? { secondPage: { page: firstPageNumber + 1, result: secondPageResult } }
+      : {}),
+  }
 }
 
 export async function requestSearchItems(

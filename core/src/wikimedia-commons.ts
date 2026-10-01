@@ -1,14 +1,16 @@
 // Wikimedia Commons is queried through the MediaWiki Action API, documented at
 // https://www.mediawiki.org/wiki/API:Main_page. Category listing uses the `categorymembers`
 // generator: https://www.mediawiki.org/wiki/API:Categorymembers.
+import { MediaItemType } from './data-format/schemas/item'
+
 const COMMONS_HOST = 'commons.wikimedia.org'
 const COMMONS_API_URL = 'https://commons.wikimedia.org/w/api.php'
 const COMMONS_PAGE_SIZE = 50
 const COMMONS_GENERIC_ICON_PATH = '/w/resources/assets/file-type-icons/'
 
-export type WikimediaMediaType = 'image' | 'video' | 'audio' | 'pdf'
-
-function itemTypeForFile(mediatype: string, mime: string): WikimediaMediaType | null {
+// null for a real Commons file whose type isn't one we can turn into a tapestry item (e.g. an
+// OFFICE document that isn't a PDF) -- callers decide what to do with those, not this function.
+function wikimediaTypeToItemType(mediatype: string, mime: string): MediaItemType | null {
   if (mediatype === 'BITMAP' || mediatype === 'DRAWING') return 'image'
   if (mediatype === 'VIDEO') return 'video'
   if (mediatype === 'AUDIO') return 'audio'
@@ -22,7 +24,7 @@ export interface WikimediaMedia {
   thumbnail: string | null
   title: string
   uploader: string | null
-  mediaType: WikimediaMediaType
+  mediaType: MediaItemType | null
   /** Only meaningful for images -- video/audio/pdf files don't report a natural width/height here. */
   width?: number
   height?: number
@@ -68,7 +70,7 @@ function thumbnailFor(itemInfo: CommonsItemInfo): string | null {
 // Commons transcodes most VIDEO and AUDIO files into WebM and MP3. It reports these as
 // `derivatives`. Prefer a derivative over the original. Use the original only when no
 // derivative exists.
-function bestPlaybackURL(mediaType: WikimediaMediaType, itemInfo: CommonsItemInfo): string {
+function bestPlaybackURL(mediaType: MediaItemType | null, itemInfo: CommonsItemInfo): string {
   const derivatives = itemInfo.derivatives ?? []
 
   if (mediaType === 'video') {
@@ -92,8 +94,9 @@ function toWikimediaMedia(page: CommonsFilePage): WikimediaMedia | null {
   const itemInfo = page.videoinfo?.[0]
   if (!itemInfo) return null
 
-  const mediaType = itemTypeForFile(itemInfo.mediatype, itemInfo.mime)
-  if (!mediaType) return null
+  // Returns every real file, even ones whose type isn't one we can turn into a tapestry item
+  // (mediaType: null) -- deciding what to do with those is up to the caller, not this function.
+  const mediaType = wikimediaTypeToItemType(itemInfo.mediatype, itemInfo.mime)
 
   return {
     id: String(page.pageid),
@@ -172,31 +175,6 @@ export async function fetchWikimediaMedia(
   }
 }
 
-export async function fetchWikimediaPageCount(
-  category: string,
-  signal?: AbortSignal,
-): Promise<number | undefined> {
-  try {
-    const url = new URL(COMMONS_API_URL)
-    url.searchParams.set('action', 'query')
-    url.searchParams.set('titles', category)
-    url.searchParams.set('prop', 'categoryinfo')
-    url.searchParams.set('format', 'json')
-    url.searchParams.set('origin', '*')
-
-    const res = await fetch(url, { signal })
-    if (!res.ok) return undefined
-
-    interface CategoryPage {
-      categoryinfo?: { files: number }
-    }
-    const data = (await res.json()) as CommonsQueryResponse<CategoryPage>
-    return Object.values(data.query?.pages ?? {})[0]?.categoryinfo?.files
-  } catch {
-    return undefined
-  }
-}
-
 const CATEGORY_THUMBNAIL_WIDTH = 300
 
 export interface WikimediaCategoryDetails {
@@ -205,20 +183,21 @@ export interface WikimediaCategoryDetails {
   // wikitext has an article-like intro, and blank HTML for one that doesn't -- both are real,
   // common outcomes, not a sign the API failed.
   description: string | null
+  total: number | undefined
 }
 
-// pageimages/extracts are combined into one request -- verified real: MediaWiki's action=query
-// supports multiple props (prop=pageimages|extracts) in a single call.
+// thumbnail/description/file count combined into one request -- verified real: MediaWiki's
+// action=query supports multiple props (prop=pageimages|extracts|categoryinfo) in a single call.
 export async function fetchWikimediaCategoryDetails(
   category: string,
   signal?: AbortSignal,
 ): Promise<WikimediaCategoryDetails> {
-  const empty = { thumbnail: null, description: null }
+  const empty = { thumbnail: null, description: null, total: undefined }
   try {
     const url = new URL(COMMONS_API_URL)
     url.searchParams.set('action', 'query')
     url.searchParams.set('titles', category)
-    url.searchParams.set('prop', 'pageimages|extracts')
+    url.searchParams.set('prop', 'pageimages|extracts|categoryinfo')
     url.searchParams.set('piprop', 'thumbnail')
     url.searchParams.set('pithumbsize', String(CATEGORY_THUMBNAIL_WIDTH))
     url.searchParams.set('exintro', 'true')
@@ -232,12 +211,14 @@ export async function fetchWikimediaCategoryDetails(
     interface CategoryPage {
       thumbnail?: { source: string }
       extract?: string
+      categoryinfo?: { files: number }
     }
     const data = (await res.json()) as CommonsQueryResponse<CategoryPage>
     const page = Object.values(data.query?.pages ?? {})[0] ?? {}
     return {
       thumbnail: page.thumbnail?.source ?? null,
       description: page.extract?.trim() || null,
+      total: page.categoryinfo?.files,
     }
   } catch {
     return empty

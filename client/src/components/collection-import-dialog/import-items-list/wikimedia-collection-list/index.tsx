@@ -4,6 +4,7 @@ import {
   wikimediaFilePageURL,
   WikimediaMedia,
 } from 'tapestry-core/src/wikimedia-commons'
+import { MediaItemType } from 'tapestry-core/src/data-format/schemas/item'
 import { ImportItemsListProps } from '..'
 import { CollectionImport } from '../../../../pages/tapestry/view-model'
 import { useResponsive, Breakpoint } from '../../../../providers/responsive-provider'
@@ -14,12 +15,17 @@ import { createDerivedSourceMediaItem } from '../../../../model/data/utils'
 
 // Use this icon when a media item has no real thumbnail (Commons' generic per-extension icon,
 // already mapped to null in wikimedia-commons.ts).
-const NO_THUMBNAIL_ICON: Record<WikimediaMedia['mediaType'], IconName> = {
+const NO_THUMBNAIL_ICON: Partial<Record<MediaItemType, IconName>> = {
   image: 'image',
   audio: 'audio_file',
   video: 'video_file',
   pdf: 'picture_as_pdf',
 }
+
+// fetchWikimediaCategoryResults returns every real file, including ones whose type isn't one we
+// can turn into a tapestry item (mediaType: null, e.g. a non-PDF OFFICE document) -- filtered out
+// here on the client, not in core, so this list decides what it can actually show/import.
+type SupportedWikimediaMedia = WikimediaMedia & { mediaType: MediaItemType }
 
 export type WikimediaCommonsCategoryImport = Extract<
   CollectionImport,
@@ -44,15 +50,18 @@ export function WikimediaCollectionList({
     // left off, fetching one real page at a time and buffering everything fetched so far, until
     // the buffer covers the requested window. Cursors (and the buffered items) live for as long
     // as this component does; they don't go stale.
-    const fetched: WikimediaMedia[] = []
+    const fetched: SupportedWikimediaMedia[] = []
     let nextCursor: string | undefined
     let done = false
+
+    const isSupported = (item: WikimediaMedia): item is SupportedWikimediaMedia =>
+      item.mediaType !== null
 
     return async (skip: number, limit: number, signal: AbortSignal) => {
       while (fetched.length < skip + limit && !done) {
         const page = await fetchWikimediaCategoryResults(collection.category, nextCursor, signal)
         if (!page) break
-        fetched.push(...page.results)
+        fetched.push(...page.results.filter(isSupported))
         nextCursor = page.nextCursor
         done = nextCursor === undefined
       }
@@ -78,7 +87,7 @@ export function WikimediaCollectionList({
         dimensions:
           item.width && item.height ? { width: item.width, height: item.height } : undefined,
       })}
-      toTapestryItem={(item: WikimediaMedia) =>
+      toTapestryItem={(item: SupportedWikimediaMedia) =>
         createDerivedSourceMediaItem(tapestryId, {
           source: item.url,
           originalSource: wikimediaFilePageURL(item.id),

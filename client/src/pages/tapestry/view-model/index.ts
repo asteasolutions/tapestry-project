@@ -173,6 +173,8 @@ export type CollectionImport =
       type: 'WikimediaCommonsCategory'
       category: string
       total: number
+      thumbnail: string | null
+      description: string | null
     }
   | {
       type: 'IASearchCollection'

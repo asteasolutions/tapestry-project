@@ -1,7 +1,9 @@
 // Openverse API docs: https://docs.openverse.org/api/. Endpoint reference for the
 // list/detail routes used below: https://api.openverse.org/v1/#tag/images.
 const OPENVERSE_HOST = 'openverse.org'
-const OPENVERSE_MAX_PAGE_SIZE = 20
+// Openverse's real per-request cap. Callers that need an arbitrary skip/limit window (e.g. a
+// lazily-loaded list) walk forward over real pages of this size themselves.
+export const OPENVERSE_MAX_PAGE_SIZE = 20
 
 export type OpenverseMediaType = 'image' | 'audio'
 
@@ -100,7 +102,7 @@ function setOpenverseCollectionSearchParams(url: URL, collection: OpenverseColle
   }
 }
 
-async function fetchOpenverseCollectionPage(
+export async function fetchOpenverseCollectionPage(
   mediaType: OpenverseMediaType,
   collection: OpenverseCollectionQuery,
   page: number,
@@ -128,38 +130,4 @@ export async function fetchOpenverseCollectionCount(
   signal?: AbortSignal,
 ): Promise<number | undefined> {
   return (await fetchOpenverseCollectionPage(mediaType, collection, 1, 1, signal))?.result_count
-}
-
-export async function fetchOpenverseCollectionResults(
-  mediaType: OpenverseMediaType,
-  collection: OpenverseCollectionQuery,
-  page: number,
-  pageSize: number,
-  signal?: AbortSignal,
-): Promise<{ total: number; results: OpenverseMedia[] } | undefined> {
-  const skip = (page - 1) * pageSize
-  const firstRealPage = Math.floor(skip / OPENVERSE_MAX_PAGE_SIZE) + 1
-  const lastRealPage = Math.floor((skip + pageSize - 1) / OPENVERSE_MAX_PAGE_SIZE) + 1
-
-  const realPages: (OpenverseMediaListResponse | null)[] = []
-  for (let realPage = firstRealPage; realPage <= lastRealPage; realPage++) {
-    realPages.push(
-      await fetchOpenverseCollectionPage(
-        mediaType,
-        collection,
-        realPage,
-        OPENVERSE_MAX_PAGE_SIZE,
-        signal,
-      ),
-    )
-  }
-  if (!realPages[0]) return undefined
-
-  const offset = skip % OPENVERSE_MAX_PAGE_SIZE
-  const combined = realPages.flatMap((realPage) => realPage?.results ?? [])
-
-  return {
-    total: realPages[0].result_count,
-    results: combined.slice(offset, offset + pageSize),
-  }
 }

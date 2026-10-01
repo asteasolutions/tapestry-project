@@ -1,13 +1,11 @@
 import { ReactNode } from 'react'
 import { getIAItemThumbnailURL } from 'tapestry-core/src/internet-archive'
-import { fetchWikimediaCategoryDetails } from 'tapestry-core/src/wikimedia-commons'
 import { CollectionImport } from '../../../pages/tapestry/view-model'
 import styles from './styles.module.css'
 import { Text } from 'tapestry-core-client/src/components/lib/text/index'
-import { useAsync } from 'tapestry-core-client/src/components/lib/hooks/use-async'
 import { intlFormat } from 'date-fns'
 import { Breakpoint, useResponsive } from '../../../providers/responsive-provider'
-import { ImageWrapper } from '../image-wrapper'
+import { ImageLoader } from '../image-loader'
 
 const parser = new DOMParser()
 
@@ -27,7 +25,7 @@ function DetailsLayout({ thumbnail, title, subtitle, meta, body }: DetailsLayout
   return (
     <div className={styles.root}>
       <div className={styles.header}>
-        {thumbnail && <ImageWrapper className={styles.thumbnail} image={thumbnail} />}
+        {thumbnail && <ImageLoader className={styles.thumbnail} image={thumbnail} />}
         <div className={styles.metadataContainer}>
           <div>
             <Text
@@ -55,26 +53,6 @@ function DetailsLayout({ thumbnail, title, subtitle, meta, body }: DetailsLayout
   )
 }
 
-function WikimediaCommonsCategoryDetails({
-  collection,
-}: {
-  collection: Extract<CollectionImport, { type: 'WikimediaCommonsCategory' }>
-}) {
-  const { data: details } = useAsync(
-    ({ signal }) => fetchWikimediaCategoryDetails(collection.category, signal),
-    [collection.category],
-  )
-
-  return (
-    <DetailsLayout
-      thumbnail={details?.thumbnail}
-      title={collection.category}
-      subtitle={`${collection.total} files`}
-      body={details?.description}
-    />
-  )
-}
-
 interface ImportDetailsProps {
   import: CollectionImport
 }
@@ -97,7 +75,14 @@ export function ImportDetails({ import: collectionImport }: ImportDetailsProps) 
       )
 
     case 'WikimediaCommonsCategory':
-      return <WikimediaCommonsCategoryDetails collection={collectionImport} />
+      return (
+        <DetailsLayout
+          thumbnail={collectionImport.thumbnail}
+          title={collectionImport.category}
+          subtitle={`${collectionImport.total} files`}
+          body={collectionImport.description}
+        />
+      )
 
     case 'IASearchCollection':
       return (
