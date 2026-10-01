@@ -10,7 +10,7 @@ const COMMONS_GENERIC_ICON_PATH = '/w/resources/assets/file-type-icons/'
 
 // null for a real Commons file whose type isn't one we can turn into a tapestry item (e.g. an
 // OFFICE document that isn't a PDF) -- callers decide what to do with those, not this function.
-function wikimediaTypeToItemType(mediatype: string, mime: string): MediaItemType | null {
+export function wikimediaTypeToItemType(mediatype: string, mime: string): MediaItemType | null {
   if (mediatype === 'BITMAP' || mediatype === 'DRAWING') return 'image'
   if (mediatype === 'VIDEO') return 'video'
   if (mediatype === 'AUDIO') return 'audio'
@@ -23,8 +23,9 @@ export interface WikimediaMedia {
   url: string
   thumbnail: string | null
   title: string
-  uploader: string | null
-  mediaType: MediaItemType | null
+  uploadedAt: string
+  mediatype: string
+  mime: string
   /** Only meaningful for images -- video/audio/pdf files don't report a natural width/height here. */
   width?: number
   height?: number
@@ -42,7 +43,7 @@ interface CommonsItemInfo {
   url: string
   mime: string
   mediatype: string
-  user?: string
+  timestamp: string
   thumburl?: string
   derivatives?: CommonsDerivative[]
   width?: number
@@ -70,10 +71,10 @@ function thumbnailFor(itemInfo: CommonsItemInfo): string | null {
 // Commons transcodes most VIDEO and AUDIO files into WebM and MP3. It reports these as
 // `derivatives`. Prefer a derivative over the original. Use the original only when no
 // derivative exists.
-function bestPlaybackURL(mediaType: MediaItemType | null, itemInfo: CommonsItemInfo): string {
+function bestPlaybackURL(itemInfo: CommonsItemInfo): string {
   const derivatives = itemInfo.derivatives ?? []
 
-  if (mediaType === 'video') {
+  if (itemInfo.mediatype === 'VIDEO') {
     const webm = derivatives.filter((d) => d.type.startsWith('video/webm'))
     const best = webm.reduce<CommonsDerivative | null>(
       (best, d) => (!best || d.width > best.width ? d : best),
@@ -82,7 +83,7 @@ function bestPlaybackURL(mediaType: MediaItemType | null, itemInfo: CommonsItemI
     if (best) return best.src
   }
 
-  if (mediaType === 'audio') {
+  if (itemInfo.mediatype === 'AUDIO') {
     const mp3 = derivatives.find((d) => d.type.startsWith('audio/mpeg'))
     if (mp3) return mp3.src
   }
@@ -94,18 +95,15 @@ function toWikimediaMedia(page: CommonsFilePage): WikimediaMedia | null {
   const itemInfo = page.videoinfo?.[0]
   if (!itemInfo) return null
 
-  // Returns every real file, even ones whose type isn't one we can turn into a tapestry item
-  // (mediaType: null) -- deciding what to do with those is up to the caller, not this function.
-  const mediaType = wikimediaTypeToItemType(itemInfo.mediatype, itemInfo.mime)
-
   return {
     id: String(page.pageid),
-    url: bestPlaybackURL(mediaType, itemInfo),
+    url: bestPlaybackURL(itemInfo),
     thumbnail: thumbnailFor(itemInfo),
     // Every file page's title carries the "File:" namespace prefix -- not useful to show.
     title: page.title.replace(/^File:/, ''),
-    uploader: itemInfo.user ?? null,
-    mediaType,
+    uploadedAt: itemInfo.timestamp,
+    mediatype: itemInfo.mediatype,
+    mime: itemInfo.mime,
     width: itemInfo.width,
     height: itemInfo.height,
   }
@@ -149,7 +147,7 @@ export function parseWikimediaCategoryQuery(url: string): string | null {
   }
 }
 
-const ITEM_INFO_PROPS = 'url|mime|mediatype|user|derivatives|size'
+const ITEM_INFO_PROPS = 'url|mime|mediatype|timestamp|derivatives|size'
 
 export async function fetchWikimediaMedia(
   title: string,

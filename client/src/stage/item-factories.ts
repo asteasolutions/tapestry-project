@@ -10,6 +10,7 @@ import {
   fetchWikimediaMedia,
   parseWikimediaCategoryQuery,
   parseWikimediaFileTitle,
+  wikimediaTypeToItemType,
 } from 'tapestry-core/src/wikimedia-commons'
 import { MediaItemSource, mediaSourceToBlob, convertHeicFile } from '../lib/media'
 import {
@@ -230,12 +231,13 @@ const wikimediaFactory: ItemFactory = async (source, _mediaType, tapestryId) => 
   const wikimediaTitle = parseWikimediaFileTitle(source)
   if (wikimediaTitle) {
     const media = await fetchWikimediaMedia(wikimediaTitle)
-    if (!media?.mediaType) return null
+    const mediaType = media && wikimediaTypeToItemType(media.mediatype, media.mime)
+    if (!media || !mediaType) return null
 
     const item = await createDerivedSourceMediaItem(tapestryId, {
       source: media.url,
       originalSource: source,
-      mediaType: media.mediaType,
+      mediaType,
     })
     if (!item) return null
 

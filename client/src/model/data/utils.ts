@@ -316,11 +316,10 @@ export async function getItemSize(item: ItemDto): Promise<Size> {
 
 async function getMediaItemSize(
   type: MediaItemType,
-  source: MediaItemSource,
-  knownSize?: Size,
+  source: MediaItemSource | Size,
 ): Promise<Size> {
   const sizeGetter = itemSizes[type]
-  return isFunction(sizeGetter) ? await sizeGetter(knownSize ?? source) : sizeGetter
+  return isFunction(sizeGetter) ? await sizeGetter(source) : sizeGetter
 }
 
 export async function createMediaItem<T extends MediaItemType>(
@@ -329,7 +328,7 @@ export async function createMediaItem<T extends MediaItemType>(
   tapestryId: string,
   knownSize?: Size,
 ) {
-  const size = await getMediaItemSize(type, source, knownSize)
+  const size = await getMediaItemSize(type, knownSize ?? source)
   return {
     type,
     size,
