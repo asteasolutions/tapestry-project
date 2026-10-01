@@ -1,0 +1,13 @@
+.loading-spinner {
+  position: absolute;
+  inset: 0;
+  background-color: var(--theme-overlay);
+
+  .loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(var(--scale));
+    width: 150px;
+  }
+}

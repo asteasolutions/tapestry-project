@@ -3,6 +3,7 @@ import { pdfjs } from 'react-pdf'
 import { urlToBlob } from 'tapestry-core-client/src/lib/file'
 import { aspectRatio, clampSize, innerFit, Size } from 'tapestry-core/src/lib/geometry'
 import { WEB_SOURCE_PARSERS } from 'tapestry-core/src/web-sources'
+import { fetchIIIFCanvasCount } from 'tapestry-core/src/iiif'
 
 export type MediaItemSource = File | string
 
@@ -60,6 +61,16 @@ export async function getImageItemSize(source: MediaItemSource, width?: number):
     width: imageWidth,
     height: imageWidth / aspectRatio(image),
   })
+}
+
+const IIIF_SINGLE_CANVAS_SIZE: Size = { width: 400, height: 400 }
+const IIIF_MULTI_CANVAS_SIZE: Size = { width: 400, height: 550 }
+
+export async function getIiifItemSize(source: MediaItemSource): Promise<Size> {
+  const canvasCount = typeof source === 'string' ? await fetchIIIFCanvasCount(source) : null
+  const size =
+    canvasCount !== null && canvasCount > 1 ? IIIF_MULTI_CANVAS_SIZE : IIIF_SINGLE_CANVAS_SIZE
+  return getClampedItemSize(size)
 }
 
 const DEFAULT_VIDEO_WIDTH = 500

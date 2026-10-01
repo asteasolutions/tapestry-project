@@ -114,6 +114,12 @@ export const ImageItemSchema = z.object({
   ...commonItemProps.action,
 })
 
+export const IiifItemSchema = z.object({
+  type: z.literal('iiif').describe('The type of this item.'),
+  ...commonItemProps.base,
+  ...commonItemProps.source,
+})
+
 export const PdfItemSchema = z.object({
   type: z.literal('pdf').describe('The type of this item.'),
   ...commonItemProps.base,
@@ -152,6 +158,7 @@ export const MediaItemSchema = z.discriminatedUnion('type', [
   AudioItemSchema,
   BookItemSchema,
   ImageItemSchema,
+  IiifItemSchema,
   PdfItemSchema,
   VideoItemSchema,
   WebpageItemSchema,
@@ -178,6 +185,7 @@ export type ActionButtonItem = z.infer<typeof ActionButtonItemSchema>
 export type AudioItem = z.infer<typeof AudioItemSchema>
 export type BookItem = z.infer<typeof BookItemSchema>
 export type ImageItem = z.infer<typeof ImageItemSchema>
+export type IiifItem = z.infer<typeof IiifItemSchema>
 export type PdfItem = z.infer<typeof PdfItemSchema>
 export type VideoItem = z.infer<typeof VideoItemSchema>
 export type WebpageItem = z.infer<typeof WebpageItemSchema>

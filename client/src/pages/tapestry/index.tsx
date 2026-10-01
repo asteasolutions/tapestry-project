@@ -15,7 +15,7 @@ interface TapestryIdState {
 
 export function TapestryPage() {
   const { id, edit } = useParams()
-  const location = useLocation()
+  const location = useLocation() as Location<Record<string, unknown> | undefined>
   const mode: InteractionMode = edit === 'edit' ? 'edit' : 'view'
 
   const { data: tapestry, error } = useAsync(
@@ -30,7 +30,7 @@ export function TapestryPage() {
       <Navigate
         to={dashboardPath('home')}
         replace
-        state={{ text: 'Tapestry not found', variant: 'error' } as SnackbarData}
+        state={{ text: 'Tapestry not found', variant: 'error' } satisfies SnackbarData}
       />
     )
   }
@@ -40,7 +40,7 @@ export function TapestryPage() {
       <Navigate
         to={tapestryPath(tapestry.owner!.username, tapestry.slug, mode, location.search)}
         replace
-        state={{ ...location.state, tapestryId: tapestry.id } as TapestryIdState}
+        state={{ ...location.state, tapestryId: tapestry.id } satisfies TapestryIdState}
       />
     )
   }
@@ -75,7 +75,7 @@ export function TapestryBySlugPage() {
       <Navigate
         to={dashboardPath('home')}
         replace
-        state={{ text: 'Tapestry not found', variant: 'error' } as SnackbarData}
+        state={{ text: 'Tapestry not found', variant: 'error' } satisfies SnackbarData}
       />
     )
   }

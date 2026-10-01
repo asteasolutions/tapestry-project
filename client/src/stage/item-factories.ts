@@ -14,7 +14,9 @@ import {
   getIAItemMetadata,
   getIAPlaylistEntries,
   getNestedIAItems,
+  getIAIIIFManifestURL,
 } from 'tapestry-core/src/internet-archive'
+import { extractIIIFContentStateURL, isIIIFManifest } from 'tapestry-core/src/iiif'
 import { MediaItemType, WebpageType } from 'tapestry-core/src/data-format/schemas/item'
 import { getUserListItems } from '../lib/internet-archive'
 import { parseMediaSource, parseStringTransferData } from './data-transfer-handler'
@@ -129,6 +131,26 @@ export async function createIAMediaItems(tapestryId: string, iaItems: IAItem[]) 
   )
 }
 
+/** Create a IIIF item from a manifest URL. Return `null` if it isn't a real manifest. */
+async function createIIIFItem(manifestUrl: string, tapestryId: string) {
+  if (!(await isIIIFManifest(manifestUrl))) return null
+  return createMediaItem('iiif', manifestUrl, tapestryId)
+}
+
+const iiifItemFactory: ItemFactory = async (source, mediaType, tapestryId) => {
+  if (typeof source !== 'string' || !isHTTPURL(source)) return null
+
+  const manifestUrl =
+    extractIIIFContentStateURL(source) ??
+    (mediaType?.includes('json') || /iiif|manifest/i.test(source) ? source : null)
+  if (!manifestUrl) return null
+
+  const item = await createIIIFItem(manifestUrl, tapestryId)
+  if (!item) return null
+
+  return { items: [item], iaImports: [] }
+}
+
 const iaFactory: ItemFactory = async (source, _mediaType, tapestryId) => {
   if (typeof source !== 'string' || !isHTTPURL(source)) return null
 
@@ -154,6 +176,11 @@ const iaFactory: ItemFactory = async (source, _mediaType, tapestryId) => {
 
   if (metadata?.mediatype === 'collection') {
     return { items: [], iaImports: [{ type: 'IACollection', metadata, id }] }
+  }
+
+  if (metadata?.mediatype === 'image') {
+    const item = await createIIIFItem(getIAIIIFManifestURL(id), tapestryId)
+    if (item) return { items: [item], iaImports: [] }
   }
 
   if (metadata?.mediatype === 'movies' || metadata?.mediatype === 'audio') {
@@ -214,6 +241,7 @@ export const ITEM_FACTORIES: ItemFactory[] = [
   linkFileFactory,
   textItemFactory,
   htmlFileItemFactory,
+  iiifItemFactory,
   iaFactory,
   webpageItemFactory,
 ]

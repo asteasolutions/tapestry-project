@@ -1,7 +1,7 @@
 import { ReactNode, useEffect, useState } from 'react'
 import { WebpageItem as WebpageItemDto } from 'tapestry-core/src/data-format/schemas/item'
 import { usePropRef } from '../../../lib/hooks/use-prop-ref'
-import { WebpageLoadingSpinner } from './loading-spinner'
+import { ItemLoadingSpinner } from '../../item-loading-spinner'
 import { WebpagePlaceholder } from './placeholder'
 import styles from './styles.module.css'
 
@@ -39,7 +39,7 @@ export function WebpageLoader({
       <div className={styles.loader}>
         {displayPage ? children : <WebpagePlaceholder item={item} />}
       </div>
-      {showSpinner && <WebpageLoadingSpinner itemId={item.id} />}
+      {showSpinner && <ItemLoadingSpinner itemId={item.id} />}
     </>
   )
 }

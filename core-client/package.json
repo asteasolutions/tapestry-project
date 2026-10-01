@@ -50,6 +50,7 @@
     "@tiptap/pm": "^2.24.2",
     "@tiptap/react": "^2.24.2",
     "@tiptap/starter-kit": "^2.24.2",
+    "@samvera/clover-iiif": "^3.16.0",
     "@tweenjs/tween.js": "^25.0.0",
     "@vimeo/player": "^2.30.2",
     "bowser": "^2.12.1",

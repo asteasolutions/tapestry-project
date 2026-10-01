@@ -10,6 +10,7 @@ import { ActionButtonItem } from './items/action-button/index.js'
 import { AudioItem } from './items/audio/index.js'
 import { BookItem } from './items/book/index.js'
 import { ImageItem } from './items/image/index.js'
+import { IiifItem } from './items/iiif/index.js'
 import { PdfItem } from './items/pdf/index.js'
 import { TextItem } from './items/text/index.js'
 import { VideoItem } from './items/video/index.js'
@@ -98,6 +99,7 @@ export function TapestryConfigProvider({
             AudioItem,
             BookItem,
             ImageItem,
+            IiifItem,
             PdfItem,
             TextItem,
             VideoItem,

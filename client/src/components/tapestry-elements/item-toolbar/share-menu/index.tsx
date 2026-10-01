@@ -8,7 +8,7 @@ import { MenuItemWithSubmenu } from 'tapestry-core-client/src/components/lib/too
 import { IconButton, MenuItemButton } from 'tapestry-core-client/src/components/lib/buttons/index'
 import { useDispatch } from '../../../../pages/tapestry/tapestry-providers'
 import { setSnackbar } from '../../../../pages/tapestry/view-model/store-commands/tapestry'
-import { compact } from 'lodash'
+import { compact } from 'lodash-es'
 import { useCreateShareUrl } from '../../../../hooks/use-create-share-url'
 import { PdfPageSelector } from 'tapestry-core-client/src/components/tapestry/items/pdf/page-selector'
 import { Text } from 'tapestry-core-client/src/components/lib/text'

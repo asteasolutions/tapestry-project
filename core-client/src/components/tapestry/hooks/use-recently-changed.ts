@@ -1,4 +1,4 @@
-import { isEqual } from 'lodash'
+import { isEqual } from 'lodash-es'
 import { useEffect, useState } from 'react'
 
 export function useRecentlyChanged<T>(value: T, delay: number) {

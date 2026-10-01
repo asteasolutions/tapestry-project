@@ -1,4 +1,4 @@
-import { trim, uniqueId } from 'lodash'
+import { trim, uniqueId } from 'lodash-es'
 import { useRef, useState } from 'react'
 import { Input } from 'tapestry-core-client/src/components/lib/input/index'
 import { SimpleModal } from 'tapestry-core-client/src/components/lib/modal/index'
