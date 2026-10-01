@@ -4,6 +4,9 @@ import { urlToBlob } from 'tapestry-core-client/src/lib/file'
 import { aspectRatio, clampSize, innerFit, Size } from 'tapestry-core/src/lib/geometry'
 import { WEB_SOURCE_PARSERS } from 'tapestry-core/src/web-sources'
 import { resource } from '../services/rest-resources'
+import { getBoundingRectangle } from 'tapestry-core-client/src/view-model/utils'
+import { createItemViewModel } from '../pages/tapestry/view-model/utils'
+import { duplicateItem } from '../model/data/utils'
 
 export type MediaItemSource = File | string
 
@@ -104,7 +107,7 @@ const EMBEDDED_TAPESTRY_ITEM_SIZE: Size = {
   width: EMBEDDED_TAPESTRY_MAX_SIDE_SIZE,
   height: EMBEDDED_TAPESTRY_MAX_SIDE_SIZE / 2,
 }
-const TOOLBAR_PADDING = 150
+const TOOLBAR_PADDING = 100
 
 type TapestryRoute =
   | { type: 'slug'; username: string; slug: string }
@@ -137,81 +140,67 @@ function parseTapestryUrl(source: string): TapestryRoute {
   return null
 }
 
+function fetchTapestry(route: TapestryRoute) {
+  return route === null
+    ? route
+    : (async () => {
+        switch (route.type) {
+          case 'slug': {
+            return resource('tapestries').read(
+              {
+                id: `${route.username}/${route.slug}`,
+              },
+              { include: ['items'] },
+            )
+          }
+
+          case 'invitation': {
+            const invitation = await resource('tapestryInvitations').read(
+              { id: route.invitationId },
+              { include: ['tapestry.items'] },
+            )
+            return invitation.tapestry
+          }
+
+          case 'id': {
+            return await resource('tapestries').read(
+              {
+                id: route.tapestryId,
+              },
+              { include: ['items'] },
+            )
+          }
+        }
+      })()
+}
+
 async function getEmbeddedTapestrySize(source: string): Promise<Size> {
   const route = parseTapestryUrl(source)
-
   if (!route) {
-    return DEFAULT_WEBPAGE_SIZE
+    return EMBEDDED_TAPESTRY_ITEM_SIZE
   }
 
-  const tapestry = await (async () => {
-    switch (route.type) {
-      case 'slug': {
-        return resource('tapestries').read(
-          {
-            id: `${route.username}/${route.slug}`,
-          },
-          { include: ['items'] },
-        )
-      }
-
-      case 'invitation': {
-        const invitation = await resource('tapestryInvitations').read(
-          { id: route.invitationId },
-          { include: ['tapestry.items'] },
-        )
-        return invitation.tapestry
-      }
-
-      case 'id': {
-        return await resource('tapestries').read(
-          {
-            id: route.tapestryId,
-          },
-          { include: ['items'] },
-        )
-      }
-    }
-  })()
-
-  if (!tapestry) {
-    return DEFAULT_WEBPAGE_SIZE
+  const tapestry = await fetchTapestry(route)
+  if (!tapestry?.items || tapestry.items.length === 0) {
+    return EMBEDDED_TAPESTRY_ITEM_SIZE
   }
 
-  //Do we want this? the start view can be too zoomed in, or zoomed out
-  // if (tapestry.startView) {
-  //   return tapestry.startView.size
-  // }
+  const viewModels = tapestry.items.map((item) => createItemViewModel(duplicateItem(item)))
+  const { width, height } = getBoundingRectangle(viewModels)
 
-  let minX = Infinity
-  let minY = Infinity
-  let maxX = -Infinity
-  let maxY = -Infinity
-
-  if (tapestry.items) {
-    for (const item of tapestry.items) {
-      minX = Math.min(minX, item.position.x)
-      minY = Math.min(minY, item.position.y)
-
-      maxX = Math.max(maxX, item.size.width + item.position.x)
-      maxY = Math.max(maxY, item.size.height + item.position.y)
-    }
-
-    const width = maxX - minX
-    const height = maxY - minY
-
-    return width >= height
-      ? {
-          width: EMBEDDED_TAPESTRY_MAX_SIDE_SIZE,
-          height: (EMBEDDED_TAPESTRY_MAX_SIDE_SIZE * height) / width + TOOLBAR_PADDING,
-        }
-      : {
-          width: (EMBEDDED_TAPESTRY_MAX_SIDE_SIZE * width) / height,
-          height: EMBEDDED_TAPESTRY_MAX_SIDE_SIZE + TOOLBAR_PADDING,
-        }
+  if (width <= 0 || height <= 0) {
+    return EMBEDDED_TAPESTRY_ITEM_SIZE
   }
 
-  return EMBEDDED_TAPESTRY_ITEM_SIZE
+  return width >= height
+    ? {
+        width: EMBEDDED_TAPESTRY_MAX_SIDE_SIZE,
+        height: (EMBEDDED_TAPESTRY_MAX_SIDE_SIZE * height) / width + TOOLBAR_PADDING,
+      }
+    : {
+        width: (EMBEDDED_TAPESTRY_MAX_SIDE_SIZE * width) / height,
+        height: EMBEDDED_TAPESTRY_MAX_SIDE_SIZE + TOOLBAR_PADDING,
+      }
 }
 
 export async function getWebpageItemSize(source: MediaItemSource): Promise<Size> {
