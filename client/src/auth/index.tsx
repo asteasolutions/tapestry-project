@@ -13,16 +13,45 @@ import { AUTH_PROVIDERS } from './providers-registry'
 export const auth = new AuthService()
 
 interface RegistrationModalProps {
-  initialName: string
+  initialUsername: string
+  initialFirstName?: string
+  initialLastName?: string
 }
 
-function RegistrationModal({ initialName }: RegistrationModalProps) {
+function RegistrationModal({
+  initialUsername,
+  initialFirstName = '',
+  initialLastName = '',
+}: RegistrationModalProps) {
   const [form] = useState(() => uniqueId('form'))
-  const [username, setUsername] = useState(initialName)
+  const [formData, setFormData] = useState({
+    username: initialUsername,
+    firstName: initialFirstName,
+    lastName: initialLastName,
+  })
 
   const { error, trigger, loading } = useAsyncAction(({ signal }) =>
-    auth.register(username, signal),
+    auth.register(
+      {
+        username: formData.username.trim(),
+        firstName: formData.firstName.trim() || undefined,
+        lastName: formData.lastName.trim() || undefined,
+      },
+      signal,
+    ),
   )
+
+  const handleInputChange = (field: keyof typeof formData, value: string) => {
+    setFormData((prev) => {
+      const updated = { ...prev, [field]: value }
+
+      if (field === 'firstName' && !value.trim()) {
+        updated.lastName = ''
+      }
+
+      return updated
+    })
+  }
 
   return (
     <SimpleModal
@@ -30,7 +59,7 @@ function RegistrationModal({ initialName }: RegistrationModalProps) {
       cancel={{
         onClick: () => auth.cancelRegistration(),
       }}
-      confirm={{ form, text: 'Register', disabled: loading || !username }}
+      confirm={{ form, text: 'Register', disabled: loading || !formData.username.trim() }}
     >
       <form
         id={form}
@@ -38,15 +67,32 @@ function RegistrationModal({ initialName }: RegistrationModalProps) {
           e.preventDefault()
           trigger()
         }}
+        style={{ display: 'flex', flexDirection: 'column', gap: 8 }}
       >
         <Input
           label={<Text>Please choose a username</Text>}
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          value={formData.username}
+          onChange={(e) => handleInputChange('username', e.target.value)}
           error={getErrorMessage(error, 'username', {
             invalid: 'Username can only include letters, digits, +, -, . and _',
           })}
           name="username"
+        />
+        <Input
+          label={<Text>First name (optional)</Text>}
+          value={formData.firstName}
+          onChange={(e) => handleInputChange('firstName', e.target.value)}
+          error={getErrorMessage(error, 'firstName')}
+          name="firstName"
+        />
+
+        <Input
+          label={<Text>Last name (optional)</Text>}
+          value={formData.lastName}
+          onChange={(e) => handleInputChange('lastName', e.target.value)}
+          disabled={!formData.firstName.trim()}
+          error={getErrorMessage(error, 'lastName')}
+          name="lastName"
         />
       </form>
     </SimpleModal>
@@ -67,7 +113,11 @@ export function LoginButton() {
         <LoginMenu />
       )}
       {pendingRegistration && (
-        <RegistrationModal initialName={pendingRegistration.usernameSuggestion} />
+        <RegistrationModal
+          initialUsername={pendingRegistration.usernameSuggestion}
+          initialFirstName={pendingRegistration.firstNameSuggestion}
+          initialLastName={pendingRegistration.lastNameSuggestion}
+        />
       )}
     </>
   )

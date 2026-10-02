@@ -11,7 +11,7 @@ const BaseErrorNameSchema = z.literal([
 ])
 
 export const ErrorNameSchema = BaseErrorNameSchema.or(
-  z.literal(['BadRequestError', 'UserDoesNotExistsError']),
+  z.literal(['BadRequestError', 'UserDoesNotExistError']),
 )
 
 export const ErrorReasonSchema = z.enum([
@@ -39,16 +39,18 @@ export const BadRequestErrorResponseSchema = z.object({
   errors: BadRequestErrorDetailsSchema.nullish(),
 })
 
-export const UserDoesNotExistsErrorResponseSchema = z.object({
+export const UserDoesNotExistErrorResponseSchema = z.object({
   ...BaseErrorResponseSchema.omit({ name: true }).shape,
-  name: z.literal('UserDoesNotExistsError'),
+  name: z.literal('UserDoesNotExistError'),
   usernameSuggestion: z.string(),
+  firstNameSuggestion: z.string().optional(),
+  lastNameSuggestion: z.string().optional(),
 })
 
 export const ErrorResponseSchema = z.discriminatedUnion('name', [
   BaseErrorResponseSchema,
   BadRequestErrorResponseSchema,
-  UserDoesNotExistsErrorResponseSchema,
+  UserDoesNotExistErrorResponseSchema,
 ])
 
 export { ZodError } from 'zod/v4'
