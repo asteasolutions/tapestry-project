@@ -146,9 +146,7 @@ export class AuthService extends Observable<AuthServiceState> {
     return this.doLogin(
       {
         authType: 'registerUser',
-        username: data.username,
-        firstName: data.firstName?.trim() || undefined,
-        lastName: data.lastName?.trim() || undefined,
+        ...data,
       },
       true,
       signal,

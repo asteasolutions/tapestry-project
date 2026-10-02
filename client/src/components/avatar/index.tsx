@@ -22,7 +22,7 @@ function getInitials(user: PublicUserProfileDto) {
   const family = user.familyName.charAt(0)
   const initials = `${given}${family}`.toUpperCase()
 
-  return initials || user.username.charAt(0).toUpperCase() || '?'
+  return initials || user.username.charAt(0).toUpperCase()
 }
 
 export function Avatar({ user, className, size, onClick, style, tooltip }: AvatarProps) {

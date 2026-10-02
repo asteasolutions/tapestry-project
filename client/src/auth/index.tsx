@@ -31,7 +31,14 @@ function RegistrationModal({
   })
 
   const { error, trigger, loading } = useAsyncAction(({ signal }) =>
-    auth.register(formData, signal),
+    auth.register(
+      {
+        username: formData.username.trim(),
+        firstName: formData.firstName.trim() || undefined,
+        lastName: formData.lastName.trim() || undefined,
+      },
+      signal,
+    ),
   )
 
   const handleInputChange = (field: keyof typeof formData, value: string) => {
@@ -52,7 +59,7 @@ function RegistrationModal({
       cancel={{
         onClick: () => auth.cancelRegistration(),
       }}
-      confirm={{ form, text: 'Register', disabled: loading || !formData.username }}
+      confirm={{ form, text: 'Register', disabled: loading || !formData.username.trim() }}
     >
       <form
         id={form}
