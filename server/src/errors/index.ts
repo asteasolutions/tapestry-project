@@ -17,7 +17,6 @@ import {
   ZodError,
 } from 'tapestry-shared/src/data-transfer/resources/schemas/errors.js'
 import { flattenError } from 'zod/v4'
-import { RegisterJWTData } from '../auth/tokens.js'
 import { isNotFoundError, isUniqueConstraintViolation } from '../db.js'
 
 abstract class APIError<T extends ErrorName = ErrorName> extends Error {
@@ -117,18 +116,12 @@ export class UserDoesNotExistError
   extends APIError<'UserDoesNotExistsError'>
   implements UserDoesNotExistsErrorResponse
 {
-  public usernameSuggestion: string
-  public firstNameSuggestion?: string
-  public lastNameSuggestion?: string
-
   constructor(
-    public jwt: RegisterJWTData,
-    suggestions: { firstNameSuggestion?: string; lastNameSuggestion?: string } = {},
+    public usernameSuggestion: string,
+    public firstNameSuggestion?: string,
+    public lastNameSuggestion?: string,
   ) {
     super(404, 'User not found', 'UserDoesNotExistsError')
-    this.usernameSuggestion = jwt.email.split('@')[0]
-    this.firstNameSuggestion = suggestions.firstNameSuggestion
-    this.lastNameSuggestion = suggestions.lastNameSuggestion
   }
 }
 

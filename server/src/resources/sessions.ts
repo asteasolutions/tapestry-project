@@ -1,25 +1,20 @@
 import { Request, Response } from 'express'
-import { resources, Resources } from 'tapestry-shared/src/data-transfer/resources/index.js'
+import { Resources } from 'tapestry-shared/src/data-transfer/resources/index.js'
 import { prisma } from '../db.js'
 import { RESTResourceImpl } from './base-resource.js'
 import { createJWT } from '../auth/tokens.js'
-import { CookieOptions } from 'express'
 import { UserDto } from 'tapestry-shared/src/data-transfer/resources/dtos/user.js'
 import { userDbToDto } from '../transformers/user.js'
 import jwt from 'jsonwebtoken'
-import { REFRESH_TOKEN_COOKIE_NAME, REGISTRATION_TOKEN_COOKIE_NAME } from '../auth/index.js'
+import {
+  REFRESH_TOKEN_COOKIE_NAME,
+  REGISTRATION_TOKEN_COOKIE_NAME,
+  SECURE_COOKIE_OPTIONS,
+} from '../auth/index.js'
 import { AUTH_PROVIDERS } from '../auth/providers/index.js'
-import { config } from '../config.js'
 import { SessionCreateDto } from 'tapestry-shared/src/data-transfer/resources/dtos/session.js'
-import { UserDoesNotExistError } from '../errors/index.js'
 
 const REFRESH_TOKEN_EXP = 24 * 60 * 60 * 1000 // 1 day in ms
-const SECURE_COOKIE_OPTIONS: CookieOptions = {
-  httpOnly: true,
-  sameSite: 'none',
-  secure: config.server.secureCookie,
-  path: `/api/${resources.sessions.create.path}`,
-}
 
 async function invokeLoginProvider(
   request: SessionCreateDto,
@@ -34,7 +29,7 @@ async function invokeLoginProvider(
   }
 
   if (request.authType === 'gsi') {
-    return AUTH_PROVIDERS.gsi.login(request)
+    return AUTH_PROVIDERS.gsi.login(request, rawResponse)
   }
 
   if (request.authType === 'iaCookies') {
@@ -72,18 +67,7 @@ export const sessions: RESTResourceImpl<Resources['sessions'], never> = {
 
   handlers: {
     create: async ({ body, query }, { rawRequest, rawResponse }) => {
-      let userId: string
-      try {
-        userId = await invokeLoginProvider(body, rawRequest, rawResponse)
-      } catch (error) {
-        if (error instanceof UserDoesNotExistError) {
-          rawResponse.cookie(REGISTRATION_TOKEN_COOKIE_NAME, createJWT(error.jwt, '5m'), {
-            ...SECURE_COOKIE_OPTIONS,
-            maxAge: 5 * 60 * 1000,
-          })
-        }
-        throw error
-      }
+      const userId = await invokeLoginProvider(body, rawRequest, rawResponse)
 
       const accessToken = createJWT({ userId }, '5m')
       const refreshToken = createJWT({ userId }, REFRESH_TOKEN_EXP)
