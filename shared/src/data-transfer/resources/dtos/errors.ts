@@ -7,7 +7,7 @@ import {
   ErrorNameSchema,
   ErrorReasonSchema,
   ErrorResponseSchema,
-  UserDoesNotExistsErrorResponseSchema,
+  UserDoesNotExistErrorResponseSchema,
 } from '../schemas/errors.js'
 import z from 'zod/v4'
 
@@ -21,7 +21,7 @@ export type BadRequestErrorDetails = z.infer<typeof BadRequestErrorDetailsSchema
 
 export type BaseErrorResponse = z.infer<typeof BaseErrorResponseSchema>
 export type BadRequestErrorResponse = z.infer<typeof BadRequestErrorResponseSchema>
-export type UserDoesNotExistsErrorResponse = z.infer<typeof UserDoesNotExistsErrorResponseSchema>
+export type UserDoesNotExistErrorResponse = z.infer<typeof UserDoesNotExistErrorResponseSchema>
 
 export type ErrorResponseDto = z.infer<typeof ErrorResponseSchema>
 

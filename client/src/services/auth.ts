@@ -110,7 +110,7 @@ export class AuthService extends Observable<AuthServiceState> {
           const errorName = error.data.name
           if (errorName === 'SessionExpiredError') {
             state.user = null
-          } else if (errorName === 'UserDoesNotExistsError') {
+          } else if (errorName === 'UserDoesNotExistError') {
             state.pendingRegistration = {
               usernameSuggestion: error.data.usernameSuggestion,
               firstNameSuggestion: error.data.firstNameSuggestion,

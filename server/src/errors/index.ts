@@ -10,7 +10,7 @@ import {
   ErrorName,
   ErrorReason,
   ErrorResponseDto,
-  UserDoesNotExistsErrorResponse,
+  UserDoesNotExistErrorResponse,
 } from 'tapestry-shared/src/data-transfer/resources/dtos/errors.js'
 import {
   ErrorResponseSchema,
@@ -113,15 +113,15 @@ export class ConflictError extends APIError<'ConflictError'> implements BaseErro
 }
 
 export class UserDoesNotExistError
-  extends APIError<'UserDoesNotExistsError'>
-  implements UserDoesNotExistsErrorResponse
+  extends APIError<'UserDoesNotExistError'>
+  implements UserDoesNotExistErrorResponse
 {
   constructor(
     public usernameSuggestion: string,
     public firstNameSuggestion?: string,
     public lastNameSuggestion?: string,
   ) {
-    super(404, 'User not found', 'UserDoesNotExistsError')
+    super(404, 'User not found', 'UserDoesNotExistError')
   }
 }
 
