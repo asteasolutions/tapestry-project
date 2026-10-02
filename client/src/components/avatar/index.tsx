@@ -17,12 +17,10 @@ interface AvatarProps {
   onClick?: () => unknown
 }
 
-function getInitials(user: PublicUserProfileDto) {
-  const given = user.givenName.charAt(0)
-  const family = user.familyName.charAt(0)
-  const initials = `${given}${family}`.toUpperCase()
+function getInitials({ givenName, familyName, username }: PublicUserProfileDto) {
+  const initials = [givenName, familyName].map((n) => n?.charAt(0) ?? '').join('')
 
-  return initials || user.username.charAt(0).toUpperCase()
+  return (initials || username.charAt(0)).toUpperCase()
 }
 
 export function Avatar({ user, className, size, onClick, style, tooltip }: AvatarProps) {
