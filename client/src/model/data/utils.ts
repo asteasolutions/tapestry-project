@@ -301,6 +301,11 @@ export async function uploadAsset(
 
 function prepareMediaSource(source: MediaItemSource): string {
   if (typeof source === 'string') {
+    const url = new URL(source)
+    if (url.host === window.location.host) {
+      url.pathname = url.pathname.replace(/\/edit\b/g, '')
+      return url.toString()
+    }
     return source
   }
 

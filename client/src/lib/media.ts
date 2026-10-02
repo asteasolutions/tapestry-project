@@ -7,6 +7,7 @@ import { resource } from '../services/rest-resources'
 import { getBoundingRectangle } from 'tapestry-core-client/src/view-model/utils'
 import { createItemViewModel } from '../pages/tapestry/view-model/utils'
 import { duplicateItem } from '../model/data/utils'
+import { ItemDto } from 'tapestry-shared/src/data-transfer/resources/dtos/item'
 
 export type MediaItemSource = File | string
 
@@ -107,7 +108,7 @@ const EMBEDDED_TAPESTRY_DEFAULT_SIZE: Size = {
   width: EMBEDDED_TAPESTRY_MAX_SIDE_SIZE,
   height: EMBEDDED_TAPESTRY_MAX_SIDE_SIZE / 2,
 }
-const EMBEDDED_TAPESTRY_TOOLBAR_PADDING = 100
+const EMBEDDED_TAPESTRY_TOOLBAR_PADDING = 130
 
 async function fetchTapestry(source: string) {
   const url = new URL(source)
@@ -151,7 +152,9 @@ async function getEmbeddedTapestrySize(source: string): Promise<Size> {
       return EMBEDDED_TAPESTRY_DEFAULT_SIZE
     }
 
-    const viewModels = tapestry.items.map((item) => createItemViewModel(duplicateItem(item)))
+    const viewModels = tapestry.items.map((item: ItemDto) =>
+      createItemViewModel(duplicateItem(item)),
+    )
     const rectangle = getBoundingRectangle(viewModels)
     width = rectangle.width
     height = rectangle.height
@@ -168,7 +171,9 @@ async function getEmbeddedTapestrySize(source: string): Promise<Size> {
 
   return {
     width: fittedSize.width,
-    height: fittedSize.height + EMBEDDED_TAPESTRY_TOOLBAR_PADDING,
+    height: tapestry.startView
+      ? fittedSize.height
+      : fittedSize.height + EMBEDDED_TAPESTRY_TOOLBAR_PADDING,
   }
 }
 
