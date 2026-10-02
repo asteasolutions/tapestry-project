@@ -56,6 +56,10 @@ export const commonItemProps = {
       'An image which will be displayed in place of the item in some cases to reduce loading time and network traffic.',
     ),
     layer: z.int().describe('The layer number of the item'),
+    originalSource: z
+      .string()
+      .nullish()
+      .describe('The original URL that the user pasted, before it was modified to source field.'),
   },
   source: {
     source: z
