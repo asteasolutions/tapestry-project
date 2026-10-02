@@ -3,6 +3,11 @@ import { pdfjs } from 'react-pdf'
 import { urlToBlob } from 'tapestry-core-client/src/lib/file'
 import { aspectRatio, clampSize, innerFit, Size } from 'tapestry-core/src/lib/geometry'
 import { WEB_SOURCE_PARSERS } from 'tapestry-core/src/web-sources'
+import { resource } from '../services/rest-resources'
+import { getBoundingRectangle } from 'tapestry-core-client/src/view-model/utils'
+import { createItemViewModel } from '../pages/tapestry/view-model/utils'
+import { duplicateItem } from '../model/data/utils'
+import { ItemDto } from 'tapestry-shared/src/data-transfer/resources/dtos/item'
 
 export type MediaItemSource = File | string
 
@@ -98,7 +103,77 @@ const DEFAULT_WEBPAGE_SIZE: Size = {
   width: 400,
   height: 500,
 }
-const EMBEDDED_TAPESTRY_ITEM_SIZE: Size = { width: 1920, height: 930 }
+const EMBEDDED_TAPESTRY_MAX_SIDE_SIZE = 700
+const EMBEDDED_TAPESTRY_DEFAULT_SIZE: Size = {
+  width: EMBEDDED_TAPESTRY_MAX_SIDE_SIZE,
+  height: EMBEDDED_TAPESTRY_MAX_SIDE_SIZE / 2,
+}
+const EMBEDDED_TAPESTRY_TOOLBAR_PADDING = 130
+
+async function fetchTapestry(source: string) {
+  const url = new URL(source)
+  const segments = url.pathname.replace(/^\/?/, '').split('/')
+
+  //path by username and slug: .../u/:username/:slug
+  if (segments[0] === 'u' && segments[1] && segments[2]) {
+    return resource('tapestries').read(
+      {
+        id: `${segments[1]}/${segments[2]}`,
+      },
+      { include: ['items'] },
+    )
+  }
+
+  //path by id:  .../t/:tapestryId
+  if (segments[0] === 't' && segments[1]) {
+    return await resource('tapestries').read(
+      {
+        id: segments[1],
+      },
+      { include: ['items'] },
+    )
+  }
+  return
+}
+
+async function getEmbeddedTapestrySize(source: string): Promise<Size> {
+  const tapestry = await fetchTapestry(source)
+  if (!tapestry) {
+    return EMBEDDED_TAPESTRY_DEFAULT_SIZE
+  }
+  let width = 0
+  let height = 0
+
+  if (tapestry.startView) {
+    width = tapestry.startView.size.width
+    height = tapestry.startView.size.height
+  } else {
+    if (!tapestry.items || tapestry.items.length === 0) {
+      return EMBEDDED_TAPESTRY_DEFAULT_SIZE
+    }
+
+    const viewModels = tapestry.items.map((item: ItemDto) =>
+      createItemViewModel(duplicateItem(item)),
+    )
+    const rectangle = getBoundingRectangle(viewModels)
+    width = rectangle.width
+    height = rectangle.height
+  }
+
+  if (width <= 0 || height <= 0) {
+    return EMBEDDED_TAPESTRY_DEFAULT_SIZE
+  }
+
+  const fittedSize = innerFit(
+    { width, height },
+    { width: EMBEDDED_TAPESTRY_MAX_SIDE_SIZE, height: EMBEDDED_TAPESTRY_MAX_SIDE_SIZE },
+  )
+
+  return {
+    width: fittedSize.width,
+    height: fittedSize.height + (tapestry.startView ? 0 : EMBEDDED_TAPESTRY_TOOLBAR_PADDING),
+  }
+}
 
 export async function getWebpageItemSize(source: MediaItemSource): Promise<Size> {
   if (source instanceof File) {
@@ -126,9 +201,8 @@ export async function getWebpageItemSize(source: MediaItemSource): Promise<Size>
     }
   }
 
-  //If the imported item is a tapestry (the URL host is the same), the size of the item is fixed
   if (host === window.location.host) {
-    return EMBEDDED_TAPESTRY_ITEM_SIZE
+    return getEmbeddedTapestrySize(source)
   }
 
   return Promise.resolve(DEFAULT_WEBPAGE_SIZE)
