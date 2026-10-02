@@ -65,15 +65,11 @@ async function parseWeblocFile(source: File) {
   return url
 }
 
-function constructEmbeddedTapestryLink(source: string) {
-  const url = new URL(source)
-  if (url.host === window.location.host) {
-    url.pathname = url.pathname.replace(/\/edit\b/g, '')
-    return url.toString()
-  }
-
-  return source
+function constructEmbeddedTapestryLink(url: URL) {
+  url.pathname = url.pathname.replace(/\/edit\/?$/, '')
+  return url.toString()
 }
+
 /**
  * An ItemFactory takes a MediaItemSource (File or URL) and tries to produce one or more tapestry items from it.
  * If a factory doesn't know how to handle a given source, it returns null.
@@ -112,7 +108,12 @@ const htmlFileItemFactory: ItemFactory = async (source, mediaType, tapestryId) =
 
 const webpageItemFactory: ItemFactory = async (source, _mediaType, tapestryId) => {
   if (typeof source !== 'string' || !isHTTPURL(source)) return null
-  source = constructEmbeddedTapestryLink(source)
+
+  const url = new URL(source)
+  if (url.host === window.location.host) {
+    source = constructEmbeddedTapestryLink(url)
+  }
+
   const parser = await findWebSourceParser(source)
   const item = await createMediaItem('webpage', parser.construct(parser.parse(source)), tapestryId)
   item.webpageType = parser.webpageType
