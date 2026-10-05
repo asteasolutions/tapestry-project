@@ -171,7 +171,7 @@ async function getEmbeddedTapestrySize(source: string): Promise<Size> {
 
   return {
     width: fittedSize.width,
-    height: fittedSize.height + (tapestry.startView ? 0 : EMBEDDED_TAPESTRY_TOOLBAR_PADDING),
+    height: fittedSize.height + EMBEDDED_TAPESTRY_TOOLBAR_PADDING,
   }
 }
 
