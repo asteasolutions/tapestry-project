@@ -15,7 +15,7 @@ function formatLink(maybeUrl: string) {
   return maybeUrl
 }
 
-const ITEM_INFO_FIELDS = ['type', 'source', 'position', 'size', 'notes'] as const
+const ITEM_INFO_FIELDS = ['type', 'source', 'originalSource', 'position', 'size', 'notes'] as const
 export type ItemInfoField = (typeof ITEM_INFO_FIELDS)[number]
 
 const ITEM_INFO_FIELD_EXTRACTORS: Record<
@@ -25,6 +25,10 @@ const ITEM_INFO_FIELD_EXTRACTORS: Record<
   type: (item) => ['Item Type', { children: startCase(item.type) }],
   source: (item) =>
     isMediaItem(item) ? ['Source', { lineClamp: 3, children: formatLink(item.source) }] : null,
+  originalSource: (item) =>
+    isMediaItem(item) && item.originalSource
+      ? ['Original source', { lineClamp: 3, children: formatLink(item.originalSource) }]
+      : null,
   position: (item) => [
     'Position',
     { children: `${Math.round(item.position.x)}, ${Math.round(item.position.y)}` },
