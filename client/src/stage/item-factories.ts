@@ -105,7 +105,13 @@ const webpageItemFactory: ItemFactory = async (source, _mediaType, tapestryId) =
   if (typeof source !== 'string' || !isHTTPURL(source)) return null
 
   const parser = await findWebSourceParser(source)
-  const item = await createMediaItem('webpage', parser.construct(parser.parse(source)), tapestryId)
+  const parsedSource = parser.construct(parser.parse(source))
+  const item = await createMediaItem(
+    'webpage',
+    parsedSource,
+    tapestryId,
+    parsedSource !== source ? source : undefined,
+  )
   item.webpageType = parser.webpageType
   item.skipSourceResolution = true
 
@@ -117,10 +123,19 @@ const IA_MEDIA_TYPE_MAP: Partial<Record<IAMediaType, WebpageType>> = {
   movies: 'iaVideo',
 }
 
-export async function createIAMediaItems(tapestryId: string, iaItems: IAItem[]) {
+export async function createIAMediaItems(
+  tapestryId: string,
+  iaItems: IAItem[],
+  originalSource: string,
+) {
   return Promise.all(
     iaItems.map(async (iaItem) => {
-      const item = await createMediaItem('webpage', iaItemEmbedURL(iaItem), tapestryId)
+      const item = await createMediaItem(
+        'webpage',
+        iaItemEmbedURL(iaItem),
+        tapestryId,
+        originalSource,
+      )
       item.webpageType = IA_MEDIA_TYPE_MAP[iaItem.mediaType] ?? null
       item.skipSourceResolution = true
 
@@ -144,7 +159,7 @@ const iaFactory: ItemFactory = async (source, _mediaType, tapestryId) => {
 
   if (descriptor.urlType === 'user-list') {
     return {
-      items: await createIAMediaItems(tapestryId, await getUserListItems(source)),
+      items: await createIAMediaItems(tapestryId, await getUserListItems(source), source),
       iaImports: [],
     }
   }
@@ -165,7 +180,7 @@ const iaFactory: ItemFactory = async (source, _mediaType, tapestryId) => {
   }
 
   return {
-    items: await createIAMediaItems(tapestryId, await getNestedIAItems(descriptor.item)),
+    items: await createIAMediaItems(tapestryId, await getNestedIAItems(descriptor.item), source),
     iaImports: [],
   }
 }

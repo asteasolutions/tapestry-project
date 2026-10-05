@@ -80,7 +80,7 @@ export async function itemDbToDto(dbItem: Item): Promise<ItemDto> {
     return {
       ...commonProps,
       type,
-      originalSource: dbItem.source,
+      originalSource: dbItem.originalSource ?? dbItem.source,
       ...commonMediaItemProps,
       startTime: dbItem.startTime,
       stopTime: dbItem.stopTime,
@@ -91,7 +91,7 @@ export async function itemDbToDto(dbItem: Item): Promise<ItemDto> {
     return {
       ...commonProps,
       type,
-      originalSource: dbItem.source,
+      originalSource: dbItem.originalSource ?? dbItem.source,
       defaultPage: dbItem.defaultPage,
       ...commonMediaItemProps,
     }
@@ -101,7 +101,7 @@ export async function itemDbToDto(dbItem: Item): Promise<ItemDto> {
     return {
       ...commonProps,
       type,
-      originalSource: dbItem.source,
+      originalSource: dbItem.originalSource ?? dbItem.source,
       ...commonMediaItemProps,
       actionType: dbItem.actionType,
       action: dbItem.action,
@@ -112,7 +112,7 @@ export async function itemDbToDto(dbItem: Item): Promise<ItemDto> {
     return {
       ...commonProps,
       type,
-      originalSource: dbItem.source,
+      originalSource: dbItem.originalSource ?? dbItem.source,
       ...commonMediaItemProps,
     }
   }
@@ -120,7 +120,7 @@ export async function itemDbToDto(dbItem: Item): Promise<ItemDto> {
   return {
     ...commonProps,
     type,
-    originalSource: dbItem.source,
+    originalSource: dbItem.originalSource ?? dbItem.source,
     ...commonMediaItemProps,
     webpageType: dbItem.webpageType,
   }

@@ -323,13 +323,14 @@ export async function createMediaItem<T extends MediaItemType>(
   type: T,
   source: MediaItemSource,
   tapestryId: string,
+  originalSource?: string,
 ) {
   const size = await getMediaItemSize(type, source)
   return {
     type,
     size,
     source: prepareMediaSource(source),
-    originalSource: prepareMediaSource(source),
+    originalSource: originalSource ?? prepareMediaSource(source),
     title: '',
     dropShadow: true,
     position: ORIGIN,
