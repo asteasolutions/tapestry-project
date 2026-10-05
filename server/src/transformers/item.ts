@@ -138,6 +138,7 @@ const DB_TO_DTO_FIELD_MAP: Record<ItemDBField, string> = {
   text: 'text',
   backgroundColor: 'backgroundColor',
   source: 'source',
+  originalSource: 'originalSource',
   thumbnailId: 'thumbnailId',
   scheduledThumbnailProcessing: 'scheduledThumbnailProcessing',
   startTime: 'startTime',
