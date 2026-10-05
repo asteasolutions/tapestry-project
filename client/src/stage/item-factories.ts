@@ -126,7 +126,7 @@ const IA_MEDIA_TYPE_MAP: Partial<Record<IAMediaType, WebpageType>> = {
 export async function createIAMediaItems(
   tapestryId: string,
   iaItems: IAItem[],
-  originalSource: string,
+  originalSource?: string,
 ) {
   return Promise.all(
     iaItems.map(async (iaItem) => {
