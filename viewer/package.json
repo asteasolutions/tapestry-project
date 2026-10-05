@@ -1,28 +1,46 @@
 {
-  "name": "tapestry-viewer",
-  "private": true,
-  "version": "0.0.0",
+  "name": "@asteasolutions/tapestry-viewer",
+  "version": "0.1.1",
+  "description": "Prebuilt static Tapestry Viewer web app, ready to be served by a host application",
   "type": "module",
+  "license": "MIT",
+  "author": "Astea Solutions",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/asteasolutions/tapestry-project.git",
+    "directory": "viewer"
+  },
+  "files": [
+    "dist/index.html",
+    "dist/favicon.png",
+    "dist/assets"
+  ],
+  "exports": {
+    "./package.json": "./package.json",
+    "./dist/*": "./dist/*"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "start": "vite",
     "build": "tsc -b && vite build",
+    "prepack": "npm run build",
     "lint-ts": "eslint src --report-unused-disable-directives --max-warnings 0",
     "lint-css": "stylelint src/**/*.css",
     "prettier": "prettier ./src --check",
     "lint": "tsc --build && npm run lint-ts && npm run lint-css && npm run prettier",
     "preview": "vite preview"
   },
-  "dependencies": {
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
-    "react-router": "^7.5.3",
-    "tapestry-core": "^1.0.0",
-    "tapestry-core-client": "^1.0.0"
-  },
   "devDependencies": {
     "@vitejs/plugin-react": "^5.0.0",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^5.2.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-router": "^7.5.3",
+    "tapestry-core": "^1.0.0",
+    "tapestry-core-client": "^1.0.0",
     "vite": "^7.1.11",
     "vite-plugin-svgr": "^4.5.0"
   }
