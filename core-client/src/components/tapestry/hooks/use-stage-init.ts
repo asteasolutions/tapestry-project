@@ -20,6 +20,7 @@ export function useStageInit<
     createPixiApps: () => Promise<PixiApps<S>>
     lifecycleController: (stage: TapestryStage<S>) => TapestryLifecycleController<T, M>
     gestureDetectorOptions: GestureDetectorOptions
+    onInit?: () => void
   },
 ) {
   const configRef = usePropRef(config)
@@ -27,7 +28,8 @@ export function useStageInit<
   useAsync(
     async (_abortCtrl, cleanUp) => {
       const scene = sceneRef.current!
-      const { gestureDetectorOptions, lifecycleController, createPixiApps } = configRef.current
+      const { gestureDetectorOptions, lifecycleController, createPixiApps, onInit } =
+        configRef.current
 
       let cancelled = false as boolean
       cleanUp(() => {
@@ -53,6 +55,7 @@ export function useStageInit<
       const controller = lifecycleController(stage)
 
       await controller.init()
+      onInit?.()
 
       cleanUp(async () => {
         await controller.dispose()
