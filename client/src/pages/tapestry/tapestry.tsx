@@ -110,8 +110,8 @@ export function Tapestry({ initialThumbnails }: TapestryProps) {
       if (title) {
         dispatch(
           setSnackbar({
-            text: `Opened "${title}" by ${fullName(owner)}`,
-            duration: 3,
+            text: `"${title}" by ${fullName(owner)}`,
+            duration: 4,
           }),
         )
       }
