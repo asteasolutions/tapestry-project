@@ -56,15 +56,17 @@ export const commonItemProps = {
       'An image which will be displayed in place of the item in some cases to reduce loading time and network traffic.',
     ),
     layer: z.int().describe('The layer number of the item'),
-    originalSource: z
-      .string()
-      .nullish()
-      .describe('The original URL that the user pasted, before it was modified to source field.'),
   },
   source: {
     source: z
       .string()
       .describe('The URL from which the contents of this media item will be loaded.'),
+  },
+  originalSource: {
+    originalSource: z
+      .string()
+      .nullish()
+      .describe('The original URL that the user pasted, before it was modified to source field.'),
   },
   playbackRange: {
     startTime: z.number().nullish().describe('Optional start time for audio or video content.'),
@@ -102,6 +104,7 @@ export const AudioItemSchema = z.object({
   type: z.literal('audio').describe('The type of this item.'),
   ...commonItemProps.base,
   ...commonItemProps.source,
+  ...commonItemProps.originalSource,
   ...commonItemProps.playbackRange,
 })
 
@@ -109,12 +112,14 @@ export const BookItemSchema = z.object({
   type: z.literal('book').describe('The type of this item.'),
   ...commonItemProps.base,
   ...commonItemProps.source,
+  ...commonItemProps.originalSource,
 })
 
 export const ImageItemSchema = z.object({
   type: z.literal('image').describe('The type of this item.'),
   ...commonItemProps.base,
   ...commonItemProps.source,
+  ...commonItemProps.originalSource,
   ...commonItemProps.action,
 })
 
@@ -122,6 +127,7 @@ export const PdfItemSchema = z.object({
   type: z.literal('pdf').describe('The type of this item.'),
   ...commonItemProps.base,
   ...commonItemProps.source,
+  ...commonItemProps.originalSource,
   defaultPage: z
     .int()
     .nullish()
@@ -132,12 +138,14 @@ export const VideoItemSchema = z.object({
   type: z.literal('video').describe('The type of this item.'),
   ...commonItemProps.base,
   ...commonItemProps.source,
+  ...commonItemProps.originalSource,
   ...commonItemProps.playbackRange,
 })
 
 export const WebpageItemSchema = z.object({
   ...commonItemProps.base,
   ...commonItemProps.source,
+  ...commonItemProps.originalSource,
   type: z.literal('webpage').describe('The type of this item.'),
   webpageType: z
     .enum(KNOWN_WEBPAGE_TYPES)

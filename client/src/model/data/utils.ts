@@ -330,7 +330,7 @@ export async function createMediaItem<T extends MediaItemType>(
     type,
     size,
     source: prepareMediaSource(source),
-    originalSource: originalSource ?? prepareMediaSource(source),
+    originalSource: originalSource ?? undefined,
     title: '',
     dropShadow: true,
     position: ORIGIN,

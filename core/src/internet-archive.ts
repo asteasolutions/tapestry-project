@@ -2,7 +2,7 @@ export const IA_WAYBACK_PAGE = 'ia-wayback-page'
 export const IA_ITEM = 'ia-item'
 export const IA_USER_LIST = 'ia-user-list'
 
-const IA_HOST = 'archive.org'
+export const IA_HOST = 'archive.org'
 
 export interface IAItem {
   id: string
