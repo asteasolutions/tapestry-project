@@ -37,6 +37,10 @@ async function invokeLoginProvider(
     return AUTH_PROVIDERS.gsi.login(request)
   }
 
+  if (request.authType === 'orcid') {
+    return AUTH_PROVIDERS.orcid.login(request)
+  }
+
   if (request.authType === 'iaCookies') {
     return AUTH_PROVIDERS.iaCookies.login(
       {

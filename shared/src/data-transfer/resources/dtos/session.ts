@@ -16,6 +16,12 @@ export interface LoginWithGoogleDto {
   gsiCredential: string
 }
 
+export interface LoginWithOrcidDto {
+  authType: 'orcid'
+  code: string
+  redirectUri: string
+}
+
 export interface LoginWithIACookiesDto {
   authType: 'iaCookies'
 }
@@ -34,6 +40,7 @@ export interface RegisterUserDto {
 export type SessionCreateDto =
   | SessionRefreshDto
   | LoginWithGoogleDto
+  | LoginWithOrcidDto
   | LoginWithIACookiesDto
   | LoginWithIACredentialsDto
   | RegisterUserDto
