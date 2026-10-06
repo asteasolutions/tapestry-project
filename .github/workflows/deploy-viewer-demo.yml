@@ -2,13 +2,10 @@ name: Deploy viewer to demo
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - ci/deploy-viewer-demo
 
 jobs:
   deploy-viewer:
-    if: github.ref == 'refs/heads/demo' || github.ref == 'refs/heads/ci/deploy-viewer-demo'
+    if: github.ref == 'refs/heads/demo'
     runs-on: self-hosted
     environment: demo
     env:
