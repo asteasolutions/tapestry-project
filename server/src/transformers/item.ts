@@ -78,7 +78,7 @@ export async function itemDbToDto(dbItem: Item): Promise<ItemDto> {
   const commonMediaItemProps = {
     source,
     internallyHosted,
-    originalSource: dbItem.originalSource ?? undefined,
+    originalSource: dbItem.originalSource,
   }
 
   if (type === 'video' || type === 'audio') {

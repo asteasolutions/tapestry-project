@@ -14,7 +14,7 @@ import {
   getIAItemMetadata,
   getIAPlaylistEntries,
   getNestedIAItems,
-  IA_HOST,
+  iaDetailsUrl,
 } from 'tapestry-core/src/internet-archive'
 import { MediaItemType, WebpageType } from 'tapestry-core/src/data-format/schemas/item'
 import { getUserListItems } from '../lib/internet-archive'
@@ -69,10 +69,6 @@ async function parseWeblocFile(source: File) {
 function constructEmbeddedTapestryLink(url: URL) {
   url.pathname = url.pathname.replace(/\/edit\/?$/, '')
   return url.toString()
-}
-
-function iaDetailsUrl(item: IAItem): string {
-  return `https://${IA_HOST}/details/${item.id}`
 }
 
 /**

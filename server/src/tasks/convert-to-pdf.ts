@@ -140,7 +140,7 @@ export async function convertToPdf({ itemId }: JobTypeMap['convert-to-pdf']) {
 
     const s3Key = tapestryKey(item.tapestryId, `${crypto.randomUUID()}.pdf`, true)
     await s3Service.putObject(s3Key, value, 'application/pdf')
-    const originalSource = item.originalSource ?? undefined
+    const originalSource = item.originalSource ?? item.source
 
     await prisma.$transaction(async (tx) => {
       const deletedItem = await tx.item.delete({ where: { id: item.id } })

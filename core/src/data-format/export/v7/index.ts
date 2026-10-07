@@ -57,33 +57,27 @@ export const ActionButtonItemSchemaV7 = z.object({
 export const AudioItemSchemaV7 = z.object({
   ...AudioItemSchemaV4.omit(omit(mediaItemOmitMask, 'thumbnail')).shape,
   ...V7MediaProps,
-  ...V7Props,
 })
 export const BookItemSchemaV7 = z.object({
   ...BookItemSchemaV4.omit(omit(mediaItemOmitMask, 'thumbnail')).shape,
   ...V7MediaProps,
-  ...V7Props,
 })
 export const ImageItemSchemaV7 = z.object({
   ...ImageItemSchemaV4.omit(omit(mediaItemOmitMask, 'thumbnail')).shape,
   ...V7MediaProps,
-  ...V7Props,
   ...actionProps,
 })
 export const PDFItemSchemaV7 = z.object({
   ...PDFItemSchemaV5.omit(mediaItemOmitMask).shape,
   ...V7MediaProps,
-  ...V7Props,
 })
 export const VideoItemSchemaV7 = z.object({
   ...VideoItemSchemaV4.omit(mediaItemOmitMask).shape,
   ...V7MediaProps,
-  ...V7Props,
 })
 export const WebpageItemSchemaV7 = z.object({
   ...WebpageItemSchemaV4.omit(mediaItemOmitMask).shape,
   ...V7MediaProps,
-  ...V7Props,
 })
 
 export const ItemSchemaV7 = z.discriminatedUnion('type', [

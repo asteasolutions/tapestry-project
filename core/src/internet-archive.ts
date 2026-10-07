@@ -2,7 +2,7 @@ export const IA_WAYBACK_PAGE = 'ia-wayback-page'
 export const IA_ITEM = 'ia-item'
 export const IA_USER_LIST = 'ia-user-list'
 
-export const IA_HOST = 'archive.org'
+const IA_HOST = 'archive.org'
 
 export interface IAItem {
   id: string
@@ -247,4 +247,8 @@ export async function getIAItemMediaType(id: string) {
 
 export function getIAItemThumbnailURL(id: string) {
   return `https://archive.org/services/img/${id}`
+}
+
+export function iaDetailsUrl(item: IAItem): string {
+  return `https://${IA_HOST}/details/${item.id}`
 }
