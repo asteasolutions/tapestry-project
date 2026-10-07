@@ -66,6 +66,11 @@ async function parseWeblocFile(source: File) {
   return url
 }
 
+function constructEmbeddedTapestryLink(url: URL) {
+  url.pathname = url.pathname.replace(/\/edit\/?$/, '')
+  return url.toString()
+}
+
 function iaDetailsUrl(item: IAItem): string {
   return `https://${IA_HOST}/details/${item.id}`
 }
@@ -108,6 +113,11 @@ const htmlFileItemFactory: ItemFactory = async (source, mediaType, tapestryId) =
 
 const webpageItemFactory: ItemFactory = async (source, _mediaType, tapestryId) => {
   if (typeof source !== 'string' || !isHTTPURL(source)) return null
+
+  const url = new URL(source)
+  if (url.host === window.location.host) {
+    source = constructEmbeddedTapestryLink(url)
+  }
 
   const parser = await findWebSourceParser(source)
   const parsedSource = parser.construct(parser.parse(source))
