@@ -7,14 +7,18 @@ import { CookieOptions } from 'express'
 import { UserDto } from 'tapestry-shared/src/data-transfer/resources/dtos/user.js'
 import { userDbToDto } from '../transformers/user.js'
 import jwt from 'jsonwebtoken'
-import { REFRESH_TOKEN_COOKIE_NAME, REGISTRATION_TOKEN_COOKIE_NAME } from '../auth/index.js'
+import {
+  BLUESKY_NONCE_COOKIE_NAME,
+  REFRESH_TOKEN_COOKIE_NAME,
+  REGISTRATION_TOKEN_COOKIE_NAME,
+} from '../auth/index.js'
 import { AUTH_PROVIDERS } from '../auth/providers/index.js'
 import { config } from '../config.js'
 import { SessionCreateDto } from 'tapestry-shared/src/data-transfer/resources/dtos/session.js'
 import { UserDoesNotExistError } from '../errors/index.js'
 
 const REFRESH_TOKEN_EXP = 24 * 60 * 60 * 1000 // 1 day in ms
-const SECURE_COOKIE_OPTIONS: CookieOptions = {
+export const SECURE_COOKIE_OPTIONS: CookieOptions = {
   httpOnly: true,
   sameSite: 'none',
   secure: config.server.secureCookie,
@@ -50,6 +54,15 @@ async function invokeLoginProvider(
 
   if (request.authType === 'iaCredentials') {
     return AUTH_PROVIDERS.iaCredentials.login(request, rawResponse)
+  }
+
+  if (request.authType === 'bluesky') {
+    // The nonce is single-use, so we clear it regardless of the login outcome
+    rawResponse.clearCookie(BLUESKY_NONCE_COOKIE_NAME, SECURE_COOKIE_OPTIONS)
+    return AUTH_PROVIDERS.bluesky.login({
+      ...request,
+      nonce: rawRequest.cookies[BLUESKY_NONCE_COOKIE_NAME] as string | undefined,
+    })
   }
 
   // After we successfully invoke the "registerUser" provider, we must clear the "registrationToken" cookie

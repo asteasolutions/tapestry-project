@@ -3,7 +3,12 @@ import { TapestryCreateSchema, TapestrySchema, TapestryUpdateSchema } from './sc
 import { IO } from './types.js'
 import { ItemCreateSchema, ItemSchema, ItemUpdateSchema } from './schemas/item.js'
 import { RelCreateSchema, RelSchema, RelUpdateSchema } from './schemas/rel.js'
-import { SessionCreateSchema, SessionSchema } from './schemas/session.js'
+import {
+  BlueskyAuthorizationCreateSchema,
+  BlueskyAuthorizationSchema,
+  SessionCreateSchema,
+  SessionSchema,
+} from './schemas/session.js'
 import { PublicUserProfileSchema, UserSchema } from './schemas/user.js'
 import { AssetURLCreateSchema, AssetURLSchema } from './schemas/asset-url.js'
 import {
@@ -23,7 +28,12 @@ import { RelCreateDto, RelDto, RelUpdateDto } from './dtos/rel.js'
 import { CommentCreateDto, CommentDto, CommentUpdateDto } from './dtos/comment.js'
 import { CommentThreadsDto } from './dtos/comment-threads.js'
 import { PublicUserProfileDto, UserDto } from './dtos/user.js'
-import { SessionCreateDto, SessionDto } from './dtos/session.js'
+import {
+  BlueskyAuthorizationCreateDto,
+  BlueskyAuthorizationDto,
+  SessionCreateDto,
+  SessionDto,
+} from './dtos/session.js'
 import { AssetURLCreateDto, AssetURLDto } from './dtos/asset-url.js'
 import {
   TapestryInvitationCreateDto,
@@ -202,6 +212,16 @@ export const resources = {
     requireAuth: 'd',
     allowedIncludes: ['user'],
     createParamsSchema: SessionCreateSchema,
+  }),
+  blueskyAuthorizations: createRESTEndpoints<
+    IO<BlueskyAuthorizationDto>,
+    IO<BlueskyAuthorizationCreateDto>
+  >()({
+    name: 'bluesky-authorizations',
+    schema: BlueskyAuthorizationSchema,
+    endpoints: 'c',
+    requireAuth: '',
+    createParamsSchema: BlueskyAuthorizationCreateSchema,
   }),
   assetURLs: createRESTEndpoints<IO<AssetURLDto>, IO<AssetURLCreateDto>>()({
     name: 'asset-urls',

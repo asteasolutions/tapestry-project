@@ -2,7 +2,7 @@ import { OptionalInt } from 'tapestry-core/src/data-format/schemas/common'
 import { deepFreeze } from 'tapestry-core/src/utils'
 import { treeifyError, z } from 'zod/v4'
 
-export const AuthProviderEnum = z.enum(['google', 'ia'])
+export const AuthProviderEnum = z.enum(['google', 'ia', 'bluesky'])
 const AuthProvidersSchema = z
   .string()
   .default('google')

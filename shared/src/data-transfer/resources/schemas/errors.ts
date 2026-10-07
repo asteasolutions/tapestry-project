@@ -18,6 +18,7 @@ export const ErrorReasonSchema = z.enum([
   'IANotAccessible',
   'IAAccountNotAccessible',
   'InvalidIASession',
+  'InvalidBlueskyHandle',
 ])
 
 export const BaseErrorResponseSchema = z.object({

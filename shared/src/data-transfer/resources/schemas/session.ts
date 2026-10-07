@@ -15,8 +15,18 @@ export const SessionCreateSchema = z.discriminatedUnion('authType', [
   z.object({ authType: z.literal('gsi'), gsiCredential: z.string() }),
   z.object({ authType: z.literal('iaCookies') }),
   z.object({ authType: z.literal('iaCredentials'), email: z.string(), password: z.string() }),
+  z.object({ authType: z.literal('bluesky'), code: z.string() }),
   z.object({
     authType: z.literal('registerUser'),
     username: z.preprocess(trimString, z.string().nonempty().regex(usernameRegex)),
   }),
 ])
+
+export const BlueskyAuthorizationSchema = z.object({
+  authorizationUrl: z.string(),
+})
+
+export const BlueskyAuthorizationCreateSchema = z.object({
+  handle: z.preprocess(trimString, z.string().nonempty()),
+  returnTo: z.string().optional(),
+})

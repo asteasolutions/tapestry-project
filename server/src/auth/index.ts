@@ -6,6 +6,7 @@ import { UserDoesNotExistError } from '../errors/index.js'
 
 export const REFRESH_TOKEN_COOKIE_NAME = 'refreshToken'
 export const REGISTRATION_TOKEN_COOKIE_NAME = 'registrationToken'
+export const BLUESKY_NONCE_COOKIE_NAME = 'blueskyNonce'
 
 export function authenticate(req: Request): string | null {
   const authHeader = req.header('Authorization')
