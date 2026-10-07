@@ -2,7 +2,7 @@ import z from 'zod/v4'
 import { BaseResourceSchema } from './common.js'
 
 export const UserSchema = BaseResourceSchema.extend({
-  email: z.email().nullable(),
+  email: z.email().nullish(),
   givenName: z.string(),
   familyName: z.string(),
   username: z.string(),
