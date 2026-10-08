@@ -45,7 +45,6 @@ function createClientMetadata(): OAuthClientMetadataInput {
   return {
     client_id: `${apiUrl}${CLIENT_METADATA_PATH}`,
     client_name: 'Tapestries',
-    client_uri: config.server.viewerUrl,
     redirect_uris: [`${apiUrl}${CALLBACK_PATH}`],
     scope: SCOPE,
     grant_types: ['authorization_code', 'refresh_token'],
@@ -89,6 +88,10 @@ export async function consumeBlueskyLoginCode(code: string) {
 function safeReturnTo(returnTo: string | undefined) {
   // Only allow relative paths to avoid open redirects
   return returnTo?.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/'
+}
+
+export function resolveBlueskyHandle(handle: string) {
+  return getOAuthClient().identityResolver.resolve(handle)
 }
 
 export function createBlueskyAuthorizationUrl(handle: string, nonce: string, returnTo?: string) {
