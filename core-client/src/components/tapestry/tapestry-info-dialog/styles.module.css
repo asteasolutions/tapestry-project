@@ -1,6 +1,6 @@
 .root {
   &:global(.modal) {
-    width: 500px;
+    width: 600px;
     max-width: 90%;
   }
 
@@ -37,6 +37,14 @@
           grid-template-columns: 100px auto;
           gap: 7px;
           align-items: baseline;
+
+          .owner-details {
+            display: flex;
+            flex-direction: row;
+            justify-content: start;
+            align-items: center;
+            gap: 8px;
+          }
         }
       }
 
@@ -53,6 +61,15 @@
         justify-content: end;
         align-items: center;
         padding: 15px var(--padding-x);
+
+        @media screen and (width <= 380px) {
+          flex-direction: column;
+          align-items: stretch;
+
+          & > * {
+            width: 100%;
+          }
+        }
       }
     }
   }
