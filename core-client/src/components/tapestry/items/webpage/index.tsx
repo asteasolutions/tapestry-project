@@ -18,13 +18,14 @@ export const WebpageItem = memo(({ id }: TapestryElementComponentProps) => {
   const isPlayable = !!webpageType && PLAYABLE_WEBPAGE_TYPES.includes(webpageType)
 
   const { containerRef, fullscreenButton, isFullscreen, exitFullscreenButton } =
-    useItemFullscreen<HTMLDivElement>()
-
+    useItemFullscreen<HTMLDivElement>({
+      exitButtonStyle: { position: 'absolute', top: 16, right: 16 },
+    })
   return (
     <TapestryItem
       id={id}
       halo={
-        isFullscreen && (
+        !isFullscreen && (
           <ItemToolbar tapestryItemId={id} items={isPlayable ? [] : [fullscreenButton]} />
         )
       }

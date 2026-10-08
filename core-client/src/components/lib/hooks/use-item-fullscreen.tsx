@@ -1,8 +1,14 @@
-import { useEffect, useRef, useState } from 'react'
+import { CSSProperties, useEffect, useRef, useState } from 'react'
 import { IconButton } from '../buttons/index'
 import { SimpleMenuItem } from '../toolbar'
 
-export function useItemFullscreen<T extends HTMLElement = HTMLDivElement>() {
+interface UseItemFullscreenOptions {
+  exitButtonStyle: CSSProperties
+}
+
+export function useItemFullscreen<T extends HTMLElement = HTMLDivElement>({
+  exitButtonStyle,
+}: UseItemFullscreenOptions) {
   const containerRef = useRef<T>(null)
   const [isFullscreen, setIsFullscreen] = useState(false)
 
@@ -34,7 +40,7 @@ export function useItemFullscreen<T extends HTMLElement = HTMLDivElement>() {
     <IconButton
       icon="close_fullscreen"
       aria-label="Exit fullscreen"
-      style={{ position: 'absolute', top: 16, right: 16 }}
+      style={exitButtonStyle}
       onClick={toggleFullscreen}
     />
   )

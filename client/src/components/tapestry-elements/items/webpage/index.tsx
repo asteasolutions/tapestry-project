@@ -102,7 +102,9 @@ export const WebpageItem = memo(({ id }: TapestryItemProps) => {
 
   const { conversionStarted, convertToPDFMenuItem } = useConvertToPDF(id)
   const { containerRef, isFullscreen, fullscreenButton, exitFullscreenButton } =
-    useItemFullscreen<HTMLDivElement>()
+    useItemFullscreen<HTMLDivElement>({
+      exitButtonStyle: { position: 'absolute', top: 16, right: 16 },
+    })
   const dispatch = useDispatch()
   const patch = ({ webpageType, data }: PatchSourceArgument) =>
     dispatch(
