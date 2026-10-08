@@ -18,13 +18,19 @@ interface RegistrationModalProps {
   initialLastName?: string
 }
 
+interface FormDataState {
+  username: string
+  firstName: string
+  lastName: string
+}
+
 function RegistrationModal({
   initialUsername,
   initialFirstName = '',
   initialLastName = '',
 }: RegistrationModalProps) {
   const [form] = useState(() => uniqueId('form'))
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormDataState>({
     username: initialUsername,
     firstName: initialFirstName,
     lastName: initialLastName,
@@ -41,11 +47,11 @@ function RegistrationModal({
     ),
   )
 
-  const handleInputChange = (field: keyof typeof formData, value: string) => {
+  const handleInputChange = (changes: Partial<FormDataState>) => {
     setFormData((prev) => {
-      const updated = { ...prev, [field]: value }
+      const updated = { ...prev, ...changes }
 
-      if (field === 'firstName' && !value.trim()) {
+      if (changes.firstName !== undefined && !changes.firstName.trim()) {
         updated.lastName = ''
       }
 
@@ -72,7 +78,7 @@ function RegistrationModal({
         <Input
           label={<Text>Please choose a username</Text>}
           value={formData.username}
-          onChange={(e) => handleInputChange('username', e.target.value)}
+          onChange={(e) => handleInputChange({ username: e.target.value })}
           error={getErrorMessage(error, 'username', {
             invalid: 'Username can only include letters, digits, +, -, . and _',
           })}
@@ -81,7 +87,7 @@ function RegistrationModal({
         <Input
           label={<Text>First name (optional)</Text>}
           value={formData.firstName}
-          onChange={(e) => handleInputChange('firstName', e.target.value)}
+          onChange={(e) => handleInputChange({ firstName: e.target.value })}
           error={getErrorMessage(error, 'firstName')}
           name="firstName"
         />
@@ -89,7 +95,7 @@ function RegistrationModal({
         <Input
           label={<Text>Last name (optional)</Text>}
           value={formData.lastName}
-          onChange={(e) => handleInputChange('lastName', e.target.value)}
+          onChange={(e) => handleInputChange({ lastName: e.target.value })}
           disabled={!formData.firstName.trim()}
           error={getErrorMessage(error, 'lastName')}
           name="lastName"

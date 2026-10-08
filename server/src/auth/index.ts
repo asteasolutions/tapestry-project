@@ -5,6 +5,7 @@ import { Prisma } from '@prisma/client'
 import { UserDoesNotExistError } from '../errors/index.js'
 import { config } from '../config.js'
 import { resources } from 'tapestry-shared/src/data-transfer/resources/index.js'
+import { RegistrationSuggestions } from 'tapestry-shared/src/data-transfer/resources/dtos/errors.js'
 
 export const REFRESH_TOKEN_COOKIE_NAME = 'refreshToken'
 export const REGISTRATION_TOKEN_COOKIE_NAME = 'registrationToken'
@@ -17,12 +18,6 @@ export const SECURE_COOKIE_OPTIONS: CookieOptions = {
 }
 
 const REGISTRATION_TOKEN_EXP = 5 * 60 * 1000
-
-export interface RegistrationSuggestions {
-  usernameSuggestion: string
-  firstNameSuggestion?: string
-  lastNameSuggestion?: string
-}
 
 export function authenticate(req: Request): string | null {
   const authHeader = req.header('Authorization')

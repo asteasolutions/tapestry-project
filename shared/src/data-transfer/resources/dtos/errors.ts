@@ -23,6 +23,11 @@ export type BaseErrorResponse = z.infer<typeof BaseErrorResponseSchema>
 export type BadRequestErrorResponse = z.infer<typeof BadRequestErrorResponseSchema>
 export type UserDoesNotExistErrorResponse = z.infer<typeof UserDoesNotExistErrorResponseSchema>
 
+export type RegistrationSuggestions = Pick<
+  UserDoesNotExistErrorResponse,
+  'usernameSuggestion' | 'firstNameSuggestion' | 'lastNameSuggestion'
+>
+
 export type ErrorResponseDto = z.infer<typeof ErrorResponseSchema>
 
 export function isErrorResponse(obj: object): obj is ErrorResponseDto {

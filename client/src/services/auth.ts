@@ -5,6 +5,7 @@ import { UserDto } from 'tapestry-shared/src/data-transfer/resources/dtos/user'
 import { APIError } from '../errors'
 import { resource } from '../services/rest-resources'
 import { AUTH_PROVIDERS } from '../auth/providers-registry'
+import { RegistrationSuggestions } from 'tapestry-shared/src/data-transfer/resources/dtos/errors'
 
 interface Token {
   token: string
@@ -20,9 +21,7 @@ export interface RegisterData {
 export interface AuthServiceState {
   user: UserDto | null
   isInitialized: boolean
-  pendingRegistration:
-    | { usernameSuggestion: string; firstNameSuggestion?: string; lastNameSuggestion?: string }
-    | undefined
+  pendingRegistration: RegistrationSuggestions | undefined
 }
 
 interface Deferred<T> {
