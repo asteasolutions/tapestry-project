@@ -11,18 +11,17 @@ import {
 import { config } from '../config.js'
 import { redis } from '../services/redis.js'
 
-// We only use Bluesky to identify the user, so we request the bare minimum scope.
 const SCOPE = 'atproto'
+
 const ROUTER_PATH = '/auth/bluesky'
 const CLIENT_METADATA_PATH = `${ROUTER_PATH}/client-metadata.json`
 const CALLBACK_PATH = `${ROUTER_PATH}/callback`
 
-// Query params used when redirecting back to the client application
 export const BLUESKY_LOGIN_CODE_PARAM = 'bluesky-login-code'
 export const BLUESKY_LOGIN_ERROR_PARAM = 'bluesky-login-error'
 
-const STATE_TTL = 10 * 60
-const LOGIN_CODE_TTL = 2 * 60
+const STATE_LIFETIME = 10 * 60
+const LOGIN_CODE_LIFETIME = 2 * 60
 
 function redisStore<V>(namespace: string, ttl: number) {
   const key = (k: string) => `bluesky-oauth:${namespace}:${k}`
@@ -42,26 +41,6 @@ function redisStore<V>(namespace: string, ttl: number) {
 
 function createClientMetadata(): OAuthClientMetadataInput {
   const apiUrl = new URL('/api', config.server.externalUrl).href
-  const isLoopback = ['localhost', '127.0.0.1', '[::1]'].includes(
-    new URL(config.server.externalUrl).hostname,
-  )
-
-  if (isLoopback) {
-    // During local development the authorization server cannot fetch our client metadata document,
-    // so we use the special "loopback" client defined by the atproto OAuth spec. Its redirect URI
-    // must use an IP address, not "localhost".
-    const redirectUri = `${apiUrl.replace(/\/\/[^/:]+/, '//127.0.0.1')}${CALLBACK_PATH}`
-    return {
-      client_id: `http://localhost?${new URLSearchParams({ redirect_uri: redirectUri, scope: SCOPE }).toString()}`,
-      redirect_uris: [redirectUri],
-      scope: SCOPE,
-      grant_types: ['authorization_code', 'refresh_token'],
-      response_types: ['code'],
-      application_type: 'native',
-      token_endpoint_auth_method: 'none',
-      dpop_bound_access_tokens: true,
-    }
-  }
 
   return {
     client_id: `${apiUrl}${CLIENT_METADATA_PATH}`,
@@ -77,16 +56,21 @@ function createClientMetadata(): OAuthClientMetadataInput {
   }
 }
 
-// Handles are resolved by the server itself (via DNS and HTTPS well-known), so no third-party
-// handle resolution service is involved.
-export const blueskyOAuthClient = new NodeOAuthClient({
-  clientMetadata: createClientMetadata(),
-  stateStore: redisStore<NodeSavedState>('state', STATE_TTL),
-  // Sessions are revoked right after the login completes, so they only need to live briefly.
-  sessionStore: redisStore<NodeSavedSession>('session', STATE_TTL),
-  // We never refresh tokens, so a local lock is sufficient.
-  requestLock: requestLocalLock,
-})
+let oauthClient: NodeOAuthClient | undefined
+
+// The client is created lazily, on the first Bluesky login, rather than when the module is
+// imported. The library validates the client metadata on creation and rejects a non-HTTPS
+// client ID, so creating it eagerly would crash the whole server whenever EXTERNAL_SERVER_URL
+// isn't HTTPS. This way only the Bluesky login is affected.
+function getOAuthClient() {
+  oauthClient ??= new NodeOAuthClient({
+    clientMetadata: createClientMetadata(),
+    stateStore: redisStore<NodeSavedState>('state', STATE_LIFETIME),
+    sessionStore: redisStore<NodeSavedSession>('session', STATE_LIFETIME),
+    requestLock: requestLocalLock,
+  })
+  return oauthClient
+}
 
 const AppStateSchema = z.object({ nonce: z.string(), returnTo: z.string() })
 type AppState = z.infer<typeof AppStateSchema>
@@ -94,7 +78,7 @@ type AppState = z.infer<typeof AppStateSchema>
 const LoginCodeDataSchema = z.object({ did: z.string(), handle: z.string(), nonce: z.string() })
 export type BlueskyLoginCodeData = z.infer<typeof LoginCodeDataSchema>
 
-const loginCodes = redisStore<BlueskyLoginCodeData>('login-code', LOGIN_CODE_TTL)
+const loginCodes = redisStore<BlueskyLoginCodeData>('login-code', LOGIN_CODE_LIFETIME)
 
 export async function consumeBlueskyLoginCode(code: string) {
   const data = await loginCodes.get(code)
@@ -109,7 +93,7 @@ function safeReturnTo(returnTo: string | undefined) {
 
 export function createBlueskyAuthorizationUrl(handle: string, nonce: string, returnTo?: string) {
   const state: AppState = { nonce, returnTo: safeReturnTo(returnTo) }
-  return blueskyOAuthClient.authorize(handle, { scope: SCOPE, state: JSON.stringify(state) })
+  return getOAuthClient().authorize(handle, { scope: SCOPE, state: JSON.stringify(state) })
 }
 
 function clientRedirectUrl(path: string, params: Record<string, string>) {
@@ -123,21 +107,18 @@ function clientRedirectUrl(path: string, params: Record<string, string>) {
 export const blueskyRouter = Router()
 
 blueskyRouter.get(CLIENT_METADATA_PATH, (_req, res) => {
-  res.json(blueskyOAuthClient.clientMetadata)
+  res.json(getOAuthClient().clientMetadata)
 })
 
 blueskyRouter.get(CALLBACK_PATH, async (req, res) => {
   let returnTo = '/'
   try {
     const params = new URLSearchParams(req.originalUrl.split('?')[1] ?? '')
-    // The library verifies that the "sub" in the token response is a DID whose
-    // authorization server is the one which issued the token.
-    const { session, state } = await blueskyOAuthClient.callback(params)
+    const { session, state } = await getOAuthClient().callback(params)
     const appState = AppStateSchema.parse(JSON.parse(state ?? ''))
     returnTo = appState.returnTo
 
-    const { handle } = await blueskyOAuthClient.identityResolver.resolve(session.did)
-    // We only need the user's identity, so there's no point in keeping the tokens.
+    const { handle } = await getOAuthClient().identityResolver.resolve(session.did)
     await session.signOut().catch((error: unknown) => {
       console.error('Error while revoking Bluesky session', error)
     })
