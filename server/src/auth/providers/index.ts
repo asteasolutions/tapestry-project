@@ -6,6 +6,7 @@ import { config } from '../../config.js'
 import { IACookiesAuthProvider, IACredentialsAuthProvider } from './internet-archive.js'
 import { Response } from 'express'
 import { RegisterUserAuthProvider } from './register-user.js'
+import { BlueskyAuthProvider } from './bluesky.js'
 
 export interface AuthProvider<Credentials extends SessionCreateDto> {
   login(params: Credentials, response: Response): Promise<string>
@@ -23,5 +24,6 @@ export const AUTH_PROVIDERS = {
   gsi: config.server.googleClientId ? new GoogleAuthProvider() : unsupported,
   iaCookies: config.server.ia.accountId ? new IACookiesAuthProvider() : unsupported,
   iaCredentials: new IACredentialsAuthProvider(),
+  bluesky: new BlueskyAuthProvider(),
   registerUser: new RegisterUserAuthProvider(),
 } satisfies Record<SessionCreateDto['authType'], AuthProvider<SessionCreateDto>>

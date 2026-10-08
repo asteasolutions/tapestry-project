@@ -71,7 +71,10 @@ export class InvalidCredentialsError
 {
   constructor(
     message = 'Invalid Credentials',
-    reason?: Extract<ErrorReason, 'InvalidIASession' | 'IAAccountNotAccessible'>,
+    reason?: Extract<
+      ErrorReason,
+      'InvalidIASession' | 'IAAccountNotAccessible' | 'InvalidBlueskyHandle'
+    >,
   ) {
     super(401, message, 'InvalidCredentialsError', reason)
   }
@@ -120,7 +123,7 @@ export class UserDoesNotExistError
   public usernameSuggestion: string
   constructor(public jwt: RegisterJWTData) {
     super(404, 'User not found', 'UserDoesNotExistsError')
-    this.usernameSuggestion = jwt.email.split('@')[0]
+    this.usernameSuggestion = jwt.email ? jwt.email.split('@')[0] : jwt.givenName.split('.')[0]
   }
 }
 

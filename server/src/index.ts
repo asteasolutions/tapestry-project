@@ -39,6 +39,8 @@ import { socketServer } from './socket/index.js'
 import { userSecrets } from './resources/user-secrets.js'
 import { tapestryBookmarks } from './resources/tapestry-bookmarks.js'
 import qs from 'qs'
+import { blueskyAuthorizations } from './resources/bluesky-authorizations.js'
+import { blueskyRouter } from './auth/bluesky.js'
 
 export const app = express()
 
@@ -71,6 +73,8 @@ app.use(
   bindEndpoints(resources.comments, comments),
   bindEndpoints(resources.commentThreads, commentThreads),
   bindEndpoints(resources.sessions, sessions),
+  bindEndpoints(resources.blueskyAuthorizations, blueskyAuthorizations),
+  blueskyRouter,
   bindEndpoints(resources.users, users),
   bindEndpoints(resources.publicUserProfiles, publicUserProfiles),
   bindEndpoints(resources.tapestryInvitations, tapestryInvitations),

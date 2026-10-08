@@ -20,9 +20,9 @@ interface AvatarProps {
 export function Avatar({ user, className, size, onClick, style, tooltip }: AvatarProps) {
   const [showInitials, setShowInitials] = useState(!user.avatar)
 
-  // Family name can be returned as undefined by google and we default it to an empty string
+  // Names can be empty strings (e.g. family name from Google, or both names for Bluesky users)
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-  const initials = `${user.givenName[0].toUpperCase()}${user.familyName[0]?.toUpperCase() ?? ''}`
+  const initials = `${user.givenName[0]?.toUpperCase() ?? ''}${user.familyName[0]?.toUpperCase() ?? ''}`
   const children = showInitials ? (
     initials
   ) : (

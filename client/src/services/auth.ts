@@ -15,6 +15,7 @@ export interface AuthServiceState {
   user: UserDto | null
   isInitialized: boolean
   pendingRegistration: { usernameSuggestion: string } | undefined
+  loginError: string | undefined
 }
 
 interface Deferred<T> {
@@ -46,18 +47,24 @@ export class AuthService extends Observable<AuthServiceState> {
   private autoRefreshTimeout: number | undefined
   private preparing = defer()
   private _accessToken: Token | null = null
+  private redirectCredentials: SessionCreateDto | undefined
 
   get accessToken() {
     return structuredClone(this._accessToken)
   }
 
   constructor() {
-    super({ user: null, isInitialized: false, pendingRegistration: undefined })
+    super({
+      user: null,
+      isInitialized: false,
+      pendingRegistration: undefined,
+      loginError: undefined,
+    })
   }
 
   private doPrepare() {
     for (const provider of AUTH_PROVIDERS) {
-      provider.prepare?.()
+      this.redirectCredentials ??= provider.prepare?.() ?? undefined
     }
   }
 
@@ -114,6 +121,24 @@ export class AuthService extends Observable<AuthServiceState> {
   }
 
   async refresh(loadUser: boolean, signal?: GenericAbortSignal) {
+    await this.preparing.promise
+
+    // If we've just been redirected back from a provider's login flow, log in with the
+    // credentials from the redirect instead of refreshing the current session.
+    const credentials = signal?.aborted ? undefined : this.redirectCredentials
+    if (credentials) {
+      this.redirectCredentials = undefined
+      try {
+        await this.doLogin(credentials, true, signal)
+      } catch (error) {
+        if (!(error instanceof APIError && error.data.name === 'UserDoesNotExistsError')) {
+          this.setLoginError('Login failed. Please try again.')
+        }
+        throw error
+      }
+      return
+    }
+
     await this.doLogin({ authType: 'refreshToken' }, loadUser, signal)
   }
 
@@ -134,6 +159,12 @@ export class AuthService extends Observable<AuthServiceState> {
 
   register(username: string, signal?: GenericAbortSignal) {
     return this.doLogin({ authType: 'registerUser', username }, true, signal)
+  }
+
+  setLoginError(loginError: string | undefined) {
+    this.update((state) => {
+      state.loginError = loginError
+    })
   }
 
   cancelRegistration() {

@@ -26,6 +26,11 @@ export interface LoginWithIACredentialsDto {
   password: string
 }
 
+export interface LoginWithBlueskyDto {
+  authType: 'bluesky'
+  code: string
+}
+
 export interface RegisterUserDto {
   authType: 'registerUser'
   username: string
@@ -36,4 +41,14 @@ export type SessionCreateDto =
   | LoginWithGoogleDto
   | LoginWithIACookiesDto
   | LoginWithIACredentialsDto
+  | LoginWithBlueskyDto
   | RegisterUserDto
+
+export interface BlueskyAuthorizationDto {
+  authorizationUrl: string
+}
+
+export interface BlueskyAuthorizationCreateDto {
+  handle: string
+  returnTo?: string
+}
