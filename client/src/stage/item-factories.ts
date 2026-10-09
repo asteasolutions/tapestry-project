@@ -117,12 +117,7 @@ const webpageItemFactory: ItemFactory = async (source, _mediaType, tapestryId) =
 
   const parser = await findWebSourceParser(source)
   const parsedSource = parser.construct(parser.parse(source))
-  const item = await createMediaItem(
-    'webpage',
-    parsedSource,
-    tapestryId,
-    parsedSource !== source ? source : undefined,
-  )
+  const item = await createMediaItem('webpage', parsedSource, tapestryId, source)
   item.webpageType = parser.webpageType
   item.skipSourceResolution = true
 
