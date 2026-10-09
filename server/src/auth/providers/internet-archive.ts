@@ -5,7 +5,7 @@ import { InvalidCredentialsError, ServerError } from '../../errors/index.js'
 import { LoginWithIACredentialsDto } from 'tapestry-shared/src/data-transfer/resources/dtos/session.js'
 import { Response } from 'express'
 import { ErrorReason } from 'tapestry-shared/src/data-transfer/resources/dtos/errors.js'
-import { updateUserIfExists } from '../index.js'
+import { findUserIdOrStartRegistration } from '../index.js'
 
 const IA_XAUTHN_URL = 'https://archive.org/services/xauthn/'
 const IA_IMG_URL = 'https://archive.org/services/img/'
@@ -130,14 +130,11 @@ async function authenticateWithIA<Op extends XauthnOpName>(
       clientResponse.appendHeader('Set-Cookie', cookie)
     })
 
-    return updateUserIfExists(
+    return findUserIdOrStartRegistration(
       { email },
-      {
-        email,
-        givenName: screenname,
-        familyName: '',
-        avatar: `${IA_IMG_URL}/${itemname}`,
-      },
+      { email, avatar: `${IA_IMG_URL}/${itemname}` },
+      clientResponse,
+      { usernameSuggestion: email.split('@')[0], firstNameSuggestion: screenname },
     )
   } else if (op === 'login' && parsedResponse.values) {
     const { reason } = parsedResponse.values

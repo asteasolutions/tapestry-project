@@ -403,8 +403,12 @@ export function userAccess(
   return 'view'
 }
 
-export function fullName({ givenName, familyName }: PublicUserProfileDto) {
-  return `${givenName} ${familyName}`
+export function firstName({ givenName, username }: PublicUserProfileDto) {
+  return givenName || username
+}
+
+export function fullName({ givenName, familyName, username }: PublicUserProfileDto) {
+  return [givenName, familyName].filter(Boolean).join(' ') || username
 }
 
 export async function loadInitialThumbnails(

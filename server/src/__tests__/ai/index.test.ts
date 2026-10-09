@@ -31,7 +31,7 @@ async function expectPromptToCreateTapestryFromLinks(prompt: string, expectedTit
   const user = await prisma.user.findFirstOrThrow()
   const context: AIChatContext = {
     userId: user.id,
-    userName: user.givenName,
+    userName: user.givenName || user.username,
     history: [],
   }
 
@@ -99,7 +99,7 @@ async function expectCorrectItemSummary(
   const response = await processChatMessage(prompt, llm, {
     tapestryId: tapestry.id,
     userId: user.id,
-    userName: user.givenName,
+    userName: user.givenName || user.username,
     history: [],
   })
 
@@ -123,7 +123,7 @@ describe.runIf(shouldRunAITests)('Test AI Prompts', () => {
     })
     const context: AIChatContext = {
       userId: tapestry.owner.id,
-      userName: tapestry.owner.givenName,
+      userName: tapestry.owner.givenName || tapestry.owner.username,
       tapestryId: tapestry.id,
       history: [],
     }

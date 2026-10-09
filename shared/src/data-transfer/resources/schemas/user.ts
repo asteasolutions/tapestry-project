@@ -3,8 +3,8 @@ import { BaseResourceSchema } from './common.js'
 
 export const UserSchema = BaseResourceSchema.extend({
   email: z.email().nullish(),
-  givenName: z.string(),
-  familyName: z.string(),
+  givenName: z.string().nullish(),
+  familyName: z.string().nullish(),
   username: z.string(),
   avatar: z.string().nullish(),
 })

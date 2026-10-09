@@ -10,14 +10,13 @@ import {
   ErrorName,
   ErrorReason,
   ErrorResponseDto,
-  UserDoesNotExistsErrorResponse,
+  UserDoesNotExistErrorResponse,
 } from 'tapestry-shared/src/data-transfer/resources/dtos/errors.js'
 import {
   ErrorResponseSchema,
   ZodError,
 } from 'tapestry-shared/src/data-transfer/resources/schemas/errors.js'
 import { flattenError } from 'zod/v4'
-import { RegisterJWTData } from '../auth/tokens.js'
 import { isNotFoundError, isUniqueConstraintViolation } from '../db.js'
 
 abstract class APIError<T extends ErrorName = ErrorName> extends Error {
@@ -114,13 +113,15 @@ export class ConflictError extends APIError<'ConflictError'> implements BaseErro
 }
 
 export class UserDoesNotExistError
-  extends APIError<'UserDoesNotExistsError'>
-  implements UserDoesNotExistsErrorResponse
+  extends APIError<'UserDoesNotExistError'>
+  implements UserDoesNotExistErrorResponse
 {
-  public usernameSuggestion: string
-  constructor(public jwt: RegisterJWTData) {
-    super(404, 'User not found', 'UserDoesNotExistsError')
-    this.usernameSuggestion = jwt.email.split('@')[0]
+  constructor(
+    public usernameSuggestion: string,
+    public firstNameSuggestion?: string,
+    public lastNameSuggestion?: string,
+  ) {
+    super(404, 'User not found', 'UserDoesNotExistError')
   }
 }
 

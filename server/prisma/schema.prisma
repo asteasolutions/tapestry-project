@@ -18,8 +18,8 @@ model User {
   gsiUserId            String?               @unique
   email                String?               @unique
   username             String                @unique
-  givenName            String
-  familyName           String
+  givenName            String?
+  familyName           String?
   avatar               String?
   tapestries           Tapestry[]
   tapestryAccess       TapestryAccess[]
