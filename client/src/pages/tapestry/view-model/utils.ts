@@ -30,7 +30,7 @@ import {
 } from '.'
 import { DeserializeResult } from '../../../stage/data-transfer-handler'
 import { addAndPositionItems } from './store-commands/items'
-import { setIAImport, setLargeFiles, setSnackbar } from './store-commands/tapestry'
+import { setCollectionImports, setLargeFiles, setSnackbar } from './store-commands/tapestry'
 import { Store } from 'tapestry-core-client/src/lib/store'
 import { idMapToArray } from 'tapestry-core/src/utils'
 
@@ -168,9 +168,9 @@ export async function insertDataTransfer(
     dispatch((model) => {
       model.pendingRequests++
     })
-    const { items, largeFiles, iaImports } = await deserialize()
-    if (iaImports.length > 0) {
-      dispatch(setIAImport(iaImports))
+    const { items, largeFiles, collectionImports } = await deserialize()
+    if (collectionImports.length > 0) {
+      dispatch(setCollectionImports(collectionImports))
     }
 
     const viewModels = items.map(createItemViewModel)
