@@ -193,6 +193,7 @@ model Item {
   text                         String?
   backgroundColor              String?
   source                       String?
+  originalSource               String?
   thumbnailId                  String?
   thumbnail                    ImageAsset?               @relation("thumbnail", fields: [thumbnailId], references: [id], onDelete: SetNull)
   scheduledThumbnailProcessing ThumbnailProcessing?

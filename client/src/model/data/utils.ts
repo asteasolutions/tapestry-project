@@ -299,12 +299,12 @@ export async function uploadAsset(
   return key
 }
 
-function prepareMediaSource(source: MediaItemSource): string {
+function prepareMediaSources(source: MediaItemSource, originalSource?: string) {
   if (typeof source === 'string') {
-    return source
+    return { source, originalSource: originalSource ?? source }
   }
 
-  return itemUpload.prepare(source)
+  return { source: itemUpload.prepare(source) }
 }
 
 export async function getItemSize(item: ItemDto): Promise<Size> {
@@ -323,12 +323,13 @@ export async function createMediaItem<T extends MediaItemType>(
   type: T,
   source: MediaItemSource,
   tapestryId: string,
+  originalSource?: string,
 ) {
   const size = await getMediaItemSize(type, source)
   return {
     type,
     size,
-    source: prepareMediaSource(source),
+    ...prepareMediaSources(source, originalSource),
     title: '',
     dropShadow: true,
     position: ORIGIN,

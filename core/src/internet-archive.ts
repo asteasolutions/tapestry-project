@@ -248,3 +248,7 @@ export async function getIAItemMediaType(id: string) {
 export function getIAItemThumbnailURL(id: string) {
   return `https://archive.org/services/img/${id}`
 }
+
+export function iaDetailsUrl(item: IAItem): string {
+  return `https://${IA_HOST}/details/${item.id}`
+}
