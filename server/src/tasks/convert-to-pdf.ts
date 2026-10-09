@@ -25,6 +25,7 @@ const CONVERT_ITEM_PROPS = [
   'tapestryId',
   'groupId',
   'dropShadow',
+  'originalSource',
 ] satisfies (keyof Item)[]
 
 type FaviconWindow = {
@@ -148,7 +149,6 @@ export async function convertToPdf({ itemId }: JobTypeMap['convert-to-pdf']) {
           ...pick(deletedItem, CONVERT_ITEM_PROPS),
           type: 'pdf',
           source: s3Key,
-          originalSource: item.originalSource,
           scheduledThumbnailProcessing: 'derive',
         },
       })
