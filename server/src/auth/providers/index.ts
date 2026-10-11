@@ -2,10 +2,12 @@ import { SessionCreateDto } from 'tapestry-shared/src/data-transfer/resources/dt
 import { BadRequestError } from '../../errors/index.js'
 import { RefreshTokenAuthProvider } from './refresh-token.js'
 import { GoogleAuthProvider } from './google.js'
+import { OrcidAuthProvider } from './orcid.js'
 import { config } from '../../config.js'
 import { IACookiesAuthProvider, IACredentialsAuthProvider } from './internet-archive.js'
 import { Response } from 'express'
 import { RegisterUserAuthProvider } from './register-user.js'
+import { WikimediaAuthProvider } from './wikimedia.js'
 
 export interface AuthProvider<Credentials extends SessionCreateDto> {
   login(params: Credentials, response: Response): Promise<string>
@@ -21,6 +23,8 @@ const unsupported = new UnsupportedAuthProvider()
 export const AUTH_PROVIDERS = {
   refreshToken: new RefreshTokenAuthProvider(),
   gsi: config.server.googleClientId ? new GoogleAuthProvider() : unsupported,
+  orcid: config.server.orcid.clientId ? new OrcidAuthProvider() : unsupported,
+  wikimedia: config.server.wikimedia.clientId ? new WikimediaAuthProvider() : unsupported,
   iaCookies: config.server.ia.accountId ? new IACookiesAuthProvider() : unsupported,
   iaCredentials: new IACredentialsAuthProvider(),
   registerUser: new RegisterUserAuthProvider(),
