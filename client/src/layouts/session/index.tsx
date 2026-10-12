@@ -14,7 +14,12 @@ function init() {
 
 export function SessionLayout({ children }: SessionLayoutProps) {
   const { isInitialized } = useObservable(auth)
-  useAsync(({ signal }) => auth.refresh(true, signal), [])
+  useAsync(async ({ signal }) => {
+    if (await auth.tryOauthLogin()) return
+    // The OAuth callback needs a registration: don't fall back to an existing session
+    if (auth.value.pendingRegistration) return
+    await auth.refresh(true, signal)
+  }, [])
 
   useEffect(() => {
     if (document.readyState === 'complete') {

@@ -4,19 +4,15 @@ import { AuthProviderEnum, config } from '../config'
 import { GoogleLoginButton } from './google/login-button'
 import { IALoginButton } from './internet-archive/login-button'
 import { BlueskyLoginButton } from './bluesky/login-button'
-import { SessionCreateDto } from 'tapestry-shared/src/data-transfer/resources/dtos/session'
-import { completeBlueskyLogin } from './bluesky/oauth-client'
+import { tryCompleteBlueskyLogin } from './bluesky/oauth-client'
 
 export interface AuthProviderItem {
   id: string
   component: React.ComponentType<{
     isSingleProvider?: boolean
   }>
-  /**
-   * May return credentials from a redirect-based login flow,
-   * which will then be used instead of refreshing the current session.
-   */
-  prepare?: () => Promise<SessionCreateDto | void> | SessionCreateDto | void
+  prepare?: () => void
+  tryCompleteLogin?: () => Promise<boolean>
 }
 type AuthProvider = z.infer<typeof AuthProviderEnum>
 
@@ -44,17 +40,8 @@ const PROVIDER_MAP: Record<AuthProvider, AuthProviderItem> = {
   bluesky: {
     id: 'bluesky',
     component: BlueskyLoginButton,
-    prepare: async () => {
-      try {
-        return await completeBlueskyLogin()
-      } catch (error) {
-        console.error('Bluesky login failed', error)
-        auth.setLoginError('Bluesky login failed. Please try again.')
-      }
-    },
+    tryCompleteLogin: tryCompleteBlueskyLogin,
   },
-  // TODO: Add more providers here as needed
-  // wikimedia: { id: 'wikimedia', component: WikimediaLoginButton },
 }
 
 export const AUTH_PROVIDERS: AuthProviderItem[] = config.authProviders

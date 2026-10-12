@@ -54,7 +54,6 @@ export class AuthService extends Observable<AuthServiceState> {
   private autoRefreshTimeout: number | undefined
   private preparing = defer()
   private _accessToken: Token | null = null
-  private redirectCredentials: SessionCreateDto | undefined
 
   get accessToken() {
     return structuredClone(this._accessToken)
@@ -69,18 +68,17 @@ export class AuthService extends Observable<AuthServiceState> {
     })
   }
 
-  private async doPrepare() {
+  private doPrepare() {
     for (const provider of AUTH_PROVIDERS) {
-      this.redirectCredentials ??= (await provider.prepare?.()) ?? undefined
+      provider.prepare?.()
     }
   }
 
-  private isPreparing = false
-
   prepare() {
-    if (this.isPreparing) return
-    this.isPreparing = true
-    void this.doPrepare().finally(() => this.preparing.resolve())
+    if (this.preparing.state === 'pending') {
+      this.doPrepare()
+      this.preparing.resolve()
+    }
   }
 
   private async doLogin(params: SessionCreateDto, loadUser: boolean, signal?: GenericAbortSignal) {
@@ -131,16 +129,14 @@ export class AuthService extends Observable<AuthServiceState> {
   }
 
   async refresh(loadUser: boolean, signal?: GenericAbortSignal) {
-    await this.preparing.promise
-
-    const credentials = signal?.aborted ? undefined : this.redirectCredentials
-    if (credentials) {
-      this.redirectCredentials = undefined
-      await this.doLogin(credentials, true, signal)
-      return
-    }
-
     await this.doLogin({ authType: 'refreshToken' }, loadUser, signal)
+  }
+
+  async tryOauthLogin(): Promise<boolean> {
+    for (const provider of AUTH_PROVIDERS) {
+      if (await provider.tryCompleteLogin?.()) return true
+    }
+    return false
   }
 
   login(credentials: SessionCreateDto, signal?: GenericAbortSignal): Promise<void> {

@@ -6,7 +6,8 @@ import {
 import { BLUESKY_LOGIN_LXM, blueskyServiceDid } from 'tapestry-shared/src/bluesky'
 import { config } from '../../config'
 import { BLUESKY_SCOPE, CLIENT_METADATA_PATH } from './client-metadata'
-import { SessionCreateDto } from 'tapestry-shared/src/data-transfer/resources/dtos/session'
+import { auth } from '..'
+import { APIError } from '../../errors'
 
 const RETURN_TO_KEY = 'bluesky-login-return-to'
 
@@ -89,23 +90,38 @@ function consumeCallbackParams() {
 
 const callbackParams = moveToLocalhost() ? null : consumeCallbackParams()
 
-export async function completeBlueskyLogin(): Promise<SessionCreateDto | undefined> {
-  if (!callbackParams) return
+let pending: Promise<boolean> | undefined
 
-  const client = await getBlueskyOAuthClient()
+export function tryCompleteBlueskyLogin(): Promise<boolean> {
+  if (!callbackParams) return Promise.resolve(false)
 
-  const state: unknown = window.history.state
-  const { href } = window.location
-  const callbackPromise = client.initCallback(
-    callbackParams,
-    client.clientMetadata.redirect_uris[0],
-  )
-  window.history.replaceState(state, '', href)
-  const { session } = await callbackPromise
+  pending ??= completeLogin(callbackParams)
+  return pending
+}
 
+async function completeLogin(params: URLSearchParams) {
   try {
-    return { authType: 'bluesky', serviceToken: await getBlueskyServiceToken(session) }
-  } finally {
-    await session.signOut()
+    const client = await getBlueskyOAuthClient()
+
+    const state: unknown = window.history.state
+    const { href } = window.location
+    const callbackPromise = client.initCallback(params, client.clientMetadata.redirect_uris[0])
+    window.history.replaceState(state, '', href)
+    const { session } = await callbackPromise
+
+    let serviceToken: string
+    try {
+      serviceToken = await getBlueskyServiceToken(session)
+    } finally {
+      await session.signOut()
+    }
+
+    await auth.login({ authType: 'bluesky', serviceToken })
+    return true
+  } catch (error) {
+    if (!(error instanceof APIError && error.data.name === 'UserDoesNotExistError')) {
+      auth.setLoginError('Bluesky login failed. Please try again.')
+    }
+    return false
   }
 }
