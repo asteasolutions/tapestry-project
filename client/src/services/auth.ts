@@ -141,7 +141,7 @@ export class AuthService extends Observable<AuthServiceState> {
       try {
         await this.doLogin(credentials, true, signal)
       } catch (error) {
-        if (!(error instanceof APIError && error.data.name === 'UserDoesNotExistsError')) {
+        if (!(error instanceof APIError && error.data.name === 'UserDoesNotExistError')) {
           this.setLoginError('Login failed. Please try again.')
         }
         throw error

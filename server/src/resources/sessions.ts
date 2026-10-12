@@ -48,7 +48,7 @@ async function invokeLoginProvider(
   }
 
   if (request.authType === 'bluesky') {
-    return AUTH_PROVIDERS.bluesky.login(request)
+    return AUTH_PROVIDERS.bluesky.login(request, rawResponse)
   }
 
   // After we successfully invoke the "registerUser" provider, we must clear the "registrationToken" cookie
