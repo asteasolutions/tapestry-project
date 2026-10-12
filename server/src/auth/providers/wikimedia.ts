@@ -58,7 +58,10 @@ export class WikimediaAuthProvider implements AuthProvider<WikimediaCredentials>
       { wikimediaId: profile.sub },
       {
         wikimediaId: profile.sub,
-        email: profile.email || `${profile.sub}@wikimedia.org`,
+        //Currently the email is unique so we don't want to set it for now in order to
+        //prevent unique constraint violation for users who wants to join with
+        //wikimedia and another provider (ia, google) using the same email.
+        //email: profile.email || `${profile.sub}@wikimedia.org`,
         avatar: null,
       },
       response,

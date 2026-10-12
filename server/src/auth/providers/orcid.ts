@@ -28,7 +28,7 @@ export class OrcidAuthProvider implements AuthProvider<OrcidCredentials> {
 
     return findUserIdOrStartRegistration(
       { orcidId: orcid },
-      { orcidId: orcid, email: `${orcid}@orcid.org`, avatar: null },
+      { orcidId: orcid, avatar: null },
       response,
       { usernameSuggestion: orcid, firstNameSuggestion: name?.trim() || undefined },
     )
