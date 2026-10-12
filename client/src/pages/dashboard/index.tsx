@@ -21,7 +21,6 @@ import { DropArea } from 'tapestry-core-client/src/components/lib/drop-area'
 import { Breakpoint, useResponsive } from '../../providers/responsive-provider'
 import { DashboardHeader } from './header'
 import { TapestryListControls } from './tapestry-list-controls'
-import { useThemeCss } from 'tapestry-core-client/src/components/lib/hooks/use-theme-css'
 import { dashboardPath } from '../../utils/paths'
 import { CreateTapestryDialog } from '../../components/create-tapestry-dialog'
 
@@ -132,8 +131,6 @@ export function Dashboard() {
     [section, searchTerm, user?.id],
   )
 
-  useThemeCss('light')
-
   const {
     imports,
     importTapestries,
@@ -176,7 +173,6 @@ export function Dashboard() {
 
   return (
     <div className={styles.root}>
-      <title>Tapestries</title>
       {!smOrLess && header}
 
       <DropArea

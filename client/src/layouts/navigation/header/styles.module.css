@@ -1,0 +1,17 @@
+.root {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 var(--padding-navigation-x);
+  background-color: var(--theme-background-primary);
+
+  .icon-link {
+    display: flex;
+  }
+
+  .navigation {
+    display: flex;
+    align-items: center;
+    gap: 25px;
+  }
+}

@@ -1,0 +1,9 @@
+.root {
+  overflow-x: clip;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+:global(.navigation-layout):has(.root) {
+  overflow-y: auto;
+}
