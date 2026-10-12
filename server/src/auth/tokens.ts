@@ -11,8 +11,6 @@ const RegisterJWTSchema = z.object({
   gsiUserId: z.string().nullish(),
   orcidId: z.string().nullish(),
   email: z.string(),
-  givenName: z.string(),
-  familyName: z.string(),
   avatar: z.string().nullish(),
 })
 export type RegisterJWTData = z.infer<typeof RegisterJWTSchema>
