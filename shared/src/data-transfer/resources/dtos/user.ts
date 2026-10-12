@@ -1,9 +1,9 @@
 import { BaseResourceDto } from './common.js'
 
 export interface UserDto extends BaseResourceDto {
-  email: string
-  givenName: string
-  familyName: string
+  email?: string | null
+  givenName?: string | null
+  familyName?: string | null
   username: string
   avatar?: string | null
 }

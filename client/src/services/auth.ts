@@ -5,16 +5,23 @@ import { UserDto } from 'tapestry-shared/src/data-transfer/resources/dtos/user'
 import { APIError } from '../errors'
 import { resource } from '../services/rest-resources'
 import { AUTH_PROVIDERS } from '../auth/providers-registry'
+import { RegistrationSuggestions } from 'tapestry-shared/src/data-transfer/resources/dtos/errors'
 
 interface Token {
   token: string
   expiresAt: number
 }
 
+export interface RegisterData {
+  username: string
+  firstName?: string
+  lastName?: string
+}
+
 export interface AuthServiceState {
   user: UserDto | null
   isInitialized: boolean
-  pendingRegistration: { usernameSuggestion: string } | undefined
+  pendingRegistration: RegistrationSuggestions | undefined
 }
 
 interface Deferred<T> {
@@ -102,9 +109,11 @@ export class AuthService extends Observable<AuthServiceState> {
           const errorName = error.data.name
           if (errorName === 'SessionExpiredError') {
             state.user = null
-          } else if (errorName === 'UserDoesNotExistsError') {
+          } else if (errorName === 'UserDoesNotExistError') {
             state.pendingRegistration = {
               usernameSuggestion: error.data.usernameSuggestion,
+              firstNameSuggestion: error.data.firstNameSuggestion,
+              lastNameSuggestion: error.data.lastNameSuggestion,
             }
           }
         }
@@ -132,8 +141,15 @@ export class AuthService extends Observable<AuthServiceState> {
     })
   }
 
-  register(username: string, signal?: GenericAbortSignal) {
-    return this.doLogin({ authType: 'registerUser', username }, true, signal)
+  register(data: RegisterData, signal?: GenericAbortSignal) {
+    return this.doLogin(
+      {
+        authType: 'registerUser',
+        ...data,
+      },
+      true,
+      signal,
+    )
   }
 
   cancelRegistration() {

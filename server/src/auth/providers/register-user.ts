@@ -7,17 +7,26 @@ interface RegisterUserCredentials {
   authType: 'registerUser'
   registrationToken: string | undefined
   username: string
+  firstName?: string
+  lastName?: string
 }
 
 export class RegisterUserAuthProvider implements AuthProvider<RegisterUserCredentials> {
-  async login({ registrationToken, username }: RegisterUserCredentials) {
+  async login({ registrationToken, username, firstName, lastName }: RegisterUserCredentials) {
     if (!registrationToken) {
       throw new SessionExpiredError()
     }
 
     try {
       const payload = verifyRegisterJWT(registrationToken)
-      const user = await prisma.user.create({ data: { ...payload, username } })
+      const user = await prisma.user.create({
+        data: {
+          ...payload,
+          givenName: firstName,
+          familyName: lastName,
+          username,
+        },
+      })
       return user.id
     } catch (error) {
       if (isUniqueConstraintViolation(error)) {
