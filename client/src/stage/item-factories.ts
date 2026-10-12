@@ -15,6 +15,7 @@ import {
   getIAPlaylistEntries,
   getNestedIAItems,
   getIAIIIFManifestURL,
+  iaDetailsUrl,
 } from 'tapestry-core/src/internet-archive'
 import { extractIIIFContentStateURL, isIIIFManifest } from 'tapestry-core/src/iiif'
 import { MediaItemType, WebpageType } from 'tapestry-core/src/data-format/schemas/item'
@@ -67,6 +68,11 @@ async function parseWeblocFile(source: File) {
   return url
 }
 
+function constructEmbeddedTapestryLink(url: URL) {
+  url.pathname = url.pathname.replace(/\/edit\/?$/, '')
+  return url.toString()
+}
+
 /**
  * An ItemFactory takes a MediaItemSource (File or URL) and tries to produce one or more tapestry items from it.
  * If a factory doesn't know how to handle a given source, it returns null.
@@ -106,8 +112,14 @@ const htmlFileItemFactory: ItemFactory = async (source, mediaType, tapestryId) =
 const webpageItemFactory: ItemFactory = async (source, _mediaType, tapestryId) => {
   if (typeof source !== 'string' || !isHTTPURL(source)) return null
 
+  const url = new URL(source)
+  if (url.host === window.location.host) {
+    source = constructEmbeddedTapestryLink(url)
+  }
+
   const parser = await findWebSourceParser(source)
-  const item = await createMediaItem('webpage', parser.construct(parser.parse(source)), tapestryId)
+  const parsedSource = parser.construct(parser.parse(source))
+  const item = await createMediaItem('webpage', parsedSource, tapestryId, source)
   item.webpageType = parser.webpageType
   item.skipSourceResolution = true
 
@@ -122,7 +134,12 @@ const IA_MEDIA_TYPE_MAP: Partial<Record<IAMediaType, WebpageType>> = {
 export async function createIAMediaItems(tapestryId: string, iaItems: IAItem[]) {
   return Promise.all(
     iaItems.map(async (iaItem) => {
-      const item = await createMediaItem('webpage', iaItemEmbedURL(iaItem), tapestryId)
+      const item = await createMediaItem(
+        'webpage',
+        iaItemEmbedURL(iaItem),
+        tapestryId,
+        iaDetailsUrl(iaItem),
+      )
       item.webpageType = IA_MEDIA_TYPE_MAP[iaItem.mediaType] ?? null
       item.skipSourceResolution = true
 

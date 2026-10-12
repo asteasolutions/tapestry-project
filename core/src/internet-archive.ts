@@ -255,3 +255,7 @@ const IA_IIIF_HOST = 'https://iiif.archive.org'
 export function getIAIIIFManifestURL(id: string) {
   return `${IA_IIIF_HOST}/iiif/${id}/manifest.json`
 }
+
+export function iaDetailsUrl(item: IAItem): string {
+  return `https://${IA_HOST}/details/${item.id}`
+}
