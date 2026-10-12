@@ -19,8 +19,8 @@ model User {
   blueskyDid           String?               @unique
   email                String?               @unique
   username             String                @unique
-  givenName            String
-  familyName           String
+  givenName            String?
+  familyName           String?
   avatar               String?
   tapestries           Tapestry[]
   tapestryAccess       TapestryAccess[]
@@ -194,6 +194,7 @@ model Item {
   text                         String?
   backgroundColor              String?
   source                       String?
+  originalSource               String?
   thumbnailId                  String?
   thumbnail                    ImageAsset?               @relation("thumbnail", fields: [thumbnailId], references: [id], onDelete: SetNull)
   scheduledThumbnailProcessing ThumbnailProcessing?

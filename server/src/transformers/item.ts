@@ -74,7 +74,12 @@ export async function itemDbToDto(dbItem: Item): Promise<ItemDto> {
     }
   }
 
-  const commonMediaItemProps = await parseDBItemSource(dbItem.source!)
+  const { source, internallyHosted } = await parseDBItemSource(dbItem.source!)
+  const commonMediaItemProps = {
+    source,
+    internallyHosted,
+    originalSource: dbItem.originalSource,
+  }
 
   if (type === 'video' || type === 'audio') {
     return {
@@ -138,6 +143,7 @@ const DB_TO_DTO_FIELD_MAP: Record<ItemDBField, string> = {
   text: 'text',
   backgroundColor: 'backgroundColor',
   source: 'source',
+  originalSource: 'originalSource',
   thumbnailId: 'thumbnailId',
   scheduledThumbnailProcessing: 'scheduledThumbnailProcessing',
   startTime: 'startTime',

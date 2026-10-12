@@ -5,6 +5,7 @@ import { useSession } from '../../layouts/session'
 import { UserProfileHeader } from './header'
 import { AIAssistantSetup } from './ai-assistant-setup'
 import { dashboardPath, userProfilePath } from '../../utils/paths'
+import { firstName } from '../../model/data/utils'
 
 export type UserProfileSection = 'ai-assistants'
 
@@ -14,7 +15,7 @@ export function UserProfile() {
 
   useThemeCss('light')
 
-  const documentTitle = `${user?.givenName}'s Profile`
+  const documentTitle = `${firstName(user!)}'s Profile`
 
   if (!user) {
     return <Navigate to={dashboardPath('home')} replace />

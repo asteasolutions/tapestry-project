@@ -34,6 +34,8 @@ export interface LoginWithBlueskyDto {
 export interface RegisterUserDto {
   authType: 'registerUser'
   username: string
+  firstName?: string
+  lastName?: string
 }
 
 export type SessionCreateDto =
