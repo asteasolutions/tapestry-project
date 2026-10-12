@@ -1,10 +1,10 @@
 import z from 'zod/v4'
+import { Response } from 'express'
 import { SessionCreateDto } from 'tapestry-shared/src/data-transfer/resources/dtos/session.js'
 import { AuthProvider } from './index.js'
 import { config } from '../../config.js'
 import { InvalidCredentialsError, ServerError } from '../../errors/index.js'
-import { updateUserIfExists } from '../index.js'
-import { RegisterJWTData } from '../tokens.js'
+import { findUserIdOrStartRegistration } from '../index.js'
 
 // The ORCID OAuth2 "authenticated iD" flow only grants the /authenticate scope, which returns
 // the user's ORCID iD and (optionally) their name. It does NOT return an email address, so we
@@ -20,7 +20,14 @@ const OrcidTokenResponseSchema = z.object({
   orcid: z.string(),
 })
 
-async function exchangeCodeForOrcid(code: string, redirectUri: string): Promise<RegisterJWTData> {
+interface OrcidUserData {
+  orcidId: string
+  email: string
+  givenName: string
+  familyName: string
+}
+
+async function exchangeCodeForOrcid(code: string, redirectUri: string): Promise<OrcidUserData> {
   let parsedResponse: z.infer<typeof OrcidTokenResponseSchema>
 
   try {
@@ -59,16 +66,19 @@ async function exchangeCodeForOrcid(code: string, redirectUri: string): Promise<
     email: `${orcid}@orcid.org`,
     givenName: name?.trim() || orcid,
     familyName: '',
-    avatar: null,
   }
 }
 
 type OrcidCredentials = SessionCreateDto & { authType: 'orcid' }
 
 export class OrcidAuthProvider implements AuthProvider<OrcidCredentials> {
-  async login({ code, redirectUri }: OrcidCredentials) {
-    const orcidUserData = await exchangeCodeForOrcid(code, redirectUri)
+  async login({ code, redirectUri }: OrcidCredentials, response: Response) {
+    const { orcidId, email, givenName, familyName } = await exchangeCodeForOrcid(code, redirectUri)
 
-    return updateUserIfExists({ orcidId: orcidUserData.orcidId }, orcidUserData)
+    return findUserIdOrStartRegistration({ orcidId }, { orcidId, email, avatar: null }, response, {
+      usernameSuggestion: email.split('@')[0],
+      firstNameSuggestion: givenName,
+      lastNameSuggestion: familyName,
+    })
   }
 }

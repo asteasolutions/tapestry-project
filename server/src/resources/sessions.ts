@@ -33,7 +33,7 @@ async function invokeLoginProvider(
   }
 
   if (request.authType === 'orcid') {
-    return AUTH_PROVIDERS.orcid.login(request)
+    return AUTH_PROVIDERS.orcid.login(request, rawResponse)
   }
 
   if (request.authType === 'iaCookies') {
