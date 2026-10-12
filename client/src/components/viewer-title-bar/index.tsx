@@ -2,10 +2,8 @@ import clsx from 'clsx'
 import { useState } from 'react'
 import { Link } from 'react-router'
 import { PropsWithStyle } from 'tapestry-core-client/src/components/lib'
-import { IconButton, MenuItemButton } from 'tapestry-core-client/src/components/lib/buttons/index'
-import { useSingleChoice } from 'tapestry-core-client/src/components/lib/hooks/use-single-choice'
+import { Button, IconButton } from 'tapestry-core-client/src/components/lib/buttons/index'
 import { SvgIcon } from 'tapestry-core-client/src/components/lib/svg-icon/index'
-import { SubmenuIds } from 'tapestry-core-client/src/components/lib/toolbar'
 import { MenuItems, Toolbar } from 'tapestry-core-client/src/components/lib/toolbar/index'
 import { useViewportObstruction } from 'tapestry-core-client/src/components/tapestry/hooks/use-viewport-obstruction'
 import { TapestryInfoDialog } from 'tapestry-core-client/src/components/tapestry/tapestry-info-dialog'
@@ -16,24 +14,41 @@ import { fullName } from '../../model/data/utils'
 import { useDispatch, useTapestryData } from '../../pages/tapestry/tapestry-providers'
 import { setSnackbar } from '../../pages/tapestry/view-model/store-commands/tapestry'
 import { dashboardPath } from '../../utils/paths'
-import { ExportButton } from '../editor-title-bar/export-button'
 import { ForkTapestryDialog } from '../fork-tapestry-dialog'
 import { JoinTapestriesModal } from '../join-tapestries-modal'
 import styles from './styles.module.css'
+import { Avatar } from '../avatar'
+import { useTapestryExport } from '../../hooks/use-tapestry-export'
+import { ExportProgressIndicator } from '../editor-title-bar/export-progress-indicator'
 
 export function ViewerTitleBar({ className, style }: PropsWithStyle) {
   const obstruction = useViewportObstruction({ clear: { top: true, left: true } })
-  const { id, title, description, thumbnail, userAccess, allowForking, createdAt, owner } =
-    useTapestryData([
-      'id',
-      'title',
-      'description',
-      'thumbnail',
-      'userAccess',
-      'allowForking',
-      'createdAt',
-      'owner',
-    ])
+  const {
+    id,
+    title,
+    description,
+    thumbnail,
+    userAccess,
+    allowForking,
+    createdAt,
+    updatedAt,
+    owner,
+  } = useTapestryData([
+    'id',
+    'title',
+    'description',
+    'thumbnail',
+    'userAccess',
+    'allowForking',
+    'createdAt',
+    'updatedAt',
+    'owner',
+  ])
+  const { progress, triggerExport } = useTapestryExport({
+    tapestryId: id,
+    onError: () => dispatch(setSnackbar({ text: 'Error during export', variant: 'error' })),
+    onSuccess: () => setViewingInfo(false),
+  })
   const { user } = useSession()
   const [joinPopup, setJoinPopup] = useState(false)
   const [forkingTapestry, setForkingTapestry] = useState(false)
@@ -48,8 +63,6 @@ export function ViewerTitleBar({ className, style }: PropsWithStyle) {
     toggleBookmark,
   } = useTapestryBookmark({ tapestryId: id, userId: user?.id })
 
-  const [selectedSubmenu, selectSubmenu, closeSubmenu] = useSingleChoice<SubmenuIds<typeof items>>()
-
   const items = [
     {
       element: (
@@ -60,89 +73,83 @@ export function ViewerTitleBar({ className, style }: PropsWithStyle) {
       tooltip: { side: 'bottom', children: 'Go to tapestries', offset: -8 },
     },
     {
-      id: 'more',
-      ui: {
-        element: (
-          <IconButton
-            icon="more_vert"
-            aria-label="More actions"
-            onClick={() => selectSubmenu('more')}
-            isActive={selectedSubmenu.startsWith('more')}
-          />
-        ),
-        tooltip: { side: 'bottom', children: 'Tapestry options' },
-      },
-      direction: 'column',
-      submenu: [
-        <MenuItemButton
-          icon="info"
-          onClick={() => {
-            closeSubmenu()
-
-            setViewingInfo(true)
-          }}
-        >
-          View tapestry info
-        </MenuItemButton>,
-        <MenuItemButton
-          icon="content_copy"
-          disabled={!canForkTapestry}
-          tooltip={
-            canForkTapestry
-              ? undefined
-              : { children: "You don't have forking permissions", side: 'bottom', offset: 16 }
-          }
-          onClick={() => {
-            closeSubmenu()
-            if (!user) {
-              setJoinPopup(true)
-            } else {
-              setForkingTapestry(true)
-            }
-          }}
-        >
-          Make a copy
-        </MenuItemButton>,
-        <ExportButton
-          disabled={!canForkTapestry}
-          tooltip={
-            canForkTapestry
-              ? undefined
-              : { children: "You don't have export permissions", side: 'bottom' }
-          }
-          tapestryId={id}
-          onError={() => dispatch(setSnackbar({ text: 'Error during export', variant: 'error' }))}
-          onSuccess={closeSubmenu}
-        />,
-        ...(user
-          ? ([
-              'separator',
-              <MenuItemButton
-                icon="bookmark"
-                disabled={loadingBookmark}
-                onClick={async () => {
-                  await toggleBookmark()
-                  dispatch(
-                    setSnackbar(
-                      isBookmarked
-                        ? 'Tapestry removed from "Bookmakrs"'
-                        : 'Tapestry added to "Bookmarks"',
-                    ),
-                  )
-                }}
-              >
-                {isBookmarked ? 'Remove from "Bookmarks"' : 'Add to "Bookmarks"'}
-              </MenuItemButton>,
-            ] as const)
-          : []),
-      ],
+      element: (
+        <IconButton icon="info" aria-label="About tapestry" onClick={() => setViewingInfo(true)} />
+      ),
+      tooltip: { side: 'bottom', children: 'About tapestry' },
     },
   ] as const satisfies MenuItems
 
+  const infoDialogButtons = (
+    <>
+      {user && (
+        <Button
+          variant="secondary"
+          className={styles.secondaryButton}
+          icon="bookmark"
+          disabled={loadingBookmark}
+          onClick={async () => {
+            await toggleBookmark()
+            dispatch(
+              setSnackbar(
+                isBookmarked
+                  ? 'Tapestry removed from "Bookmakrs"'
+                  : 'Tapestry added to "Bookmarks"',
+              ),
+            )
+          }}
+        >
+          {isBookmarked ? 'Remove Bookmark' : 'Add Bookmark'}
+        </Button>
+      )}
+      <Button
+        variant="secondary"
+        className={styles.secondaryButton}
+        icon="upload"
+        disabled={!canForkTapestry || !!progress}
+        onClick={triggerExport}
+        tooltip={
+          canForkTapestry
+            ? undefined
+            : { children: "You don't have export permissions", side: 'bottom' }
+        }
+      >
+        Export Zip file {progress && <ExportProgressIndicator progress={progress} />}
+      </Button>
+      <Button
+        variant="primary"
+        icon="content_copy"
+        disabled={!canForkTapestry}
+        tooltip={
+          canForkTapestry
+            ? undefined
+            : { children: "You don't have forking permissions", side: 'bottom', offset: 16 }
+        }
+        onClick={() => {
+          if (!user) {
+            setJoinPopup(true)
+          } else {
+            setForkingTapestry(true)
+          }
+        }}
+      >
+        Make a copy
+      </Button>
+    </>
+  )
+
   return (
     <div className={clsx(styles.root, className)} style={style} ref={obstruction.ref}>
-      <Toolbar isOpen selectedSubmenu={selectedSubmenu} onFocusOut={closeSubmenu} items={items} />
-      <div id="titlebar-action-buttons" />
+      <Toolbar isOpen items={items} />
+      {viewingInfo && (
+        <TapestryInfoDialog
+          tapestry={{ title, description, thumbnail, createdAt, updatedAt }}
+          owner={fullName(owner)}
+          ownerAvatar={owner.avatar ? <Avatar user={owner} size="small" /> : undefined}
+          onClose={() => setViewingInfo(false)}
+          buttons={infoDialogButtons}
+        />
+      )}
       {joinPopup && <JoinTapestriesModal onClose={() => setJoinPopup(false)} />}
       {forkingTapestry && (
         <ForkTapestryDialog
@@ -152,13 +159,6 @@ export function ViewerTitleBar({ className, style }: PropsWithStyle) {
             title,
             description: description ?? '',
           }}
-        />
-      )}
-      {viewingInfo && (
-        <TapestryInfoDialog
-          tapestry={{ title, description, thumbnail, createdAt }}
-          owner={fullName(owner)}
-          onClose={() => setViewingInfo(false)}
         />
       )}
     </div>

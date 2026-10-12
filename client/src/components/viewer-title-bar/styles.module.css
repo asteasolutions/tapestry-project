@@ -22,3 +22,8 @@
   border-top-left-radius: 8px;
   border-bottom-left-radius: 8px;
 }
+
+.secondary-button {
+  --icon-color: var(--theme-background-brand-secondary) !important;
+  --hover-icon-color: var(--theme-background-brand-secondary) !important;
+}

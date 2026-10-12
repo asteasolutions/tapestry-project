@@ -68,6 +68,7 @@ export function viewModelFromTapestry(
     title: tapestry.title,
     description: tapestry.description,
     createdAt: tapestry.createdAt,
+    updatedAt: tapestry.updatedAt,
     thumbnail: tapestry.thumbnail,
     items: Object.fromEntries(tapestry.items.map((item) => [item.id, { dto: item }])),
     rels: Object.fromEntries(tapestry.rels.map((rel) => [rel.id, { dto: rel }])),

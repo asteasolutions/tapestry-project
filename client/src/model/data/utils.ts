@@ -299,12 +299,12 @@ export async function uploadAsset(
   return key
 }
 
-function prepareMediaSource(source: MediaItemSource): string {
+function prepareMediaSources(source: MediaItemSource, originalSource?: string) {
   if (typeof source === 'string') {
-    return source
+    return { source, originalSource: originalSource ?? source }
   }
 
-  return itemUpload.prepare(source)
+  return { source: itemUpload.prepare(source) }
 }
 
 export async function getItemSize(item: ItemDto): Promise<Size> {
@@ -326,13 +326,14 @@ export async function createMediaItem<T extends MediaItemType>(
   type: T,
   source: MediaItemSource,
   tapestryId: string,
+  originalSource?: string,
   knownSize?: Size,
 ) {
   const size = await getMediaItemSize(type, knownSize ?? source)
   return {
     type,
     size,
-    source: prepareMediaSource(source),
+    ...prepareMediaSources(source, originalSource),
     title: '',
     dropShadow: true,
     position: ORIGIN,
@@ -347,7 +348,13 @@ export async function createDerivedSourceMediaItem(
   media: { source: string; originalSource: string; mediaType: MediaItemType; size?: Size },
 ) {
   try {
-    const item = await createMediaItem(media.mediaType, media.source, tapestryId, media.size)
+    const item = await createMediaItem(
+      media.mediaType,
+      media.source,
+      tapestryId,
+      undefined,
+      media.size,
+    )
     item.notes = `Source: ${media.originalSource}`
     return item
   } catch {
@@ -421,8 +428,12 @@ export function userAccess(
   return 'view'
 }
 
-export function fullName({ givenName, familyName }: PublicUserProfileDto) {
-  return `${givenName} ${familyName}`
+export function firstName({ givenName, username }: PublicUserProfileDto) {
+  return givenName || username
+}
+
+export function fullName({ givenName, familyName, username }: PublicUserProfileDto) {
+  return [givenName, familyName].filter(Boolean).join(' ') || username
 }
 
 export async function loadInitialThumbnails(
