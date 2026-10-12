@@ -1,7 +1,7 @@
 .provider-list {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 18px;
   padding: 8px 64px;
   align-items: stretch;
 

@@ -1,5 +1,6 @@
 .wikimedia-button {
   width: 100%;
   justify-content: center;
+  gap: 8px;
   font-size: 12px;
 }
