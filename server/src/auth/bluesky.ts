@@ -1,137 +1,58 @@
-import { Router } from 'express'
-import { randomBytes } from 'crypto'
-import z from 'zod/v4'
-import {
-  NodeOAuthClient,
-  requestLocalLock,
-  type NodeSavedSession,
-  type NodeSavedState,
-  type OAuthClientMetadataInput,
-} from '@atproto/oauth-client-node'
+import { IdResolver } from '@atproto/identity'
+import { verifyJwt } from '@atproto/xrpc-server'
+import { BLUESKY_LOGIN_LXM, blueskyServiceDid } from 'tapestry-shared/src/bluesky.js'
 import { config } from '../config.js'
 import { redis } from '../services/redis.js'
 
-const SCOPE = 'atproto'
+// Service auth tokens live for at most a minute when requested for a specific method,
+// so we only need to remember the used token IDs for that long to prevent replays
+const USED_TOKEN_LIFETIME = 2 * 60
 
-const ROUTER_PATH = '/auth/bluesky'
-const CLIENT_METADATA_PATH = `${ROUTER_PATH}/client-metadata.json`
-const CALLBACK_PATH = `${ROUTER_PATH}/callback`
+const idResolver = new IdResolver()
 
-export const BLUESKY_LOGIN_CODE_PARAM = 'bluesky-login-code'
-export const BLUESKY_LOGIN_ERROR_PARAM = 'bluesky-login-error'
+const serviceDid = blueskyServiceDid(config.server.externalUrl)
 
-const STATE_LIFETIME = 10 * 60
-const LOGIN_CODE_LIFETIME = 2 * 60
-
-function redisStore<V>(namespace: string, ttl: number) {
-  const key = (k: string) => `bluesky-oauth:${namespace}:${k}`
-  return {
-    async get(k: string) {
-      const value = await redis.get(key(k))
-      return value ? (JSON.parse(value) as V) : undefined
-    },
-    async set(k: string, value: V) {
-      await redis.set(key(k), JSON.stringify(value), 'EX', ttl)
-    },
-    async del(k: string) {
-      await redis.del(key(k))
-    },
-  }
+export interface BlueskyIdentity {
+  did: string
+  handle: string | undefined
 }
 
-function createClientMetadata(): OAuthClientMetadataInput {
-  const apiUrl = new URL('/api', config.server.externalUrl).href
-
-  return {
-    client_id: `${apiUrl}${CLIENT_METADATA_PATH}`,
-    client_name: 'Tapestries',
-    redirect_uris: [`${apiUrl}${CALLBACK_PATH}`],
-    scope: SCOPE,
-    grant_types: ['authorization_code', 'refresh_token'],
-    response_types: ['code'],
-    application_type: 'web',
-    token_endpoint_auth_method: 'none',
-    dpop_bound_access_tokens: true,
-  }
-}
-
-let oauthClient: NodeOAuthClient | undefined
-
-// The client is created lazily, on the first Bluesky login, rather than when the module is
-// imported. The library validates the client metadata on creation and rejects a non-HTTPS
-// client ID, so creating it eagerly would crash the whole server whenever EXTERNAL_SERVER_URL
-// isn't HTTPS. This way only the Bluesky login is affected.
-function getOAuthClient() {
-  oauthClient ??= new NodeOAuthClient({
-    clientMetadata: createClientMetadata(),
-    stateStore: redisStore<NodeSavedState>('state', STATE_LIFETIME),
-    sessionStore: redisStore<NodeSavedSession>('session', STATE_LIFETIME),
-    requestLock: requestLocalLock,
-  })
-  return oauthClient
-}
-
-const AppStateSchema = z.object({ nonce: z.string(), returnTo: z.string() })
-type AppState = z.infer<typeof AppStateSchema>
-
-const LoginCodeDataSchema = z.object({ did: z.string(), handle: z.string(), nonce: z.string() })
-export type BlueskyLoginCodeData = z.infer<typeof LoginCodeDataSchema>
-
-const loginCodes = redisStore<BlueskyLoginCodeData>('login-code', LOGIN_CODE_LIFETIME)
-
-export async function consumeBlueskyLoginCode(code: string) {
-  const data = await loginCodes.get(code)
-  await loginCodes.del(code)
-  return LoginCodeDataSchema.safeParse(data).data
-}
-
-function safeReturnTo(returnTo: string | undefined) {
-  // Only allow relative paths to avoid open redirects
-  return returnTo?.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/'
-}
-
-export function resolveBlueskyHandle(handle: string) {
-  return getOAuthClient().identityResolver.resolve(handle)
-}
-
-export function createBlueskyAuthorizationUrl(handle: string, nonce: string, returnTo?: string) {
-  const state: AppState = { nonce, returnTo: safeReturnTo(returnTo) }
-  return getOAuthClient().authorize(handle, { scope: SCOPE, state: JSON.stringify(state) })
-}
-
-function clientRedirectUrl(path: string, params: Record<string, string>) {
-  const url = new URL(path, config.server.viewerUrl)
-  for (const [key, value] of Object.entries(params)) {
-    url.searchParams.set(key, value)
-  }
-  return url.href
-}
-
-export const blueskyRouter = Router()
-
-blueskyRouter.get(CLIENT_METADATA_PATH, (_req, res) => {
-  res.json(getOAuthClient().clientMetadata)
-})
-
-blueskyRouter.get(CALLBACK_PATH, async (req, res) => {
-  let returnTo = '/'
+async function resolveHandle(did: string) {
   try {
-    const params = new URLSearchParams(req.originalUrl.split('?')[1] ?? '')
-    const { session, state } = await getOAuthClient().callback(params)
-    const appState = AppStateSchema.parse(JSON.parse(state ?? ''))
-    returnTo = appState.returnTo
-
-    const { handle } = await getOAuthClient().identityResolver.resolve(session.did)
-    await session.signOut().catch((error: unknown) => {
-      console.error('Error while revoking Bluesky session', error)
-    })
-
-    const code = randomBytes(32).toString('base64url')
-    await loginCodes.set(code, { did: session.did, handle, nonce: appState.nonce })
-
-    res.redirect(clientRedirectUrl(returnTo, { [BLUESKY_LOGIN_CODE_PARAM]: code }))
-  } catch (error) {
-    console.error('Error while completing Bluesky authentication', error)
-    res.redirect(clientRedirectUrl(returnTo, { [BLUESKY_LOGIN_ERROR_PARAM]: 'true' }))
+    const { handle } = await idResolver.did.resolveAtprotoData(did)
+    // The handle in the DID document is only valid if it resolves back to the same DID
+    return (await idResolver.handle.resolve(handle)) === did ? handle : undefined
+  } catch {
+    return undefined
   }
-})
+}
+
+/**
+ * Verifies a service auth JWT which the user's PDS issued for us (via
+ * com.atproto.server.getServiceAuth) and returns the identity of the user it was issued for.
+ * The token is signed with the user's atproto signing key, which proves that the bearer has
+ * an authenticated session with the user's PDS.
+ */
+export async function verifyBlueskyServiceToken(token: string): Promise<BlueskyIdentity | null> {
+  try {
+    const payload = await verifyJwt(token, serviceDid, BLUESKY_LOGIN_LXM, (iss, forceRefresh) =>
+      idResolver.did.resolveAtprotoKey(iss, forceRefresh),
+    )
+
+    if (!payload.jti || payload.iss.includes('#')) return null
+
+    const isFirstUse = await redis.set(
+      `bluesky-service-token:${payload.jti}`,
+      '1',
+      'EX',
+      USED_TOKEN_LIFETIME,
+      'NX',
+    )
+    if (!isFirstUse) return null
+
+    return { did: payload.iss, handle: await resolveHandle(payload.iss) }
+  } catch (error) {
+    console.error('Error while verifying Bluesky service token', error)
+    return null
+  }
+}

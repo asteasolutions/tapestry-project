@@ -62,17 +62,18 @@ export class AuthService extends Observable<AuthServiceState> {
     })
   }
 
-  private doPrepare() {
+  private async doPrepare() {
     for (const provider of AUTH_PROVIDERS) {
-      this.redirectCredentials ??= provider.prepare?.() ?? undefined
+      this.redirectCredentials ??= (await provider.prepare?.()) ?? undefined
     }
   }
 
+  private isPreparing = false
+
   prepare() {
-    if (this.preparing.state === 'pending') {
-      this.doPrepare()
-      this.preparing.resolve()
-    }
+    if (this.isPreparing) return
+    this.isPreparing = true
+    void this.doPrepare().finally(() => this.preparing.resolve())
   }
 
   private async doLogin(params: SessionCreateDto, loadUser: boolean, signal?: GenericAbortSignal) {

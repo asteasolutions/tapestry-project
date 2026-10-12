@@ -21,7 +21,6 @@ const REASON_MESSAGE_MAP: Record<ErrorReason, string> = {
   IAAccountNotAccessible: 'Internet Archive account not accessible',
   IANotAccessible: "Couldn't access the Internet Archive",
   InvalidIASession: 'Session expired',
-  InvalidBlueskyHandle: 'Invalid Bluesky handle',
 }
 
 export function IALoginDialog({ onClose }: IALoginDialogProps) {

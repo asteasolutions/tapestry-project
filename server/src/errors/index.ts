@@ -71,10 +71,7 @@ export class InvalidCredentialsError
 {
   constructor(
     message = 'Invalid Credentials',
-    reason?: Extract<
-      ErrorReason,
-      'InvalidIASession' | 'IAAccountNotAccessible' | 'InvalidBlueskyHandle'
-    >,
+    reason?: Extract<ErrorReason, 'InvalidIASession' | 'IAAccountNotAccessible'>,
   ) {
     super(401, message, 'InvalidCredentialsError', reason)
   }

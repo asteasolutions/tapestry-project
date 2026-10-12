@@ -4,13 +4,12 @@ import { Input } from 'tapestry-core-client/src/components/lib/input/index'
 import { Text } from 'tapestry-core-client/src/components/lib/text/index'
 import styles from './styles.module.css'
 import BlueskyLogo from '../../../assets/icons/bluesky-logo.svg?react'
-import { APIError } from '../../../errors'
 import { uniqueId } from 'lodash-es'
 import { SvgIcon } from 'tapestry-core-client/src/components/lib/svg-icon/index'
 import { Tooltip } from 'tapestry-core-client/src/components/lib/tooltip/index'
 import { useAsyncAction } from 'tapestry-core-client/src/components/lib/hooks/use-async-action'
 import { Snackbar } from 'tapestry-core-client/src/components/lib/snackbar/index'
-import { resource } from '../../../services/rest-resources'
+import { startBlueskyLogin, OAuthResolverError, saveBlueskyReturnTo } from '../oauth-client'
 
 interface BlueskyLoginDialogProps {
   onClose: () => void
@@ -18,27 +17,16 @@ interface BlueskyLoginDialogProps {
 
 export function BlueskyLoginDialog({ onClose }: BlueskyLoginDialogProps) {
   const [form] = useState(() => uniqueId('form'))
-
   const [handle, setHandle] = useState('')
-
   const [snackbarText, setSnackbarText] = useState<string>()
 
   const { trigger, cancel, loading } = useAsyncAction(async ({ signal }) => {
     try {
-      const { authorizationUrl } = await resource('blueskyAuthorizations').create(
-        {
-          handle: handle.trim().replace(/^@/, ''),
-          returnTo: `${window.location.pathname}${window.location.search}`,
-        },
-        {},
-        { signal },
-      )
-      window.location.assign(authorizationUrl)
+      saveBlueskyReturnTo()
+      await startBlueskyLogin(handle.trim().replace(/^@/, ''), signal)
     } catch (error) {
-      if (error instanceof APIError && error.data.reason === 'InvalidBlueskyHandle') {
+      if (error instanceof OAuthResolverError) {
         setSnackbarText("Couldn't find a Bluesky account with this handle")
-      } else if (error instanceof APIError) {
-        setSnackbarText('Server error encountered')
       } else {
         setSnackbarText('Unknown error encountered')
       }

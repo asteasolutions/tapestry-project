@@ -14,6 +14,7 @@ docker build \
   --build-arg VITE_WEBPAGE_LOADER_TIMEOUT=${WEBPAGE_LOADER_TIMEOUT} \
   --build-arg VITE_STUN_SERVER=${STUN_SERVER} \
   --build-arg VITE_SENTRY_DSN=${SENTRY_DSN_CLIENT} \
+  --build-arg VITE_PUBLIC_URL=${VIEWER_URL} \
   --tag tapestries-client:latest \
   --file Dockerfile.client-aws .
 

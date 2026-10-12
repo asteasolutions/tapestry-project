@@ -2,26 +2,21 @@ import { LoginWithBlueskyDto } from 'tapestry-shared/src/data-transfer/resources
 import { AuthProvider } from './index.js'
 import { InvalidCredentialsError } from '../../errors/index.js'
 import { updateUserIfExists } from '../index.js'
-import { consumeBlueskyLoginCode } from '../bluesky.js'
+import { verifyBlueskyServiceToken } from '../bluesky.js'
 
-const HANDLE_INVALID = 'handle.invalid'
+export class BlueskyAuthProvider implements AuthProvider<LoginWithBlueskyDto> {
+  async login({ serviceToken }: LoginWithBlueskyDto) {
+    const identity = await verifyBlueskyServiceToken(serviceToken)
 
-type BlueskyCredentials = LoginWithBlueskyDto & { nonce: string | undefined }
-
-export class BlueskyAuthProvider implements AuthProvider<BlueskyCredentials> {
-  async login({ code, nonce }: BlueskyCredentials) {
-    const data = await consumeBlueskyLoginCode(code)
-
-    // The nonce binds the login code to the browser which initiated the authorization
-    if (!data || !nonce || data.nonce !== nonce) {
+    if (!identity) {
       throw new InvalidCredentialsError()
     }
 
     return updateUserIfExists(
-      { blueskyDid: data.did },
+      { blueskyDid: identity.did },
       {
-        blueskyDid: data.did,
-        givenName: data.handle === HANDLE_INVALID ? data.did : data.handle,
+        blueskyDid: identity.did,
+        givenName: identity.handle ?? identity.did,
         familyName: '',
         avatar: null,
       },
