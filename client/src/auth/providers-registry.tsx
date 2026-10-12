@@ -1,5 +1,4 @@
 import z from 'zod/v4'
-import { GenericAbortSignal } from 'axios'
 import { auth } from '.'
 import { AuthProviderEnum, config } from '../config'
 import { GoogleLoginButton } from './google/login-button'
@@ -15,7 +14,7 @@ export interface AuthProviderItem {
     isSingleProvider?: boolean
   }>
   prepare?: () => void
-  tryCompleteLogin?: (signal?: GenericAbortSignal) => Promise<boolean>
+  tryCompleteLogin?: () => Promise<boolean>
 }
 type AuthProvider = z.infer<typeof AuthProviderEnum>
 
