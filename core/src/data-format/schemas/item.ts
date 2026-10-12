@@ -127,6 +127,7 @@ export const IiifItemSchema = z.object({
   type: z.literal('iiif').describe('The type of this item.'),
   ...commonItemProps.base,
   ...commonItemProps.source,
+  ...commonItemProps.originalSource,
 })
 
 export const PdfItemSchema = z.object({
