@@ -9,7 +9,8 @@ import { SvgIcon } from 'tapestry-core-client/src/components/lib/svg-icon/index'
 import { Tooltip } from 'tapestry-core-client/src/components/lib/tooltip/index'
 import { useAsyncAction } from 'tapestry-core-client/src/components/lib/hooks/use-async-action'
 import { Snackbar } from 'tapestry-core-client/src/components/lib/snackbar/index'
-import { startBlueskyLogin, OAuthResolverError, saveBlueskyReturnTo } from '../oauth-client'
+import { startBlueskyLogin, saveBlueskyReturnTo } from '../oauth-client'
+import { OAuthResolverError } from '@atproto/oauth-client-browser'
 
 interface BlueskyLoginDialogProps {
   onClose: () => void

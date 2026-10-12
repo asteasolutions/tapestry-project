@@ -3,7 +3,47 @@ import { LoginWithBlueskyDto } from 'tapestry-shared/src/data-transfer/resources
 import { AuthProvider } from './index.js'
 import { InvalidCredentialsError } from '../../errors/index.js'
 import { findUserIdOrStartRegistration } from '../index.js'
-import { verifyBlueskyServiceToken } from '../bluesky.js'
+import { IdResolver } from '@atproto/identity'
+import { verifyJwt } from '@atproto/xrpc-server'
+import { BLUESKY_LOGIN_LXM, blueskyServiceDid } from 'tapestry-shared/src/bluesky.js'
+import { config } from '../../config.js'
+import { redis } from '../../services/redis.js'
+
+const USED_TOKEN_LIFETIME = 2 * 60
+
+const idResolver = new IdResolver()
+const serviceDid = blueskyServiceDid(config.server.externalUrl)
+
+interface BlueskyIdentity {
+  did: string
+  handle: string | undefined
+}
+
+async function verifyBlueskyServiceToken(token: string): Promise<BlueskyIdentity | null> {
+  try {
+    const payload = await verifyJwt(token, serviceDid, BLUESKY_LOGIN_LXM, (iss, forceRefresh) =>
+      idResolver.did.resolveAtprotoKey(iss, forceRefresh),
+    )
+
+    if (!payload.jti || payload.iss.includes('#')) return null
+
+    const isFirstUse = await redis.set(
+      `bluesky-service-token:${payload.jti}`,
+      '1',
+      'EX',
+      USED_TOKEN_LIFETIME,
+      'NX',
+    )
+    if (!isFirstUse) return null
+
+    return {
+      did: payload.iss,
+      handle: (await idResolver.did.resolveAtprotoData(payload.iss)).handle,
+    }
+  } catch {
+    throw new InvalidCredentialsError()
+  }
+}
 
 export class BlueskyAuthProvider implements AuthProvider<LoginWithBlueskyDto> {
   async login({ serviceToken }: LoginWithBlueskyDto, response: Response) {
@@ -15,7 +55,6 @@ export class BlueskyAuthProvider implements AuthProvider<LoginWithBlueskyDto> {
 
     const { did, handle } = identity
     return findUserIdOrStartRegistration({ blueskyDid: did }, { blueskyDid: did }, response, {
-      // Bluesky handles are domain names, e.g. "alice.bsky.social"
       usernameSuggestion: handle?.split('.')[0] ?? '',
     })
   }

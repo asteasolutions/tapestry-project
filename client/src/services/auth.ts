@@ -133,19 +133,10 @@ export class AuthService extends Observable<AuthServiceState> {
   async refresh(loadUser: boolean, signal?: GenericAbortSignal) {
     await this.preparing.promise
 
-    // If we've just been redirected back from a provider's login flow, log in with the
-    // credentials from the redirect instead of refreshing the current session.
     const credentials = signal?.aborted ? undefined : this.redirectCredentials
     if (credentials) {
       this.redirectCredentials = undefined
-      try {
-        await this.doLogin(credentials, true, signal)
-      } catch (error) {
-        if (!(error instanceof APIError && error.data.name === 'UserDoesNotExistError')) {
-          this.setLoginError('Login failed. Please try again.')
-        }
-        throw error
-      }
+      await this.doLogin(credentials, true, signal)
       return
     }
 

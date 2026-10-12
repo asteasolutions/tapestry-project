@@ -8,18 +8,12 @@ import { config } from '../../config'
 import { BLUESKY_SCOPE, CLIENT_METADATA_PATH } from './client-metadata'
 import { SessionCreateDto } from 'tapestry-shared/src/data-transfer/resources/dtos/session'
 
-export { OAuthResolverError } from '@atproto/oauth-client-browser'
+const RETURN_TO_KEY = 'bluesky-login-return-to'
 
 function isLoopback(hostname: string) {
   return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]'
 }
 
-/**
- * Loopback redirect URIs must use an IP address rather than "localhost" (RFC 8252), so during
- * development the auth server always redirects back to 127.0.0.1. The OAuth state is stored per
- * origin though, so we always use localhost: logins are started there, and both the callback and
- * any page opened on 127.0.0.1 are moved there before anything else runs.
- */
 function moveToLocalhost() {
   const { hostname, port, pathname, search, hash } = window.location
   if (hostname !== '127.0.0.1' && hostname !== '[::1]') return false
@@ -32,9 +26,7 @@ let clientPromise: Promise<BrowserOAuthClient> | undefined
 
 export function getBlueskyOAuthClient() {
   clientPromise ??= isLoopback(window.location.hostname)
-    ? // During development we use a loopback client, which doesn't need hosted metadata.
-      // The auth server redirects back to 127.0.0.1, see moveToLocalhost().
-      BrowserOAuthClient.load({
+    ? BrowserOAuthClient.load({
         clientId: `${buildLoopbackClientId({
           hostname: window.location.hostname,
           port: window.location.port,
@@ -48,24 +40,16 @@ export function getBlueskyOAuthClient() {
       })
 
   const promise = clientPromise
-  // Retry on the next call if loading the client failed
   promise.catch(() => (clientPromise = undefined))
 
   return promise
 }
 
-/**
- * Redirects to the authorization server of the user's PDS. The promise never resolves.
- */
 export async function startBlueskyLogin(handle: string, signal?: AbortSignal) {
   const client = await getBlueskyOAuthClient()
   return client.signInRedirect(handle, { signal })
 }
 
-/**
- * Asks the user's PDS for a short-lived token, signed with the user's key, which proves to our
- * server that the user is who they claim to be.
- */
 export async function getBlueskyServiceToken(session: OAuthSession) {
   const params = new URLSearchParams({
     aud: blueskyServiceDid(config.apiUrl),
@@ -81,12 +65,6 @@ export async function getBlueskyServiceToken(session: OAuthSession) {
   return token
 }
 
-const RETURN_TO_KEY = 'bluesky-login-return-to'
-
-/**
- * Saves the current location, so that we can return to it after the user is redirected back
- * from the Bluesky authorization server, which always redirects to the root path.
- */
 export function saveBlueskyReturnTo() {
   sessionStorage.setItem(RETURN_TO_KEY, `${window.location.pathname}${window.location.search}`)
 }
@@ -101,8 +79,6 @@ function consumeCallbackParams() {
     return null
   }
 
-  // Restore the original location before the router is created, so that it never sees the
-  // callback URL. This module is evaluated before that since the auth service depends on it.
   const returnTo = sessionStorage.getItem(RETURN_TO_KEY)
   sessionStorage.removeItem(RETURN_TO_KEY)
   const safeReturnTo = returnTo?.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/'
@@ -113,16 +89,11 @@ function consumeCallbackParams() {
 
 const callbackParams = moveToLocalhost() ? null : consumeCallbackParams()
 
-/**
- * Completes the Bluesky OAuth flow, if we've just been redirected back from the authorization
- * server, and returns credentials for logging into our server.
- */
 export async function completeBlueskyLogin(): Promise<SessionCreateDto | undefined> {
   if (!callbackParams) return
 
   const client = await getBlueskyOAuthClient()
-  // initCallback() synchronously replaces the current history entry with one that has no state,
-  // which would wipe the router's state, so we put the entry back right after calling it.
+
   const state: unknown = window.history.state
   const { href } = window.location
   const callbackPromise = client.initCallback(
@@ -131,11 +102,10 @@ export async function completeBlueskyLogin(): Promise<SessionCreateDto | undefin
   )
   window.history.replaceState(state, '', href)
   const { session } = await callbackPromise
+
   try {
     return { authType: 'bluesky', serviceToken: await getBlueskyServiceToken(session) }
   } finally {
-    await session.signOut().catch((error: unknown) => {
-      console.error('Error while revoking Bluesky session', error)
-    })
+    await session.signOut()
   }
 }
