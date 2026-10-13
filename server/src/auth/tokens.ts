@@ -10,6 +10,8 @@ type SessionJWTData = z.infer<typeof SessionJWTSchema>
 const RegisterJWTSchema = z.object({
   gsiUserId: z.string().nullish(),
   blueskyDid: z.string().nullish(),
+  orcidId: z.string().nullish(),
+  wikimediaId: z.string().nullish(),
   email: z.string().nullish(),
   avatar: z.string().nullish(),
 })

@@ -5,6 +5,10 @@ import { GoogleLoginButton } from './google/login-button'
 import { IALoginButton } from './internet-archive/login-button'
 import { BlueskyLoginButton } from './bluesky/login-button'
 import { tryCompleteBlueskyLogin } from './bluesky/oauth-client'
+import { OrcidLoginButton } from './orcid/login-button'
+import { WikimediaLoginButton } from './wikimedia/login-button'
+import { orcidClient } from './orcid/service'
+import { wikimediaClient } from './wikimedia/service'
 
 export interface AuthProviderItem {
   id: string
@@ -41,6 +45,16 @@ const PROVIDER_MAP: Record<AuthProvider, AuthProviderItem> = {
     id: 'bluesky',
     component: BlueskyLoginButton,
     tryCompleteLogin: tryCompleteBlueskyLogin,
+  },
+  orcid: {
+    id: 'orcid',
+    component: OrcidLoginButton,
+    tryCompleteLogin: orcidClient.tryCompleteLogin,
+  },
+  wikimedia: {
+    id: 'wikimedia',
+    component: WikimediaLoginButton,
+    tryCompleteLogin: wikimediaClient.tryCompleteLogin,
   },
 }
 

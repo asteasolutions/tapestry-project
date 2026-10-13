@@ -17,6 +17,8 @@ model User {
   updatedAt            DateTime              @updatedAt
   gsiUserId            String?               @unique
   blueskyDid           String?               @unique
+  orcidId              String?               @unique
+  wikimediaId          String?               @unique
   email                String?               @unique
   username             String                @unique
   givenName            String?
