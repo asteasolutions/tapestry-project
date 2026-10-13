@@ -29,6 +29,9 @@ jobs:
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
           JOBS_ADMIN_NAME: ${{ secrets.JOBS_ADMIN_NAME }}
           JOBS_ADMIN_PASSWORD: ${{ secrets.JOBS_ADMIN_PASSWORD }}
+          ORCID_CLIENT_ID: ${{ vars.ORCID_CLIENT_ID }}
+          ORCID_CLIENT_SECRET: ${{ secrets.ORCID_CLIENT_SECRET }}
+          ORCID_REDIRECT_URI: ${{ vars.ORCID_REDIRECT_URI }}
           PUPPETEER_ARGS: ${{ vars.PUPPETEER_ARGS }}
           REDIS_PORT: ${{ secrets.REDIS_PORT }}
           SENTRY_DSN_CLIENT: ${{ secrets.SENTRY_DSN_CLIENT }}
@@ -45,3 +48,6 @@ jobs:
           VAULT_ROOT_TOKEN: ${{ secrets.VAULT_ROOT_TOKEN }}
           VAULT_SECRET_ID: ${{ secrets.VAULT_SECRET_ID }}
           WEBPAGE_LOADER_TIMEOUT: ${{ vars.WEBPAGE_LOADER_TIMEOUT }}
+          WIKIMEDIA_CLIENT_ID: ${{ vars.WIKIMEDIA_CLIENT_ID }}
+          WIKIMEDIA_CLIENT_SECRET: ${{ secrets.WIKIMEDIA_CLIENT_SECRET }}
+          WIKIMEDIA_REDIRECT_URI: ${{ vars.WIKIMEDIA_REDIRECT_URI }}
