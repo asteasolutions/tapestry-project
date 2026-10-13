@@ -18,7 +18,7 @@ interface ExchangeCodeParams {
   redirectUri: string
 }
 
-//Here in ExchangeCodeParams we have the common things for out OAuth providers
+//Here in ExchangeCodeParams we have the common things for our OAuth providers
 export async function exchangeCodeForToken<T>(
   { tokenUrl, clientId, clientSecret, code, redirectUri }: ExchangeCodeParams,
   schema: z.ZodType<T>,

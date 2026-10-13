@@ -5,8 +5,8 @@ import { GoogleLoginButton } from './google/login-button'
 import { IALoginButton } from './internet-archive/login-button'
 import { OrcidLoginButton } from './orcid/login-button'
 import { WikimediaLoginButton } from './wikimedia/login-button'
-import { tryCompleteOrcidLogin } from './orcid/service'
-import { tryCompleteWikimediaLogin } from './wikimedia/service'
+import { orcidClient } from './orcid/service'
+import { wikimediaClient } from './wikimedia/service'
 
 export interface AuthProviderItem {
   id: string
@@ -39,11 +39,15 @@ const PROVIDER_MAP: Record<AuthProvider, AuthProviderItem> = {
     },
   },
   ia: { id: 'internet-archive', component: IALoginButton },
-  orcid: { id: 'orcid', component: OrcidLoginButton, tryCompleteLogin: tryCompleteOrcidLogin },
+  orcid: {
+    id: 'orcid',
+    component: OrcidLoginButton,
+    tryCompleteLogin: orcidClient.tryCompleteLogin,
+  },
   wikimedia: {
     id: 'wikimedia',
     component: WikimediaLoginButton,
-    tryCompleteLogin: tryCompleteWikimediaLogin,
+    tryCompleteLogin: wikimediaClient.tryCompleteLogin,
   },
 }
 

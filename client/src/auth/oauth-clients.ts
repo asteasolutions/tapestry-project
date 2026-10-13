@@ -20,7 +20,7 @@ export function createOAuthClient({
   scope,
   redirectUri,
 }: OAuthClientOptions) {
-  const getRedirectUri = () => redirectUri || `${window.location.origin}/`
+  const callbackUri = redirectUri || `${window.location.origin}/`
   let pending: Promise<boolean> | null = null
 
   function start() {
@@ -31,7 +31,7 @@ export function createOAuthClient({
     const params = new URLSearchParams({
       client_id: clientId,
       response_type: 'code',
-      redirect_uri: getRedirectUri(),
+      redirect_uri: callbackUri,
       state: `${authType}:${nonce}`,
     })
     if (scope) params.set('scope', scope)
@@ -46,7 +46,7 @@ export function createOAuthClient({
     if (!nonce || nonce !== expectedNonce) return false
 
     try {
-      await auth.login({ authType, code, redirectUri: getRedirectUri() })
+      await auth.login({ authType, code, redirectUri: callbackUri })
       return true
     } catch (error) {
       console.error('[oauth] login failed', error)
