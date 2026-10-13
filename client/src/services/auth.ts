@@ -126,6 +126,13 @@ export class AuthService extends Observable<AuthServiceState> {
     await this.doLogin({ authType: 'refreshToken' }, loadUser, signal)
   }
 
+  async tryOauthLogin(): Promise<boolean> {
+    for (const provider of AUTH_PROVIDERS) {
+      if (await provider.tryCompleteLogin?.()) return true
+    }
+    return false
+  }
+
   login(credentials: SessionCreateDto, signal?: GenericAbortSignal): Promise<void> {
     return this.doLogin(credentials, true, signal)
   }

@@ -22,7 +22,7 @@ export function LoginMenu() {
 
               return (
                 <Fragment key={provider.id}>
-                  {index > 0 && (
+                  {index === 1 && (
                     <div className={styles.divider}>
                       <span>OR</span>
                     </div>
