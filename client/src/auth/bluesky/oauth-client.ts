@@ -25,20 +25,23 @@ function moveToLocalhost() {
 
 let clientPromise: Promise<BrowserOAuthClient> | undefined
 
+function getClientId() {
+  if (isLoopback(window.location.hostname)) {
+    const loopbackId = buildLoopbackClientId({
+      hostname: window.location.hostname,
+      port: window.location.port,
+      pathname: '/',
+    })
+    return `${loopbackId}&scope=${encodeURIComponent(BLUESKY_SCOPE)}`
+  }
+  return `${window.location.origin}${CLIENT_METADATA_PATH}`
+}
+
 export function getBlueskyOAuthClient() {
-  clientPromise ??= isLoopback(window.location.hostname)
-    ? BrowserOAuthClient.load({
-        clientId: `${buildLoopbackClientId({
-          hostname: window.location.hostname,
-          port: window.location.port,
-          pathname: '/',
-        })}&scope=${encodeURIComponent(BLUESKY_SCOPE)}`,
-        handleResolver: 'https://bsky.social',
-      })
-    : BrowserOAuthClient.load({
-        clientId: `${window.location.origin}${CLIENT_METADATA_PATH}`,
-        handleResolver: 'https://bsky.social',
-      })
+  clientPromise ??= BrowserOAuthClient.load({
+    clientId: getClientId(),
+    handleResolver: 'https://bsky.social',
+  })
 
   const promise = clientPromise
   promise.catch(() => (clientPromise = undefined))
@@ -51,7 +54,7 @@ export async function startBlueskyLogin(handle: string, signal?: AbortSignal) {
   return client.signInRedirect(handle, { signal })
 }
 
-export async function getBlueskyServiceToken(session: OAuthSession) {
+async function getBlueskyServiceToken(session: OAuthSession) {
   const params = new URLSearchParams({
     aud: blueskyServiceDid(config.apiUrl),
     lxm: BLUESKY_LOGIN_LXM,
