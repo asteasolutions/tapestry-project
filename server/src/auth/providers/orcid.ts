@@ -5,7 +5,7 @@ import { config } from '../../config.js'
 import { findUserIdOrStartRegistration } from '../index.js'
 import { BaseTokenResponseSchema, exchangeCodeForToken } from './oauth.js'
 import { Response } from 'express'
-import { RegisterUserSuggestions } from 'tapestry-shared/src/data-transfer/resources/schemas/session.js'
+import { RegisterUserSuggestionsSchema } from 'tapestry-shared/src/data-transfer/resources/schemas/session.js'
 
 const OrcidTokenResponseSchema = BaseTokenResponseSchema.extend({
   name: z.string().nullish(),
@@ -28,7 +28,7 @@ export class OrcidAuthProvider implements AuthProvider<OrcidCredentials> {
     )
 
     const [first = '', ...rest] = name?.trim().split(/\s+/) ?? []
-    const registrationSuggestions = RegisterUserSuggestions.parse({
+    const registrationSuggestions = RegisterUserSuggestionsSchema.parse({
       usernameSuggestion: first.toLowerCase(),
       firstNameSuggestion: first,
       lastNameSuggestion: rest.join(' '),

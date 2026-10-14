@@ -15,8 +15,8 @@ const usernameRegex = /^[a-zA-Z0-9_+.-]*$/g
 const UsernameSchema = z.preprocess(trimString, z.string().nonempty().max(25).regex(usernameRegex))
 const NameSchema = z.preprocess(trimString, z.string().nonempty().max(25))
 
-export const RegisterUserSuggestions = z.object({
-  usernameSuggestion: UsernameSchema.catch(''),
+export const RegisterUserSuggestionsSchema = z.object({
+  usernameSuggestion: UsernameSchema.optional().catch(undefined),
   firstNameSuggestion: NameSchema.optional().catch(undefined),
   lastNameSuggestion: NameSchema.optional().catch(undefined),
 })

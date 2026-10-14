@@ -6,7 +6,7 @@ import { BaseTokenResponseSchema, exchangeCodeForToken } from './oauth.js'
 import { config } from '../../config.js'
 import { InvalidCredentialsError, ServerError } from '../../errors/index.js'
 import { findUserIdOrStartRegistration } from '../index.js'
-import { RegisterUserSuggestions } from 'tapestry-shared/src/data-transfer/resources/schemas/session.js'
+import { RegisterUserSuggestionsSchema } from 'tapestry-shared/src/data-transfer/resources/schemas/session.js'
 
 // Wikimedia returns only tokens here; the user's identity comes from the profile endpoint
 const WikimediaTokenSchema = BaseTokenResponseSchema
@@ -54,7 +54,7 @@ type WikimediaCredentials = SessionCreateDto & { authType: 'wikimedia' }
 export class WikimediaAuthProvider implements AuthProvider<WikimediaCredentials> {
   async login({ code, redirectUri }: WikimediaCredentials, response: Response) {
     const profile = await fetchWikimediaProfile(code, redirectUri)
-    const { usernameSuggestion } = RegisterUserSuggestions.parse({
+    const { usernameSuggestion } = RegisterUserSuggestionsSchema.parse({
       usernameSuggestion: profile.username,
     })
 
