@@ -22,7 +22,6 @@ export interface AuthServiceState {
   user: UserDto | null
   isInitialized: boolean
   pendingRegistration: RegistrationSuggestions | undefined
-  loginError: string | undefined
 }
 
 interface Deferred<T> {
@@ -64,7 +63,6 @@ export class AuthService extends Observable<AuthServiceState> {
       user: null,
       isInitialized: false,
       pendingRegistration: undefined,
-      loginError: undefined,
     })
   }
 
@@ -163,12 +161,6 @@ export class AuthService extends Observable<AuthServiceState> {
       true,
       signal,
     )
-  }
-
-  setLoginError(loginError: string | undefined) {
-    this.update((state) => {
-      state.loginError = loginError
-    })
   }
 
   cancelRegistration() {

@@ -120,7 +120,7 @@ async function completeLogin(params: URLSearchParams) {
     return true
   } catch (error) {
     if (!(error instanceof APIError && error.data.name === 'UserDoesNotExistError')) {
-      auth.setLoginError('Bluesky login failed. Please try again.')
+      console.error('[bluesky] login failed', error)
     }
     return false
   }
