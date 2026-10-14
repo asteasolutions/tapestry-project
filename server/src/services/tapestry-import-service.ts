@@ -244,7 +244,7 @@ export class TapestryImportService {
             data: await Promise.all(
               tapestry.items?.map<Promise<Prisma.ItemCreateManyInput>>(async (i) => {
                 const isMedia = isMediaItem(i)
-                const source = isMedia ? i.source : undefined
+                const isTextOrActionButton = i.type === 'text' || i.type === 'actionButton'
 
                 return {
                   id: itemIdMap[i.id],
@@ -257,15 +257,16 @@ export class TapestryImportService {
                   dropShadow: !!i.dropShadow,
                   groupId: groupIdMap[i.groupId ?? ''],
                   thumbnailId: itemThumbnailsMap[i.id]?.id,
-                  backgroundColor: isMediaItem(i) ? undefined : i.backgroundColor,
-                  text: isMedia ? undefined : i.text,
+                  backgroundColor: isTextOrActionButton ? i.backgroundColor : undefined,
+                  text: isTextOrActionButton ? i.text : undefined,
                   layer: i.layer,
 
                   ...(hasActionType(i)
                     ? actionMap(itemIdMap, groupIdMap, i.action, i.actionType)
                     : {}),
 
-                  source,
+                  source: isMedia ? i.source : undefined,
+                  originalSource: isMedia ? i.originalSource : undefined,
                   title: i.title,
                   type: i.type,
                   webpageType:

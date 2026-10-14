@@ -7,7 +7,7 @@ assume_deploy_role
 # TODO: Make docker use build cache when building this image. Probably upload it to ECR to use as cache later?
 docker build \
   --build-arg VITE_API_URL=${EXTERNAL_SERVER_URL} \
-  --build-arg VITE_AUTH_PROVIDER=${AUTH_PROVIDER} \
+  --build-arg VITE_AUTH_PROVIDERS=${AUTH_PROVIDERS} \
   --build-arg VITE_GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID} \
   --build-arg VITE_BUG_REPORT_FORM_URL=${BUG_REPORT_FORM_URL} \
   --build-arg VITE_AI_CHAT_EXPIRES_IN=${AI_CHAT_EXPIRES_IN} \

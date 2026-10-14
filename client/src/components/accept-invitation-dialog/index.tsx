@@ -113,7 +113,7 @@ export function AcceptInvitationDialog() {
       content: (
         <div className={styles.acceptContainer}>
           <Text component="div" variant="bodySm" style={{ textAlign: 'center' }}>
-            You are logged in as <em>{user.email}</em>.<br />
+            You are logged in as <em>{user.username}</em>.<br />
             Do you want to accept the invitation?
           </Text>
           <Button onClick={() => accept(data.id)}>Accept and open</Button>

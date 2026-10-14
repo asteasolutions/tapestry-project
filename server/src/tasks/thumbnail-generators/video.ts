@@ -3,6 +3,7 @@ import { noop } from 'lodash-es'
 import { downloadToTempFile, spawn } from '../utils'
 import { ThumbnailRenditionOutput } from '.'
 import { generateThumbnail } from './image'
+import { MAX_SOURCE_FILE_SIZE } from 'tapestry-shared/src/utils'
 
 function extractVideoThumbnailFromFile(filePath: string, startTime = 1, width = 320) {
   // prettier-ignore
@@ -31,7 +32,7 @@ export async function generateVideoThumbnail(
 ): Promise<ThumbnailRenditionOutput> {
   let tmpFile = ''
   try {
-    tmpFile = await downloadToTempFile(videoUrl)
+    tmpFile = await downloadToTempFile(videoUrl, { maxBytes: MAX_SOURCE_FILE_SIZE })
     const frame = await extractVideoThumbnailFromFile(tmpFile, startTime, width)
     return generateThumbnail(frame)
   } finally {

@@ -1,0 +1,43 @@
+name: Deploy viewer to demo
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy-viewer:
+    if: github.ref == 'refs/heads/demo'
+    runs-on: self-hosted
+    environment: demo
+    env:
+      AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+      AWS_DEPLOY_ROLE_NAME: ${{ secrets.AWS_DEPLOY_ROLE_NAME }}
+      DEPLOY_AWS_ACCESS_KEY_ID: ${{ secrets.DEPLOY_AWS_ACCESS_KEY_ID }}
+      DEPLOY_AWS_SECRET_ACCESS_KEY: ${{ secrets.DEPLOY_AWS_SECRET_ACCESS_KEY }}
+      DEPLOY_AWS_REGION: ${{ secrets.DEPLOY_AWS_REGION }}
+      VIEWER_BUCKET: ${{ vars.DEPLOY_VIEWER_S3_BUCKET }}
+      VIEWER_DISTRIBUTION_ID: ${{ vars.DEPLOY_VIEWER_CF_DISTRIBUTION_ID }}
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Build viewer
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: "true"
+        run: |
+          npm ci
+          npm run build -w viewer
+
+      - name: Upload viewer to S3
+        run: |
+          . ./deployment/docker/utils.sh
+          assume_deploy_role
+
+          aws s3 sync viewer/dist/ s3://$VIEWER_BUCKET --delete
+          aws s3 cp viewer/dist/index.html s3://$VIEWER_BUCKET/index.html --cache-control no-cache
+          aws cloudfront create-invalidation --distribution-id $VIEWER_DISTRIBUTION_ID --paths "/*"

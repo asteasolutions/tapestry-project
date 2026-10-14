@@ -1,6 +1,8 @@
 import { PublicUserProfileDto, UserDto } from './data-transfer/resources/dtos/user'
 import { Size } from 'tapestry-core/src/data-format/schemas/common'
 
+export const MAX_SOURCE_FILE_SIZE = 500 * 1000 * 1000 // 500 MB
+
 export function userToPublicProfileDto(user: UserDto): PublicUserProfileDto {
   return {
     id: user.id,
