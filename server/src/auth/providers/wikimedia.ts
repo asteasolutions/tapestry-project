@@ -54,7 +54,7 @@ type WikimediaCredentials = SessionCreateDto & { authType: 'wikimedia' }
 export class WikimediaAuthProvider implements AuthProvider<WikimediaCredentials> {
   async login({ code, redirectUri }: WikimediaCredentials, response: Response) {
     const profile = await fetchWikimediaProfile(code, redirectUri)
-    const { usernameSuggestion } = RegisterUserSuggestionsSchema.parse({
+    const usernameSuggestion = RegisterUserSuggestionsSchema.parse({
       usernameSuggestion: profile.username,
     })
 
@@ -69,7 +69,7 @@ export class WikimediaAuthProvider implements AuthProvider<WikimediaCredentials>
         avatar: null,
       },
       response,
-      { usernameSuggestion },
+      usernameSuggestion,
     )
   }
 }
