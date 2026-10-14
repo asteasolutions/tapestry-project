@@ -15,7 +15,7 @@ services:
         VITE_WEBPAGE_LOADER_TIMEOUT: ${WEBPAGE_LOADER_TIMEOUT}
         VITE_STUN_SERVER: ${STUN_SERVER}
         VITE_SENTRY_DSN: ${SENTRY_DSN_CLIENT}
-        VITE_PUBLIC_URL: https://${HOST}.asteasolutions.net
+        VITE_ATPROTO_CLIENT_ID: https://${HOST}.asteasolutions.net
     networks:
       - traefik
     labels:

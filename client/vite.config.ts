@@ -18,7 +18,7 @@ function blueskyClientMetadataPlugin(publicUrl: string | undefined): Plugin {
     generateBundle() {
       if (!publicUrl) {
         this.warn(
-          `VITE_PUBLIC_URL is not set, so ${CLIENT_METADATA_PATH} won't be generated and Bluesky login will only work on localhost`,
+          `VITE_ATPROTO_CLIENT_ID is not set, so ${CLIENT_METADATA_PATH} won't be generated and Bluesky login will only work on localhost`,
         )
         return
       }
@@ -54,7 +54,7 @@ export default defineConfig(({ mode }) => {
       viteStaticCopy({
         targets: [{ src: pdfWasmDir, dest: '' }],
       }),
-      blueskyClientMetadataPlugin(env.VITE_PUBLIC_URL),
+      blueskyClientMetadataPlugin(env.VITE_ATPROTO_CLIENT_ID),
     ],
     build: {
       assetsInlineLimit: 0,
