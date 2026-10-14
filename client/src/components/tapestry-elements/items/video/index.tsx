@@ -11,13 +11,17 @@ import { usePlayableItemToolbar } from '../../item-toolbar/use-playable-item-too
 export const VideoItem = memo(({ id }: TapestryItemProps) => {
   const dto = useTapestryData(`items.${id}.dto`) as VideoItemDto
   const src = useMediaSource(dto.source)
-  const [duration] = useState(0)
+  const [duration, setDuration] = useState(0)
 
   const { toolbar } = usePlayableItemToolbar(dto, duration)
 
   return (
     <TapestryItem id={id} halo={toolbar}>
-      <VideoItemPlayer id={id} mediaType={itemUpload.type(src)} />
+      <VideoItemPlayer
+        id={id}
+        mediaType={itemUpload.type(src)}
+        onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
+      />
     </TapestryItem>
   )
 })

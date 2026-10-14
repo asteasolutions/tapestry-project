@@ -7,6 +7,8 @@ import clsx from 'clsx'
 import { Id } from 'tapestry-core/src/data-format/schemas/common'
 
 type ComponentType = 'video' | 'audio'
+type MediaElement<T extends ComponentType> = T extends 'video' ? HTMLVideoElement : HTMLAudioElement
+type MediaEvent<T extends ComponentType> = React.SyntheticEvent<MediaElement<T>>
 
 export interface MediaOptions {
   autoplay?: boolean | 'muted' | 'play' | 'any'
@@ -22,17 +24,18 @@ export interface MediaOptions {
   inactivityTimeout?: number
 }
 
-export interface MediaPlayerProps<T extends ComponentType> {
+export interface MediaPlayerProps<T extends ComponentType, Component = MediaElement<T>> {
   id: Id
   component: T
   options: MediaOptions
   startTime: number
   stopTime?: number
   style?: CSSProperties
-  onPlay?: React.ReactEventHandler<HTMLVideoElement | HTMLAudioElement>
-  onPause?: React.ReactEventHandler<HTMLVideoElement | HTMLAudioElement>
-  onEnded?: React.ReactEventHandler<HTMLVideoElement | HTMLAudioElement>
-  onSeeked?: React.ReactEventHandler<HTMLVideoElement | HTMLAudioElement>
+  onPlay?: React.ReactEventHandler<Component>
+  onPause?: React.ReactEventHandler<Component>
+  onEnded?: React.ReactEventHandler<Component>
+  onSeeked?: React.ReactEventHandler<Component>
+  onLoadedMetadata?: React.ReactEventHandler<Component>
   isInteractive: boolean
   thumbnail?: string
 }
@@ -48,10 +51,11 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
   onPause,
   onEnded,
   onSeeked,
+  onLoadedMetadata,
   isInteractive,
   thumbnail,
 }: MediaPlayerProps<T>) {
-  const mediaRef = useRef<HTMLVideoElement | HTMLAudioElement | null>(null)
+  const mediaRef = useRef<MediaElement<T> | null>(null)
   const [volume, setVolume] = useState<number>(1)
   const [playbackRate, setPlaybackRate] = useState<number>(1)
   const isAudio = component === 'audio' || options.audioOnlyMode
@@ -97,28 +101,29 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
     setIsOver(currentTime === duration)
   }
 
-  const onLoadedMetadata = () => {
+  const handleLoadedMetadata = (e: MediaEvent<T>) => {
     if (!mediaRef.current) {
       return
     }
     mediaRef.current.currentTime = intervalRef.current.startTime
     setDuration(mediaRef.current.duration)
     setIsOver(currentTime === duration)
+    onLoadedMetadata?.(e)
   }
 
   const [isPlaying, setIsPlaying] = useState<boolean>(false)
 
-  const handlePlay = (e: React.SyntheticEvent<HTMLVideoElement | HTMLAudioElement>) => {
+  const handlePlay = (e: MediaEvent<T>) => {
     setIsPlaying(true)
     onPlay?.(e)
   }
 
-  const handlePause = (e: React.SyntheticEvent<HTMLVideoElement | HTMLAudioElement>) => {
+  const handlePause = (e: MediaEvent<T>) => {
     setIsPlaying(false)
     onPause?.(e)
   }
 
-  const handleEnded = (e: React.SyntheticEvent<HTMLVideoElement | HTMLAudioElement>) => {
+  const handleEnded = (e: MediaEvent<T>) => {
     setIsPlaying(false)
     onEnded?.(e)
   }
@@ -144,11 +149,11 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
   }
 
   const handleMouseMove = useMemo(() => {
-    let timer: NodeJS.Timeout
+    let timer: number
     return () => {
       setIsMoving(true)
       clearTimeout(timer)
-      timer = setTimeout(() => {
+      timer = window.setTimeout(() => {
         setIsMoving(false)
       }, 3000)
     }
@@ -190,6 +195,15 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
     }
   }
 
+  const mediaProps = {
+    onLoadedMetadata: handleLoadedMetadata,
+    onTimeUpdate: onTimeUpdate,
+    onPlay: handlePlay,
+    onPause: handlePause,
+    onEnded: handleEnded,
+    onSeeked: onSeeked,
+  }
+
   return (
     <div
       className={clsx(styles.root, { [styles.audioOnly]: isAudio })}
@@ -199,24 +213,14 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
       {isAudio ? (
         <audio
           ref={mediaRef as React.RefObject<HTMLAudioElement>}
-          onLoadedMetadata={onLoadedMetadata}
-          onTimeUpdate={onTimeUpdate}
-          onPlay={handlePlay}
-          onPause={handlePause}
-          onEnded={handleEnded}
-          onSeeked={onSeeked}
+          {...mediaProps}
           src={options.src}
           style={{ display: 'none' }}
         />
       ) : (
         <video
           ref={mediaRef as React.RefObject<HTMLVideoElement>}
-          onLoadedMetadata={onLoadedMetadata}
-          onTimeUpdate={onTimeUpdate}
-          onPlay={handlePlay}
-          onPause={handlePause}
-          onEnded={handleEnded}
-          onSeeked={onSeeked}
+          {...mediaProps}
           controls={false}
           style={{
             display: isPlaying ? 'block' : 'none',

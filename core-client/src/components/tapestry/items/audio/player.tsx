@@ -1,5 +1,5 @@
 import { useMediaSource } from '../../../lib/hooks/use-media-source'
-import { memo, useCallback, useMemo } from 'react'
+import { memo } from 'react'
 import { AudioItem as AudioItemDto } from 'tapestry-core/src/data-format/schemas/item'
 import { MediaPlayer, MediaPlayerProps, MediaOptions } from '../../../lib/media-player'
 import { useTapestryConfig } from '../..'
@@ -26,24 +26,16 @@ export const AudioItemPlayer = memo(
     const src = useMediaSource(source)
     const mediaParams = useMediaParams(id)
 
-    const onStart = useCallback(() => {
-      dispatch(setItemIsPlaying(id, true))
-    }, [dispatch, id])
+    const onStart = () => dispatch(setItemIsPlaying(id, true))
+    const onStop = () => dispatch(setItemIsPlaying(id, false))
 
-    const onStop = useCallback(() => {
-      dispatch(setItemIsPlaying(id, false))
-    }, [dispatch, id])
-
-    const options = useMemo<MediaOptions>(
-      () => ({
-        src,
-        mediaType,
-        controls: true,
-        inactivityTimeout: 0,
-        ...(customThumbnail ? { poster: customThumbnail, audioOnlyMode: false } : {}),
-      }),
-      [src, customThumbnail, mediaType],
-    )
+    const options: MediaOptions = {
+      src,
+      mediaType,
+      controls: true,
+      inactivityTimeout: 0,
+      ...(customThumbnail ? { poster: customThumbnail, audioOnlyMode: false } : {}),
+    }
 
     return (
       <MediaPlayer

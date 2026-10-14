@@ -58,14 +58,14 @@ export function ControlBar({
     setSelectedSubmenu((prev) => (prev === id ? '' : id))
   }
 
-  const leaveTimer = useRef<NodeJS.Timeout | null>(null)
+  const leaveTimer = useRef<number | null>(null)
   const handleMouseEnter = (id: string) => {
     if (leaveTimer.current) clearTimeout(leaveTimer.current)
     setSelectedSubmenu(id)
   }
 
   const handleMouseLeave = () => {
-    leaveTimer.current = setTimeout(() => {
+    leaveTimer.current = window.setTimeout(() => {
       setSelectedSubmenu('')
     }, 200)
   }
@@ -77,8 +77,22 @@ export function ControlBar({
 
   const portal = document.querySelector(`[data-model-id="${mediaId}"]`)
 
+  const volumeSubmenuRef = useRef<HTMLInputElement>(null)
+  const playbackRateSubmenuRef = useRef<HTMLDivElement>(null)
+
+  const onFocusOut = (_source: HTMLElement, target: HTMLElement) => {
+    if (
+      volumeSubmenuRef.current?.contains(target) ||
+      playbackRateSubmenuRef.current?.contains(target)
+    ) {
+      return
+    }
+    setSelectedSubmenu('')
+  }
+
   const volumeSubmenu = (
     <input
+      ref={volumeSubmenuRef}
       type="range"
       min={0}
       max={1}
@@ -96,6 +110,7 @@ export function ControlBar({
 
   const playbackRateSubmenu = (
     <div
+      ref={playbackRateSubmenuRef}
       className={clsx(
         styles.playbackRateButtons,
         document.fullscreenElement
@@ -209,7 +224,7 @@ export function ControlBar({
     <Toolbar
       isOpen={isOpen}
       className={clsx(className, styles.root)}
-      onFocusOut={() => setSelectedSubmenu('')}
+      onFocusOut={onFocusOut}
       selectedSubmenu={selectedSubmenu}
       items={items}
     />
