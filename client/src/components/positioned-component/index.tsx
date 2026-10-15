@@ -1,17 +1,21 @@
+import { ComponentProps, createElement } from 'react'
 import ConcreteWallImage from '../../assets/images/landing-page/concrete-wall.png'
 
-interface PositionedComponentProps {
-  top?: number
-  left?: number
-  right?: number
-  bottom?: number
-  width?: number
-  height?: number
+export type PositionedComponentElement = keyof React.JSX.IntrinsicElements
+
+type PositionedComponentProps<T extends PositionedComponentElement = 'div'> = ComponentProps<T> & {
+  component?: T
+  top?: number | string
+  left?: number | string
+  right?: number | string
+  bottom?: number | string
+  width?: number | string
+  height?: number | string
   rotation?: number
-  style?: React.CSSProperties
 }
 
-function getPositionedComponentStyle({
+export function PositionedComponent<T extends PositionedComponentElement = 'div'>({
+  component,
   top,
   left,
   right,
@@ -19,71 +23,90 @@ function getPositionedComponentStyle({
   width,
   height,
   rotation,
+  children,
   style,
-}: PositionedComponentProps): React.CSSProperties {
-  return {
-    position: 'absolute',
-    top: top && `${top}px`,
-    left: left && `${left}px`,
-    right: right && `${right}px`,
-    bottom: bottom && `${bottom}px`,
-    width: `${width}px`,
-    height: `${height}px`,
-    rotate: `${rotation}deg`,
-
-    ...style,
+  ...rest
+}: PositionedComponentProps<T>) {
+  const toCssValue = (value?: number | string) => {
+    return typeof value === 'number' ? `${value}px` : value
   }
+
+  return createElement(component ?? 'div', {
+    style: {
+      position: 'absolute',
+      top: toCssValue(top),
+      left: toCssValue(left),
+      right: toCssValue(right),
+      bottom: toCssValue(bottom),
+      width: toCssValue(width),
+      height: toCssValue(height),
+      rotate: rotation && `${rotation}deg`,
+      ...style,
+    },
+    ...rest,
+    children,
+  })
 }
 
-interface PositionedCircleProps extends Omit<PositionedComponentProps, 'height'> {
+interface PositionedCircleProps extends Omit<
+  PositionedComponentProps,
+  'height' | 'width' | 'component'
+> {
+  diameter: number
   backgroundColor: string
 }
 
-export function PositionedCircle({ backgroundColor, ...props }: PositionedCircleProps) {
+export function PositionedCircle({
+  backgroundColor,
+  diameter,
+  style,
+  ...props
+}: PositionedCircleProps) {
   return (
-    <div
+    <PositionedComponent
+      width={diameter}
+      height={diameter}
       style={{
-        ...getPositionedComponentStyle({ ...props, height: props.width }),
         backgroundColor,
         borderRadius: '50%',
+        ...style,
       }}
+      {...props}
     />
   )
 }
 
-export function ConcreteWall(props: PositionedComponentProps) {
+export function ConcreteWall({ style, ...props }: Omit<PositionedComponentProps, 'component'>) {
   return (
-    <div
+    <PositionedComponent
       style={{
         background: `url(${ConcreteWallImage})`,
-        ...getPositionedComponentStyle(props),
+        ...style,
       }}
+      {...props}
     />
   )
 }
 
-interface PositionedImageProps extends PositionedComponentProps {
-  src: string
+export function PositionedImage({ ...props }: Omit<PositionedComponentProps<'img'>, 'component'>) {
+  return <PositionedComponent component="img" draggable={false} {...props} />
 }
 
-export function PositionedImage({ src, ...props }: PositionedImageProps) {
-  return <img src={src} style={getPositionedComponentStyle(props)} draggable={false} />
-}
-
-interface PositionedMaskProps extends PositionedComponentProps {
+interface PositionedMaskProps extends Omit<PositionedComponentProps, 'component'> {
   src: string
   backgroundColor: string
 }
 
-export function PositionedMask({ src, backgroundColor, ...props }: PositionedMaskProps) {
+export function PositionedMask({ src, backgroundColor, style, ...props }: PositionedMaskProps) {
   return (
-    <div
+    <PositionedComponent
       style={{
-        ...getPositionedComponentStyle(props),
         mask: `url(${src}) no-repeat center / contain`,
-        WebkitMask: `url(${src}) no-repeat center / contain`,
+        WebkitMask: `url(${src}), no-repeat center / contain`,
         backgroundColor,
+        ...style,
       }}
+      {...props}
     />
   )
 }

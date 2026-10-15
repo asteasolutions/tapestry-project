@@ -44,7 +44,7 @@ export const NARRATIVE_DESIGN_SYSTEM: NarrativeDesignSystem = {
     h5: {
       fontFamily: 'Inter', // Subheading
       fontSize: '24px',
-      lineHeight: '100%',
+      lineHeight: '130%',
       fontWeight: '500',
     },
     h6: {
@@ -61,8 +61,8 @@ export const NARRATIVE_DESIGN_SYSTEM: NarrativeDesignSystem = {
     },
     bodySm: {
       fontFamily: 'Inter', // Caption
-      fontSize: '14px',
-      lineHeight: '150%',
+      fontSize: '16px',
+      lineHeight: '160%',
       fontWeight: '400',
     },
     bodyXs: {

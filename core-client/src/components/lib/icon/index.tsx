@@ -77,6 +77,7 @@ const ICONS = [
   'keyboard',
   'keyboard_arrow_left',
   'keyboard_arrow_right',
+  'keyboard_double_arrow_down',
   'left_click',
   'light_mode',
   'line_weight',

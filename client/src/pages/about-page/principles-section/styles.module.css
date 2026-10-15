@@ -1,54 +1,60 @@
 .root {
-  padding: 65px 95px 0;
+  padding: 65px 95px 10px;
   background-color: var(--color-warm-white);
+  display: flex;
+  justify-content: center;
 
-  .title {
-    font-style: italic;
-    margin-bottom: 65px;
-  }
+  .section-wrapper {
+    max-width: var(--max-section-width);
 
-  .principle-grid {
-    display: grid;
-    grid-template-columns: 100px 1fr 200px;
-    grid-template-areas:
-      'index title title'
-      '. content icon';
-    gap: 25px;
-
-    &:not(:last-child) {
-      padding-bottom: 50px;
+    .title {
+      font-style: italic;
+      margin-bottom: 65px;
     }
 
-    .principle-index {
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      grid-area: index;
-      font-style: italic;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+    .principle-grid {
+      display: grid;
+      grid-template-columns: 100px 1fr 200px;
+      grid-template-areas:
+        'index title title'
+        '. content icon';
+      gap: 25px;
 
-    .principle-title {
-      grid-area: title;
-      font-style: italic;
-
-      .title-divider {
-        margin-top: 10px;
-        width: 72px;
-        height: 2px;
+      &:not(:last-child) {
+        padding-bottom: 50px;
       }
-    }
 
-    .principle-content {
-      grid-area: content;
-    }
+      .principle-index {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        grid-area: index;
+        font-style: italic;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
 
-    .principle-icon {
-      grid-area: icon;
-      width: 100%;
-      align-self: center;
+      .principle-title {
+        grid-area: title;
+        font-style: italic;
+
+        .title-divider {
+          margin-top: 10px;
+          width: 72px;
+          height: 2px;
+        }
+      }
+
+      .principle-content {
+        grid-area: content;
+      }
+
+      .principle-icon {
+        grid-area: icon;
+        width: 100%;
+        align-self: center;
+      }
     }
   }
 }

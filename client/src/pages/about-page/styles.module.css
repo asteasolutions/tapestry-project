@@ -1,7 +1,8 @@
 .root {
   overflow-x: clip;
-  user-select: none;
   -webkit-user-drag: none;
+
+  --max-section-width: 1300px;
 }
 
 :global(.navigation-layout):has(.root) {

@@ -1,7 +1,7 @@
 .root {
   background-color: var(--color-section-green);
   color: white;
-  padding: 100px 350px 180px;
+  padding: 110px 350px 180px;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -35,13 +35,13 @@
 
   .content {
     z-index: 1;
-    margin-top: 70px;
+    margin-top: 50px;
   }
 
   .heading,
   .subheading,
   .content {
-    max-width: 800px;
+    max-width: 600px;
   }
 
   .awmt {

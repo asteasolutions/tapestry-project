@@ -1,8 +1,8 @@
 .root {
   --big-letter-margin: 105px;
-  --center-text-width: 610px;
+  --center-text-width: 700px;
 
-  .yellow-section {
+  .yellow-part {
     position: relative;
     padding: 65px 95px 0;
     background-color: var(--color-section-yellow);
@@ -30,7 +30,7 @@
       margin: 0 auto;
 
       .content-text {
-        width: 510px;
+        width: 610px;
         font-weight: 500;
         margin-bottom: 20px;
       }
@@ -70,7 +70,7 @@
     }
   }
 
-  .white-section {
+  .white-part {
     padding-top: 15px;
     height: 230px;
     display: flex;

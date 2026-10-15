@@ -41,7 +41,12 @@ export function OpenSourceSection() {
         >
           View GitHub Repo
         </Button>
-        <Button variant="outline" className={styles.outlineButton}>
+        <Button
+          variant="outline"
+          className={styles.outlineButton}
+          component="a"
+          href="mailto:tapestries@awmt.org"
+        >
           Contact
         </Button>
       </div>

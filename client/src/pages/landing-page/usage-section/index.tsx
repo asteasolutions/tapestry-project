@@ -14,25 +14,35 @@ export function UsageSection() {
 
   return (
     <div className={styles.root}>
-      <Text variant="h3" className={styles.title} component="div">
-        {title}
-      </Text>
-      <Text variant="bodySm" component="div" className={styles.subtitle}>
-        {subtitle}
-      </Text>
-      <div className={styles.usageGrid}>
-        {subsections.map((subsection, index) => (
-          <div className={styles.usageGridColumn}>
-            <Text className={styles.usageTitle}>{subsection.title}</Text>
-            <img src={usagesImages[index]} draggable={false} className={styles.usageImage} />
-            <Text variant="bodySm">{subsection.content}</Text>
-          </div>
-        ))}
+      <div className={styles.sectionWrapper}>
+        <Text variant="h3" className={styles.title} component="div">
+          {title}
+        </Text>
+        <Text variant="bodySm" component="div" className={styles.subtitle}>
+          {subtitle}
+        </Text>
+        <div className={styles.usageGrid}>
+          {subsections.map((subsection, index) => (
+            <div className={styles.usageGridColumn} key={index}>
+              <Text className={styles.usageTitle}>{subsection.title}</Text>
+              <img src={usagesImages[index]} draggable={false} className={styles.usageImage} />
+              <Text variant="bodySm">{subsection.content}</Text>
+            </div>
+          ))}
+        </div>
+        <div className={styles.reachOutSection}>
+          <Text variant="h6">{content}</Text>
+          <Button
+            className={styles.reachOutButton}
+            variant="mono"
+            component="a"
+            href="mailto:tapestries@awmt.org"
+            target="_blank"
+          >
+            Reach out
+          </Button>
+        </div>
       </div>
-      <Text variant="h6">{content}</Text>
-      <Button className={styles.reachOut} variant="mono">
-        Reach out
-      </Button>
     </div>
   )
 }

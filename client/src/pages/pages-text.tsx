@@ -15,13 +15,24 @@ export const LANDING_PAGE_TEXT = {
     subtitle: 'Weave it all together',
     content: (
       <>
-        A tapestry is a shareable canvas for curating media artifacts from across the digital world.
+        A tapestry is a shareable canvas for curating
+        <br />
+        media artifacts from across the digital world.
         <br />
         <br />
-        As generative AI colonizes our work, thinking, and attention, Tapestries offers a sheltered
-        space where your mind's natural process of making connections comes first. <br />
+        As generative AI colonizes our work, thinking,
         <br />
-        On your own or together, it's something only you could make.
+        and attention, Tapestries offers a sheltered
+        <br />
+        space where your mind's natural process of
+        <br />
+        making connections comes first. <br />
+        <br />
+        <em>
+          On your own or together,
+          <br />
+          it’s something only you could make.
+        </em>
       </>
     ),
     subsections: {

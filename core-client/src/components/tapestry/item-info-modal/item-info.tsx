@@ -27,7 +27,7 @@ const ITEM_INFO_FIELD_EXTRACTORS: Record<
     isMediaItem(item) ? ['Source', { lineClamp: 3, children: formatLink(item.source) }] : null,
   originalSource: (item) =>
     isMediaItem(item) && item.originalSource && item.originalSource !== item.source
-      ? ['Original', { lineClamp: 3, children: item.originalSource }]
+      ? ['Original', { lineClamp: 3, children: formatLink(item.originalSource) }]
       : null,
   position: (item) => [
     'Position',

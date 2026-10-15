@@ -15,26 +15,15 @@ import {
   PositionedImage,
 } from '../../../components/positioned-component'
 
-export function HeadingSection() {
-  const { title, subtitle, content, subsections } = LANDING_PAGE_TEXT.heading
+function PositionedElements() {
   return (
-    <div className={styles.root}>
+    <>
       <ConcreteWall width={275} height={200} left={350} top={-100} />
       <ConcreteWall width={120} height={165} left={0} top={30} />
       <PositionedImage src={LeftHandWithThread} left={-90} width={450} top={120} rotation={-78.5} />
       <ConcreteWall width={90} height={470} right={75} bottom={125} rotation={-3.5} />
       <ConcreteWall width={220} height={65} left={0} top={410} />
       <ConcreteWall width={470} height={170} right={10} bottom={100} />
-      <ConcreteWall
-        width={350}
-        height={130}
-        bottom={0}
-        rotation={-4.5}
-        style={{
-          transform: `translate(-50%, 50%)`,
-          left: '50%',
-        }}
-      />
       <PositionedImage
         src={RightHandWithThread}
         right={-85}
@@ -47,7 +36,7 @@ export function HeadingSection() {
         <PositionedImage src={WikipediaScreenshot} width={72} style={{ top: '27%', left: '9%' }} />
         <PositionedCircle
           backgroundColor="var(--color-section-blue)"
-          width={50}
+          diameter={50}
           style={{ right: '7%', bottom: '30%' }}
         />
       </div>
@@ -58,9 +47,18 @@ export function HeadingSection() {
         left={135}
         bottom={15}
         backgroundColor="var(--color-bright-red)"
-        width={100}
+        diameter={100}
       />
       <PositionedImage src={AWMTLogo} left={120} bottom={12} width={100} />
+    </>
+  )
+}
+
+export function HeadingSection() {
+  const { title, subtitle, content, subsections } = LANDING_PAGE_TEXT.heading
+  return (
+    <div className={styles.root}>
+      <PositionedElements />
       <Text variant="h1" className={styles.heading}>
         {title}
       </Text>

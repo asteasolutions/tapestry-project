@@ -11,6 +11,8 @@ import styles from './styles.module.css'
 import { Link } from 'react-router'
 import { dashboardPath } from '../../../utils/paths'
 import { ConcreteWall, PositionedMask } from '../../../components/positioned-component'
+import { Button } from 'tapestry-core-client/src/components/lib/buttons'
+import { useRef } from 'react'
 
 export function MediaSection() {
   const {
@@ -18,47 +20,68 @@ export function MediaSection() {
     ceciliaQuote,
   } = LANDING_PAGE_TEXT
 
+  const sectionRef = useRef<HTMLDivElement>(null)
+
   return (
-    <div className={styles.root}>
-      <ConcreteWall width={400} height={300} top={40} left={100} style={{ opacity: '25%' }} />
-      <div className={styles.titles}>
-        <Text variant="h2" component="div" className={styles.title}>
-          {title}
+    <div className={styles.root} ref={sectionRef}>
+      <div className={styles.learnMoreContainer}>
+        <Button
+          icon="keyboard_double_arrow_down"
+          variant="secondary"
+          aria-label="Learn more"
+          className={styles.learnMoreButton}
+          onClick={() => sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+        />
+        <Text component="div" variant="h6" className={styles.learnMoreText}>
+          Learn more
         </Text>
-        <Text component="div">{subtitle}</Text>
       </div>
-      <div className={styles.content}>
-        <div className={styles.subsections}>
-          {subsections.map((subsection, index) => (
-            <div className={styles.subsection} key={index}>
-              <Text component="div" className={styles.subsectionTitle}>
-                {subsection.title}
-              </Text>
-              <Text component="div">{subsection.content}</Text>
-              {index === 0 && (
-                <div className={styles.mediaIcons}>
-                  <img src={OpenverseIcon} className={styles.mediaIcon} />
-                  <img src={IALogoCircle} className={styles.mediaIcon} />
-                  <img src={WikipediaIcon} className={styles.mediaIcon} />
-                  <img src={IIIFIcon} className={styles.mediaIcon} />
-                  <img src={YoutubeIcon} className={styles.mediaIcon} />
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-        <div className={styles.videoSection}>
-          <video
-            src={TapestriesPresentation}
-            className={styles.video}
-            controls={true}
-            autoPlay={true}
-            loop={true}
-            disablePictureInPicture
-          />
-          <Text className={styles.link} component="div" variant="h5">
-            <Link to={dashboardPath('home')}>Explore the public gallery</Link>
+      <ConcreteWall width={400} height={300} top={40} left={100} style={{ opacity: '25%' }} />
+      <div className={styles.sectionWrapper}>
+        <div className={styles.titles}>
+          <Text variant="h3" component="div" className={styles.title}>
+            {title}
           </Text>
+          <Text component="div">{subtitle}</Text>
+        </div>
+        <div className={styles.content}>
+          <div className={styles.subsections}>
+            {subsections.map((subsection, index) => (
+              <div className={styles.subsection} key={index}>
+                <Text component="div" className={styles.subsectionTitle}>
+                  {subsection.title}
+                </Text>
+                <Text component="div">{subsection.content}</Text>
+                {index === 0 && (
+                  <div className={styles.mediaIcons}>
+                    <img src={OpenverseIcon} className={styles.mediaIcon} />
+                    <img src={IALogoCircle} className={styles.mediaIcon} />
+                    <img src={WikipediaIcon} className={styles.mediaIcon} />
+                    <img src={IIIFIcon} className={styles.mediaIcon} />
+                    <img src={YoutubeIcon} className={styles.mediaIcon} />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+          <div className={styles.videoSection}>
+            <video
+              src={TapestriesPresentation}
+              className={styles.video}
+              controls={true}
+              autoPlay={true}
+              loop={true}
+              disablePictureInPicture
+            />
+            <Button
+              component={Link}
+              className={styles.link}
+              variant="mono"
+              to={dashboardPath('home')}
+            >
+              Explore the public gallery
+            </Button>
+          </div>
         </div>
       </div>
       <div className={styles.quote}>

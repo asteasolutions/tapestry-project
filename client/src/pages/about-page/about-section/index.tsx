@@ -19,17 +19,17 @@ export function AboutSection() {
 
   return (
     <div className={styles.root}>
-      <div className={styles.yellowSection}>
+      <div className={styles.yellowPart}>
         <ConcreteWall width={400} height={300} top={40} left={100} style={{ opacity: '25%' }} />
         <ConcreteWall width={490} height={200} bottom={160} right={0} style={{ opacity: '15%' }} />
         <PositionedCircle
-          width={120}
+          diameter={120}
           top={80}
           right={120}
           backgroundColor="var(--color-section-blue)"
         />
         <PositionedCircle
-          width={130}
+          diameter={130}
           top={78}
           right={-50}
           backgroundColor="var(--color-section-red)"
@@ -84,7 +84,7 @@ export function AboutSection() {
           </div>
         </div>
       </div>
-      <div className={styles.whiteSection}>
+      <div className={styles.whitePart}>
         <div className={styles.choiceContentContainer}>
           <div className={styles.choiceContentText}>
             <Text component="div" variant="h1" className={styles.bigLetter}>

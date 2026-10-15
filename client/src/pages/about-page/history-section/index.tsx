@@ -10,14 +10,16 @@ export function HistorySection() {
   return (
     <div className={styles.root}>
       <ConcreteWall width={230} height={45} top={57} right={10} rotation={30} />
-      <Text variant="h3" className={styles.title} component="div">
-        {title}
-      </Text>
       <div className={styles.content}>
-        <Text component="div" variant="bodySm" className={styles.contentText}>
-          {content}
-        </Text>
         <div>
+          <Text variant="h3" className={styles.title} component="div">
+            {title}
+          </Text>
+          <Text component="div" variant="bodySm" className={styles.contentText}>
+            {content}
+          </Text>
+        </div>
+        <div className={styles.imageColumn}>
           <div className={styles.imageContainer}>
             <ConcreteWall width={45} height={230} top={25} left={-35} rotation={2} />
             <img src={BobArchive} className={styles.imageElement} draggable={false} />
