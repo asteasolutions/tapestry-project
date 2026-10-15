@@ -32,6 +32,14 @@ async function invokeLoginProvider(
     return AUTH_PROVIDERS.gsi.login(request, rawResponse)
   }
 
+  if (request.authType === 'orcid') {
+    return AUTH_PROVIDERS.orcid.login(request, rawResponse)
+  }
+
+  if (request.authType === 'wikimedia') {
+    return AUTH_PROVIDERS.wikimedia.login(request, rawResponse)
+  }
+
   if (request.authType === 'iaCookies') {
     return AUTH_PROVIDERS.iaCookies.login(
       {

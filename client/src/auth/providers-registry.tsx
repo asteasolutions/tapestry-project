@@ -3,6 +3,10 @@ import { auth } from '.'
 import { AuthProviderEnum, config } from '../config'
 import { GoogleLoginButton } from './google/login-button'
 import { IALoginButton } from './internet-archive/login-button'
+import { OrcidLoginButton } from './orcid/login-button'
+import { WikimediaLoginButton } from './wikimedia/login-button'
+import { orcidClient } from './orcid/service'
+import { wikimediaClient } from './wikimedia/service'
 
 export interface AuthProviderItem {
   id: string
@@ -10,6 +14,7 @@ export interface AuthProviderItem {
     isSingleProvider?: boolean
   }>
   prepare?: () => void
+  tryCompleteLogin?: () => Promise<boolean>
 }
 type AuthProvider = z.infer<typeof AuthProviderEnum>
 
@@ -34,9 +39,16 @@ const PROVIDER_MAP: Record<AuthProvider, AuthProviderItem> = {
     },
   },
   ia: { id: 'internet-archive', component: IALoginButton },
-  // TODO: Add more providers here as needed
-  // bluesky: { id: 'bluesky', component: BlueskyLoginButton },
-  // wikimedia: { id: 'wikimedia', component: WikimediaLoginButton },
+  orcid: {
+    id: 'orcid',
+    component: OrcidLoginButton,
+    tryCompleteLogin: orcidClient.tryCompleteLogin,
+  },
+  wikimedia: {
+    id: 'wikimedia',
+    component: WikimediaLoginButton,
+    tryCompleteLogin: wikimediaClient.tryCompleteLogin,
+  },
 }
 
 export const AUTH_PROVIDERS: AuthProviderItem[] = config.authProviders
