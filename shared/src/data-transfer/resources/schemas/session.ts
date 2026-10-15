@@ -12,6 +12,15 @@ export const SessionSchema = z.object({
 const OAuthCodeSchema = z.object({ code: z.string(), redirectUri: z.string() })
 
 const usernameRegex = /^[a-zA-Z0-9_+.-]*$/g
+const UsernameSchema = z.preprocess(trimString, z.string().nonempty().max(25).regex(usernameRegex))
+const NameSchema = z.preprocess(trimString, z.string().nonempty().max(25))
+
+export const RegisterUserSuggestionsSchema = z.object({
+  usernameSuggestion: UsernameSchema.optional().catch(undefined),
+  firstNameSuggestion: NameSchema.optional().catch(undefined),
+  lastNameSuggestion: NameSchema.optional().catch(undefined),
+})
+
 export const SessionCreateSchema = z.discriminatedUnion('authType', [
   z.object({ authType: z.literal('refreshToken') }),
   z.object({ authType: z.literal('gsi'), gsiCredential: z.string() }),
@@ -21,8 +30,8 @@ export const SessionCreateSchema = z.discriminatedUnion('authType', [
   z.object({ authType: z.literal('iaCredentials'), email: z.string(), password: z.string() }),
   z.object({
     authType: z.literal('registerUser'),
-    username: z.preprocess(trimString, z.string().nonempty().max(25).regex(usernameRegex)),
-    firstName: z.preprocess(trimString, z.string().nonempty().max(25)).optional(),
-    lastName: z.preprocess(trimString, z.string().nonempty().max(25)).optional(),
+    username: UsernameSchema,
+    firstName: NameSchema.optional(),
+    lastName: NameSchema.optional(),
   }),
 ])

@@ -42,7 +42,7 @@ export const BadRequestErrorResponseSchema = z.object({
 export const UserDoesNotExistErrorResponseSchema = z.object({
   ...BaseErrorResponseSchema.omit({ name: true }).shape,
   name: z.literal('UserDoesNotExistError'),
-  usernameSuggestion: z.string(),
+  usernameSuggestion: z.string().optional(),
   firstNameSuggestion: z.string().optional(),
   lastNameSuggestion: z.string().optional(),
 })
