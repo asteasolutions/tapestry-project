@@ -5,36 +5,41 @@ import { defineConfig, loadEnv, normalizePath, Plugin } from 'vite'
 import { patchCssModules } from 'vite-css-modules'
 import { viteStaticCopy } from 'vite-plugin-static-copy'
 import svgr from 'vite-plugin-svgr'
-import { blueskyClientMetadata, CLIENT_METADATA_PATH } from './src/auth/bluesky/client-metadata'
+import { blueskyClientMetadata } from './src/auth/bluesky/client-metadata'
 
 const pdfjsDistPath = path.dirname(
   createRequire(import.meta.url).resolve('pdfjs-dist/package.json'),
 )
 const pdfWasmDir = normalizePath(path.join(pdfjsDistPath, 'wasm'))
 
-function blueskyClientMetadataPlugin(publicUrl: string | undefined): Plugin {
+function blueskyClientMetadataPlugin(client_id: string | undefined, redirectUri: string): Plugin {
+  if (!client_id) {
+    return {
+      name: 'bluesky-client-metadata',
+      configResolved() {
+        console.warn(
+          'VITE_ATPROTO_CLIENT_ID is not set. Bluesky login metadata will not be generated.',
+        )
+      },
+    }
+  }
+  const metadataPath = new URL(client_id).pathname
+  const fileName = metadataPath.slice(1)
+
   return {
     name: 'bluesky-client-metadata',
     generateBundle() {
-      if (!publicUrl) {
-        this.warn(
-          `VITE_ATPROTO_CLIENT_ID is not set, so ${CLIENT_METADATA_PATH} won't be generated and Bluesky login will only work on localhost`,
-        )
-        return
-      }
       this.emitFile({
         type: 'asset',
-        fileName: CLIENT_METADATA_PATH.slice(1),
-        source: JSON.stringify(blueskyClientMetadata(publicUrl), null, 2),
+        fileName: fileName,
+        source: JSON.stringify(blueskyClientMetadata(client_id, redirectUri), null, 2),
       })
     },
-    // The dev server serves the metadata for whatever host it's accessed on, since the client ID
-    // must match the URL of the metadata. Note that on localhost a loopback client is used instead.
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
-        if (req.url?.split('?')[0] !== CLIENT_METADATA_PATH) return next()
+        if (req.url?.split('?')[0] !== metadataPath) return next()
 
-        const metadata = blueskyClientMetadata(`http://${req.headers.host}`)
+        const metadata = blueskyClientMetadata(client_id, redirectUri)
         res.setHeader('Content-Type', 'application/json')
         res.end(JSON.stringify(metadata, null, 2))
       })
@@ -54,7 +59,7 @@ export default defineConfig(({ mode }) => {
       viteStaticCopy({
         targets: [{ src: pdfWasmDir, dest: '' }],
       }),
-      blueskyClientMetadataPlugin(env.VITE_ATPROTO_CLIENT_ID),
+      blueskyClientMetadataPlugin(env.VITE_ATPROTO_CLIENT_ID, env.VITE_OAUTH_REDIRECT_URI),
     ],
     build: {
       assetsInlineLimit: 0,

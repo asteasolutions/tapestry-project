@@ -5,7 +5,7 @@ import {
 } from '@atproto/oauth-client-browser'
 import { BLUESKY_LOGIN_LXM, blueskyServiceDid } from 'tapestry-shared/src/bluesky'
 import { config } from '../../config'
-import { BLUESKY_SCOPE, CLIENT_METADATA_PATH } from './client-metadata'
+import { BLUESKY_SCOPE } from './client-metadata'
 import { auth } from '..'
 import { APIError } from '../../errors'
 
@@ -34,7 +34,7 @@ function getClientId() {
     })
     return `${loopbackId}&scope=${encodeURIComponent(BLUESKY_SCOPE)}`
   }
-  return `${window.location.origin}${CLIENT_METADATA_PATH}`
+  return config.atProtoClientId
 }
 
 export function getBlueskyOAuthClient() {

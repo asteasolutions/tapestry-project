@@ -6,5 +6,5 @@ export const orcidClient = createOAuthClient({
   authorizeUrl: `${config.orcid.baseUrl}/oauth/authorize`,
   clientId: config.orcid.clientId,
   scope: '/authenticate',
-  redirectUri: config.orcid.redirectUri,
+  redirectUri: config.redirectUri,
 })
