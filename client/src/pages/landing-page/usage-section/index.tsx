@@ -26,7 +26,14 @@ export function UsageSection() {
             <div className={styles.usageGridColumn} key={index}>
               <Text className={styles.usageTitle}>{subsection.title}</Text>
               <img src={usagesImages[index]} draggable={false} className={styles.usageImage} />
-              <Text variant="bodySm">{subsection.content}</Text>
+              <div>
+                <Text component="div" variant="bodySm" className={styles.usageSubtitle}>
+                  {subsection.subtitle}
+                </Text>
+                <Text component="div" variant="bodySm">
+                  {subsection.content}
+                </Text>
+              </div>
             </div>
           ))}
         </div>

@@ -13,7 +13,7 @@ export const LANDING_PAGE_TEXT = {
   heading: {
     title: 'Tapestries',
     subtitle: 'Weave it all together',
-    content: (
+    content: [
       <>
         A tapestry is a shareable canvas for curating
         <br />
@@ -28,13 +28,14 @@ export const LANDING_PAGE_TEXT = {
         <br />
         making connections comes first. <br />
         <br />
-        <em>
-          On your own or together,
-          <br />
-          it’s something only you could make.
-        </em>
-      </>
-    ),
+      </>,
+
+      <em>
+        On your own or together,
+        <br />
+        it’s something only you could make.
+      </em>,
+    ],
     subsections: {
       AWMT: {
         content:
@@ -99,11 +100,9 @@ export const LANDING_PAGE_TEXT = {
     subsections: [
       {
         title: 'Tapestries for Education',
+        subtitle: 'Generative AI is changing how students write, research, and read.',
         content: (
           <>
-            <strong>Generative AI is changing how students write, research, and read.</strong>
-            <br />
-            <br />
             College professors and high school teachers are using Tapestries to create assignments
             that resist AI shortcuts and build critical skills. This gives students the opportunity
             to do their own creative research, to evaluate sources, and to build dynamic projects
@@ -113,11 +112,9 @@ export const LANDING_PAGE_TEXT = {
       },
       {
         title: 'Tapestries for Collections',
+        subtitle: 'Centuries of digitized history and culture doesn’t tell its own story.',
         content: (
           <>
-            <strong>Centuries of digitized history and culture doesn’t tell its own story.</strong>
-            <br />
-            <br />
             Tapestries actually originated in archives. Now the Internet Archive is using its own
             installation of Tapestries to enable readers to surface the narratives hiding in its
             vast trove of historical web pages, digitized books, documents, multimedia and software.
@@ -126,11 +123,9 @@ export const LANDING_PAGE_TEXT = {
       },
       {
         title: 'Tapestries for...',
+        subtitle: 'A blank canvas, infinite possibilities.',
         content: (
           <>
-            <strong>A blank canvas, infinite possibilities.</strong>
-            <br />
-            <br />
             We're exploring many more applications for Tapestries — in journalism, the arts,
             creative writing, knowledge management, personal digital memory, and beyond. If you have
             ideas for how Tapestries could support your work, or use cases that we haven’t thought

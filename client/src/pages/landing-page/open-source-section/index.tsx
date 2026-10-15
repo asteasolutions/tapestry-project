@@ -29,7 +29,7 @@ export function OpenSourceSection() {
       >
         {subtitle}
       </Text>
-      <Text variant="bodySm" className={styles.content}>
+      <Text variant="bodySm" component="div" className={styles.content}>
         {content}
       </Text>
       <div className={styles.buttons}>

@@ -38,6 +38,11 @@
           aspect-ratio: 36 / 22;
           object-fit: contain;
         }
+
+        .usage-subtitle {
+          font-weight: 700;
+          margin-bottom: 10px;
+        }
       }
     }
 

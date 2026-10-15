@@ -16,6 +16,8 @@ import {
 } from '../../../components/positioned-component'
 
 function PositionedElements() {
+  const awmtText = LANDING_PAGE_TEXT.heading.subsections.AWMT.content
+
   return (
     <>
       <ConcreteWall width={275} height={200} left={350} top={-100} />
@@ -33,11 +35,19 @@ function PositionedElements() {
       />
       <div className={styles.stringWrapper}>
         <img src={TapestryString} className={styles.tapestryString} draggable={false} />
-        <PositionedImage src={WikipediaScreenshot} width={72} style={{ top: '27%', left: '9%' }} />
+        <PositionedImage
+          src={WikipediaScreenshot}
+          width={72}
+          top="32%"
+          left="11%"
+          style={{ transform: 'translate(-50%, -50%)' }}
+        />
         <PositionedCircle
           backgroundColor="var(--color-section-blue)"
           diameter={50}
-          style={{ right: '7%', bottom: '30%' }}
+          right="7%"
+          bottom="28%"
+          style={{ transform: 'translate(-50%, -50%)' }}
         />
       </div>
       <PositionedImage src={Checker} right={-30} width={100} bottom={320} />
@@ -50,27 +60,34 @@ function PositionedElements() {
         diameter={100}
       />
       <PositionedImage src={AWMTLogo} left={120} bottom={12} width={100} />
+      <Text variant="bodySm" component="div" className={styles.awmt}>
+        {awmtText}
+      </Text>
     </>
   )
 }
 
 export function HeadingSection() {
-  const { title, subtitle, content, subsections } = LANDING_PAGE_TEXT.heading
+  const { title, subtitle, content } = LANDING_PAGE_TEXT.heading
   return (
     <div className={styles.root}>
       <PositionedElements />
-      <Text variant="h1" className={styles.heading}>
-        {title}
-      </Text>
-      <Text variant="h6" component="div" className={styles.subheading}>
-        {subtitle}
-      </Text>
-      <Text variant="h5" component="div" className={styles.content}>
-        {content}
-      </Text>
-      <Text variant="bodySm" component="div" className={styles.awmt}>
-        {subsections.AWMT.content}
-      </Text>
+      <div className={styles.sectionWrapper}>
+        <Text variant="h1" className={styles.heading}>
+          {title}
+        </Text>
+        <Text variant="h6" component="div" className={styles.subheading}>
+          {subtitle}
+        </Text>
+        <div className={styles.content}>
+          <Text variant="h5" component="div">
+            {content[0]}
+          </Text>
+          <Text variant="h6" component="div">
+            {content[1]}
+          </Text>
+        </div>
+      </div>
     </div>
   )
 }

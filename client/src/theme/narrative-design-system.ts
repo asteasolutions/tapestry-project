@@ -50,7 +50,7 @@ export const NARRATIVE_DESIGN_SYSTEM: NarrativeDesignSystem = {
     h6: {
       fontFamily: 'IBM Plex Serif', // Subheading serif / CTA Large
       fontSize: '24px',
-      lineHeight: '100%',
+      lineHeight: '130%',
       fontWeight: '400',
     },
     body: {

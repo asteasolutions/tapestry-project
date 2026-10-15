@@ -72,7 +72,7 @@
           }
 
           .media-icons {
-            margin: 25px 0;
+            margin: 16px 0 50px;
             display: flex;
             gap: 15px;
             align-items: center;
@@ -85,12 +85,12 @@
       }
 
       .video-section {
-        width: 550px;
         padding-top: 40px;
         place-self: center;
 
         .video {
           width: 100%;
+          max-width: 550px;
         }
 
         .link {

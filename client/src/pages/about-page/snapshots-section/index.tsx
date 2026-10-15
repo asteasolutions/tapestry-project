@@ -71,12 +71,12 @@ export function SnapshotsSection() {
         <TapestryCard
           tapestry={FIRST_SNAPSHOT}
           viewURL="https://tapestries.media/t/db673ba1-5231-4655-a3c0-28c1f0fbd58b"
-          viewOnly={true}
+          viewOnly
         />
         <TapestryCard
           tapestry={SECOND_SNAPSHOT}
           viewURL="https://tapestries.media/t/46adbc20-70c8-4543-942c-be5115809906"
-          viewOnly={true}
+          viewOnly
         />
       </div>
     </div>

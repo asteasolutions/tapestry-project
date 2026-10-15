@@ -102,7 +102,7 @@ export function PositionedMask({ src, backgroundColor, style, ...props }: Positi
     <PositionedComponent
       style={{
         mask: `url(${src}) no-repeat center / contain`,
-        WebkitMask: `url(${src}), no-repeat center / contain`,
+        WebkitMask: `url(${src}) no-repeat center / contain`,
         backgroundColor,
         ...style,
       }}
