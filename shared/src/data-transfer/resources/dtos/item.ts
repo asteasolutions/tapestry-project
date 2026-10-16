@@ -24,7 +24,7 @@ interface BaseMediaItemDto extends BaseItemDto {
   internallyHosted: boolean
 }
 
-interface ThumbnailUpdate {
+export interface ThumbnailUpdate {
   thumbnail?: {
     source: string
     size: Size
