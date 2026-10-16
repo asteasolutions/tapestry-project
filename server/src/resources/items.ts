@@ -179,12 +179,25 @@ export async function createItems(
 
   items = ensureArray(items)
   await Promise.all(items.map(resolveWebSource))
-  const itemData = items.map((item) => itemDtoToDb(item, ['createdAt', 'updatedAt']))
+  const itemData = items.map((item) =>
+    itemDtoToDb(omit(item, 'thumbnail'), ['createdAt', 'updatedAt']),
+  )
 
   const dbItems = (await (tx ?? prisma).item.createManyAndReturn({
     data: itemData,
     include: parseItemIncludes(query?.include),
   })) as ItemWithAssets[]
+
+  for (const [index, dbItem] of dbItems.entries()) {
+    const { thumbnail } = items[index]
+    if (!thumbnail) continue
+
+    await processCustomThumbnailUpdate(dbItem, thumbnail, tx)
+    dbItems[index] = await (tx ?? prisma).item.findUniqueOrThrow({
+      where: { id: dbItem.id },
+      include: parseItemIncludes(query?.include),
+    })
+  }
 
   const itemIds = dbItems
     .filter((dbItem) => shouldProcessItemThumbnail(dbItem))
