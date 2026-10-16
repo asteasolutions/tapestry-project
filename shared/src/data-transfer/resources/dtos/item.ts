@@ -35,8 +35,10 @@ type ItemReadonlyProps = keyof BaseItemDto | 'thumbnail'
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 type NonNullishType = { type: {} }
 
-type CreateDto<I extends Item & BaseItemDto> = Omit<I, Exclude<ItemReadonlyProps, 'tapestryId'>>
-type CreateInTapestryDto<I extends Item & BaseItemDto> = Omit<I, Exclude<ItemReadonlyProps, 'id'>>
+type CreateDto<I extends Item & BaseItemDto> = Omit<I, Exclude<ItemReadonlyProps, 'tapestryId'>> &
+  ThumbnailUpdate
+type CreateInTapestryDto<I extends Item & BaseItemDto> = Omit<I, Exclude<ItemReadonlyProps, 'id'>> &
+  ThumbnailUpdate
 type UpdateDto<I extends Item & BaseItemDto> = Omit<Partial<I>, ItemReadonlyProps> &
   NonNullishType &
   ThumbnailUpdate
@@ -76,14 +78,16 @@ type BaseMediaItemWriteProps = MediaItemDto & {
 export type MediaItemCreateDto = DistributiveOmit<
   BaseMediaItemWriteProps,
   Exclude<MediaItemReadonlyProps, 'tapestryId'>
->
+> &
+  ThumbnailUpdate
 
 // When creating items as part of a tapestry, the client needs to generate and pass IDs
 // so that the backend can know which items each rel points to
 export type MediaItemCreateInTapestryDto = DistributiveOmit<
   BaseMediaItemWriteProps,
   Exclude<MediaItemReadonlyProps, 'id'>
->
+> &
+  ThumbnailUpdate
 
 export type MediaItemUpdateDto = DistributiveOmit<
   Partial<BaseMediaItemWriteProps>,
