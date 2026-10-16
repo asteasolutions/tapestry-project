@@ -14,7 +14,7 @@ export interface WithId {
 
 export interface LazyListProps<T extends WithId> extends Partial<LazyListLoaderConfig> {
   requestItems: LazyListRequestItems<T>
-  renderItem: (item: T) => ReactNode
+  renderItem: (item: T, index: number) => ReactNode
   emptyPlaceholder: ReactNode
   loadingIndicator: ReactNode
   // Normally the lazy list starts with the first item at the top and the user scrolls down to view more items.
@@ -127,9 +127,9 @@ export function LazyList<T extends WithId>({
         {state === 'initial-load' && loadingIndicator}
         {(state === 'idle' || state === 'reload') && items.length === 0 && emptyPlaceholder}
         {state !== 'initial-load' &&
-          items.map((item) => (
+          items.map((item, i) => (
             <div key={item.id} data-item-id={item.id} className="lazy-list-item">
-              {renderItem(item)}
+              {renderItem(item, reversed ? skip + (items.length - 1 - i) : skip + i)}
             </div>
           ))}
       </div>
