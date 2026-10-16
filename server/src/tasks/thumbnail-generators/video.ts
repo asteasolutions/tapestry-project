@@ -22,7 +22,7 @@ function extractVideoThumbnailFromUrl(videoUrl: string, startTime = 1, width = 3
     "-f", "image2pipe",
     "-vcodec", "mjpeg",
     "pipe:1",
-  ];
+  ]
 
   return spawn('ffmpeg', args, { timeoutMs: FFMPEG_TIMEOUT })
 }

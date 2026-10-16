@@ -62,6 +62,16 @@ async function takeItemScreenshot(page: Page, item: Item) {
       await window.document.fonts.ready
     })
 
+    if (item.type === 'iiif') {
+      // Let the manifest and its image tiles load before screenshotting.
+      console.log('> Waiting for iiif viewer network activity to settle...')
+      try {
+        await page.waitForNetworkIdle({ idleTime: 1000, timeout: 15_000 })
+      } catch {
+        console.log('> Network did not settle in time. Proceeding anyway.')
+      }
+    }
+
     console.log('> Taking screenshot...')
     const screenshot = await element.screenshot({ type: 'png', omitBackground: true })
 

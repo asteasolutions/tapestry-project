@@ -61,7 +61,10 @@ export function LazyList<T extends WithId>({
   ...loaderConfigInit
 }: LazyListProps<T>) {
   const listRef = useRef<HTMLDivElement>(null)
-  const itemOffsetsRef = useRef({ offsets: {} as Record<string, number>, bottomOffset: 0 })
+  const itemOffsetsRef = useRef<{ offsets: Record<string, number>; bottomOffset: number }>({
+    offsets: {},
+    bottomOffset: 0,
+  })
   const [loader] = useState(() => new LazyListLoader(requestItems, loaderConfigInit))
   const { data, skip, state, total } = useObservable(loader)
 
