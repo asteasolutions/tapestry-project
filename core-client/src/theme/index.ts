@@ -11,7 +11,7 @@ function kebabCase(str: string) {
     .join('-')
 }
 
-function cssRule(prop: string, value: string) {
+export function cssRule(prop: string, value: string) {
   return `${kebabCase(prop)}: ${value};`
 }
 
@@ -27,11 +27,11 @@ function cssVarValue(prefix: string, name: string) {
   return `var(${cssVarName(prefix, name)})`
 }
 
-function cssVars(prefix: string, vars: Record<string, string>) {
+export function cssVars(prefix: string, vars: Record<string, string>) {
   return cssRules(mapKeys(vars, (_, name) => cssVarName(prefix, name)))
 }
 
-function cssBlock(selector: string, props: Record<string, string> | string[]) {
+export function cssBlock(selector: string, props: Record<string, string> | string[]) {
   const rules = Array.isArray(props) ? props : cssRules(props)
   return [`${selector} {`, ...rules.map((rule) => `\t${rule}`), '}'].join('\n')
 }
@@ -77,6 +77,19 @@ export function serializeTheme(theme: Theme) {
   }
 
   return cssBlock(':root', cssVars('theme', serializeColors(theme.config.colors)))
+}
+
+export function writeStyleTag(id: string, generateContent: () => string, key?: string) {
+  let styleTag = document.getElementById(id) as HTMLStyleElement | null
+  if (!styleTag) {
+    styleTag = document.createElement('style')
+    styleTag.id = id
+    document.head.appendChild(styleTag)
+  }
+  if (!key || styleTag.dataset.key !== key) {
+    styleTag.innerHTML = generateContent()
+    styleTag.dataset.key = key
+  }
 }
 
 export function typographyClassName(typography: TypographyName) {

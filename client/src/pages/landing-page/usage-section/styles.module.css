@@ -1,0 +1,59 @@
+.root {
+  padding: 90px 50px 60px;
+  background-color: white;
+  display: flex;
+  justify-content: center;
+
+  .section-wrapper {
+    max-width: var(--max-section-width);
+
+    .title {
+      margin-bottom: 25px;
+      font-style: italic;
+    }
+
+    .title,
+    .subtitle {
+      text-align: center;
+    }
+
+    .usage-grid {
+      margin: 50px 0 65px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 50px;
+
+      .usage-grid-column {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+
+        .usage-title {
+          font-weight: 700;
+          text-align: center;
+        }
+
+        .usage-image {
+          width: 100%;
+          aspect-ratio: 36 / 22;
+          object-fit: contain;
+        }
+
+        .usage-subtitle {
+          font-weight: 700;
+          margin-bottom: 10px;
+        }
+      }
+    }
+
+    .reach-out-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+
+      .reach-out-button {
+        margin-top: 20px;
+      }
+    }
+  }
+}

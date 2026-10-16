@@ -1,6 +1,6 @@
 import styles from './styles.module.css'
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { Navigate, useLocation, useNavigate, useParams } from 'react-router'
+import { useMemo, useRef, useState } from 'react'
+import { Navigate, useLocation, useParams } from 'react-router'
 import { useSession } from '../../layouts/session'
 import { LazyListLoader } from '../../components/lazy-list/lazy-list-loader'
 import { useTapestryImport } from '../../hooks/use-tapestry-import'
@@ -21,24 +21,8 @@ import { DropArea } from 'tapestry-core-client/src/components/lib/drop-area'
 import { Breakpoint, useResponsive } from '../../providers/responsive-provider'
 import { DashboardHeader } from './header'
 import { TapestryListControls } from './tapestry-list-controls'
-import { useThemeCss } from 'tapestry-core-client/src/components/lib/hooks/use-theme-css'
 import { dashboardPath } from '../../utils/paths'
 import { CreateTapestryDialog } from '../../components/create-tapestry-dialog'
-
-function useNavigateOnLogin() {
-  const { user } = useSession()
-  const navigate = useNavigate()
-
-  const prevUser = useRef(user)
-
-  useEffect(() => {
-    if (user && !prevUser.current) {
-      // TODO: Implementing this with <Navigate /> does not seem to work for some reason
-      void navigate(dashboardPath('home'), { replace: true })
-    }
-    prevUser.current = user
-  }, [navigate, user])
-}
 
 const SORT_BY = ['latest', 'title', 'lastSeen'] as const
 
@@ -97,8 +81,6 @@ export function Dashboard() {
   const { section } = useParams<{ section: DashboardSection }>()
   const location = useLocation()
 
-  useNavigateOnLogin()
-
   const [creatingTapestry, setCreatingTapestry] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
 
@@ -131,8 +113,6 @@ export function Dashboard() {
     () => (section ? createTapestryFilter(section, searchTerm, user?.id) : {}),
     [section, searchTerm, user?.id],
   )
-
-  useThemeCss('light')
 
   const {
     imports,
@@ -176,7 +156,6 @@ export function Dashboard() {
 
   return (
     <div className={styles.root}>
-      <title>Tapestries</title>
       {!smOrLess && header}
 
       <DropArea
