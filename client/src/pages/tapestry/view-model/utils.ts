@@ -83,14 +83,12 @@ export function getGridIndices(ind: number, { primary, cols, rows }: GridState) 
   return { row: ind % rows, col: Math.floor(ind / rows) }
 }
 
-export function createItemViewModel({
-  thumbnail: _thumbnail,
-  ...itemCreate
-}: ItemCreateDto): EditableItemViewModel {
+export function createItemViewModel(itemCreate: ItemCreateDto): EditableItemViewModel {
   const now = new Date()
   const itemProps = {
     dto: {
       ...itemCreate,
+      thumbnail: undefined,
       id: crypto.randomUUID(),
       createdAt: now,
       updatedAt: now,
