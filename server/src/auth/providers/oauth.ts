@@ -40,7 +40,6 @@ export async function exchangeCodeForToken<T>(
     })
 
     if (!response.ok) {
-      console.log(await response.text())
       throw new InvalidCredentialsError()
     }
 
