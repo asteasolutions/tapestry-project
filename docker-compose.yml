@@ -4,6 +4,7 @@ services:
       dockerfile: ./Dockerfile.client
       args:
         VITE_API_URL: https://${HOST}-api.asteasolutions.net/api
+        VITE_ATPROTO_CLIENT_ID: https://${HOST}.asteasolutions.net/atproto-client-metadata.json
         VITE_AUTH_PROVIDERS: ${AUTH_PROVIDERS}
         VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
         VITE_OAUTH_REDIRECT_URI: ${OAUTH_REDIRECT_URI}
@@ -14,7 +15,6 @@ services:
         VITE_WEBPAGE_LOADER_TIMEOUT: ${WEBPAGE_LOADER_TIMEOUT}
         VITE_STUN_SERVER: ${STUN_SERVER}
         VITE_SENTRY_DSN: ${SENTRY_DSN_CLIENT}
-        VITE_ATPROTO_CLIENT_ID: https://${HOST}.asteasolutions.net
     networks:
       - traefik
     labels:

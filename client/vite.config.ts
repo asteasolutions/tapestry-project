@@ -59,7 +59,9 @@ export default defineConfig(({ mode }) => {
       viteStaticCopy({
         targets: [{ src: pdfWasmDir, dest: '' }],
       }),
-      blueskyClientMetadataPlugin(env.VITE_ATPROTO_CLIENT_ID, env.VITE_OAUTH_REDIRECT_URI),
+      // Not importing src/config.ts here since it can only be evaluated on the frontend
+      env.VITE_AUTH_PROVIDERS.toLowerCase().includes('bluesky') &&
+        blueskyClientMetadataPlugin(env.VITE_ATPROTO_CLIENT_ID, env.VITE_OAUTH_REDIRECT_URI),
     ],
     build: {
       assetsInlineLimit: 0,

@@ -2,6 +2,8 @@ import { OptionalInt } from 'tapestry-core/src/data-format/schemas/common'
 import { deepFreeze } from 'tapestry-core/src/utils'
 import { treeifyError, z } from 'zod/v4'
 
+// vite.config.ts looks for a 'bluesky' substring in VITE_AUTH_PROVIDERS in order to generate
+// the Bluesky OAuth client metadata file, so keep that in mind when renaming this value.
 export const AuthProviderEnum = z.enum(['google', 'ia', 'orcid', 'wikimedia', 'bluesky'])
 const AuthProvidersSchema = z
   .string()

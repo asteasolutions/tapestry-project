@@ -7,6 +7,7 @@ assume_deploy_role
 # TODO: Make docker use build cache when building this image. Probably upload it to ECR to use as cache later?
 docker build \
   --build-arg VITE_API_URL=${EXTERNAL_SERVER_URL} \
+  --build-arg VITE_ATPROTO_CLIENT_ID=${VIEWER_URL}/atproto-client-metadata.json \
   --build-arg VITE_AUTH_PROVIDERS=${AUTH_PROVIDERS} \
   --build-arg VITE_GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID} \
   --build-arg VITE_OAUTH_REDIRECT_URI=${OAUTH_REDIRECT_URI} \
@@ -17,7 +18,6 @@ docker build \
   --build-arg VITE_WEBPAGE_LOADER_TIMEOUT=${WEBPAGE_LOADER_TIMEOUT} \
   --build-arg VITE_STUN_SERVER=${STUN_SERVER} \
   --build-arg VITE_SENTRY_DSN=${SENTRY_DSN_CLIENT} \
-  --build-arg VITE_ATPROTO_CLIENT_ID=${VIEWER_URL} \
   --tag tapestries-client:latest \
   --file Dockerfile.client-aws .
 

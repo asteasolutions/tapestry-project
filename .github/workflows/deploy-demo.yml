@@ -62,7 +62,6 @@ jobs:
           VIEWER_URL: ${{ vars.VIEWER_URL }}
           WIKIMEDIA_CLIENT_ID: ${{ vars.WIKIMEDIA_CLIENT_ID }}
           WIKIMEDIA_CLIENT_SECRET: ${{ secrets.WIKIMEDIA_CLIENT_SECRET }}
-          ATPROTO_CLIENT_ID: ${{ vars.ATPROTO_CLIENT_ID }}
 
   deploy-aws-backend:
     runs-on: self-hosted
