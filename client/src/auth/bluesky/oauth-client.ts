@@ -75,17 +75,15 @@ export function saveBlueskyReturnTo() {
 
 function consumeCallbackParams() {
   const params = new URLSearchParams(window.location.hash.slice(1))
-  if (
-    window.location.pathname !== '/' ||
-    !params.has('state') ||
-    !(params.has('code') || params.has('error'))
-  ) {
+  // The return path is saved right before redirecting to Bluesky, so only a tab
+  // that started a Bluesky login treats the URL fragment as an OAuth callback
+  const returnTo = sessionStorage.getItem(RETURN_TO_KEY)
+  if (returnTo === null || !params.has('state') || !(params.has('code') || params.has('error'))) {
     return null
   }
 
-  const returnTo = sessionStorage.getItem(RETURN_TO_KEY)
   sessionStorage.removeItem(RETURN_TO_KEY)
-  const safeReturnTo = returnTo?.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/'
+  const safeReturnTo = returnTo.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/'
   window.history.replaceState(window.history.state, '', safeReturnTo)
 
   return params
