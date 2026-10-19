@@ -25,6 +25,8 @@ import { TapestryListItem } from '../tapestry-list'
 
 interface TapestryCardProps {
   tapestry: TapestryListItem
+  viewURL?: string
+  viewOnly?: boolean
   onTapestryDeleted?: () => unknown
   onTapestryModified?: () => unknown
 }
@@ -33,6 +35,8 @@ export function TapestryCard({
   tapestry,
   onTapestryDeleted,
   onTapestryModified,
+  viewURL,
+  viewOnly,
 }: TapestryCardProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const menuContainerRef = useOutsideClick<HTMLDivElement>(() => setIsMenuOpen(false))
@@ -53,17 +57,20 @@ export function TapestryCard({
       ),
   )
 
-  const { user } = useSession()
+  let { user } = useSession()
+  if (viewOnly) {
+    user = null
+  }
   const canEdit = userAccess(tapestry, user?.id) === 'edit'
   const isOwner = tapestry.ownerId === user?.id
-  const viewUrl = tapestryPath(tapestry.owner.username, tapestry.slug)
+  const finalViewUrl = viewURL || tapestryPath(tapestry.owner.username, tapestry.slug)
   const editUrl = tapestryPath(tapestry.owner.username, tapestry.slug, 'edit')
   const canForkTapestry = canEdit || tapestry.allowForking
 
   return (
     <div className={styles.root}>
       {tapestry.isBookmarked && <Icon icon="bookmark" className={styles.bookmark} inert />}
-      <Link to={viewUrl} style={{ color: 'transparent' }}>
+      <Link to={finalViewUrl} style={{ color: 'transparent' }}>
         <div className={styles.preview}>
           {tapestry.thumbnail ? (
             <img src={tapestry.thumbnail} className={styles.thumbnail} />
@@ -234,7 +241,7 @@ export function TapestryCard({
                   Edit
                 </Button>
               )}
-              <Button component={Link} to={viewUrl}>
+              <Button component={Link} to={finalViewUrl}>
                 Go to Tapestry
               </Button>
             </>

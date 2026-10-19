@@ -1,0 +1,116 @@
+.root {
+  background-color: var(--color-section-yellow);
+  padding: 80px 100px 180px;
+  position: relative;
+  display: flex;
+  justify-content: center;
+
+  .learn-more-container {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+
+    .learn-more-button {
+      border-radius: 50%;
+      padding: 10px;
+
+      --bg-color: white;
+      --active-border-color: var(--internal-hover-border-color);
+
+      :global(.button-icon) {
+        font-size: 26px;
+      }
+    }
+
+    .learn-more-text {
+      position: absolute;
+      bottom: calc(100% + 10px);
+      left: 50%;
+      transform: translate(-50%);
+      font-size: 16px;
+      font-style: italic;
+      white-space: nowrap;
+      color: white;
+    }
+  }
+
+  .section-wrapper {
+    max-width: var(--max-section-width);
+
+    .titles {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 0 170px 50px;
+      text-align: center;
+
+      .title {
+        text-shadow: 0 4px var(--color-bright-red);
+        margin-bottom: 25px;
+        white-space: pre-line;
+        font-style: italic;
+      }
+    }
+
+    .content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 50px;
+
+      .subsections {
+        padding-right: 50px;
+
+        .subsection {
+          &:not(:first-child, :last-child) {
+            margin-bottom: 50px;
+          }
+
+          .subsection-title {
+            font-weight: 700;
+          }
+
+          .media-icons {
+            margin: 16px 0 50px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+
+            .media-icon {
+              width: 40px;
+            }
+          }
+        }
+      }
+
+      .video-section {
+        padding-top: 40px;
+        place-self: center;
+
+        .video {
+          width: 100%;
+          max-width: 550px;
+        }
+
+        .link {
+          margin-top: 20px;
+        }
+      }
+    }
+  }
+
+  .quote {
+    position: absolute;
+    bottom: -50px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 550px;
+
+    .quote-text {
+      position: relative;
+      text-align: center;
+      white-space: pre-line;
+    }
+  }
+}

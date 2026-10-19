@@ -117,7 +117,7 @@ export class UserDoesNotExistError
   implements UserDoesNotExistErrorResponse
 {
   constructor(
-    public usernameSuggestion: string,
+    public usernameSuggestion?: string,
     public firstNameSuggestion?: string,
     public lastNameSuggestion?: string,
   ) {
