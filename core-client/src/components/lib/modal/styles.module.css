@@ -1,6 +1,7 @@
 .root {
   position: fixed;
   inset: 0;
+
   /* This needs to be above the nav layout */
   z-index: 3;
   background-color: var(--theme-overlay);
