@@ -5,26 +5,28 @@ import { useThemeCss } from 'tapestry-core-client/src/components/lib/hooks/use-t
 import { Header } from './header'
 import { Footer } from './footer'
 import { useSession } from '../session'
-import { useNavigate } from 'react-router'
+import { useLocation, useNavigate } from 'react-router'
 import { dashboardPath } from '../../utils/paths'
 import { UserDto } from 'tapestry-shared/src/data-transfer/resources/dtos/user'
 import { LoadingLogo } from '../../components/loading-logo'
+import { AcceptInvitationDialog } from '../../components/accept-invitation-dialog'
 
 function useNavigateOnLogin() {
   const { user } = useSession()
   const navigate = useNavigate()
+  const location = useLocation()
   const [prevUser, setPrevUser] = useState<UserDto | null>(null)
 
   const navigatingOnLogin = !!user && !prevUser
 
   useEffect(() => {
     if (navigatingOnLogin) {
-      void navigate(dashboardPath('home'), { replace: true })
+      void navigate({ pathname: dashboardPath('home'), search: location.search }, { replace: true })
     }
     if (user !== prevUser) {
       setPrevUser(user)
     }
-  }, [navigate, user, prevUser, navigatingOnLogin])
+  }, [navigate, user, prevUser, navigatingOnLogin, location.search])
 
   return { navigatingOnLogin }
 }
@@ -41,6 +43,7 @@ export function NavigationLayout({ children }: NavigationLayoutProps) {
       <Header />
       {navigatingOnLogin ? <LoadingLogo /> : children}
       <Footer />
+      <AcceptInvitationDialog />
     </div>
   )
 }

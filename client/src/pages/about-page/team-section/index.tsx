@@ -10,7 +10,7 @@ export function TeamSection() {
       <Text component="div" variant="h3" className={styles.title}>
         {title}
       </Text>
-      <Text component="div" variant="body" className={styles.subtitle}>
+      <Text component="div" variant="bodySm" className={styles.subtitle}>
         {subtitle}
       </Text>
       <div className={styles.subsectionsContainer}>

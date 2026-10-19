@@ -1,6 +1,6 @@
 .root {
   background-color: var(--color-section-yellow);
-  padding: 80px 100px 180px;
+  padding: 80px var(--section-padding-x) 180px;
   position: relative;
   display: flex;
   justify-content: center;
@@ -37,7 +37,7 @@
   }
 
   .section-wrapper {
-    max-width: var(--max-section-width);
+    max-width: var(--section-max-width);
 
     .titles {
       display: flex;
@@ -52,6 +52,14 @@
         white-space: pre-line;
         font-style: italic;
       }
+
+      @media screen and (width <= 1200px) {
+        margin: 0 0 50px;
+
+        .title {
+          font-size: 28px;
+        }
+      }
     }
 
     .content {
@@ -59,8 +67,16 @@
       grid-template-columns: 1fr 1fr;
       gap: 50px;
 
+      @media screen and (width <= 1200px) {
+        grid-template-columns: auto;
+      }
+
       .subsections {
         padding-right: 50px;
+
+        @media screen and (width <=1200px) {
+          padding-right: unset;
+        }
 
         .subsection {
           &:not(:first-child, :last-child) {
@@ -91,26 +107,13 @@
         .video {
           width: 100%;
           max-width: 550px;
+          border-radius: 16px;
         }
 
         .link {
           margin-top: 20px;
         }
       }
-    }
-  }
-
-  .quote {
-    position: absolute;
-    bottom: -50px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 550px;
-
-    .quote-text {
-      position: relative;
-      text-align: center;
-      white-space: pre-line;
     }
   }
 }

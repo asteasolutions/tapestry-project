@@ -5,6 +5,7 @@ import PortableIcon from '../../../assets/images/about-page/portable.webp'
 import CommunityIcon from '../../../assets/images/about-page/community.webp'
 import AIIcon from '../../../assets/images/about-page/ai.webp'
 import { ABOUT_PAGE_TEXT } from '../../pages-text'
+import { Breakpoint, useResponsive } from '../../../providers/responsive-provider'
 
 const PRINCIPLES_PROPS: { image: string; backgroundColor: string; indexColor?: string }[] = [
   {
@@ -28,6 +29,8 @@ const PRINCIPLES_PROPS: { image: string; backgroundColor: string; indexColor?: s
 
 export function PrinciplesSection() {
   const { title, subsections } = ABOUT_PAGE_TEXT.principles
+  const MDOrLess = useResponsive() <= Breakpoint.MD
+
   return (
     <div className={styles.root}>
       <div className={styles.sectionWrapper}>
@@ -50,7 +53,7 @@ export function PrinciplesSection() {
                 {(index + 1).toString().padStart(2, '0')}
               </Text>
               <div className={styles.principleTitle}>
-                <Text component="div" variant="h3">
+                <Text component="div" variant={MDOrLess ? 'h6' : 'h3'}>
                   {subsection.title}
                 </Text>
                 <div
@@ -64,7 +67,7 @@ export function PrinciplesSection() {
               <Text component="div" variant="bodySm" className={styles.principleContent}>
                 {subsection.content}
               </Text>
-              <img src={image} className={styles.principleIcon} draggable="false" />
+              {!MDOrLess && <img src={image} className={styles.principleIcon} draggable="false" />}
             </div>
           )
         })}

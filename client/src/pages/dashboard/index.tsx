@@ -9,7 +9,6 @@ import { dataTransferToFiles } from '../../stage/data-transfer-handler'
 import { TYPE } from 'tapestry-core/src/data-format/export'
 import { useObservable } from 'tapestry-core-client/src/components/lib/hooks/use-observable'
 import { TapestryList, TapestryListItem } from './tapestry-list'
-import { AcceptInvitationDialog } from '../../components/accept-invitation-dialog'
 import { SnackbarData } from 'tapestry-core-client/src/view-model'
 import { Snackbar } from 'tapestry-core-client/src/components/lib/snackbar/index'
 import {
@@ -191,7 +190,6 @@ export function Dashboard() {
       </DropArea>
       {creatingTapestry && <CreateTapestryDialog onCancel={() => setCreatingTapestry(false)} />}
       {imports && <ImportTapestryDialog imports={imports} onClose={resetImports} />}
-      <AcceptInvitationDialog />
       <Snackbar value={initialPrompt} onChange={() => setInitialPrompt(undefined)} />
     </div>
   )

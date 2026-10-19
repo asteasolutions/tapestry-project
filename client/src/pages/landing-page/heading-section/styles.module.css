@@ -1,11 +1,16 @@
 .root {
   background-color: var(--color-section-green);
   color: white;
-  padding: 110px 50px 180px;
+  padding: 110px var(--section-padding-x) 180px;
   position: relative;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
   z-index: 1;
+
+  @media screen and (width <= 1200px) {
+    padding-top: 50px;
+  }
 
   .string-wrapper {
     position: absolute;
@@ -18,23 +23,12 @@
     }
   }
 
-  .awmt {
-    position: absolute;
-    left: 120px;
-    bottom: 95px;
-    padding-left: 13px;
-    width: 220px;
-    padding-bottom: 35px;
-    text-align: left;
-    border-left: 1px solid var(--color-light-gray);
-  }
-
-  .section-wrapper {
-    max-width: 600px;
+  .text-wrapper {
     text-align: center;
     display: flex;
     flex-direction: column;
     align-items: center;
+    max-width: 500px;
 
     .heading {
       color: var(--color-section-red);
@@ -52,6 +46,65 @@
     .content {
       z-index: 1;
       margin-top: 50px;
+    }
+
+    @media screen and (width <= 1200px) {
+      max-width: initial;
+
+      .heading {
+        font-size: 48px;
+      }
+
+      .subheading {
+        font-size: 16px;
+      }
+
+      .content {
+        margin-top: 20px;
+
+        * {
+          font-size: 18px;
+        }
+      }
+    }
+
+    .awmt {
+      position: absolute;
+      left: 120px;
+      bottom: 95px;
+      padding-left: 13px;
+      width: 220px;
+      padding-bottom: 35px;
+      text-align: left;
+      border-left: 1px solid var(--color-light-gray);
+
+      @media screen and (width <= 1200px) {
+        position: relative;
+        inset: unset;
+        border-left: none;
+        border-top: 1px solid var(--color-light-gray);
+        padding: 13px 0 0;
+        width: auto;
+        margin-top: 30px;
+      }
+
+      .awmt-circles {
+        width: 220px;
+        height: 110px;
+        position: absolute;
+        top: calc(100% - 10px);
+        left: 50%;
+        transform: translateX(-50%);
+
+        @media screen and (width <= 1200px) {
+          top: calc(100% + 20px);
+        }
+      }
+    }
+
+    .mobile-hands {
+      display: block;
+      width: min(400px, 100%);
     }
   }
 }

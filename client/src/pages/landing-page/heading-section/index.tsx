@@ -4,6 +4,7 @@ import { LANDING_PAGE_TEXT } from '../../pages-text'
 import LeftHandWithThread from '../../../assets/images/landing-page/left-hand-thread.webp'
 import RightHandWithThread from '../../../assets/images/landing-page/right-hand-thread.webp'
 import TapestryString from '../../../assets/images/landing-page/tapestry-string.svg'
+import MobileHands from '../../../assets/images/landing-page/mobile-hands.webp'
 import Checker from '../../../assets/images/landing-page/checker.png'
 import IALogoSmall from '../../../assets/images/landing-page/ia-logo.png'
 import AWMTLogo from '../../../assets/images/landing-page/awmt-logo.png'
@@ -12,12 +13,12 @@ import Herkulanisher from '../../../assets/images/landing-page/Herkulaneischer_M
 import {
   ConcreteWall,
   PositionedCircle,
+  PositionedComponent,
   PositionedImage,
 } from '../../../components/positioned-component'
+import { Breakpoint, useResponsive } from '../../../providers/responsive-provider'
 
-function PositionedElements() {
-  const awmtText = LANDING_PAGE_TEXT.heading.subsections.AWMT.content
-
+function PositionedElementsDesktop() {
   return (
     <>
       <ConcreteWall width={275} height={200} left={350} top={-100} />
@@ -52,33 +53,61 @@ function PositionedElements() {
       </div>
       <PositionedImage src={Checker} right={-30} width={100} bottom={320} />
       <PositionedImage src={Herkulanisher} right={216} bottom={220} width={100} />
-      <PositionedImage src={IALogoSmall} left={250} bottom={25} width={100} />
-      <PositionedCircle
-        left={135}
-        bottom={15}
-        backgroundColor="var(--color-bright-red)"
-        diameter={100}
-      />
-      <PositionedImage src={AWMTLogo} left={120} bottom={12} width={100} />
-      <Text variant="bodySm" component="div" className={styles.awmt}>
-        {awmtText}
-      </Text>
     </>
   )
 }
 
+function AWMTCircles() {
+  return (
+    <div className={styles.awmtCircles}>
+      <PositionedCircle
+        left={15}
+        bottom={5}
+        backgroundColor="var(--color-bright-red)"
+        diameter={100}
+      />
+      <PositionedComponent
+        component="a"
+        left={0}
+        bottom={0}
+        width={100}
+        height={100}
+        href="https://awmt.org"
+        target="_blank"
+      >
+        <img src={AWMTLogo} style={{ width: '100%', height: '100%' }} />
+      </PositionedComponent>
+      <PositionedComponent
+        component="a"
+        top={0}
+        right={0}
+        width={100}
+        height={100}
+        href="https://archive.org"
+        target="_blank"
+      >
+        <img src={IALogoSmall} style={{ width: '100%', height: '100%' }} />
+      </PositionedComponent>
+    </div>
+  )
+}
+
 export function HeadingSection() {
-  const { title, subtitle, content } = LANDING_PAGE_TEXT.heading
+  const { title, subtitle, content, subsections } = LANDING_PAGE_TEXT.heading
+  const breakpoint = useResponsive()
+  const LGOrLess = breakpoint <= Breakpoint.LG
+
   return (
     <div className={styles.root}>
-      <PositionedElements />
-      <div className={styles.sectionWrapper}>
+      {!LGOrLess && <PositionedElementsDesktop />}
+      <div className={styles.textWrapper}>
         <Text variant="h1" className={styles.heading}>
           {title}
         </Text>
         <Text variant="h6" component="div" className={styles.subheading}>
           {subtitle}
         </Text>
+        {LGOrLess && <img className={styles.mobileHands} src={MobileHands} />}
         <div className={styles.content}>
           <Text variant="h5" component="div">
             {content[0]}
@@ -86,6 +115,12 @@ export function HeadingSection() {
           <Text variant="h6" component="div">
             {content[1]}
           </Text>
+        </div>
+        <div className={styles.awmt}>
+          <Text variant="bodySm" component="div">
+            {subsections.AWMT.content}
+          </Text>
+          <AWMTCircles />
         </div>
       </div>
     </div>
