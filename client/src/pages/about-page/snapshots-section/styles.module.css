@@ -1,0 +1,25 @@
+.root {
+  padding: 70px 100px;
+  background-color: var(--color-section-red);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  .title {
+    font-style: italic;
+    margin-bottom: 15px;
+  }
+
+  .title,
+  .subtitle {
+    max-width: 600px;
+    text-align: center;
+  }
+
+  .cards {
+    margin-top: 30px;
+    display: flex;
+    gap: 30px;
+    height: 400px;
+  }
+}

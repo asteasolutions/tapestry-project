@@ -1,0 +1,28 @@
+.root {
+  color: var(--theme-text-primary-inverse);
+  background-color: var(--theme-background-mono);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 var(--padding-navigation-x);
+
+  @media screen and (width <= 380px) {
+    justify-content: center;
+  }
+
+  .links {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+
+    a {
+      text-decoration: none;
+      color: white;
+    }
+
+    .logo-link {
+      margin-right: 10px;
+      display: flex;
+    }
+  }
+}
