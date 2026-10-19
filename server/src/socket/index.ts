@@ -113,13 +113,19 @@ class SocketServer {
       this.connections.push(connection)
 
       socket.on('subscribe', (e: SubscriptionEvent, params: unknown, callback: unknown) => {
-        // @ts-expect-error Hard to convince TS here
-        this.onSubscribe[e](connection, params, callback)
+        Promise.resolve()
+          // @ts-expect-error Hard to convince TS here
+          .then(() => this.onSubscribe[e](connection, params, callback))
+          .catch((error) => console.error(`Error while subscribing to ${e}`, error))
       })
 
-      socket.on('rtc-signaling-message', (e) =>
-        this.notifyPeers(RTCSignalingMessageSchema.parse(e), e.tapestryId, socket.id),
-      )
+      socket.on('rtc-signaling-message', (e) => {
+        try {
+          this.notifyPeers(RTCSignalingMessageSchema.parse(e), e.tapestryId, socket.id)
+        } catch (error) {
+          console.error('Error while rtc-signaling-message', error)
+        }
+      })
 
       socket.on('disconnect', () => {
         this.connections
@@ -171,13 +177,17 @@ class SocketServer {
                 s.name === 'tapestry-updated' &&
                 s.params.tapestryId === notification.tapestryId
               ) {
-                const tapestry = await this.getTapestryAsOf(
-                  notification.tapestryId,
-                  s.params.lastUpdate as Date,
-                  notification.deletedIds,
-                )
-                c.socket.emit('tapestry-updated', tapestry)
-                s.params.lastUpdate = new Date()
+                try {
+                  const tapestry = await this.getTapestryAsOf(
+                    notification.tapestryId,
+                    s.params.lastUpdate as Date,
+                    notification.deletedIds,
+                  )
+                  c.socket.emit('tapestry-updated', tapestry)
+                  s.params.lastUpdate = new Date()
+                } catch (error) {
+                  console.error('Error while sending tapestry update', error)
+                }
               }
               break
             case 'rtc-signaling-message':
