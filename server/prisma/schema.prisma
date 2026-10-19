@@ -137,6 +137,7 @@ enum ItemType {
   video
   book
   image
+  iiif
   pdf
   webpage
 }

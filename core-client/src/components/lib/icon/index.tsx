@@ -77,6 +77,7 @@ const ICONS = [
   'keyboard',
   'keyboard_arrow_left',
   'keyboard_arrow_right',
+  'keyboard_double_arrow_down',
   'left_click',
   'light_mode',
   'line_weight',
@@ -183,6 +184,11 @@ export function GoogleFonts() {
       />
       <link
         href={`https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Carattere&family=Caveat:wght@400..700&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Raleway:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,100..900;1,100..900&family=Source+Code+Pro:ital,wght@0,200..900;1,200..900&family=Tinos:ital,wght@0,400;0,700;1,400;1,700&display=swap`}
+        rel="stylesheet"
+        precedence="medium"
+      />
+      <link
+        href={`https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=IBM+Plex+Serif:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&family=Martian+Mono:wght@100..800&display=swap`}
         rel="stylesheet"
         precedence="medium"
       />

@@ -110,7 +110,7 @@ export async function itemDbToDto(dbItem: Item): Promise<ItemDto> {
     }
   }
 
-  if (type === 'book') {
+  if (type === 'book' || type === 'iiif') {
     return {
       ...commonProps,
       type,

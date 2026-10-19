@@ -1,5 +1,4 @@
 import clsx from 'clsx'
-import { useEffect } from 'react'
 import { Rel } from 'tapestry-core/src/data-format/schemas/rel'
 import { LinearTransform, Rectangle } from 'tapestry-core/src/lib/geometry'
 import { IdMap, idMapToArray } from 'tapestry-core/src/utils'
@@ -9,7 +8,6 @@ import {
   TapestryElementComponent,
   useTapestryConfig,
 } from '../../../components/tapestry'
-import { themeToDOMWriter } from '../../../theme/theme-to-dom-writer'
 import { ItemViewModel, TapestryViewModel } from '../../../view-model'
 import { getBounds, isItemInSelection, isMultiselection } from '../../../view-model/utils'
 import { PropsWithStyle } from '../../lib'
@@ -18,6 +16,7 @@ import { cssTransformForLocation } from '../../../stage/utils'
 import { ItemType } from 'tapestry-core/src/data-format/schemas/item'
 import { isMac, isMobile } from '../../../lib/user-agent'
 import { sortByPath } from 'tapestry-core/src/lib/array'
+import { useThemeCss } from '../../lib/hooks/use-theme-css'
 
 const ITEMS_WITHOUT_THUMBNAIL_PLACEHOLDER: ItemType[] = ['text', 'actionButton']
 
@@ -158,8 +157,7 @@ export function TapestryCanvas({ classes, style }: TapestryCanvasProps) {
     useStoreData('pointerInteraction', ['constrainToLayer', 'action']) ?? {}
   const { theme, items, rels, selection } = useStoreData(['theme', 'items', 'rels', 'selection'])
 
-  useEffect(() => themeToDOMWriter.init(), [])
-  useEffect(() => themeToDOMWriter.updateTheme(theme), [theme])
+  useThemeCss(theme)
 
   if (!viewportReady) {
     return
