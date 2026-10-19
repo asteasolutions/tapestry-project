@@ -344,21 +344,19 @@ export async function createMediaItem<T extends MediaItemType>(
   } satisfies MediaItemCreateDto as MediaItemCreateDto & { type: T }
 }
 
-// Creates an item from a source on another platform, keeping the platform page as a note.
+// Creates an item from a source on another platform, keeping the platform page as an original source.
 export async function createDerivedSourceMediaItem(
   tapestryId: string,
   media: { source: string; originalSource: string; mediaType: MediaItemType; size?: Size },
 ) {
   try {
-    const item = await createMediaItem(
+    return await createMediaItem(
       media.mediaType,
       media.source,
       tapestryId,
-      undefined,
+      media.originalSource,
       media.size,
     )
-    item.notes = `Source: ${media.originalSource}`
-    return item
   } catch {
     return null
   }
