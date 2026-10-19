@@ -3,6 +3,8 @@ import { auth } from '.'
 import { AuthProviderEnum, config } from '../config'
 import { GoogleLoginButton } from './google/login-button'
 import { IALoginButton } from './internet-archive/login-button'
+import { BlueskyLoginButton } from './bluesky/login-button'
+import { tryCompleteBlueskyLogin } from './bluesky/oauth-client'
 import { OrcidLoginButton } from './orcid/login-button'
 import { WikimediaLoginButton } from './wikimedia/login-button'
 import { orcidClient } from './orcid/service'
@@ -39,6 +41,11 @@ const PROVIDER_MAP: Record<AuthProvider, AuthProviderItem> = {
     },
   },
   ia: { id: 'internet-archive', component: IALoginButton },
+  bluesky: {
+    id: 'bluesky',
+    component: BlueskyLoginButton,
+    tryCompleteLogin: tryCompleteBlueskyLogin,
+  },
   orcid: {
     id: 'orcid',
     component: OrcidLoginButton,

@@ -28,6 +28,7 @@ export const SessionCreateSchema = z.discriminatedUnion('authType', [
   z.object({ authType: z.literal('wikimedia'), ...OAuthCodeSchema.shape }),
   z.object({ authType: z.literal('iaCookies') }),
   z.object({ authType: z.literal('iaCredentials'), email: z.string(), password: z.string() }),
+  z.object({ authType: z.literal('bluesky'), serviceToken: z.string() }),
   z.object({
     authType: z.literal('registerUser'),
     username: UsernameSchema,

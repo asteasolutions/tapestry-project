@@ -45,11 +45,11 @@ jobs:
           DEPLOY_FRONTEND_S3_BUCKET: ${{ secrets.DEPLOY_FRONTEND_S3_BUCKET }}
           EXTERNAL_SERVER_URL: ${{ vars.EXTERNAL_SERVER_URL }}
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          OAUTH_REDIRECT_URI: ${{ vars.OAUTH_REDIRECT_URI }}
           JOBS_ADMIN_NAME: ${{ secrets.JOBS_ADMIN_NAME }}
           JOBS_ADMIN_PASSWORD: ${{ secrets.JOBS_ADMIN_PASSWORD }}
           ORCID_CLIENT_ID: ${{ vars.ORCID_CLIENT_ID }}
           ORCID_CLIENT_SECRET: ${{ secrets.ORCID_CLIENT_SECRET }}
-          ORCID_REDIRECT_URI: ${{ vars.ORCID_REDIRECT_URI }}
           REDIS_HOST: ${{ secrets.REDIS_HOST }}
           REDIS_USE_TLS: ${{ secrets.REDIS_USE_TLS }}
           SENTRY_DSN_CLIENT: ${{ secrets.SENTRY_DSN_CLIENT }}
@@ -62,7 +62,6 @@ jobs:
           VIEWER_URL: ${{ vars.VIEWER_URL }}
           WIKIMEDIA_CLIENT_ID: ${{ vars.WIKIMEDIA_CLIENT_ID }}
           WIKIMEDIA_CLIENT_SECRET: ${{ secrets.WIKIMEDIA_CLIENT_SECRET }}
-          WIKIMEDIA_REDIRECT_URI: ${{ vars.WIKIMEDIA_REDIRECT_URI }}
 
   deploy-aws-backend:
     runs-on: self-hosted

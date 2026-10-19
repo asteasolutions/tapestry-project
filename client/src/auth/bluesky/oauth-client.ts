@@ -1,0 +1,130 @@
+import {
+  BrowserOAuthClient,
+  buildLoopbackClientId,
+  type OAuthSession,
+} from '@atproto/oauth-client-browser'
+import { BLUESKY_LOGIN_LXM, blueskyServiceDid } from 'tapestry-shared/src/bluesky'
+import { config } from '../../config'
+import { BLUESKY_SCOPE } from './client-metadata'
+import { auth } from '..'
+import { APIError } from '../../errors'
+
+const RETURN_TO_KEY = 'bluesky-login-return-to'
+
+function isLoopback(hostname: string) {
+  return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]'
+}
+
+function moveToLocalhost() {
+  const { hostname, port, pathname, search, hash } = window.location
+  if (hostname !== '127.0.0.1' && hostname !== '[::1]') return false
+
+  window.location.replace(`http://localhost${port ? `:${port}` : ''}${pathname}${search}${hash}`)
+  return true
+}
+
+let clientPromise: Promise<BrowserOAuthClient> | undefined
+
+function getClientId() {
+  if (isLoopback(window.location.hostname)) {
+    const loopbackId = buildLoopbackClientId({
+      hostname: window.location.hostname,
+      port: window.location.port,
+      pathname: '/',
+    })
+    return `${loopbackId}&scope=${encodeURIComponent(BLUESKY_SCOPE)}`
+  }
+  return config.atProtoClientId
+}
+
+export function getBlueskyOAuthClient() {
+  clientPromise ??= BrowserOAuthClient.load({
+    clientId: getClientId(),
+    handleResolver: 'https://bsky.social',
+  })
+
+  const promise = clientPromise
+  promise.catch(() => (clientPromise = undefined))
+
+  return promise
+}
+
+export async function startBlueskyLogin(handle: string, signal?: AbortSignal) {
+  const client = await getBlueskyOAuthClient()
+  return client.signInRedirect(handle, { signal })
+}
+
+async function getBlueskyServiceToken(session: OAuthSession) {
+  const params = new URLSearchParams({
+    aud: blueskyServiceDid(config.apiUrl),
+    lxm: BLUESKY_LOGIN_LXM,
+  })
+  const response = await session.fetchHandler(
+    `/xrpc/com.atproto.server.getServiceAuth?${params.toString()}`,
+  )
+  if (!response.ok) {
+    throw new Error(`Failed to obtain a Bluesky service token: ${response.status}`)
+  }
+  const { token } = (await response.json()) as { token: string }
+  return token
+}
+
+export function saveBlueskyReturnTo() {
+  sessionStorage.setItem(RETURN_TO_KEY, `${window.location.pathname}${window.location.search}`)
+}
+
+function consumeCallbackParams() {
+  const params = new URLSearchParams(window.location.hash.slice(1))
+  if (
+    window.location.pathname !== '/' ||
+    !params.has('state') ||
+    !(params.has('code') || params.has('error'))
+  ) {
+    return null
+  }
+
+  const returnTo = sessionStorage.getItem(RETURN_TO_KEY)
+  sessionStorage.removeItem(RETURN_TO_KEY)
+  const safeReturnTo = returnTo?.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/'
+  window.history.replaceState(window.history.state, '', safeReturnTo)
+
+  return params
+}
+
+const callbackParams = moveToLocalhost() ? null : consumeCallbackParams()
+
+let pending: Promise<boolean> | undefined
+
+export function tryCompleteBlueskyLogin(): Promise<boolean> {
+  if (!callbackParams) return Promise.resolve(false)
+
+  pending ??= completeLogin(callbackParams)
+  return pending
+}
+
+async function completeLogin(params: URLSearchParams) {
+  try {
+    const client = await getBlueskyOAuthClient()
+
+    const state: unknown = window.history.state
+    const { href } = window.location
+    const callbackPromise = client.initCallback(params, client.clientMetadata.redirect_uris[0])
+    window.history.replaceState(state, '', href)
+    const { session } = await callbackPromise
+
+    let serviceToken: string
+    try {
+      serviceToken = await getBlueskyServiceToken(session)
+    } finally {
+      await session.signOut()
+    }
+
+    await auth.login({ authType: 'bluesky', serviceToken })
+    return true
+  } catch (error) {
+    if (!(error instanceof APIError && error.data.name === 'UserDoesNotExistError')) {
+      console.error('[bluesky] login failed', error)
+    }
+    return false
+  }
+}
