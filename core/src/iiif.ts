@@ -9,13 +9,17 @@
  */
 import { normalize } from '@iiif/parser'
 
+function normalizeManifestJson(json: unknown) {
+  const normalized = normalize(json)
+  return normalized.resource.type === 'Manifest' ? normalized : null
+}
+
 export async function fetchIIIFManifest(url: string, signal?: AbortSignal) {
   try {
     const response = await fetch(url, { signal })
     if (!response.ok) return null
-    const json: unknown = await response.json()
-    const normalized = normalize(json)
-    return normalized.resource.type === 'Manifest' ? normalized : null
+
+    return normalizeManifestJson(await response.json())
   } catch (error) {
     console.warn('Failed to fetch or parse IIIF manifest', error)
     return null
@@ -26,8 +30,12 @@ export async function isIIIFManifest(url: string, signal?: AbortSignal) {
   return (await fetchIIIFManifest(url, signal)) !== null
 }
 
-export async function fetchIIIFCanvasCount(url: string, signal?: AbortSignal) {
-  const manifest = await fetchIIIFManifest(url, signal)
+export async function fetchIIIFCanvasCount(source: string | File, signal?: AbortSignal) {
+  const manifest =
+    source instanceof File
+      ? normalizeManifestJson(await JSON.parse(await source.text()))
+      : await fetchIIIFManifest(source, signal)
+
   return manifest ? Object.keys(manifest.entities.Canvas).length : null
 }
 
