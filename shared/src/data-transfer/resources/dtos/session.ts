@@ -39,6 +39,11 @@ export interface LoginWithIACredentialsDto {
   password: string
 }
 
+export interface LoginWithBlueskyDto {
+  authType: 'bluesky'
+  serviceToken: string
+}
+
 export interface RegisterUserDto {
   authType: 'registerUser'
   username: string
@@ -53,4 +58,5 @@ export type SessionCreateDto =
   | LoginWithWikimediaDto
   | LoginWithIACookiesDto
   | LoginWithIACredentialsDto
+  | LoginWithBlueskyDto
   | RegisterUserDto

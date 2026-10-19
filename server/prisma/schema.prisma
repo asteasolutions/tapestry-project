@@ -16,6 +16,7 @@ model User {
   createdAt            DateTime              @default(now())
   updatedAt            DateTime              @updatedAt
   gsiUserId            String?               @unique
+  blueskyDid           String?               @unique
   orcidId              String?               @unique
   wikimediaId          String?               @unique
   email                String?               @unique
@@ -134,6 +135,7 @@ enum ItemType {
   video
   book
   image
+  iiif
   pdf
   webpage
 }

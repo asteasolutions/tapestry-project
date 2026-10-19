@@ -7,6 +7,7 @@ import { config } from '../../config.js'
 import { IACookiesAuthProvider, IACredentialsAuthProvider } from './internet-archive.js'
 import { Response } from 'express'
 import { RegisterUserAuthProvider } from './register-user.js'
+import { BlueskyAuthProvider } from './bluesky.js'
 import { WikimediaAuthProvider } from './wikimedia.js'
 
 export interface AuthProvider<Credentials extends SessionCreateDto> {
@@ -27,5 +28,6 @@ export const AUTH_PROVIDERS = {
   wikimedia: config.server.wikimedia.clientId ? new WikimediaAuthProvider() : unsupported,
   iaCookies: config.server.ia.accountId ? new IACookiesAuthProvider() : unsupported,
   iaCredentials: new IACredentialsAuthProvider(),
+  bluesky: new BlueskyAuthProvider(),
   registerUser: new RegisterUserAuthProvider(),
 } satisfies Record<SessionCreateDto['authType'], AuthProvider<SessionCreateDto>>

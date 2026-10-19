@@ -41,7 +41,7 @@ export function SelectAll({
             position: 'after',
             variant: textVariant,
           }}
-          disabled={loading}
+          disabled={total === undefined}
         />
       )}
       {total !== undefined && (
