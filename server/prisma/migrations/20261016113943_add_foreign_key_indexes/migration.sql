@@ -26,9 +26,6 @@ CREATE INDEX "Comment_relId_idx" ON "Comment"("relId");
 CREATE INDEX "Comment_parentCommentId_idx" ON "Comment"("parentCommentId");
 
 -- CreateIndex
-CREATE INDEX "Comment_authorId_idx" ON "Comment"("authorId");
-
--- CreateIndex
 CREATE INDEX "Group_tapestryId_idx" ON "Group"("tapestryId");
 
 -- CreateIndex
@@ -62,23 +59,10 @@ CREATE INDEX "Rel_fromItemId_idx" ON "Rel"("fromItemId");
 CREATE INDEX "Rel_toItemId_idx" ON "Rel"("toItemId");
 
 -- CreateIndex
-CREATE INDEX "Tapestry_parentId_idx" ON "Tapestry"("parentId");
-
--- CreateIndex
 CREATE INDEX "TapestryAccess_tapestryId_idx" ON "TapestryAccess"("tapestryId");
-
--- CreateIndex
-CREATE INDEX "TapestryBookmark_tapestryId_idx" ON "TapestryBookmark"("tapestryId");
-
--- CreateIndex
-CREATE INDEX "TapestryCreateJob_userId_idx" ON "TapestryCreateJob"("userId");
-
--- CreateIndex
-CREATE INDEX "TapestryInteraction_tapestryId_idx" ON "TapestryInteraction"("tapestryId");
 
 -- CreateIndex
 CREATE INDEX "TapestryInvitation_tapestryId_idx" ON "TapestryInvitation"("tapestryId");
 
 -- CreateIndex
 CREATE INDEX "UserSecret_ownerId_idx" ON "UserSecret"("ownerId");
-

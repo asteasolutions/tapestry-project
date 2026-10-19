@@ -77,7 +77,6 @@ model Tapestry {
   bookmarks        TapestryBookmark[]
 
   @@unique([ownerId, slug])
-  @@index([parentId])
 }
 
 model TapestryAccess {
@@ -117,7 +116,6 @@ model TapestryInteraction {
   firstSeen  DateTime
 
   @@unique([userId, tapestryId])
-  @@index([tapestryId])
 }
 
 model TapestryBookmark {
@@ -130,7 +128,6 @@ model TapestryBookmark {
   tapestry   Tapestry @relation(fields: [tapestryId], references: [id], onDelete: Cascade)
 
   @@unique([userId, tapestryId])
-  @@index([tapestryId])
 }
 
 enum ItemType {
@@ -310,7 +307,6 @@ model Comment {
   @@index([itemId])
   @@index([relId])
   @@index([parentCommentId])
-  @@index([authorId])
 }
 
 enum JobStatus {
@@ -340,8 +336,6 @@ model TapestryCreateJob {
   description String?
   parentId    String?
   s3Key       String?
-
-  @@index([userId])
 }
 
 enum AiProvider {
