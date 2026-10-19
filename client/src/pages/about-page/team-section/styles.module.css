@@ -1,0 +1,27 @@
+.root {
+  padding: 40px 70px 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  .title {
+    font-style: italic;
+  }
+
+  .subtitle {
+    margin: 32px 0;
+    max-width: 820px;
+    text-align: center;
+  }
+
+  .subsections-container {
+    display: grid;
+    gap: 50px;
+    grid-template-columns: repeat(3, 280px);
+
+    .subsection-title {
+      margin-bottom: 20px;
+      color: var(--color-neutral-600);
+    }
+  }
+}

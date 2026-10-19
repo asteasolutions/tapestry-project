@@ -46,6 +46,15 @@ export async function downloadImageToArrayBuffer(url: string) {
   return Buffer.from(await res.arrayBuffer())
 }
 
+export async function fetchContentLength(url: string, timeoutMs = 20_000) {
+  const res = await fetch(url, { redirect: 'follow', signal: AbortSignal.timeout(timeoutMs) })
+  await res.body?.cancel()
+  if (!res.ok) throw new Error(`Fetch failed: ${res.status} ${res.statusText}`)
+
+  const contentLength = res.headers.get('content-length')
+  return contentLength ? Number(contentLength) : undefined
+}
+
 export async function downloadToTempFile(urlStr: string, opts: DownloadOpts = {}) {
   const url = new URL(urlStr)
 
@@ -82,9 +91,17 @@ export async function downloadToTempFile(urlStr: string, opts: DownloadOpts = {}
   return filePath
 }
 
-export async function spawn(command: string, args: string[], input?: Buffer) {
+interface SpawnOpts {
+  input?: Buffer
+  timeoutMs?: number
+}
+
+export async function spawn(command: string, args: string[], { input, timeoutMs }: SpawnOpts = {}) {
   return new Promise<Buffer>((resolve, reject) => {
-    const proc = nodeSpawn(command, args, { stdio: [input ? 'pipe' : 'ignore', 'pipe', 'pipe'] })
+    const proc = nodeSpawn(command, args, {
+      stdio: [input ? 'pipe' : 'ignore', 'pipe', 'pipe'],
+      timeout: timeoutMs,
+    })
     const chunks: Buffer[] = []
     let err = ''
 
@@ -92,7 +109,8 @@ export async function spawn(command: string, args: string[], input?: Buffer) {
     proc.stderr!.on('data', (d: Buffer) => (err += d.toString()))
 
     proc.on('error', reject)
-    proc.on('close', (code) => {
+    proc.on('close', (code, signal) => {
+      if (signal) return reject(new Error(`${command} killed with ${signal}: ${err}`))
       if (code !== 0) return reject(new Error(`${command} exited ${code}: ${err}`))
 
       resolve(Buffer.concat(chunks))

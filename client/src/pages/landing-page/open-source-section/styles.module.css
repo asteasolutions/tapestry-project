@@ -1,0 +1,41 @@
+.root {
+  position: relative;
+  overflow-y: clip;
+  padding: 100px 330px 35px;
+  background-color: var(--color-section-blue);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: white;
+
+  .subtitle {
+    margin-bottom: 25px;
+  }
+
+  .content a {
+    color: white;
+  }
+
+  .title,
+  .subtitle {
+    text-align: center;
+  }
+
+  .title,
+  .subtitle,
+  .content {
+    max-width: 800px;
+  }
+
+  .buttons {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+
+    .outline-button {
+      color: white;
+
+      --hover-bg-color: transparent;
+    }
+  }
+}

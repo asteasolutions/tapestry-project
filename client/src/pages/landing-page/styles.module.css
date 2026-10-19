@@ -1,0 +1,10 @@
+.root {
+  overflow-x: clip;
+  -webkit-user-drag: none;
+
+  --max-section-width: 1300px;
+}
+
+:global(.navigation-layout):has(.root) {
+  overflow-y: auto;
+}

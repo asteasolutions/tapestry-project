@@ -13,7 +13,7 @@ import { AUTH_PROVIDERS } from './providers-registry'
 export const auth = new AuthService()
 
 interface RegistrationModalProps {
-  initialUsername: string
+  initialUsername?: string
   initialFirstName?: string
   initialLastName?: string
 }
@@ -25,7 +25,7 @@ interface FormDataState {
 }
 
 function RegistrationModal({
-  initialUsername,
+  initialUsername = '',
   initialFirstName = '',
   initialLastName = '',
 }: RegistrationModalProps) {
