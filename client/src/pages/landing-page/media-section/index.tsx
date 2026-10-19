@@ -77,6 +77,8 @@ export function MediaSection() {
               autoPlay
               loop
               disablePictureInPicture
+              muted
+              playsInline
               onMouseEnter={() => {
                 videoRef.current?.setAttribute('controls', 'true')
               }}
