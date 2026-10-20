@@ -21,7 +21,7 @@ import { useDispatch, useTapestryData } from '../../../../pages/tapestry/tapestr
 import { updateItem } from '../../../../pages/tapestry/view-model/store-commands/items'
 import { resource } from '../../../../services/rest-resources'
 import { TimeInput } from '../../../time-input'
-import { buildToolbarMenu, ItemToolbarMenu } from '../../item-toolbar'
+import { buildToolbarMenu } from '../../item-toolbar'
 import { PlayableShareMenu, shareMenu } from '../../item-toolbar/share-menu'
 import { useItemToolbar } from '../../item-toolbar/use-item-toolbar'
 import { TapestryItem } from '../tapestry-item'
@@ -101,10 +101,9 @@ export const WebpageItem = memo(({ id }: TapestryItemProps) => {
   const { webpageType } = webSourceParams
 
   const { conversionStarted, convertToPDFMenuItem } = useConvertToPDF(id)
-  const { containerRef, isFullscreen, fullscreenButton, exitFullscreenButton } =
-    useItemFullscreen<HTMLDivElement>({
-      exitButtonStyle: { position: 'absolute', top: 16, right: 16 },
-    })
+  const { containerRef, isFullscreen, exitFullscreenButton } = useItemFullscreen<HTMLDivElement>({
+    exitButtonStyle: { position: 'absolute', top: 16, right: 16 },
+  })
   const dispatch = useDispatch()
   const patch = ({ webpageType, data }: PatchSourceArgument) =>
     dispatch(
@@ -175,8 +174,6 @@ export const WebpageItem = memo(({ id }: TapestryItemProps) => {
           : 'share',
       })
 
-      const fullscreenItems: ItemToolbarMenu = isPlayable ? [] : [fullscreenButton, 'separator']
-
       return isEditMode
         ? [
             {
@@ -193,12 +190,11 @@ export const WebpageItem = memo(({ id }: TapestryItemProps) => {
               tooltip: { side: 'bottom', children: 'Switch to Wayback Machine version' },
             },
             'separator',
-            ...fullscreenItems,
             refreshButton,
             'separator',
             ...controls,
           ]
-        : [...fullscreenItems, refreshButton, 'separator', ...controls]
+        : [refreshButton, 'separator', ...controls]
     },
     moreMenuItems: [
       ...(webpageType === 'youtube' || webpageType === 'vimeo'
