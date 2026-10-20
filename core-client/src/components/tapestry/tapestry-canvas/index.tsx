@@ -20,14 +20,6 @@ import { useThemeCss } from '../../lib/hooks/use-theme-css'
 
 const ITEMS_WITHOUT_THUMBNAIL_PLACEHOLDER: ItemType[] = ['text', 'actionButton']
 
-function shouldDisplayThumbnailPlaceholder(item: ItemViewModel) {
-  return (
-    (item.dto.thumbnail?.renditions.length ?? 0) > 0 &&
-    !item.snapshotId &&
-    !ITEMS_WITHOUT_THUMBNAIL_PLACEHOLDER.includes(item.dto.type)
-  )
-}
-
 export function shouldDisplayDom(
   {
     disableOptimizations,
@@ -42,7 +34,8 @@ export function shouldDisplayDom(
     disableOptimizations ||
     isInteractive ||
     item.isPlaying ||
-    (thumbnailsInitialized ? !item.snapshotId : !shouldDisplayThumbnailPlaceholder(item))
+    (!item.snapshotId &&
+      (thumbnailsInitialized || ITEMS_WITHOUT_THUMBNAIL_PLACEHOLDER.includes(item.dto.type)))
   )
 }
 
