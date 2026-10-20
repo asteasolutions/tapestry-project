@@ -16,6 +16,7 @@ model User {
   createdAt            DateTime              @default(now())
   updatedAt            DateTime              @updatedAt
   gsiUserId            String?               @unique
+  blueskyDid           String?               @unique
   orcidId              String?               @unique
   wikimediaId          String?               @unique
   email                String?               @unique
@@ -90,6 +91,7 @@ model TapestryAccess {
   canEdit    Boolean  @default(false)
 
   @@unique([userId, tapestryId])
+  @@index([tapestryId])
 }
 
 model TapestryInvitation {
@@ -99,6 +101,8 @@ model TapestryInvitation {
   tapestryId String
   tapestry   Tapestry @relation(fields: [tapestryId], references: [id], onDelete: Cascade)
   canEdit    Boolean  @default(false)
+
+  @@index([tapestryId])
 }
 
 model TapestryInteraction {
@@ -172,6 +176,8 @@ model ImageAssetRendition {
   format          String
   width           Int
   height          Int
+
+  @@index([assetId])
 }
 
 enum ThumbnailProcessing {
@@ -214,6 +220,10 @@ model Item {
   comments                     Comment[]
   presentationSteps            PresentationStep[]
   referencingAttachments       AiChatMessageAttachment[]
+
+  @@index([tapestryId])
+  @@index([thumbnailId])
+  @@index([groupId])
 }
 
 model PresentationStep {
@@ -227,6 +237,10 @@ model PresentationStep {
   prevStepId String?
   prevStep   PresentationStep?  @relation("order", fields: [prevStepId], references: [id], onDelete: Restrict)
   nextSteps  PresentationStep[] @relation("order")
+
+  @@index([itemId])
+  @@index([groupId])
+  @@index([prevStepId])
 }
 
 enum RelArrowhead {
@@ -259,6 +273,10 @@ model Rel {
   color         String
   weight        LineWeight   @default(light)
   comments      Comment[]
+
+  @@index([tapestryId])
+  @@index([fromItemId])
+  @@index([toItemId])
 }
 
 enum CommentContextType {
@@ -286,6 +304,11 @@ model Comment {
   parentCommentId String?
   replies         Comment[]          @relation("reply")
   deletedAt       DateTime?
+
+  @@index([tapestryId])
+  @@index([itemId])
+  @@index([relId])
+  @@index([parentCommentId])
 }
 
 enum JobStatus {
@@ -333,6 +356,9 @@ model AiChat {
   tapestry      Tapestry?       @relation(fields: [tapestryId], references: [id], onDelete: Cascade)
   tapestryId    String?
   messages      AiChatMessage[]
+
+  @@index([userId])
+  @@index([tapestryId])
 }
 
 enum AiChatParticipantRole {
@@ -356,6 +382,8 @@ model AiChatMessage {
   content     String
   state       AiChatMessageState
   attachments AiChatMessageAttachment[]
+
+  @@index([chatId])
 }
 
 enum AiChatMessageAttachmentType {
@@ -371,6 +399,9 @@ model AiChatMessageAttachment {
   type      AiChatMessageAttachmentType
   itemId    String?
   item      Item?                       @relation(fields: [itemId], references: [id], onDelete: SetNull)
+
+  @@index([messageId])
+  @@index([itemId])
 }
 
 model Group {
@@ -384,6 +415,8 @@ model Group {
   hasBackground     Boolean            @default(true)
   hasBorder         Boolean            @default(true)
   presentationSteps PresentationStep[]
+
+  @@index([tapestryId])
 }
 
 enum UserSecretType {
@@ -398,4 +431,6 @@ model UserSecret {
   maskedValue String
   owner       User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   ownerId     String
+
+  @@index([ownerId])
 }

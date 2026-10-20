@@ -7,8 +7,12 @@ assume_deploy_role
 # TODO: Make docker use build cache when building this image. Probably upload it to ECR to use as cache later?
 docker build \
   --build-arg VITE_API_URL=${EXTERNAL_SERVER_URL} \
+  --build-arg VITE_ATPROTO_CLIENT_ID=${VIEWER_URL}/atproto-client-metadata.json \
   --build-arg VITE_AUTH_PROVIDERS=${AUTH_PROVIDERS} \
   --build-arg VITE_GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID} \
+  --build-arg VITE_OAUTH_REDIRECT_URI=${OAUTH_REDIRECT_URI} \
+  --build-arg VITE_ORCID_CLIENT_ID=${ORCID_CLIENT_ID} \
+  --build-arg VITE_WIKIMEDIA_CLIENT_ID=${WIKIMEDIA_CLIENT_ID} \
   --build-arg VITE_BUG_REPORT_FORM_URL=${BUG_REPORT_FORM_URL} \
   --build-arg VITE_AI_CHAT_EXPIRES_IN=${AI_CHAT_EXPIRES_IN} \
   --build-arg VITE_WEBPAGE_LOADER_TIMEOUT=${WEBPAGE_LOADER_TIMEOUT} \

@@ -8,6 +8,9 @@ import { InvalidCredentialsError, ServerError } from '../../errors/index.js'
 import { findUserIdOrStartRegistration } from '../index.js'
 import { RegisterUserSuggestionsSchema } from 'tapestry-shared/src/data-transfer/resources/schemas/session.js'
 
+// Wikimedia requires a descriptive User-Agent from server-side clients and rate limits the default one
+const WIKIMEDIA_API_USER_AGENT = 'Tapestry/1.0 (https://github.com/asteasolutions/tapestry-project)'
+
 // Wikimedia returns only tokens here; the user's identity comes from the profile endpoint
 const WikimediaTokenSchema = BaseTokenResponseSchema
 
@@ -28,13 +31,18 @@ async function fetchWikimediaProfile(code: string, redirectUri: string) {
       clientSecret,
       code,
       redirectUri,
+      headers: { 'User-Agent': WIKIMEDIA_API_USER_AGENT },
     },
     WikimediaTokenSchema,
   )
 
   try {
     const response = await fetch(`${baseUrl}/w/rest.php/oauth2/resource/profile`, {
-      headers: { Authorization: `Bearer ${access_token}`, Accept: 'application/json' },
+      headers: {
+        Authorization: `Bearer ${access_token}`,
+        Accept: 'application/json',
+        'User-Agent': WIKIMEDIA_API_USER_AGENT,
+      },
     })
     if (!response.ok) {
       throw new InvalidCredentialsError()

@@ -107,7 +107,7 @@ export function Tapestry({ initialThumbnails }: TapestryProps) {
         initialThumbnails,
       ),
     onInit: () => {
-      if (title) {
+      if (title && !hideControls) {
         dispatch(
           setSnackbar({
             text: `"${title}" by ${fullName(owner)}`,

@@ -16,11 +16,12 @@ interface ExchangeCodeParams {
   clientSecret: string
   code: string
   redirectUri: string
+  headers?: Record<string, string>
 }
 
 //Here in ExchangeCodeParams we have the common things for our OAuth providers
 export async function exchangeCodeForToken<T>(
-  { tokenUrl, clientId, clientSecret, code, redirectUri }: ExchangeCodeParams,
+  { tokenUrl, clientId, clientSecret, code, redirectUri, headers }: ExchangeCodeParams,
   schema: z.ZodType<T>,
 ): Promise<T> {
   try {
@@ -29,6 +30,7 @@ export async function exchangeCodeForToken<T>(
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/x-www-form-urlencoded',
+        ...headers,
       },
       body: new URLSearchParams({
         client_id: clientId,

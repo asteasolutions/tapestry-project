@@ -1,5 +1,5 @@
 .root {
-  padding: 70px 100px;
+  padding: 70px var(--section-padding-x);
   background-color: var(--color-section-red);
   display: flex;
   flex-direction: column;
@@ -8,6 +8,10 @@
   .title {
     font-style: italic;
     margin-bottom: 15px;
+
+    @media screen and (width <= 1200px) {
+      font-size: 28px;
+    }
   }
 
   .title,
@@ -21,5 +25,16 @@
     display: flex;
     gap: 30px;
     height: 400px;
+
+    @media screen and (width <= 1200px) {
+      flex-direction: column;
+      align-items: center;
+      height: unset;
+      max-width: 500px;
+
+      :global(.typography) {
+        font-size: 12px;
+      }
+    }
   }
 }

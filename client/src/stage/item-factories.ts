@@ -166,9 +166,9 @@ export async function createIAMediaItems(tapestryId: string, iaItems: IAItem[]) 
 }
 
 /** Create a IIIF item from a manifest URL. Return `null` if it isn't a real manifest. */
-async function createIIIFItem(manifestUrl: string, tapestryId: string) {
+async function createIIIFItem(manifestUrl: string, tapestryId: string, originalSource: string) {
   if (!(await isIIIFManifest(manifestUrl))) return null
-  return createMediaItem('iiif', manifestUrl, tapestryId)
+  return createMediaItem('iiif', manifestUrl, tapestryId, originalSource)
 }
 
 const iiifItemFactory: ItemFactory = async (source, mediaType, tapestryId) => {
@@ -179,7 +179,7 @@ const iiifItemFactory: ItemFactory = async (source, mediaType, tapestryId) => {
     (mediaType?.includes('json') || /iiif|manifest/i.test(source) ? source : null)
   if (!manifestUrl) return null
 
-  const item = await createIIIFItem(manifestUrl, tapestryId)
+  const item = await createIIIFItem(manifestUrl, tapestryId, source)
   if (!item) return null
 
   return { items: [item], iaImports: [] }
@@ -213,7 +213,7 @@ const iaFactory: ItemFactory = async (source, _mediaType, tapestryId) => {
   }
 
   if (metadata?.mediatype === 'image') {
-    const item = await createIIIFItem(getIAIIIFManifestURL(id), tapestryId)
+    const item = await createIIIFItem(getIAIIIFManifestURL(id), tapestryId, source)
     if (item) return { items: [item], iaImports: [] }
   }
 

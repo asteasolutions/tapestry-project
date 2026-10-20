@@ -59,7 +59,11 @@ export class AuthService extends Observable<AuthServiceState> {
   }
 
   constructor() {
-    super({ user: null, isInitialized: false, pendingRegistration: undefined })
+    super({
+      user: null,
+      isInitialized: false,
+      pendingRegistration: undefined,
+    })
   }
 
   private doPrepare() {
