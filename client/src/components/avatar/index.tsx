@@ -17,12 +17,17 @@ interface AvatarProps {
   onClick?: () => unknown
 }
 
-export function Avatar({ user, className, size, onClick, style, tooltip }: AvatarProps) {
-  const [showInitials, setShowInitials] = useState(!user.avatar)
+function getInitials({ givenName, familyName, username }: PublicUserProfileDto) {
+  const initials = [givenName, familyName].map((n) => n?.charAt(0) ?? '').join('')
 
-  // Family name can be returned as undefined by google and we default it to an empty string
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-  const initials = `${user.givenName[0].toUpperCase()}${user.familyName[0]?.toUpperCase() ?? ''}`
+  return (initials || username.charAt(0)).toUpperCase()
+}
+
+export function Avatar({ user, className, size, onClick, style, tooltip }: AvatarProps) {
+  const [failed, setFailed] = useState(false)
+  const showInitials = !user.avatar || failed
+
+  const initials = getInitials(user)
   const children = showInitials ? (
     initials
   ) : (
@@ -30,7 +35,7 @@ export function Avatar({ user, className, size, onClick, style, tooltip }: Avata
       src={user.avatar!}
       alt={fullName(user)}
       onError={() => {
-        setShowInitials(true)
+        setFailed(true)
       }}
     />
   )

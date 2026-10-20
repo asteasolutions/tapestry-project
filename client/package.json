@@ -13,6 +13,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@atproto/oauth-client-browser": "^0.5.9",
     "@sentry/react": "^10.33.0",
     "@tweenjs/tween.js": "^25.0.0",
     "@wavesurfer/react": "^1.0.11",
@@ -24,6 +25,7 @@
     "date-fns": "^4.1.0",
     "dompurify": "^3.2.6",
     "file-type": "^21.0.0",
+    "heic-to": "^1.5.2",
     "immer": "^10.1.1",
     "ini": "^6.0.0",
     "lodash-es": "^4.17.21",

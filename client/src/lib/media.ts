@@ -3,6 +3,12 @@ import { pdfjs } from 'react-pdf'
 import { urlToBlob } from 'tapestry-core-client/src/lib/file'
 import { aspectRatio, clampSize, innerFit, Size } from 'tapestry-core/src/lib/geometry'
 import { WEB_SOURCE_PARSERS } from 'tapestry-core/src/web-sources'
+import { fetchIIIFCanvasCount } from 'tapestry-core/src/iiif'
+import { resource } from '../services/rest-resources'
+import { getBoundingRectangle } from 'tapestry-core-client/src/view-model/utils'
+import { createItemViewModel } from '../pages/tapestry/view-model/utils'
+import { duplicateItem } from '../model/data/utils'
+import { ItemDto } from 'tapestry-shared/src/data-transfer/resources/dtos/item'
 
 export type MediaItemSource = File | string
 
@@ -21,6 +27,15 @@ export async function loadImageFromBlob(file: Blob) {
 
 export function mediaSourceToBlob(source: MediaItemSource) {
   return source instanceof File ? source : urlToBlob(source)
+}
+
+const HEIC_CONVERT_QUALITY = 0.92
+
+export async function convertHeicFile(blob: Blob) {
+  const { heicTo } = await import('heic-to')
+  const jpegBlob = await heicTo({ blob, type: 'image/jpeg', quality: HEIC_CONVERT_QUALITY })
+
+  return new File([jpegBlob], 'converted.jpg', { type: 'image/jpeg' })
 }
 
 export const MIN_ITEM_SIZE: Size = {
@@ -42,46 +57,74 @@ function getClampedItemSize(size: Size) {
   return clampSize(size, MIN_ITEM_SIZE, MAX_ITEM_SIZE)
 }
 
-export async function getImageItemSize(source: MediaItemSource, width?: number): Promise<Size> {
-  const image = await loadImageFromBlob(await mediaSourceToBlob(source))
+function isMediaItemSource(source: MediaItemSource | Size): source is MediaItemSource {
+  return source instanceof File || typeof source === 'string'
+}
+
+export async function getImageItemSize(
+  source: MediaItemSource | Size,
+  width?: number,
+): Promise<Size> {
+  const intrinsicSize: Size = isMediaItemSource(source)
+    ? await loadImageFromBlob(await mediaSourceToBlob(source))
+    : source
   const defaultImageWidth = 300
   const imageWidth = width ?? defaultImageWidth
 
   return getClampedItemSize({
     width: imageWidth,
-    height: imageWidth / aspectRatio(image),
+    height: imageWidth / aspectRatio(intrinsicSize),
   })
+}
+
+const IIIF_SINGLE_CANVAS_SIZE: Size = { width: 400, height: 400 }
+const IIIF_MULTI_CANVAS_SIZE: Size = { width: 400, height: 550 }
+
+export async function getIiifItemSize(source: MediaItemSource | Size): Promise<Size> {
+  if (!isMediaItemSource(source)) return getClampedItemSize(source)
+
+  const canvasCount = await fetchIIIFCanvasCount(source)
+  const size =
+    canvasCount !== null && canvasCount > 1 ? IIIF_MULTI_CANVAS_SIZE : IIIF_SINGLE_CANVAS_SIZE
+
+  return getClampedItemSize(size)
 }
 
 const DEFAULT_VIDEO_WIDTH = 500
 
-export async function getVideoItemSize(source: MediaItemSource): Promise<Size> {
+function videoIntrinsicSize(source: MediaItemSource): Promise<Size> {
   return new Promise((resolve) => {
     const video = document.createElement('video')
     video.src = mediaSourceToSrc(source)
 
     video.onloadedmetadata = () => {
       URL.revokeObjectURL(video.src)
-      resolve({
-        width: DEFAULT_VIDEO_WIDTH,
-        height: (DEFAULT_VIDEO_WIDTH * video.videoHeight) / video.videoWidth,
-      })
+      resolve({ width: video.videoWidth, height: video.videoHeight })
     }
   })
 }
 
-export async function getPDFItemSize(source: MediaItemSource): Promise<Size> {
-  const src = mediaSourceToSrc(source)
+export async function getVideoItemSize(source: MediaItemSource | Size): Promise<Size> {
+  const intrinsicSize = isMediaItemSource(source) ? await videoIntrinsicSize(source) : source
 
-  const doc = await pdfjs.getDocument(src).promise
-  const { width, height } = (await doc.getPage(1)).getViewport({ scale: 1 })
-  const aspectRatio = height / width
+  return {
+    width: DEFAULT_VIDEO_WIDTH,
+    height: (DEFAULT_VIDEO_WIDTH * intrinsicSize.height) / intrinsicSize.width,
+  }
+}
 
+async function getPDFPageSize(source: MediaItemSource): Promise<Size> {
+  const doc = await pdfjs.getDocument(mediaSourceToSrc(source)).promise
+  return (await doc.getPage(1)).getViewport({ scale: 1 })
+}
+
+export async function getPDFItemSize(source: MediaItemSource | Size): Promise<Size> {
+  const intrinsicSize = isMediaItemSource(source) ? await getPDFPageSize(source) : source
   const defaultPDFWidth = 300
 
   return getClampedItemSize({
     width: defaultPDFWidth,
-    height: defaultPDFWidth * aspectRatio,
+    height: defaultPDFWidth / aspectRatio(intrinsicSize),
   })
 }
 
@@ -89,8 +132,81 @@ const DEFAULT_WEBPAGE_SIZE: Size = {
   width: 400,
   height: 500,
 }
+const EMBEDDED_TAPESTRY_MAX_SIDE_SIZE = 700
+const EMBEDDED_TAPESTRY_DEFAULT_SIZE: Size = {
+  width: EMBEDDED_TAPESTRY_MAX_SIDE_SIZE,
+  height: EMBEDDED_TAPESTRY_MAX_SIDE_SIZE / 2,
+}
+const EMBEDDED_TAPESTRY_TOOLBAR_PADDING = 130
 
-export async function getWebpageItemSize(source: MediaItemSource): Promise<Size> {
+async function fetchTapestry(source: string) {
+  const url = new URL(source)
+  const segments = url.pathname.replace(/^\/?/, '').split('/')
+
+  //path by username and slug: .../u/:username/:slug
+  if (segments[0] === 'u' && segments[1] && segments[2]) {
+    return resource('tapestries').read(
+      {
+        id: `${segments[1]}/${segments[2]}`,
+      },
+      { include: ['items'] },
+    )
+  }
+
+  //path by id:  .../t/:tapestryId
+  if (segments[0] === 't' && segments[1]) {
+    return await resource('tapestries').read(
+      {
+        id: segments[1],
+      },
+      { include: ['items'] },
+    )
+  }
+  return
+}
+
+async function getEmbeddedTapestrySize(source: string): Promise<Size> {
+  const tapestry = await fetchTapestry(source)
+  if (!tapestry) {
+    return EMBEDDED_TAPESTRY_DEFAULT_SIZE
+  }
+  let width = 0
+  let height = 0
+
+  if (tapestry.startView) {
+    width = tapestry.startView.size.width
+    height = tapestry.startView.size.height
+  } else {
+    if (!tapestry.items || tapestry.items.length === 0) {
+      return EMBEDDED_TAPESTRY_DEFAULT_SIZE
+    }
+
+    const viewModels = tapestry.items.map((item: ItemDto) =>
+      createItemViewModel(duplicateItem(item)),
+    )
+    const rectangle = getBoundingRectangle(viewModels)
+    width = rectangle.width
+    height = rectangle.height
+  }
+
+  if (width <= 0 || height <= 0) {
+    return EMBEDDED_TAPESTRY_DEFAULT_SIZE
+  }
+
+  const fittedSize = innerFit(
+    { width, height },
+    { width: EMBEDDED_TAPESTRY_MAX_SIDE_SIZE, height: EMBEDDED_TAPESTRY_MAX_SIDE_SIZE },
+  )
+
+  return {
+    width: fittedSize.width,
+    height: fittedSize.height + EMBEDDED_TAPESTRY_TOOLBAR_PADDING,
+  }
+}
+
+export async function getWebpageItemSize(source: MediaItemSource | Size): Promise<Size> {
+  if (!isMediaItemSource(source)) return getClampedItemSize(source)
+
   if (source instanceof File) {
     return DEFAULT_WEBPAGE_SIZE
   }
@@ -114,6 +230,10 @@ export async function getWebpageItemSize(source: MediaItemSource): Promise<Size>
       width: DEFAULT_VIDEO_WIDTH,
       height: DEFAULT_VIDEO_WIDTH * (9 / 16),
     }
+  }
+
+  if (host === window.location.host) {
+    return getEmbeddedTapestrySize(source)
   }
 
   return Promise.resolve(DEFAULT_WEBPAGE_SIZE)

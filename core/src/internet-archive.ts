@@ -115,6 +115,31 @@ export async function iaAdvancedSearch<F extends IAAdvancedSearchFieldsQuery>(
   }
 }
 
+export function parseIASearchURLQuery(source: unknown): string | null {
+  if (typeof source !== 'string' || source === '') return null
+
+  try {
+    const url = new URL(source)
+    const query = url.searchParams.get('query')
+    if (url.host !== IA_HOST || url.pathname.replace(/^\/?/, '') !== 'search' || !query) {
+      return null
+    }
+    return query
+  } catch (error) {
+    console.warn(error)
+    return null
+  }
+}
+
+export function excludeIACollections(query: string) {
+  return `(${query}) AND NOT mediatype:collection`
+}
+
+export async function fetchIASearchCount(query: string) {
+  const response = await iaAdvancedSearch({ q: query, pageSize: 1 })
+  return response?.response.numFound
+}
+
 export function parseInternetArchiveURL(source: unknown): IAUrlDescriptor | null {
   if (typeof source !== 'string' || source === '') return null
 
@@ -222,4 +247,15 @@ export async function getIAItemMediaType(id: string) {
 
 export function getIAItemThumbnailURL(id: string) {
   return `https://archive.org/services/img/${id}`
+}
+
+const IA_IIIF_HOST = 'https://iiif.archive.org'
+
+/** Builds the URL of the IIIF Presentation manifest that Internet Archive serves for the given item. */
+export function getIAIIIFManifestURL(id: string) {
+  return `${IA_IIIF_HOST}/iiif/${id}/manifest.json`
+}
+
+export function iaDetailsUrl(item: IAItem): string {
+  return `https://${IA_HOST}/details/${item.id}`
 }

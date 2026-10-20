@@ -30,16 +30,23 @@ import {
 } from '../../pages/tapestry/view-model'
 import {
   getImageItemSize,
+  getIiifItemSize,
   getPDFItemSize,
   getVideoItemSize,
   getWebpageItemSize,
   MediaItemSource,
 } from '../../lib/media'
 import { resource } from '../../services/rest-resources'
-import { isFunction, omit } from 'lodash-es'
+import { isFunction, minBy, omit } from 'lodash-es'
 import mime from 'mime'
 import axios, { AxiosProgressEvent } from 'axios'
-import { arrayToIdMap, fileExtension, isMediaItem } from 'tapestry-core/src/utils'
+import {
+  arrayToIdMap,
+  fileExtension,
+  IdMap,
+  idMapToArray,
+  isMediaItem,
+} from 'tapestry-core/src/utils'
 import { userSettings } from '../../services/user-settings'
 import { itemUpload } from '../../services/item-upload'
 import { PublicUserProfileDto } from 'tapestry-shared/src/data-transfer/resources/dtos/user'
@@ -59,6 +66,12 @@ import {
   viewModelFromTapestry,
 } from 'tapestry-core-client/src/view-model/utils'
 import { DEFAULT_LAYER } from '../../pages/tapestry/view-model/utils'
+import { ItemViewModel } from 'tapestry-core-client/src/view-model'
+import {
+  ItemThumbnailController,
+  LoadedRendition,
+} from 'tapestry-core-client/src/stage/controller/item-thumbnail-controller'
+import { fetchBitmap } from 'tapestry-core-client/src/lib/file'
 
 export const EDITABLE_TAPESTRY_PROPS = [
   'background',
@@ -206,7 +219,7 @@ export function fromTapestryDto(
     pendingRequests: 0,
     userAccess,
     largeFiles: [],
-    iaImports: [],
+    collectionImports: [],
     collaborators: {},
   }
 
@@ -220,11 +233,12 @@ export const itemSizes = {
   audio: { width: 300, height: 50 },
   book: { width: 700, height: 500 },
   image: getImageItemSize,
+  iiif: getIiifItemSize,
   pdf: getPDFItemSize,
   video: getVideoItemSize,
   webpage: getWebpageItemSize,
   text: { height: 200, width: 400 },
-} as const satisfies Record<ItemType, Size | ((file: MediaItemSource) => Promise<Size>)>
+} as const satisfies Record<ItemType, Size | ((file: MediaItemSource | Size) => Promise<Size>)>
 
 export function createTextItem(text = '', tapestryId: string): TextItemCreateDto {
   const { textItemColor } = userSettings.getTapestrySettings(tapestryId)
@@ -287,12 +301,12 @@ export async function uploadAsset(
   return key
 }
 
-function prepareMediaSource(source: MediaItemSource): string {
+function prepareMediaSources(source: MediaItemSource, originalSource?: string) {
   if (typeof source === 'string') {
-    return source
+    return { source, originalSource: originalSource ?? source }
   }
 
-  return itemUpload.prepare(source)
+  return { source: itemUpload.prepare(source) }
 }
 
 export async function getItemSize(item: ItemDto): Promise<Size> {
@@ -302,7 +316,10 @@ export async function getItemSize(item: ItemDto): Promise<Size> {
   return itemSizes[item.type]
 }
 
-async function getMediaItemSize(type: MediaItemType, source: MediaItemSource): Promise<Size> {
+async function getMediaItemSize(
+  type: MediaItemType,
+  source: MediaItemSource | Size,
+): Promise<Size> {
   const sizeGetter = itemSizes[type]
   return isFunction(sizeGetter) ? await sizeGetter(source) : sizeGetter
 }
@@ -311,18 +328,38 @@ export async function createMediaItem<T extends MediaItemType>(
   type: T,
   source: MediaItemSource,
   tapestryId: string,
+  originalSource?: string,
+  knownSize?: Size,
 ) {
-  const size = await getMediaItemSize(type, source)
+  const size = await getMediaItemSize(type, knownSize ?? source)
   return {
     type,
     size,
-    source: prepareMediaSource(source),
+    ...prepareMediaSources(source, originalSource),
     title: '',
     dropShadow: true,
     position: ORIGIN,
     tapestryId,
     layer: DEFAULT_LAYER,
   } satisfies MediaItemCreateDto as MediaItemCreateDto & { type: T }
+}
+
+// Creates an item from a source on another platform, keeping the platform page as an original source.
+export async function createDerivedSourceMediaItem(
+  tapestryId: string,
+  media: { source: string; originalSource: string; mediaType: MediaItemType; size?: Size },
+) {
+  try {
+    return await createMediaItem(
+      media.mediaType,
+      media.source,
+      tapestryId,
+      media.originalSource,
+      media.size,
+    )
+  } catch {
+    return null
+  }
 }
 
 // TODO: Handle the scenario where the source is an S3 object and therefore needs to be cloned.
@@ -391,6 +428,41 @@ export function userAccess(
   return 'view'
 }
 
-export function fullName({ givenName, familyName }: PublicUserProfileDto) {
-  return `${givenName} ${familyName}`
+export function firstName({ givenName, username }: PublicUserProfileDto) {
+  return givenName || username
+}
+
+export function fullName({ givenName, familyName, username }: PublicUserProfileDto) {
+  return [givenName, familyName].filter(Boolean).join(' ') || username
+}
+
+export async function loadInitialThumbnails(
+  items: IdMap<ItemViewModel>,
+  timeout?: number,
+): Promise<IdMap<LoadedRendition>> {
+  const renditionPromises: Promise<{ rendition: LoadedRendition; itemId: string }>[] = []
+  const timeoutSignal = timeout ? AbortSignal.timeout(timeout) : undefined
+  for (const item of idMapToArray(items)) {
+    const thumbnailRenditions = item.dto.thumbnail?.renditions ?? []
+    const rendition = minBy(thumbnailRenditions, ({ size }) => size.width)
+    if (!rendition) {
+      // No thumbnail to load
+      continue
+    }
+    renditionPromises.push(
+      fetchBitmap(rendition.source, undefined, timeoutSignal).then((bitmap) => ({
+        rendition: {
+          snapshotId: ItemThumbnailController.generateSnapshotId(),
+          bitmap,
+          meta: rendition,
+        },
+        itemId: item.dto.id,
+      })),
+    )
+  }
+  const renditionResults = (await Promise.allSettled(renditionPromises))
+    .filter((promise) => promise.status === 'fulfilled')
+    .map((p) => p.value)
+
+  return Object.fromEntries(renditionResults.map((result) => [result.itemId, result.rendition]))
 }

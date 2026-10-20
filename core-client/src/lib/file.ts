@@ -1,3 +1,5 @@
+import { Size } from 'tapestry-core/src/data-format/schemas/common'
+
 function isDir(entry: FileSystemEntry): entry is FileSystemDirectoryEntry {
   return entry.isDirectory
 }
@@ -49,4 +51,21 @@ export async function fileToBase64(file: File) {
     reader.onerror = reject
     reader.readAsDataURL(file)
   })
+}
+
+export async function fetchBitmap(url: string, resize?: Size, signal?: AbortSignal) {
+  const res = await fetch(url, { mode: 'cors', signal })
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  const blob = await res.blob()
+
+  return createImageBitmap(
+    blob,
+    resize
+      ? {
+          resizeWidth: resize.width,
+          resizeHeight: resize.height,
+          resizeQuality: 'high',
+        }
+      : undefined,
+  )
 }

@@ -1,15 +1,15 @@
 # Tapestry Project
 
-A *Tapestry* is a digital format describing an endless canvas that hosts a variety of interconnected multimedia items. An instance of the Tapestry Project is hosted on https://tapestries.media. The Tapestry Project is open-source.
+A _Tapestry_ is a digital format describing an endless canvas that hosts a variety of interconnected multimedia items. An instance of the Tapestry Project is hosted on https://tapestries.media. The Tapestry Project is open-source.
 
 ## Repository Structure
 
- * [`core`](./core) - Contains a description of the base Tapestry data format, including TypeScript types, Zod schemas, and various utilities.
- * [`core-client`](./core-client) - An opinionated collection of React tools and components for building React-based Tapestry applications.
- * Main application consisting of three separate sub-projects:
-   * [`shared`](./shared) - Builds on top of the `core` schemas to describe one specific REST API structure along with Data-Transfer Object (DTO) definitions. Describes the "contract" for client-server communication.
-   * [`server`](./server) - The backend component of the main application. Handles authentication, data validation, persists tapestry data in a database, auto-generates item thumbnails during Tapestry creation, etc.
-   * [`client`](./client) - The main frontend application, including a Tapestry viewer and a WYSIWYG Tapestry authoring tool.
+- [`core`](./core) - Contains a description of the base Tapestry data format, including TypeScript types, Zod schemas, and various utilities.
+- [`core-client`](./core-client) - An opinionated collection of React tools and components for building React-based Tapestry applications.
+- Main application consisting of three separate sub-projects:
+  - [`shared`](./shared) - Builds on top of the `core` schemas to describe one specific REST API structure along with Data-Transfer Object (DTO) definitions. Describes the "contract" for client-server communication.
+  - [`server`](./server) - The backend component of the main application. Handles authentication, data validation, persists tapestry data in a database, auto-generates item thumbnails during Tapestry creation, etc.
+  - [`client`](./client) - The main frontend application, including a Tapestry viewer and a WYSIWYG Tapestry authoring tool.
 
 ## Running the Tapestry Application
 
@@ -21,25 +21,56 @@ The application is configured via environment variables. The env variables for t
 
 #### Authentication Providers
 
-The application doesn't have built-in user registration and authentication capabilities and depends on external authentication providers. Currently there are two supported providers: Internet Archive and Google. The application can use either one or the other. This is configured via the `VITE_AUTH_PROVIDER` variable in the `client` project.
+The application doesn't have built-in user registration and authentication capabilities and depends on external authentication providers. Currently there are four supported providers: Internet Archive, Google, ORCID and Wikimedia. The application can use one or more of them. This is configured via the `VITE_AUTH_PROVIDERS` variable in the `client` project. To set multiple, separate them with a comma like this `google,ia,orcid,wikimedia`.
 
 ##### Internet Archive Login
 
-If `VITE_AUTH_PROVIDER` is set to `ia`, the Tapestries frontend will provide a username/password form for users to log in. In this form users can enter any valid credentials for [Internet Archive](https://archive.org). No further configuration is necessary for this to work.
+If `VITE_AUTH_PROVIDERS` is set to `ia`, the Tapestries frontend will provide a username/password form for users to log in. In this form users can enter any valid credentials for [Internet Archive](https://archive.org). No further configuration is necessary for this to work.
 
 It is also possible to configure the Tapestry application to use shared sessions with `archive.org`, i.e. users who have already logged into `archive.org` get logged into Tapestries automatically. For this purpose, the Tapestry application needs to be deployed to a subdomain of `archive.org` and the `IA_ACCOUNT_ID` and `IA_SECRET` env variables for the server need to be configured with an account that has permissions to use the IA xauthn API.
 
 ##### Google Login
 
-If `VITE_AUTH_PROVIDER` is set to `google`, the Tapestries frontend will display a "Sign in With Google" button. The application uses Google Identity Services for this workflow and needs a valid OAuth2.0 client ID to be provided via the `GOOGLE_CLIENT_ID` env variable for the backend and `VITE_GOOGLE_CLIENT_ID` for the frontend. Follow this guide to obtain a Google Client ID: https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid#get_your_google_api_client_id
+If `VITE_AUTH_PROVIDERS` is set to `google`, the Tapestries frontend will display a "Sign in With Google" button. The application uses Google Identity Services for this workflow and needs a valid OAuth2.0 client ID to be provided via the `GOOGLE_CLIENT_ID` env variable for the backend and `VITE_GOOGLE_CLIENT_ID` for the frontend. Follow this guide to obtain a Google Client ID: https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid#get_your_google_api_client_id
+
+##### OAuth Providers (ORCID and Wikimedia)
+
+ORCID and Wikimedia both use the standard OAuth 2.0 authorization code flow and share most of their implementation:
+
+1. The frontend redirects the whole window to the provider's authorize endpoint. The `state` parameter is set to `<provider>:<nonce>`; the nonce is kept in `sessionStorage`.
+2. The provider redirects back to the configured redirect URI with a `?code=...&state=...` query.
+3. On load, the frontend checks that the `state` belongs to the provider and that the nonce matches, removes the OAuth parameters from the URL, and sends the `code` and the `redirectUri` to the server.
+4. The server exchanges the code for tokens at the provider's token endpoint, resolves the user's identity, and either logs the user in or starts the registration flow.
+
+The shared logic lives in `client/src/auth/oauth-client.ts` (redirect, `state`/nonce handling, code exchange request) and `server/src/auth/providers/oauth.ts` (token exchange). Each provider only adds its endpoints, scope, and how the identity is read. Because every provider handles only its own `state`, several OAuth providers can be enabled at the same time.
+
+Things that apply to both providers:
+
+- The redirect URI is matched **exactly** by the provider, including the trailing slash, and the same value must be sent in the authorize and token steps. It is configured on the frontend only (`VITE_*_REDIRECT_URI`; blank means the app's own origin followed by `/`), the server receives it from the client.
+- The client secret is used by the server only and must never be exposed through a `VITE_*` variable.
+- All `VITE_*` variables are compiled into the frontend bundle at build time. When using Docker, changing them requires rebuilding the client image. Restarting the container is not enough.
+- Start and finish a login on the same origin (for example, always `localhost` or always `127.0.0.1`), because the nonce is stored per origin.
+
+##### ORCID Login
+
+If `VITE_AUTH_PROVIDERS` contains `orcid`, the Tapestries frontend will display a "Sign in with ORCID" button. The application uses ORCID's [OAuth 2.0 "Get an authenticated ORCID iD"](https://info.orcid.org/documentation/api-tutorials/api-tutorial-get-and-authenticated-orcid-id/) flow: the frontend redirects the user to ORCID, ORCID redirects back with an authorization code, and the backend exchanges that code for the authenticated ORCID iD. Register an application at https://orcid.org/developer-tools (production) or https://sandbox.orcid.org/developer-tools (testing). Sandbox and production credentials are not interchangeable. ORCID does not accept `localhost` as a redirect URI, use `http://127.0.0.1:<port>/` instead, and open the app on that address.
+
+Configure the backend with `ORCID_CLIENT_ID` and `ORCID_CLIENT_SECRET`, and the frontend with `VITE_ORCID_CLIENT_ID`. By default production ORCID (`https://orcid.org`) is used; set `ORCID_BASE_URL` / `VITE_ORCID_BASE_URL` to `https://sandbox.orcid.org` for testing against the sandbox. The OAuth callback defaults to the app's own origin but can be overridden with `ORCID_REDIRECT_URI` / `VITE_ORCID_REDIRECT_URI`. Note that the `/authenticate` scope only returns the user's ORCID iD and name (no email), so Tapestries derives a stable placeholder email from the ORCID iD.
+
+##### Wikimedia Login
+
+If `VITE_AUTH_PROVIDERS` contains `wikimedia`, the Tapestries frontend will display a "Continue with Wikimedia" button. The application uses Wikimedia's OAuth 2.0 authorization code flow: the frontend redirects the user to Meta-Wiki, Meta-Wiki redirects back with an authorization code, and the backend exchanges that code for an access token. Unlike ORCID, the token response contains only tokens and no user identity, so the backend makes a second request with the access token to the profile endpoint (`/w/rest.php/oauth2/resource/profile`) in order to read the user's ID (`sub`), username and, if it was granted, email address. The ID is stored in `User.wikimediaId` and is the only value used to recognize a returning user, because usernames can be changed. The username is used only as a suggestion in the registration form.
+
+Configure the backend with `WIKIMEDIA_CLIENT_ID` and `WIKIMEDIA_CLIENT_SECRET`, and the frontend with `VITE_WIKIMEDIA_CLIENT_ID`. The client ID is the "Client application key" and the secret is the "Client application secret", which is shown only once, so store it right away. By default `https://meta.wikimedia.org` is used; set `WIKIMEDIA_BASE_URL` / `VITE_WIKIMEDIA_BASE_URL` to change it. The OAuth callback defaults to the app's own origin but can be overridden with `WIKIMEDIA_REDIRECT_URI` / `VITE_WIKIMEDIA_REDIRECT_URI`. Note that, unlike ORCID, there is no `scope` parameter, because the permissions are fixed when the consumer is registered. If the email address is not part of the granted permissions, Tapestries derives a stable placeholder email from the user ID.
 
 ## Running Locally
 
 The main Tapestry application consists of a backend (`server` API and worker) and frontend (`client`) components, but it also requires additional infrastructure. More specifically:
- - A PostgreSQL database for storing Tapestry data.
- - An AWS S3 bucket for storing Tapestry binary assets.
- - A Redis server instance for caching and scheduling background jobs.
- - (optional) A HashiCorp Vault for storing user secrets such as AI API keys.
+
+- A PostgreSQL database for storing Tapestry data.
+- An AWS S3 bucket for storing Tapestry binary assets.
+- A Redis server instance for caching and scheduling background jobs.
+- (optional) A HashiCorp Vault for storing user secrets such as AI API keys.
 
 This makes a total of 7 separate components. Each of these components can be hosted in multiple ways - locally on the host machine, in a Docker container, as an external service (SaaS), etc. Obviously this creates a very large amount of possible setups for local development or deployment. Here we will discuss each of these components shortly and show an example how it can be started locally, but keep in mind that in some cases there may be more convenient ways to run it.
 

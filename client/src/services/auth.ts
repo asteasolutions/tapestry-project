@@ -1,55 +1,75 @@
-import { UserDto } from 'tapestry-shared/src/data-transfer/resources/dtos/user'
-import { resource } from './rest-resources'
-import { api } from './api'
 import { Observable } from 'tapestry-core-client/src/lib/events/observable'
 import { CanceledError, GenericAbortSignal } from 'axios'
 import { SessionCreateDto } from 'tapestry-shared/src/data-transfer/resources/dtos/session'
+import { UserDto } from 'tapestry-shared/src/data-transfer/resources/dtos/user'
 import { APIError } from '../errors'
+import { resource } from '../services/rest-resources'
+import { AUTH_PROVIDERS } from '../auth/providers-registry'
+import { RegistrationSuggestions } from 'tapestry-shared/src/data-transfer/resources/dtos/errors'
+
+interface Token {
+  token: string
+  expiresAt: number
+}
+
+export interface RegisterData {
+  username: string
+  firstName?: string
+  lastName?: string
+}
 
 export interface AuthServiceState {
   user: UserDto | null
   isInitialized: boolean
-  pendingRegistration: { usernameSuggestion: string } | undefined
+  pendingRegistration: RegistrationSuggestions | undefined
 }
 
-function defer<T = void>() {
-  let resolve: (value: T) => void
-  let reject: (error: Error) => void
-  let state = 'pending' as 'pending' | 'resolved' | 'rejected'
-  const promise = new Promise<T>((res, rej) => {
-    resolve = (value: T) => {
+interface Deferred<T> {
+  promise: Promise<T>
+  resolve: (value: T) => void
+  reject: (error: Error) => void
+  state: 'pending' | 'resolved' | 'rejected'
+}
+
+function defer<T = void>(): Deferred<T> {
+  const deferred = {} as Deferred<T>
+  deferred.state = 'pending'
+
+  deferred.promise = new Promise<T>((res, rej) => {
+    deferred.resolve = (value: T) => {
       res(value)
-      state = 'resolved'
+      deferred.state = 'resolved'
     }
-    reject = (error: Error) => {
+    deferred.reject = (error: Error) => {
       rej(error)
-      state = 'rejected'
+      deferred.state = 'rejected'
     }
   })
 
-  // @ts-expect-error TS doesn't know that Promise executors are called synchronously
-  // and thinks that resolve and reject are not defined here yet.
-  return { promise, resolve, reject, state }
+  return deferred
 }
 
-export abstract class AuthService<
-  Credentials extends SessionCreateDto = SessionCreateDto,
-> extends Observable<AuthServiceState> {
+export class AuthService extends Observable<AuthServiceState> {
   private autoRefreshTimeout: number | undefined
   private preparing = defer()
-  private accessToken?: string
+  private _accessToken: Token | null = null
 
-  get token() {
-    return this.accessToken
+  get accessToken() {
+    return structuredClone(this._accessToken)
   }
 
   constructor() {
-    super({ user: null, isInitialized: false, pendingRegistration: undefined })
+    super({
+      user: null,
+      isInitialized: false,
+      pendingRegistration: undefined,
+    })
   }
 
-  /** Override in descendants to implement any preparation logic. */
-  protected doPrepare() {
-    // Nothing.
+  private doPrepare() {
+    for (const provider of AUTH_PROVIDERS) {
+      provider.prepare?.()
+    }
   }
 
   prepare() {
@@ -59,17 +79,13 @@ export abstract class AuthService<
     }
   }
 
-  protected async doLogin(
-    params: SessionCreateDto,
-    loadUser: boolean,
-    signal?: GenericAbortSignal,
-  ) {
+  private async doLogin(params: SessionCreateDto, loadUser: boolean, signal?: GenericAbortSignal) {
     await this.preparing.promise
 
     try {
       // We don't want to send the old access token (if any) when refreshing the session
       // because if it is invalid, it would cause an InvalidAccessTokenError.
-      api.setAccessToken(null)
+      this._accessToken = null
       const { accessToken, user, expiresAt } = await resource('sessions').create(
         params,
         { include: loadUser ? ['user'] : undefined },
@@ -79,10 +95,9 @@ export abstract class AuthService<
       const renewAfter = expiresAt - Date.now() - 10_000
       if (renewAfter > 0) {
         clearTimeout(this.autoRefreshTimeout)
-        this.autoRefreshTimeout = window.setTimeout(this.refresh.bind(this), renewAfter)
+        this.autoRefreshTimeout = window.setTimeout(this.refresh.bind(this, false), renewAfter)
       }
-      api.setAccessToken(accessToken)
-      this.accessToken = accessToken
+      this._accessToken = { token: accessToken, expiresAt }
       this.update((state) => {
         state.user = user ?? state.user ?? null
         state.isInitialized = true
@@ -98,9 +113,11 @@ export abstract class AuthService<
           const errorName = error.data.name
           if (errorName === 'SessionExpiredError') {
             state.user = null
-          } else if (errorName === 'UserDoesNotExistsError') {
+          } else if (errorName === 'UserDoesNotExistError') {
             state.pendingRegistration = {
               usernameSuggestion: error.data.usernameSuggestion,
+              firstNameSuggestion: error.data.firstNameSuggestion,
+              lastNameSuggestion: error.data.lastNameSuggestion,
             }
           }
         }
@@ -109,26 +126,41 @@ export abstract class AuthService<
     }
   }
 
-  async refresh(loadUser = false, signal?: GenericAbortSignal) {
+  async refresh(loadUser: boolean, signal?: GenericAbortSignal) {
     await this.doLogin({ authType: 'refreshToken' }, loadUser, signal)
   }
 
-  login(_credentials: Credentials, _signal?: GenericAbortSignal): Promise<void> {
-    throw new Error('Not implemented')
+  async tryOauthLogin(): Promise<boolean> {
+    for (const provider of AUTH_PROVIDERS) {
+      if (await provider.tryCompleteLogin?.()) return true
+    }
+    return false
+  }
+
+  login(credentials: SessionCreateDto, signal?: GenericAbortSignal): Promise<void> {
+    return this.doLogin(credentials, true, signal)
   }
 
   async logout(signal?: GenericAbortSignal) {
     if (!this.value.user) return
 
     await resource('sessions').destroy({ id: this.value.user.id }, { signal })
-    api.setAccessToken(null)
+    this._accessToken = null
+    clearTimeout(this.autoRefreshTimeout)
     this.update((state) => {
       state.user = null
     })
   }
 
-  register(username: string, signal?: GenericAbortSignal) {
-    return this.doLogin({ authType: 'registerUser', username }, true, signal)
+  register(data: RegisterData, signal?: GenericAbortSignal) {
+    return this.doLogin(
+      {
+        authType: 'registerUser',
+        ...data,
+      },
+      true,
+      signal,
+    )
   }
 
   cancelRegistration() {

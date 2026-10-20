@@ -100,7 +100,7 @@ export function useItemMenu<const M extends string>(
         return {
           element: (
             <IconButton
-              icon="cancel"
+              icon="select_window_off"
               aria-label="Deselect"
               onClick={() =>
                 dispatch(deselectAll(), !!item.groupId && selectGroups([item.groupId]))

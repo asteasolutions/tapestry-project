@@ -4,9 +4,12 @@
   align-items: center;
 
   .page-input {
-    width: 25px;
     border-radius: 8px;
     padding: 5px 7px;
+
+    > input {
+      width: 25px;
+    }
   }
 
   .page-input-button {

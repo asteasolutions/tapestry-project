@@ -18,6 +18,7 @@
   .disabled {
     color: var(--theme-text-disabled);
     user-select: none;
+    -webkit-user-select: none;
   }
 
   .people-with-access-title {

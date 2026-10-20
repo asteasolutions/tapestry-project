@@ -10,6 +10,8 @@ import { Item } from '@prisma/client'
 import { innerFit } from 'tapestry-core/src/lib/geometry.js'
 import { initWebpage, inNewBrowserPage, pageEval, WebpageConfig } from '../utils.js'
 
+// the width of the thumbnail as displayed in the UI * max desktop DPI
+const TAPESTRY_THUMBNAIL_WIDTH = 500 * 2
 const MAX_ITEM_SIZE = 2000
 
 async function takeItemScreenshot(page: Page, item: Item) {
@@ -59,6 +61,16 @@ async function takeItemScreenshot(page: Page, item: Item) {
     await pageEval(page, async (window) => {
       await window.document.fonts.ready
     })
+
+    if (item.type === 'iiif') {
+      // Let the manifest and its image tiles load before screenshotting.
+      console.log('> Waiting for iiif viewer network activity to settle...')
+      try {
+        await page.waitForNetworkIdle({ idleTime: 1000, timeout: 15_000 })
+      } catch {
+        console.log('> Network did not settle in time. Proceeding anyway.')
+      }
+    }
 
     console.log('> Taking screenshot...')
     const screenshot = await element.screenshot({ type: 'png', omitBackground: true })
@@ -114,7 +126,9 @@ export async function* takeTapestryScreenshots(
 
     // First take a screenshot of the whole tapestry
     const screenshot = await page.screenshot(options)
-    let item = yield await generateThumbnail(Buffer.from(screenshot))
+    let item = yield await generateThumbnail(Buffer.from(screenshot), {
+      maxDim: TAPESTRY_THUMBNAIL_WIDTH,
+    })
 
     if (!item) return
 

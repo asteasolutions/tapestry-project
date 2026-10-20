@@ -13,7 +13,7 @@ export const BULLMQ_REDIS_BASE_OPTIONS: QueueBaseOptions = {
 export interface JobTypeMap {
   'generate-tapestry-thumbnails': {
     tapestryId: string
-    generateAll?: ItemDto['scheduledThumbnailProcessing']
+    generationStrategy?: Exclude<ItemDto['scheduledThumbnailProcessing'], null> | 'standard'
   }
   's3-cleanup': void
   'create-tapestry': {

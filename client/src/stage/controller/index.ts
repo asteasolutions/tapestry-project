@@ -12,7 +12,11 @@ import { TapestryLifecycleController } from 'tapestry-core-client/src/stage/cont
 import { TapestryStage } from 'tapestry-core-client/src/stage'
 import { ViewportController } from 'tapestry-core-client/src/stage/controller/viewport-controller'
 import { EditorItemController } from './editor-item-controller'
-import { ItemThumbnailController } from 'tapestry-core-client/src/stage/controller/item-thumbnail-controller'
+import {
+  ItemThumbnailController,
+  LoadedRendition,
+} from 'tapestry-core-client/src/stage/controller/item-thumbnail-controller'
+import { IdMap } from 'tapestry-core/src/utils'
 
 export class EditorLifecycleController extends TapestryLifecycleController<
   EditableTapestryViewModel,
@@ -22,10 +26,11 @@ export class EditorLifecycleController extends TapestryLifecycleController<
     store: TapestryEditorStore,
     stage: TapestryStage<'presentationOrder'>,
     tapestryDataSyncCommands: Pick<TapestryDataSyncCommands, 'broadcastCursorPosition'>,
+    initialThumbnails?: IdMap<LoadedRendition>,
   ) {
     super(store, stage, {
       global: [
-        new ItemThumbnailController(store.as('base')),
+        new ItemThumbnailController(store.as('base'), initialThumbnails),
         new ViewportController(store.as('base'), stage),
         new EditorTapestryRenderer(store, stage),
       ],

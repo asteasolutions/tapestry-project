@@ -25,9 +25,6 @@ export const config = deepFreeze(
       NODE_ENV: z.enum(['production', 'development', 'test']).catch('development'),
       SERVER_PORT: Port(3000),
       SECRET_KEY: z.string(),
-      GOOGLE_CLIENT_ID: z.string().default(''),
-      IA_ACCOUNT_ID: z.string().default(''),
-      IA_SECRET: z.string().default(''),
       WBM_RESPONSE_CACHE_DURATION: OptionalInt(3600), // one hour in seconds
       WBM_EMPTY_RESPONSE_CACHE_DURATION: OptionalInt(120),
       ASSET_READ_URL_EXPIRES_IN: OptionalInt(604_800), // on week in seconds
@@ -38,6 +35,17 @@ export const config = deepFreeze(
         .string()
         .transform((v) => v !== 'false')
         .default(true),
+
+      // Auth
+      GOOGLE_CLIENT_ID: z.string().default(''),
+      ORCID_CLIENT_ID: z.string().default(''),
+      ORCID_CLIENT_SECRET: z.string().default(''),
+      ORCID_BASE_URL: z.string().default('https://orcid.org'),
+      WIKIMEDIA_CLIENT_ID: z.string().default(''),
+      WIKIMEDIA_CLIENT_SECRET: z.string().default(''),
+      WIKIMEDIA_BASE_URL: z.string().default('https://meta.wikimedia.org'),
+      IA_ACCOUNT_ID: z.string().default(''),
+      IA_SECRET: z.string().default(''),
 
       // AWS
       AWS_ENDPOINT_URL: z.string().default(''),
@@ -87,6 +95,16 @@ export const config = deepFreeze(
         port: input.SERVER_PORT,
         secretKey: input.SECRET_KEY,
         googleClientId: input.GOOGLE_CLIENT_ID,
+        orcid: {
+          clientId: input.ORCID_CLIENT_ID,
+          clientSecret: input.ORCID_CLIENT_SECRET,
+          baseUrl: input.ORCID_BASE_URL,
+        },
+        wikimedia: {
+          clientId: input.WIKIMEDIA_CLIENT_ID,
+          clientSecret: input.WIKIMEDIA_CLIENT_SECRET,
+          baseUrl: input.WIKIMEDIA_BASE_URL,
+        },
         assetReadUrlExpiresIn: input.ASSET_READ_URL_EXPIRES_IN,
         assetReadUrlValidationExpiresIn: input.ASSET_READ_URL_VALIDATION_EXPIRES_IN,
         externalUrl: input.EXTERNAL_SERVER_URL,

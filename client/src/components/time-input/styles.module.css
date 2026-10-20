@@ -16,13 +16,16 @@
     color: var(--theme-text-disabled);
   }
 
-  > form > input {
-    width: 20px;
+  .time-input {
     border: none;
     padding: 0;
 
-    &[disabled] {
-      color: var(--theme-text-disabled);
+    > input {
+      width: 20px;
+
+      &[disabled] {
+        color: var(--theme-text-disabled);
+      }
     }
   }
 }

@@ -13,7 +13,6 @@ import {
   WebpageItemViewer,
   WebpageItemViewerApi,
 } from 'tapestry-core-client/src/components/tapestry/items/webpage/viewer'
-import { WebpageType } from 'tapestry-core/src/data-format/schemas/item'
 import { parseWebSource, WEB_SOURCE_PARSERS } from 'tapestry-core/src/web-sources'
 import { WebpageItemDto } from 'tapestry-shared/src/data-transfer/resources/dtos/item'
 import { TapestryItemProps } from '..'
@@ -32,10 +31,10 @@ import {
   WebFrameSwitchProps,
 } from 'tapestry-core-client/src/components/tapestry/items/webpage/web-frame'
 import { useConvertToPDF } from '../../../../hooks/use-convert-to-pdf'
+import { useItemFullscreen } from 'tapestry-core-client/src/components/lib/hooks/use-item-fullscreen'
+import { PLAYABLE_WEBPAGE_TYPES } from 'tapestry-core-client/src/components/tapestry/items/webpage'
 
 const checkedSources = new Map<string, boolean>()
-
-const PLAYABLE_WEBPAGE_TYPES: WebpageType[] = ['iaAudio', 'iaVideo', 'vimeo', 'youtube']
 
 function Webpage({ src, onLoad, ...props }: WebFrameSwitchProps) {
   const onLoadRef = usePropRef(onLoad)
@@ -102,7 +101,9 @@ export const WebpageItem = memo(({ id }: TapestryItemProps) => {
   const { webpageType } = webSourceParams
 
   const { conversionStarted, convertToPDFMenuItem } = useConvertToPDF(id)
-
+  const { containerRef, isFullscreen, exitFullscreenButton } = useItemFullscreen<HTMLDivElement>({
+    exitButtonStyle: { position: 'absolute', top: 16, right: 16 },
+  })
   const dispatch = useDispatch()
   const patch = ({ webpageType, data }: PatchSourceArgument) =>
     dispatch(
@@ -172,6 +173,7 @@ export const WebpageItem = memo(({ id }: TapestryItemProps) => {
             })
           : 'share',
       })
+
       return isEditMode
         ? [
             {
@@ -189,6 +191,7 @@ export const WebpageItem = memo(({ id }: TapestryItemProps) => {
             },
             'separator',
             refreshButton,
+            'separator',
             ...controls,
           ]
         : [refreshButton, 'separator', ...controls]
@@ -228,8 +231,11 @@ export const WebpageItem = memo(({ id }: TapestryItemProps) => {
 
   return (
     <>
-      <TapestryItem id={id} halo={toolbar}>
-        <WebpageItemViewer id={id} WebFrame={Webpage} apiRef={apiRef} />
+      <TapestryItem id={id} halo={!isFullscreen && toolbar}>
+        <div ref={containerRef} className={styles.fullscreenController}>
+          <WebpageItemViewer id={id} WebFrame={Webpage} apiRef={apiRef} />
+          {isFullscreen && exitFullscreenButton}
+        </div>
       </TapestryItem>
       {showSaveToWBMPrompt && (
         <SimpleModal

@@ -4,7 +4,7 @@ import { TapestryDto } from 'tapestry-shared/src/data-transfer/resources/dtos/ta
 import {
   EditableTapestryViewModel,
   InteractionMode,
-  IAImport,
+  CollectionImport,
   convertCommand,
   EDIT_VIEWPORT_LIMITS,
 } from '..'
@@ -96,11 +96,11 @@ export function setIsConfiguringPresentationOrder(
   }
 }
 
-export function setIAImport(
-  iaImports: IAImport[],
+export function setCollectionImports(
+  collectionImports: CollectionImport[],
 ): StoreMutationCommand<EditableTapestryViewModel> {
   return (model) => {
-    model.iaImports = iaImports
+    model.collectionImports = collectionImports
   }
 }
 

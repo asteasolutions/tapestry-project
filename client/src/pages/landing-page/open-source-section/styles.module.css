@@ -1,0 +1,51 @@
+.root {
+  position: relative;
+  overflow-y: clip;
+  padding: 70px var(--section-padding-x) 35px;
+  background-color: var(--color-section-blue);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: white;
+
+  @media screen and (width >= 1200px) {
+    padding: 100px 330px 35px;
+
+    .text-wrapper {
+      max-width: 800px;
+    }
+  }
+
+  .text-wrapper {
+    .subtitle {
+      margin-bottom: 25px;
+    }
+
+    .content a {
+      color: white;
+    }
+
+    .title,
+    .subtitle {
+      text-align: center;
+    }
+  }
+
+  .buttons {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+
+    .outline-button {
+      color: white;
+
+      --hover-bg-color: transparent;
+    }
+  }
+
+  .mobile-hands-container {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+  }
+}

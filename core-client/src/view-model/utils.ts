@@ -68,6 +68,7 @@ export function viewModelFromTapestry(
     title: tapestry.title,
     description: tapestry.description,
     createdAt: tapestry.createdAt,
+    updatedAt: tapestry.updatedAt,
     thumbnail: tapestry.thumbnail,
     items: Object.fromEntries(tapestry.items.map((item) => [item.id, { dto: item }])),
     rels: Object.fromEntries(tapestry.rels.map((rel) => [rel.id, { dto: rel }])),
@@ -360,6 +361,14 @@ export function isItemInSelection<I extends ItemViewModel>(
   return (
     selection.itemIds.has(item?.dto.id ?? '') || selection.groupIds.has(item?.dto.groupId ?? '')
   )
+}
+
+export function isRelInSelection<I extends ItemViewModel>(
+  fromItem: I | undefined,
+  toItem: I | undefined,
+  selection: TapestryViewModel['selection'],
+): boolean {
+  return isItemInSelection(fromItem, selection) || isItemInSelection(toItem, selection)
 }
 
 export function getSelectionItems<I extends ItemViewModel>({

@@ -1,0 +1,133 @@
+.root {
+  --big-letter-margin: 105px;
+  --center-text-width: 700px;
+
+  .yellow-part {
+    position: relative;
+    padding: 65px var(--section-padding-x) 0;
+    background-color: var(--color-section-yellow);
+
+    @media screen and (width <= 1200px) {
+      padding-bottom: 60px;
+    }
+
+    .subtitle-quote {
+      position: relative;
+      margin-top: 55px;
+      margin-bottom: 60px;
+      width: 640px;
+
+      @media screen and (width <= 1200px) {
+        max-width: 330px;
+        padding-top: 20px;
+        padding-left: 20px;
+        margin: 20px 0;
+        width: auto;
+      }
+
+      .subtitle-quote-text {
+        position: relative;
+      }
+    }
+
+    .subtitle {
+      padding-left: 70px;
+      font-style: italic;
+      text-shadow: 0 4px var(--color-bright-red);
+      margin-bottom: 45px;
+    }
+
+    @media screen and (width <= 1200px) {
+      .title {
+        font-size: 48px;
+      }
+
+      .subtitle {
+        padding-left: 0;
+        margin-bottom: 20px;
+        font-size: 35px;
+      }
+    }
+
+    .content {
+      width: var(--center-text-width);
+      margin: 0 auto;
+
+      .content-text {
+        width: 610px;
+        font-weight: 500;
+        margin-bottom: 20px;
+      }
+
+      .choice-titles {
+        margin-left: var(--big-letter-margin);
+
+        .choice-quote {
+          margin-top: 20px;
+          padding-bottom: 20px;
+          position: relative;
+
+          .choice-quote-text {
+            font-weight: 500;
+          }
+
+          .choice-quote-blocks {
+            position: absolute;
+            top: 0;
+            left: calc(100% + 5px);
+            display: flex;
+            gap: 10px;
+
+            .choice-quote-line {
+              margin: 13px 0;
+              width: 120px;
+              border-top: 1px solid black;
+              border-right: 1px solid black;
+            }
+
+            .mc-luhan-image {
+              width: 130px;
+            }
+          }
+        }
+      }
+    }
+
+    @media screen and (width <= 1200px) {
+      .choice-title {
+        margin: 30px 0;
+      }
+
+      .big-letter {
+        font-size: 48px;
+      }
+
+      .choice-subtitle {
+        font-weight: 500;
+        margin-bottom: 30px;
+      }
+    }
+  }
+
+  .white-part {
+    padding-top: 15px;
+    height: 230px;
+    display: flex;
+    justify-content: center;
+
+    .choice-content-container {
+      width: var(--center-text-width);
+
+      .choice-content-text {
+        position: relative;
+        margin-left: var(--big-letter-margin);
+
+        .big-letter {
+          position: absolute;
+          right: calc(100% + 10px);
+          bottom: calc(100% - 30px);
+        }
+      }
+    }
+  }
+}
