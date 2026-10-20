@@ -15,18 +15,11 @@ export const LANDING_PAGE_TEXT = {
     subtitle: 'Weave it all together',
     content: [
       <>
-        A tapestry is a shareable canvas for curating
-        <br />
-        media artifacts from across the digital world.
+        A tapestry is a shareable canvas for curating media artifacts from across the digital world.
         <br />
         <br />
-        As generative AI colonizes our work, thinking,
-        <br />
-        and attention, Tapestries offers a sheltered
-        <br />
-        space where your mind's natural process of
-        <br />
-        making connections comes first. <br />
+        As generative AI colonizes our work, thinking, and attention, Tapestries offers a sheltered
+        space where your mind's natural process of making connections comes first. <br />
         <br />
       </>,
 
@@ -208,14 +201,13 @@ export const ABOUT_PAGE_TEXT = {
   },
   history: {
     title: 'The Future Has A Right to the Past',
-    content: (
+    content: [
       <>
         The idea for Tapestries emerged a few years back as Bob Stein, founder of the Criterion
         Collection and Voyager Company, was wrestling with how to put his archive (now at Stanford)
         online.
-        <br />
-        <br />
-        <br />
+      </>,
+      <>
         An archive is like a life, containing multitudes. Bob's comprises 250+ linear feet of
         correspondence, planning documents, contracts, magazines, protest literature and ephemera,
         plus CD-ROMs, laser discs, cassettes, and hard drives full of digital media. Innumerable
@@ -252,8 +244,8 @@ export const ABOUT_PAGE_TEXT = {
         <br />
         <br />
         <br />
-      </>
-    ),
+      </>,
+    ],
   },
   snapshots: {
     title: 'Archive Snapshots',

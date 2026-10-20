@@ -1,15 +1,46 @@
 .root {
-  padding: 90px 50px 60px;
+  padding: 90px var(--section-padding-x) 60px;
   background-color: white;
+  position: relative;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
 
-  .section-wrapper {
-    max-width: var(--max-section-width);
+  .quote {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translate(-50%, 50%);
+    max-width: 550px;
+
+    @media screen and (width <= 1200px) {
+      position: relative;
+      inset: unset;
+      transform: unset;
+      margin: 10px 0 50px;
+    }
+
+    @media screen and (width <= 600px) {
+      max-width: 278px;
+    }
+
+    .quote-text {
+      position: relative;
+      text-align: center;
+      white-space: pre-line;
+    }
+  }
+
+  .text-wrapper {
+    max-width: var(--section-max-width);
 
     .title {
       margin-bottom: 25px;
       font-style: italic;
+
+      @media screen and (width <= 1200px) {
+        font-size: 28px;
+      }
     }
 
     .title,
@@ -22,6 +53,15 @@
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 50px;
+
+      @media screen and (width <= 1200px) {
+        grid-template-columns: auto;
+
+        .usage-image {
+          max-width: 300px;
+          align-self: center;
+        }
+      }
 
       .usage-grid-column {
         display: flex;

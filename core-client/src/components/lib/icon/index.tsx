@@ -86,6 +86,7 @@ const ICONS = [
   'lock',
   'logout',
   'match_case',
+  'menu',
   'menu_book',
   'mic',
   'minimize',

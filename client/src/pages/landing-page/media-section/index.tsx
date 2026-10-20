@@ -6,18 +6,16 @@ import OpenverseIcon from '../../../assets/images/landing-page/openverse-icon.pn
 import WikipediaIcon from '../../../assets/images/landing-page/wikipedia-icon.png'
 import IIIFIcon from '../../../assets/images/landing-page/iiif-icon.png'
 import YoutubeIcon from '../../../assets/images/landing-page/youtube-icon.png'
-import AccentBlob from '../../../assets/images/landing-page/accent-blob.svg'
 import styles from './styles.module.css'
 import { Link } from 'react-router'
 import { dashboardPath } from '../../../utils/paths'
-import { ConcreteWall, PositionedMask } from '../../../components/positioned-component'
+import { ConcreteWall } from '../../../components/positioned-component'
 import { Button } from 'tapestry-core-client/src/components/lib/buttons'
 import { useRef } from 'react'
 
 export function MediaSection() {
   const {
     media: { title, subtitle, subsections },
-    ceciliaQuote,
   } = LANDING_PAGE_TEXT
 
   const sectionRef = useRef<HTMLDivElement>(null)
@@ -39,19 +37,23 @@ export function MediaSection() {
       <ConcreteWall width={400} height={300} top={40} left={100} style={{ opacity: '25%' }} />
       <div className={styles.sectionWrapper}>
         <div className={styles.titles}>
-          <Text variant="h3" component="div" className={styles.title}>
+          <Text variant={'h3'} component="div" className={styles.title}>
             {title}
           </Text>
-          <Text component="div">{subtitle}</Text>
+          <Text component="div" variant="bodySm">
+            {subtitle}
+          </Text>
         </div>
         <div className={styles.content}>
           <div className={styles.subsections}>
             {subsections.map((subsection, index) => (
               <div className={styles.subsection} key={index}>
-                <Text component="div" className={styles.subsectionTitle}>
+                <Text component="div" variant="bodySm" className={styles.subsectionTitle}>
                   {subsection.title}
                 </Text>
-                <Text component="div">{subsection.content}</Text>
+                <Text component="div" variant="bodySm">
+                  {subsection.content}
+                </Text>
                 {index === 0 && (
                   <div className={styles.mediaIcons}>
                     <img src={OpenverseIcon} className={styles.mediaIcon} />
@@ -68,10 +70,12 @@ export function MediaSection() {
             <video
               src={TapestriesPresentation}
               className={styles.video}
-              controls={true}
-              autoPlay={true}
-              loop={true}
+              controls
+              autoPlay
+              loop
               disablePictureInPicture
+              muted
+              playsInline
             />
             <Button
               component={Link}
@@ -83,29 +87,6 @@ export function MediaSection() {
             </Button>
           </div>
         </div>
-      </div>
-      <div className={styles.quote}>
-        <PositionedMask
-          src={AccentBlob}
-          left={-85}
-          top={-60}
-          width={670}
-          height={200}
-          rotation={-4.5}
-          backgroundColor="var(--color-section-red)"
-        />
-        <PositionedMask
-          src={AccentBlob}
-          left={-70}
-          top={-50}
-          width={670}
-          height={200}
-          rotation={0.2}
-          backgroundColor="var(--color-cream-yellow)"
-        />
-        <Text component="div" variant="bodyXs" className={styles.quoteText}>
-          {ceciliaQuote.content}
-        </Text>
       </div>
     </div>
   )

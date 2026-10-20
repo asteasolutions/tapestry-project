@@ -1,8 +1,18 @@
 .root {
   overflow-x: clip;
+  min-width: 0;
   -webkit-user-drag: none;
 
-  --max-section-width: 1300px;
+  --section-max-width: 1300px;
+  --section-padding-x: 100px;
+
+  @media screen and (width <= 900px) {
+    --section-padding-x: 35px;
+  }
+
+  img {
+    user-select: none;
+  }
 }
 
 :global(.navigation-layout):has(.root) {
