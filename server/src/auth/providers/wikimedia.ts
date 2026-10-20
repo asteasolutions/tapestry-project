@@ -9,7 +9,7 @@ import { findUserIdOrStartRegistration } from '../index.js'
 import { RegisterUserSuggestionsSchema } from 'tapestry-shared/src/data-transfer/resources/schemas/session.js'
 
 // Wikimedia requires a descriptive User-Agent from server-side clients and rate limits the default one
-const USER_AGENT = 'Tapestry/1.0 (https://github.com/asteasolutions/tapestry-project)'
+const WIKIMEDIA_API_USER_AGENT = 'Tapestry/1.0 (https://github.com/asteasolutions/tapestry-project)'
 
 // Wikimedia returns only tokens here; the user's identity comes from the profile endpoint
 const WikimediaTokenSchema = BaseTokenResponseSchema
@@ -31,7 +31,7 @@ async function fetchWikimediaProfile(code: string, redirectUri: string) {
       clientSecret,
       code,
       redirectUri,
-      headers: { 'User-Agent': USER_AGENT },
+      headers: { 'User-Agent': WIKIMEDIA_API_USER_AGENT },
     },
     WikimediaTokenSchema,
   )
@@ -41,7 +41,7 @@ async function fetchWikimediaProfile(code: string, redirectUri: string) {
       headers: {
         Authorization: `Bearer ${access_token}`,
         Accept: 'application/json',
-        'User-Agent': USER_AGENT,
+        'User-Agent': WIKIMEDIA_API_USER_AGENT,
       },
     })
     if (!response.ok) {
