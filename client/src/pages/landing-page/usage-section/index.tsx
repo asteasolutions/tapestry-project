@@ -30,16 +30,16 @@ export function UsageSection() {
               src={MobileBlobRed}
               left={-15}
               top={-45}
-              width={310}
-              height={235}
+              right={-10}
+              bottom={5}
               backgroundColor="var(--color-section-red)"
             />
             <PositionedMask
               src={MobileBlobYellow}
               left={-10}
               top={-40}
-              width={310}
-              height={265}
+              right={-15}
+              bottom={-30}
               backgroundColor="var(--color-cream-yellow)"
             />
           </>

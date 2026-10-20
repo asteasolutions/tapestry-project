@@ -10,6 +10,7 @@ import { Button, IconButton, MenuItemButton } from 'tapestry-core-client/src/com
 import { Breakpoint, useResponsive } from '../../../providers/responsive-provider'
 import { Toolbar } from 'tapestry-core-client/src/components/lib/toolbar'
 import { useState } from 'react'
+import { useOutsideClick } from 'tapestry-core-client/src/components/lib/hooks/use-outside-click'
 
 export function Header() {
   const { user } = useSession()
@@ -17,11 +18,12 @@ export function Header() {
   const showGallery = !pathname.startsWith(DASHBOARD_ROOT)
   const SMOrLess = useResponsive() <= Breakpoint.SM
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
+  const mobileNavRef = useOutsideClick<HTMLDivElement>(() => setIsMobileNavOpen(false))
 
   return (
     <div className={styles.root}>
       {SMOrLess && (
-        <div className={styles.mobileNav}>
+        <div className={styles.mobileNav} ref={mobileNavRef}>
           <IconButton
             className={styles.mobileNavButton}
             icon="menu"

@@ -5,6 +5,10 @@
   display: flex;
   justify-content: center;
 
+  @media screen and (width <= 1200px) {
+    padding-bottom: 80px;
+  }
+
   .learn-more-container {
     position: absolute;
     top: 0;

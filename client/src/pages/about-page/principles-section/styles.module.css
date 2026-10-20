@@ -1,5 +1,5 @@
 .root {
-  padding: 65px var(--section-padding-x) 10px;
+  padding: 65px var(--section-padding-x) 65px;
   background-color: var(--color-warm-white);
   display: flex;
   justify-content: center;
@@ -44,6 +44,10 @@
         display: flex;
         align-items: center;
         justify-content: center;
+
+        @media screen and (width <= 900px) {
+          place-self: center;
+        }
       }
 
       .principle-title {

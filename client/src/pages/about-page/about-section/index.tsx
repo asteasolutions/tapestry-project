@@ -52,8 +52,8 @@ export function AboutSection() {
               backgroundColor="var(--color-cream-yellow)"
               top={-10}
               left={-10}
-              bottom={-10}
-              right={-10}
+              bottom={-20}
+              right={-20}
             />
           ) : (
             <>
@@ -87,12 +87,14 @@ export function AboutSection() {
             <Text component="div" variant="bodySm">
               {content}
             </Text>
-            <Text component="div" variant="h6" className={styles.choiceQuoteTitle}>
+            <Text component="div" variant="h6" className={styles.choiceTitle}>
               {choice.title}
             </Text>
-            <Text variant="bodySm">{choice.subtitle}</Text>
+            <Text variant="bodySm" className={styles.choiceSubtitle} component="div">
+              {choice.subtitle} - Marshall McLuhan
+            </Text>
             <div>
-              <Text component="div" variant="h1">
+              <Text variant="h1" className={styles.bigLetter}>
                 {choice.content[0]}
               </Text>
               <Text variant="bodySm">{choice.content.slice(1)}</Text>

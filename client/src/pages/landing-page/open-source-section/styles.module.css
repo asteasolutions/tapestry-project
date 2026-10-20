@@ -1,7 +1,7 @@
 .root {
   position: relative;
   overflow-y: clip;
-  padding: 100px var(--section-padding-x) 35px;
+  padding: 70px var(--section-padding-x) 35px;
   background-color: var(--color-section-blue);
   display: flex;
   flex-direction: column;

@@ -7,6 +7,10 @@
     padding: 65px var(--section-padding-x) 0;
     background-color: var(--color-section-yellow);
 
+    @media screen and (width <= 1200px) {
+      padding-bottom: 60px;
+    }
+
     .subtitle-quote {
       position: relative;
       margin-top: 55px;
@@ -90,8 +94,17 @@
     }
 
     @media screen and (width <= 1200px) {
-      .choice-quote-title {
+      .choice-title {
         margin: 30px 0;
+      }
+
+      .big-letter {
+        font-size: 48px;
+      }
+
+      .choice-subtitle {
+        font-weight: 500;
+        margin-bottom: 30px;
       }
     }
   }

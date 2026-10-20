@@ -12,7 +12,6 @@ import { dashboardPath } from '../../../utils/paths'
 import { ConcreteWall } from '../../../components/positioned-component'
 import { Button } from 'tapestry-core-client/src/components/lib/buttons'
 import { useRef } from 'react'
-import { isMobile } from 'tapestry-core-client/src/lib/user-agent'
 
 export function MediaSection() {
   const {
@@ -20,7 +19,6 @@ export function MediaSection() {
   } = LANDING_PAGE_TEXT
 
   const sectionRef = useRef<HTMLDivElement>(null)
-  const videoRef = useRef<HTMLVideoElement>(null)
 
   return (
     <div className={styles.root} ref={sectionRef}>
@@ -70,21 +68,14 @@ export function MediaSection() {
           </div>
           <div className={styles.videoSection}>
             <video
-              ref={videoRef}
               src={TapestriesPresentation}
               className={styles.video}
-              controls={isMobile || undefined}
+              controls
               autoPlay
               loop
               disablePictureInPicture
               muted
               playsInline
-              onMouseEnter={() => {
-                videoRef.current?.setAttribute('controls', 'true')
-              }}
-              onMouseLeave={() => {
-                videoRef.current?.removeAttribute('controls')
-              }}
             />
             <Button
               component={Link}
