@@ -14,7 +14,7 @@ export const WebpageItem = memo(({ id }: TapestryElementComponentProps) => {
     exitButtonStyle: { position: 'absolute', top: 16, right: 16 },
   })
   return (
-    <TapestryItem id={id} halo={!isFullscreen && <ItemToolbar tapestryItemId={id} items={[]} />}>
+    <TapestryItem id={id} halo={!isFullscreen && <ItemToolbar tapestryItemId={id} />}>
       <div ref={containerRef} className={styles.fullscreenController}>
         <WebpageItemViewer id={id} />
         {isFullscreen && exitFullscreenButton}
