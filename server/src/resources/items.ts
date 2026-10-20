@@ -118,6 +118,7 @@ async function processCustomThumbnailUpdate(
   item: Item,
   thumbnailUpdate: ItemUpdateDto['thumbnail'] | null | undefined,
   tx?: Prisma.TransactionClient,
+  include?: Prisma.ItemInclude | null,
 ) {
   if (thumbnailUpdate === undefined) return
 
@@ -148,6 +149,7 @@ async function processCustomThumbnailUpdate(
           },
         },
       },
+      include,
     })
   })
 }
@@ -182,33 +184,25 @@ export async function createItems(
   const itemData = items.map((item) =>
     itemDtoToDb(omit(item, 'thumbnail'), ['createdAt', 'updatedAt']),
   )
+  const dtos = await ensureTransaction(tx, async (tx) => {
+    const include = parseItemIncludes(query?.include)
+    const dbItems = await tx.item.createManyAndReturn({ data: itemData, include })
 
-  const dbItems = (await (tx ?? prisma).item.createManyAndReturn({
-    data: itemData,
-    include: parseItemIncludes(query?.include),
-  })) as ItemWithAssets[]
+    for (const [index, dbItem] of dbItems.entries()) {
+      const { thumbnail } = items[index]
+      if (!thumbnail) continue
 
-  for (const [index, dbItem] of dbItems.entries()) {
-    const { thumbnail } = items[index]
-    if (!thumbnail) continue
+      dbItems[index] = (await processCustomThumbnailUpdate(dbItem, thumbnail, tx, include))!
+    }
 
-    await processCustomThumbnailUpdate(dbItem, thumbnail, tx)
-    dbItems[index] = await (tx ?? prisma).item.findUniqueOrThrow({
-      where: { id: dbItem.id },
-      include: parseItemIncludes(query?.include),
-    })
-  }
+    const itemIds = dbItems
+      .filter((dbItem) => shouldProcessItemThumbnail(dbItem))
+      .map(({ id }) => id)
+    const data = { scheduledThumbnailProcessing: 'derive' } as const
+    await tx.item.updateMany({ where: { id: { in: itemIds } }, data })
 
-  const itemIds = dbItems
-    .filter((dbItem) => shouldProcessItemThumbnail(dbItem))
-    .map((item) => item.id)
-
-  await (tx ?? prisma).item.updateMany({
-    where: { id: { in: itemIds } },
-    data: { scheduledThumbnailProcessing: 'derive' },
+    return serialize('Item', dbItems)
   })
-
-  const dtos = await serialize('Item', dbItems)
 
   for (const id of new Set(dtos.map((d) => d.tapestryId))) {
     await scheduleTapestryThumbnailGeneration(id)
