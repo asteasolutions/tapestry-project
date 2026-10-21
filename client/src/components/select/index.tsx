@@ -71,7 +71,7 @@ export function Select<V>({ value, options, styles, ref, theme, ...props }: Sele
           flexWrap: 'initial',
           backgroundColor: 'var(--theme-background-primary)',
           pointerEvents: 'auto',
-          cursor: isDisabled ? 'not-allowed' : baseStyles.cursor,
+          cursor: isDisabled ? 'not-allowed' : 'pointer',
         }),
         menu: (baseStyles) => ({
           ...baseStyles,
