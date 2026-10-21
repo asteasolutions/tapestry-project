@@ -45,7 +45,6 @@ export function Select<V>({ value, options, styles, ref, theme, ...props }: Sele
       options={options}
       value={options.find((o) => o.value === value)}
       isSearchable={false}
-      menuPortalTarget={document.body}
       menuPlacement="auto"
       theme={(baseTheme) => {
         const defaultTheme: Theme = merge({}, baseTheme, {
@@ -77,7 +76,7 @@ export function Select<V>({ value, options, styles, ref, theme, ...props }: Sele
         menu: (baseStyles) => ({
           ...baseStyles,
           width: 'fit-content',
-          top: '8px',
+          top: 'calc(100% + 8px)',
           whiteSpace: 'nowrap',
           backgroundColor: 'var(--theme-background-primary)',
           boxShadow: '0px 2px 6px 2px rgba(0, 0, 0, 0.10)',
