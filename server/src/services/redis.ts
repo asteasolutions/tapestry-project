@@ -15,6 +15,10 @@ export class RedisCache {
     return `${this.namespace}:${key}`
   }
 
+  private validationKey(namespacedKey: string) {
+    return `${namespacedKey}:valid`
+  }
+
   async memoize(
     key: string,
     generate: () => Promise<string>,
@@ -25,7 +29,7 @@ export class RedisCache {
     const namespacedKey = this.namespacedKey(key)
     const cachedValue = await redis.get(namespacedKey)
     if (typeof cachedValue === 'string') {
-      const validationKey = `${namespacedKey}:valid`
+      const validationKey = this.validationKey(namespacedKey)
       let isValid = !!(await redis.exists(validationKey))
       if (!isValid) {
         isValid = await validateCachedValue(cachedValue)
@@ -44,7 +48,16 @@ export class RedisCache {
     return newValue
   }
 
-  async delete(key: string) {
-    await redis.del(this.namespacedKey(key))
+  async delete(...keys: string[]) {
+    const keysToDelete: string[] = []
+    for (const key of keys) {
+      const namespacedKey = this.namespacedKey(key)
+      //we have to remove the marker as well or it will pass to the new url
+      keysToDelete.push(namespacedKey, this.validationKey(namespacedKey))
+    }
+
+    if (keysToDelete.length > 0) {
+      await redis.del(keysToDelete)
+    }
   }
 }
