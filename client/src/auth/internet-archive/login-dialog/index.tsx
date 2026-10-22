@@ -15,7 +15,7 @@ import { auth } from '../..'
 
 interface IALoginDialogProps {
   onClose: () => void
-  title?: string
+  title: string
 }
 
 const REASON_MESSAGE_MAP: Record<ErrorReason, string> = {
@@ -60,7 +60,7 @@ export function IALoginDialog({ onClose, title }: IALoginDialogProps) {
               Internet Archive
             </Tooltip>
           </div>
-          {title || 'Log In'}
+          {title}
         </Text>
       }
       cancel={{
