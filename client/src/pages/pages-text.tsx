@@ -74,7 +74,7 @@ export const LANDING_PAGE_TEXT = {
         “Everything is falling apart because of lack of connections. Weaving is the connection that
         is missing, the connection between people and themselves, people and nature.”
         <br />
-        <br />- Cecilia Vicuña'
+        <br />- Cecilia Vicuña
       </>
     ),
   },

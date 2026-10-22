@@ -82,7 +82,7 @@ export function TapestryList({
           skip,
           limit,
         },
-        { signal },
+        { signal, headers: { 'Cache-Control': 'no-cache' } },
       )
 
       const bookmarks =
