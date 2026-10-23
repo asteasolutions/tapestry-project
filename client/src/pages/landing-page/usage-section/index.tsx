@@ -23,87 +23,89 @@ export function UsageSection() {
 
   return (
     <div className={styles.root}>
-      <div className={styles.quote}>
-        {SMOrLess ? (
-          <>
-            <PositionedMask
-              src={MobileBlobRed}
-              left={-15}
-              top={-45}
-              right={-10}
-              bottom={5}
-              backgroundColor="var(--color-section-red)"
-            />
-            <PositionedMask
-              src={MobileBlobYellow}
-              left={-10}
-              top={-40}
-              right={-15}
-              bottom={-30}
-              backgroundColor="var(--color-cream-yellow)"
-            />
-          </>
-        ) : (
-          <>
-            <PositionedMask
-              src={AccentBlob}
-              left={-85}
-              top={-60}
-              width={670}
-              height={200}
-              rotation={-4.5}
-              backgroundColor="var(--color-section-red)"
-            />
-            <PositionedMask
-              src={AccentBlob}
-              left={-70}
-              top={-50}
-              width={670}
-              height={200}
-              rotation={0.2}
-              backgroundColor="var(--color-cream-yellow)"
-            />
-          </>
-        )}
-        <Text component="div" variant="bodyXs" className={styles.quoteText}>
-          {ceciliaQuote.content}
-        </Text>
-      </div>
-      <div className={styles.textWrapper}>
-        <Text variant="h3" className={styles.title} component="div">
-          {title}
-        </Text>
-        <Text variant="bodySm" component="div" className={styles.subtitle}>
-          {subtitle}
-        </Text>
-        <div className={styles.usageGrid}>
-          {subsections.map((subsection, index) => (
-            <div className={styles.usageGridColumn} key={index}>
-              <Text className={styles.usageTitle}>{subsection.title}</Text>
-              <img src={usagesImages[index]} draggable={false} className={styles.usageImage} />
-              <div>
-                <Text component="div" variant="bodySm" className={styles.usageSubtitle}>
-                  {subsection.subtitle}
-                </Text>
-                <Text component="div" variant="bodySm">
-                  {subsection.content}
-                </Text>
+      <div className={styles.usageSection}>
+        <div className={styles.quote}>
+          {SMOrLess ? (
+            <>
+              <PositionedMask
+                src={MobileBlobRed}
+                left={-15}
+                top={-45}
+                right={-10}
+                bottom={5}
+                backgroundColor="var(--color-section-red)"
+              />
+              <PositionedMask
+                src={MobileBlobYellow}
+                left={-10}
+                top={-40}
+                right={-15}
+                bottom={-30}
+                backgroundColor="var(--color-cream-yellow)"
+              />
+            </>
+          ) : (
+            <>
+              <PositionedMask
+                src={AccentBlob}
+                left={-85}
+                top={-60}
+                right={-40}
+                bottom={-20}
+                rotation={-4.5}
+                backgroundColor="var(--color-section-red)"
+              />
+              <PositionedMask
+                src={AccentBlob}
+                left={-70}
+                top={-50}
+                right={-50}
+                bottom={-40}
+                rotation={0.2}
+                backgroundColor="var(--color-cream-yellow)"
+              />
+            </>
+          )}
+          <Text component="div" variant="bodyXs" className={styles.quoteText}>
+            {ceciliaQuote.content}
+          </Text>
+        </div>
+        <div className={styles.textWrapper}>
+          <Text variant="h3" className={styles.title} component="div">
+            {title}
+          </Text>
+          <Text variant="bodySm" component="div" className={styles.subtitle}>
+            {subtitle}
+          </Text>
+          <div className={styles.usageGrid}>
+            {subsections.map((subsection, index) => (
+              <div className={styles.usageGridColumn} key={index}>
+                <Text className={styles.usageTitle}>{subsection.title}</Text>
+                <img src={usagesImages[index]} draggable={false} className={styles.usageImage} />
+                <div>
+                  <Text component="div" variant="bodySm" className={styles.usageSubtitle}>
+                    {subsection.subtitle}
+                  </Text>
+                  <Text component="div" variant="bodySm">
+                    {subsection.content}
+                  </Text>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-        <div className={styles.reachOutSection}>
-          <Text variant="h6">{content}</Text>
-          <Button
-            className={styles.reachOutButton}
-            variant="mono"
-            component="a"
-            href="mailto:tapestries@awmt.org"
-            target="_blank"
-          >
-            Reach out
-          </Button>
-        </div>
+      </div>
+      <div className={styles.reachOutSection}>
+        <Text variant="h6">{content}</Text>
+        <Button
+          className={styles.reachOutButton}
+          variant="mono"
+          component="a"
+          href="mailto:tapestries@awmt.org"
+          target="_blank"
+        >
+          Reach out
+        </Button>
       </div>
     </div>
   )

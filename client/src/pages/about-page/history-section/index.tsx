@@ -9,8 +9,9 @@ function ImageContent() {
   return (
     <>
       <div className={styles.imageContainer}>
-        <ConcreteWall width={45} height={230} top={25} left={-35} rotation={2} />
         <img src={BobArchive} className={styles.imageElement} draggable={false} />
+        <ConcreteWall width="10%" height="66%" top={25} left={-35} rotation={2} />
+        <ConcreteWall width="50%" height="13%" top={10} right={-75} rotation={35} />
       </div>
       <Text component="div" variant="bodySm" className={styles.imageDescription}>
         A portion of Bob Stein's collection.
@@ -26,7 +27,6 @@ export function HistorySection() {
 
   return (
     <div className={styles.root}>
-      <ConcreteWall width={230} height={45} top={57} right={10} rotation={30} />
       <div className={styles.content}>
         {LGOrLess ? (
           <>

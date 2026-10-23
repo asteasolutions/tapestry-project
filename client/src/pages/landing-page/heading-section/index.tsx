@@ -18,24 +18,40 @@ import {
 } from '../../../components/positioned-component'
 import { Breakpoint, useResponsive } from '../../../providers/responsive-provider'
 
+function PositionedElementsMobile() {
+  return (
+    <>
+      <ConcreteWall width={100} height={70} left="30%" top={0} />
+      <ConcreteWall width={70} height={20} left={0} top={150} />
+      <ConcreteWall width={30} height={60} right={0} top={360} />
+    </>
+  )
+}
+
 function PositionedElementsDesktop() {
   return (
     <>
       <ConcreteWall width={275} height={200} left={350} top={-100} />
       <ConcreteWall width={120} height={165} left={0} top={30} />
-      <PositionedImage src={LeftHandWithThread} left={-90} width={450} top={120} rotation={-78.5} />
-      <ConcreteWall width={90} height={470} right={75} bottom={125} rotation={-3.5} />
-      <ConcreteWall width={220} height={65} left={0} top={410} />
-      <ConcreteWall width={470} height={170} right={10} bottom={100} />
-      <PositionedImage
-        src={RightHandWithThread}
-        right={-85}
-        width={465}
-        bottom={-450}
-        rotation={-65.53}
-      />
-      <div className={styles.stringWrapper}>
+      <ConcreteWall width={60} height={140} right={25} top={200} rotation={-3.5} />
+      <ConcreteWall width={240} height={170} right={0} top={100} />
+      <ConcreteWall width={150} height={100} left={0} bottom={85} />
+      <PositionedComponent top={160} right={125} bottom={-110} left={190}>
+        <PositionedImage
+          src={RightHandWithThread}
+          right={-150}
+          width={350}
+          bottom={-225}
+          rotation={-65.53}
+        />
         <img src={TapestryString} className={styles.tapestryString} draggable={false} />
+        <PositionedImage
+          src={LeftHandWithThread}
+          left={-200}
+          width={340}
+          top={-110}
+          rotation={-45}
+        />
         <PositionedImage
           src={WikipediaScreenshot}
           width={72}
@@ -44,15 +60,15 @@ function PositionedElementsDesktop() {
           style={{ transform: 'translate(-50%, -50%)' }}
         />
         <PositionedCircle
-          backgroundColor="var(--color-section-blue)"
-          diameter={50}
-          right="7%"
-          bottom="28%"
+          backgroundColor="#2EBD28"
+          diameter={30}
+          left="13%"
+          top="4%"
           style={{ transform: 'translate(-50%, -50%)' }}
         />
-      </div>
-      <PositionedImage src={Checker} right={-30} width={100} bottom={320} />
-      <PositionedImage src={Herkulanisher} right={216} bottom={220} width={100} />
+      </PositionedComponent>
+      <PositionedImage src={Checker} left={-50} width={100} bottom={160} />
+      <PositionedImage src={Herkulanisher} right={80} top={65} width={100} />
     </>
   )
 }
@@ -92,14 +108,38 @@ function AWMTCircles() {
   )
 }
 
+function MainContent() {
+  const { content, subsections } = LANDING_PAGE_TEXT.heading
+
+  return (
+    <>
+      <div className={styles.content}>
+        <Text variant="h5" component="div">
+          {content[0]}
+        </Text>
+        <Text variant="h6" component="div">
+          {content[1]}
+        </Text>
+      </div>
+      <div className={styles.awmt}>
+        <Text variant="bodySm" component="div">
+          {subsections.AWMT.content}
+        </Text>
+        <AWMTCircles />
+      </div>
+    </>
+  )
+}
+
 export function HeadingSection() {
-  const { title, subtitle, content, subsections } = LANDING_PAGE_TEXT.heading
+  const { title, subtitle } = LANDING_PAGE_TEXT.heading
   const breakpoint = useResponsive()
   const LGOrLess = breakpoint <= Breakpoint.LG
+  const tabletLayout = LGOrLess && breakpoint > Breakpoint.SM
 
   return (
     <div className={styles.root}>
-      {!LGOrLess && <PositionedElementsDesktop />}
+      {LGOrLess ? <PositionedElementsMobile /> : <PositionedElementsDesktop />}
       <div className={styles.textWrapper}>
         <Text variant="h1" className={styles.heading}>
           {title}
@@ -108,20 +148,13 @@ export function HeadingSection() {
           {subtitle}
         </Text>
         {LGOrLess && <img className={styles.mobileHands} src={MobileHands} />}
-        <div className={styles.content}>
-          <Text variant="h5" component="div">
-            {content[0]}
-          </Text>
-          <Text variant="h6" component="div">
-            {content[1]}
-          </Text>
-        </div>
-        <div className={styles.awmt}>
-          <Text variant="bodySm" component="div">
-            {subsections.AWMT.content}
-          </Text>
-          <AWMTCircles />
-        </div>
+        {tabletLayout ? (
+          <div className={styles.tabletContent}>
+            <MainContent />
+          </div>
+        ) : (
+          <MainContent />
+        )}
       </div>
     </div>
   )
