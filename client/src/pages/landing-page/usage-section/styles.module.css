@@ -1,99 +1,104 @@
 .root {
-  padding: 90px var(--section-padding-x) 60px;
-  background-color: white;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  .usage-section {
+    position: relative;
+    padding: 120px var(--section-padding-x) 60px;
+    background-color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 
-  .quote {
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translate(-50%, 50%);
-    max-width: 550px;
+    .quote {
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translate(-50%, 50%);
+      max-width: 550px;
 
-    @media screen and (width <= 1200px) {
-      position: relative;
-      inset: unset;
-      transform: unset;
-      margin: 10px 0 50px;
+      @media screen and (width <= 1200px) {
+        position: relative;
+        inset: unset;
+        transform: unset;
+        margin: 10px 0 50px;
+      }
+
+      @media screen and (width <= 600px) {
+        max-width: 278px;
+      }
+
+      .quote-text {
+        position: relative;
+        text-align: center;
+        white-space: pre-line;
+      }
     }
 
-    @media screen and (width <= 600px) {
-      max-width: 278px;
-    }
+    .text-wrapper {
+      max-width: var(--section-max-width);
 
-    .quote-text {
-      position: relative;
-      text-align: center;
-      white-space: pre-line;
+      .title {
+        margin-bottom: 25px;
+        font-style: italic;
+
+        @media screen and (width <= 1200px) {
+          font-size: 28px;
+        }
+      }
+
+      .title,
+      .subtitle {
+        text-align: center;
+      }
+
+      .usage-grid {
+        margin-top: 50px;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 50px;
+
+        @media screen and (width <= 1200px) {
+          grid-template-columns: auto;
+
+          .usage-image {
+            max-width: 300px;
+            align-self: center;
+          }
+        }
+
+        .usage-grid-column {
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+
+          .usage-title {
+            font-weight: 700;
+            text-align: center;
+          }
+
+          .usage-image {
+            width: 100%;
+            aspect-ratio: 36 / 22;
+            object-fit: contain;
+          }
+
+          .usage-subtitle {
+            font-weight: 700;
+            margin-bottom: 10px;
+          }
+        }
+      }
+
     }
   }
 
-  .text-wrapper {
-    max-width: var(--section-max-width);
+  .reach-out-section {
+    padding: 50px var(--section-padding-x);
+    background-color: var(--color-section-yellow);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 
-    .title {
-      margin-bottom: 25px;
-      font-style: italic;
-
-      @media screen and (width <= 1200px) {
-        font-size: 28px;
-      }
-    }
-
-    .title,
-    .subtitle {
-      text-align: center;
-    }
-
-    .usage-grid {
-      margin: 50px 0 65px;
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 50px;
-
-      @media screen and (width <= 1200px) {
-        grid-template-columns: auto;
-
-        .usage-image {
-          max-width: 300px;
-          align-self: center;
-        }
-      }
-
-      .usage-grid-column {
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
-
-        .usage-title {
-          font-weight: 700;
-          text-align: center;
-        }
-
-        .usage-image {
-          width: 100%;
-          aspect-ratio: 36 / 22;
-          object-fit: contain;
-        }
-
-        .usage-subtitle {
-          font-weight: 700;
-          margin-bottom: 10px;
-        }
-      }
-    }
-
-    .reach-out-section {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-
-      .reach-out-button {
-        margin-top: 20px;
-      }
+    .reach-out-button {
+      margin-top: 20px;
     }
   }
 }
