@@ -15,7 +15,6 @@ import { auth } from '../..'
 
 interface IALoginDialogProps {
   onClose: () => void
-  title: string
 }
 
 const REASON_MESSAGE_MAP: Record<ErrorReason, string> = {
@@ -24,7 +23,7 @@ const REASON_MESSAGE_MAP: Record<ErrorReason, string> = {
   InvalidIASession: 'Session expired',
 }
 
-export function IALoginDialog({ onClose, title }: IALoginDialogProps) {
+export function IALoginDialog({ onClose }: IALoginDialogProps) {
   const [form] = useState(() => uniqueId('form'))
 
   const [email, setEmail] = useState('')
@@ -60,7 +59,7 @@ export function IALoginDialog({ onClose, title }: IALoginDialogProps) {
               Internet Archive
             </Tooltip>
           </div>
-          {title}
+          Log In
         </Text>
       }
       cancel={{

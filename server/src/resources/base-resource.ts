@@ -68,6 +68,12 @@ function validateIncludes(query: object, allowedIncludes: string[]) {
   }
 }
 
+function setHeaders(res: Response, headers?: Record<string, string>) {
+  if (headers) {
+    res.header(headers)
+  }
+}
+
 function bindEndpoint<E extends Endpoint, ListFilter>(
   router: Router,
   endpoint: E,
@@ -109,6 +115,7 @@ function bindEndpoint<E extends Endpoint, ListFilter>(
         req.on('data', (chunk: ArrayBuffer) => chunks.push(chunk))
         req.on('end', async () => {
           try {
+            setHeaders(res, endpoint.responseHeaders)
             res.json(await handler({ pathParams, query, body: new Blob(chunks) }, context))
           } catch (error) {
             next(error)
@@ -121,7 +128,7 @@ function bindEndpoint<E extends Endpoint, ListFilter>(
 
         const canAccess = await authorize({ pathParams, query, body }, context)
         if (!canAccess) throw new ForbiddenError()
-
+        setHeaders(res, endpoint.responseHeaders)
         res.json(await handler({ pathParams, query, body }, context))
       }
     } catch (error) {
