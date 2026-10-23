@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(npm run lint)",
+      "Bash(npm run lint *)",
+      "Bash(npx prettier *)",
+      "Bash(npm test *)",
+      "Bash(npm run build)",
+      "Bash(npm run prisma:generate)",
+      "Bash(git status *)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git add *)"
+    ],
+    "deny": [
+      "Bash(git push *)",
+      "Bash(git reset --hard *)",
+      "Bash(rm -rf *)",
+      "Bash(npm publish *)",
+      "Bash(tofu *)",
+      "Bash(./deployment/*)",
+      "Bash(bash ./deployment/*)",
+      "Read(./server/.env)",
+      "Read(./server/.env.test)",
+      "Read(./client/.env)",
+      "Edit(./server/.env)",
+      "Edit(./server/.env.test)",
+      "Edit(./client/.env)",
+      "Edit(./node_modules/**)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/guard-files.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/guard-bash.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/format.sh",
+            "timeout": 30,
+            "statusMessage": "Formatting with Prettier"
+          },
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/prisma-generate.sh",
+            "timeout": 120,
+            "statusMessage": "Regenerating Prisma client"
+          }
+        ]
+      }
+    ]
+  }
+}
