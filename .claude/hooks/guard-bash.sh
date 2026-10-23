@@ -19,8 +19,15 @@ check 'prisma\s+migrate\s+reset|--force-reset|--accept-data-loss' 'drops or rewr
 check '\bdocker(\s+compose|-compose)\b.*\bdown\b.*(\s-v\b|--volumes)' 'deletes Docker volumes (database, S3 data)'
 check '\bdocker\s+(volume\s+(rm|prune)|system\s+prune)' 'deletes Docker data'
 # Real env files hold secrets; the *.example templates are fine.
-check_env=$(sed -E 's/\.env(\.test)?\.example//g' <<<"$cmd")
-if grep -qE '\.env(\.test)?\b' <<<"$check_env"; then reasons+=('touches a real .env file (secrets)'); fi
+# Writing to them is blocked outright; anything else that touches them needs confirmation.
+check_env=$(sed -E 's/\.env(\.test|\.local)?\.example//g' <<<"$cmd")
+if grep -qE '\.env(\.test|\.local)?\b' <<<"$check_env"; then
+  if grep -qE '(>>?|\btee\b|\bsed\s+-i|\bcp\b|\bmv\b|\btruncate\b)[^|;&]*\.env' <<<"$check_env"; then
+    echo 'Blocked: writing to real .env files is not allowed. Ask the user to change them.' >&2
+    exit 2
+  fi
+  reasons+=('touches a real .env file (secrets)')
+fi
 
 [ ${#reasons[@]} -eq 0 ] && exit 0
 

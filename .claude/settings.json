@@ -21,13 +21,13 @@
       "Bash(tofu *)",
       "Bash(./deployment/*)",
       "Bash(bash ./deployment/*)",
-      "Read(./server/.env)",
-      "Read(./server/.env.test)",
-      "Read(./client/.env)",
-      "Edit(./server/.env)",
-      "Edit(./server/.env.test)",
-      "Edit(./client/.env)",
-      "Edit(./node_modules/**)"
+      "Read(**/.env)",
+      "Read(**/.env.test)",
+      "Read(**/.env.local)",
+      "Edit(**/.env)",
+      "Edit(**/.env.test)",
+      "Edit(**/.env.local)",
+      "Edit(**/node_modules/**)"
     ]
   },
   "hooks": {
