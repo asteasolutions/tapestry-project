@@ -6,9 +6,9 @@
   align-items: center;
   position: relative;
 
-      @media screen and (width <= 600px) {
-      padding-bottom: 100px;
-    }
+  @media screen and (width <= 600px) {
+    padding-bottom: 100px;
+  }
 
   .learn-more-container {
     position: absolute;
@@ -55,7 +55,7 @@
     width: 200px;
     z-index: 1;
 
-     @media screen and (width <= 600px) {
+    @media screen and (width <= 600px) {
       width: 100%;
     }
   }
