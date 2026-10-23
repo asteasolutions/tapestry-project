@@ -15,10 +15,10 @@ const WBM_SEARCH_ENDPOINT = 'https://web.archive.org/cdx/search/cdx'
 const MAX_WBM_SEARCH_LIMIT = 1000
 
 function parseXFrameOptions(origin: string, value: string, host: string) {
-  if (value === 'DENY') {
+  if (value.toUpperCase() === 'DENY') {
     return false
   }
-  if (value === 'SAMEORIGIN' && origin === host) {
+  if (value.toUpperCase() === 'SAMEORIGIN' && origin === host) {
     return true
   }
   const [, ...allowed] = value.split(' ')
@@ -31,7 +31,7 @@ function parseCSP(origin: string, value: string, host: string) {
     .find((directive) => directive.trim().startsWith('frame-ancestors'))
 
   if (!frameAncestors) {
-    return true
+    return undefined
   }
 
   const [, ...allowed] = frameAncestors.trim().split(' ')
@@ -47,12 +47,15 @@ function parseCSP(origin: string, value: string, host: string) {
 function canFrame(url: string, headers: Headers, host: string) {
   const { origin } = new URL(url)
   const csp = headers.get('content-security-policy')
-  const allowedByCSP = !csp || parseCSP(origin, csp, host)
+  const allowedByCSP = csp ? parseCSP(origin, csp, host) : undefined
+  if (allowedByCSP !== undefined) {
+    return allowedByCSP
+  }
 
   const xFrameOptions = headers.get('x-frame-options')
-  const alloweByXFrameOptions = !xFrameOptions || parseXFrameOptions(origin, xFrameOptions, host)
+  const allowedByXFrameOptions = !xFrameOptions || parseXFrameOptions(origin, xFrameOptions, host)
 
-  return allowedByCSP && alloweByXFrameOptions
+  return allowedByXFrameOptions
 }
 
 const wbmSearchResultsCache = new RedisCache('wbm-search-results')
@@ -129,7 +132,12 @@ export const proxy: RESTResourceImpl<Resources['proxy'], never> = {
 
           return {
             type: 'can-frame',
-            result: canFrame(body.url, response.headers, rawRequest.host),
+            // The resource is framed by the client app, so we check against its origin, not the API host
+            result: canFrame(
+              body.url,
+              response.headers,
+              rawRequest.get('origin') ?? new URL(config.server.viewerUrl).origin,
+            ),
           }
         }
         case 'ia-user-list': {
