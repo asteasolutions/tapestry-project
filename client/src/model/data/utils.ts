@@ -230,7 +230,7 @@ export function fromTapestryDto(
 
 export const itemSizes = {
   actionButton: { width: 350, height: 75 },
-  audio: { width: 300, height: 50 },
+  audio: { width: 400, height: 50 },
   book: { width: 700, height: 500 },
   image: getImageItemSize,
   iiif: getIiifItemSize,
