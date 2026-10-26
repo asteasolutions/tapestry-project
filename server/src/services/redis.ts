@@ -49,15 +49,13 @@ export class RedisCache {
   }
 
   async delete(...keys: string[]) {
-    const keysToDelete: string[] = []
-    for (const key of keys) {
+    const toDelete = keys.flatMap((key) => {
       const namespacedKey = this.namespacedKey(key)
       //we have to remove the marker as well or it will pass to the new url
-      keysToDelete.push(namespacedKey, this.validationKey(namespacedKey))
-    }
-
-    if (keysToDelete.length > 0) {
-      await redis.del(keysToDelete)
+      return [namespacedKey, this.validationKey(namespacedKey)]
+    })
+    if (toDelete.length > 0) {
+      await redis.del(toDelete)
     }
   }
 }
