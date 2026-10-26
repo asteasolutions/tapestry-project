@@ -6,7 +6,7 @@
   justify-content: center;
 
   @media screen and (width <= 1200px) {
-    padding-bottom: 80px;
+    padding-bottom: 40px;
   }
 
   .section-wrapper {
@@ -20,21 +20,16 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      margin-bottom: 50px;
+      margin-bottom: 25px;
       text-align: center;
       max-width: 960px;
 
       .title {
-        text-shadow: 0 4px var(--color-bright-red);
         margin-bottom: 25px;
         white-space: pre-line;
         font-style: italic;
-      }
 
-      @media screen and (width <= 1200px) {
-        margin: 0 0 50px;
-
-        .title {
+        @media screen and (width <= 1200px) {
           font-size: 28px;
         }
       }
@@ -42,11 +37,13 @@
 
     .buttons {
       align-self: center;
-      display: flex;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
       gap: 10px;
       margin-bottom: 50px;
 
       @media screen and (width <= 600px) {
+        display: flex;
         flex-direction: column;
         align-self: unset;
       }
@@ -76,6 +73,7 @@
 
           .subsection-title {
             font-weight: 700;
+            margin-bottom: 8px;
           }
 
           .media-icons {

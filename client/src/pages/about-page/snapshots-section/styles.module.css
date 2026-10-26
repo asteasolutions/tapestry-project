@@ -1,9 +1,13 @@
 .root {
   padding: 70px var(--section-padding-x);
   background-color: var(--color-section-red);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  display: grid;
+  grid-template-columns: min(100%, 1000px);
+  justify-content: center;
+
+  @media screen and (width <= 1200px) {
+    grid-template-columns: min(100%, 500px);
+  }
 
   .title {
     font-style: italic;
@@ -16,25 +20,17 @@
 
   .title,
   .subtitle {
-    max-width: 600px;
     text-align: center;
   }
 
   .cards {
     margin-top: 30px;
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 30px;
-    height: 400px;
 
     @media screen and (width <= 1200px) {
-      flex-direction: column;
-      align-items: center;
-      height: unset;
-      max-width: 500px;
-
-      :global(.typography) {
-        font-size: 12px;
-      }
+      grid-template-columns: 1fr;
     }
   }
 }

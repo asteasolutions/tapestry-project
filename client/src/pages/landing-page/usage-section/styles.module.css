@@ -7,6 +7,10 @@
     flex-direction: column;
     align-items: center;
 
+    @media screen and (width <= 1200px) {
+      padding-top: 80px;
+    }
+
     .quote {
       position: absolute;
       bottom: 100%;
@@ -18,7 +22,7 @@
         position: relative;
         inset: unset;
         transform: unset;
-        margin: 10px 0 50px;
+        margin: 10px 0 80px;
       }
 
       @media screen and (width <= 600px) {
@@ -95,9 +99,16 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    text-align: center;
 
     .reach-out-button {
       margin-top: 20px;
+      box-sizing: border-box;
+      width: 200px;
+
+      @media screen and (width <= 600px) {
+        width: 100%;
+      }
     }
   }
 }

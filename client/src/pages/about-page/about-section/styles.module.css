@@ -13,15 +13,14 @@
 
     .subtitle-quote {
       position: relative;
-      margin-top: 55px;
-      margin-bottom: 60px;
+      margin: 80px 0;
       width: 640px;
 
       @media screen and (width <= 1200px) {
         max-width: 330px;
         padding-top: 20px;
         padding-left: 20px;
-        margin: 20px 0;
+        margin: 45px 0;
         width: auto;
       }
 
@@ -33,7 +32,6 @@
     .subtitle {
       padding-left: 70px;
       font-style: italic;
-      text-shadow: 0 4px var(--color-bright-red);
       margin-bottom: 45px;
     }
 
@@ -63,7 +61,7 @@
         margin-left: var(--big-letter-margin);
 
         .choice-quote {
-          margin-top: 20px;
+          margin-top: 10px;
           padding-bottom: 20px;
           position: relative;
 
@@ -95,7 +93,7 @@
 
     @media screen and (width <= 1200px) {
       .choice-title {
-        margin: 30px 0;
+        margin: 30px 0 15px;
       }
 
       .big-letter {

@@ -17,13 +17,13 @@ export function OpenSourceSection() {
     <div className={styles.root}>
       {!LGOrLess && (
         <>
-          <PositionedImage src={LeftHand} width={400} left={-130} bottom={-20} />
-          <PositionedImage src={VerticalString} width={110} left={175} bottom={-20} />
+          <PositionedImage src={LeftHand} width={400} left={-130} bottom={0} />
+          <PositionedImage src={VerticalString} width={110} left={175} bottom={-30} />
           <PositionedImage src={RightHand} width={365} right={-100} bottom={-10} rotation={-27.5} />
         </>
       )}
       <div className={styles.textWrapper}>
-        <Text variant="h4" component="div" className={styles.title}>
+        <Text variant="h4" component="div">
           {title}
         </Text>
         <Text
@@ -39,24 +39,24 @@ export function OpenSourceSection() {
         <Text variant="bodySm" component="div" className={styles.content}>
           {content}
         </Text>
-      </div>
-      <div className={styles.buttons}>
-        <Button
-          variant="mono"
-          component="a"
-          href="https://github.com/asteasolutions/tapestry-project"
-          target="_blank"
-        >
-          View GitHub Repo
-        </Button>
-        <Button
-          variant="outline"
-          className={styles.outlineButton}
-          component="a"
-          href="mailto:tapestries@awmt.org"
-        >
-          Contact
-        </Button>
+        <div className={styles.buttons}>
+          <Button
+            variant="secondary"
+            component="a"
+            href="https://github.com/asteasolutions/tapestry-project"
+            target="_blank"
+          >
+            View GitHub Repo
+          </Button>
+          <Button
+            variant="outline"
+            className={styles.outlineButton}
+            component="a"
+            href="mailto:tapestries@awmt.org"
+          >
+            Contact
+          </Button>
+        </div>
       </div>
       {LGOrLess && (
         <div className={styles.mobileHandsContainer}>

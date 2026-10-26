@@ -29,17 +29,17 @@ export function UsageSection() {
             <>
               <PositionedMask
                 src={MobileBlobRed}
-                left={-15}
+                left={-25}
                 top={-45}
-                right={-10}
+                right={-20}
                 bottom={5}
                 backgroundColor="var(--color-section-red)"
               />
               <PositionedMask
                 src={MobileBlobYellow}
-                left={-10}
+                left={-20}
                 top={-40}
-                right={-15}
+                right={-25}
                 bottom={-30}
                 backgroundColor="var(--color-cream-yellow)"
               />

@@ -9,7 +9,7 @@
   z-index: 1;
 
   @media screen and (width <= 1200px) {
-    padding: 50px var(--section-padding-x) 50px;
+    padding: 50px var(--section-padding-x) 80px;
   }
 
   @media screen and (width <= 600px) {

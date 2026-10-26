@@ -5,7 +5,7 @@ import { HeadingSection } from './heading-section'
 import { MediaSection } from './media-section'
 import { UsageSection } from './usage-section'
 import { OpenSourceSection } from './open-source-section'
-import { EventsSection } from './events-section/indesx'
+import { EventsSection } from './events-section'
 
 export function LandingPage() {
   const narrativeDesignClassName = useNarrtiveDesignSystem()

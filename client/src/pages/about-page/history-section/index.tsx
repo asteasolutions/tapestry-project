@@ -10,8 +10,8 @@ function ImageContent() {
     <>
       <div className={styles.imageContainer}>
         <img src={BobArchive} className={styles.imageElement} draggable={false} />
-        <ConcreteWall width="10%" height="66%" top={25} left={-35} rotation={2} />
-        <ConcreteWall width="50%" height="13%" top={10} right={-75} rotation={35} />
+        <ConcreteWall width="10%" height="66%" top="6%" left="-7%" rotation={2} />
+        <ConcreteWall width="50%" height="13%" top="2.5%" right="-15%" rotation={35} />
       </div>
       <Text component="div" variant="bodySm" className={styles.imageDescription}>
         A portion of Bob Stein's collection.

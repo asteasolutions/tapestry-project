@@ -211,8 +211,9 @@ export const ABOUT_PAGE_TEXT = {
         The idea for Tapestries emerged a few years back as Bob Stein, founder of the Criterion
         Collection and Voyager Company, was wrestling with how to put his archive (now at Stanford)
         online.
-      </>,
-      <>
+        <br />
+        <br />
+        <br />
         An archive is like a life, containing multitudes. Bob's comprises 250+ linear feet of
         correspondence, planning documents, contracts, magazines, protest literature and ephemera,
         plus CD-ROMs, laser discs, cassettes, and hard drives full of digital media. Innumerable
@@ -221,9 +222,8 @@ export const ABOUT_PAGE_TEXT = {
         it needs a way to coalesce into a cosmology of its own. It needs context, guiding
         commentary, connections to other archives, multiple entry points and pathways for
         exploration.
-        <br />
-        <br />
-        <br />
+      </>,
+      <>
         Tapestries started with this desire for a more imaginative, even playful, approach to
         archival presentation - and with the broader question of how we make the past meaningfully
         accessible to the future. Bob brought in Dan Visel, an old colleague from the{' '}

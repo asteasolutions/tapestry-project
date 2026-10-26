@@ -18,11 +18,12 @@
 
     .principle-grid {
       display: grid;
-      grid-template-columns: 100px 1fr 200px;
+      grid-template-columns: auto 1fr 200px;
       grid-template-areas:
-        'index title title'
+        'index title icon'
         '. content icon';
       gap: 25px;
+      row-gap: 15px;
 
       @media screen and (width <= 900px) {
         grid-template-columns: 60px 1fr auto;
