@@ -76,10 +76,6 @@ class S3Service {
     )
   }
 
-  private invalidateReadObjectUrls(...keys: string[]) {
-    return this.cache.delete(...keys)
-  }
-
   async copyObject(key: string, newObjectKey: string) {
     const result = await this.s3Client.send(
       new CopyObjectCommand({
@@ -88,7 +84,7 @@ class S3Service {
         Key: newObjectKey,
       }),
     )
-    await this.invalidateReadObjectUrls(newObjectKey)
+    await this.cache.delete(newObjectKey)
     return result
   }
 
@@ -101,7 +97,7 @@ class S3Service {
         ContentType: contentType,
       }),
     )
-    await this.invalidateReadObjectUrls(key)
+    await this.cache.delete(key)
     return result
   }
 
@@ -113,7 +109,7 @@ class S3Service {
           Key: key,
         }),
       )
-      await this.invalidateReadObjectUrls(key)
+      await this.cache.delete(key)
       return result
     } catch (e) {
       console.warn(`There was an error deleting ${key} from S3`, e)
@@ -140,7 +136,7 @@ class S3Service {
         Delete: { Objects: keys.map((Key) => ({ Key })) },
       }),
     )
-    await this.invalidateReadObjectUrls(...keys)
+    await this.cache.delete(...keys)
     return result
   }
 
