@@ -241,7 +241,7 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
           crossOrigin="anonymous"
           alt="Video thumbnail"
           style={{
-            display: isPlaying ? 'none' : 'block',
+            display: isPlaying && !isAudio ? 'none' : 'block',
             height: '100%',
             width: '100%',
             objectFit: 'cover',
@@ -255,7 +255,7 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
         onMouseLeave={() => setIsHovering(false)}
       >
         <ControlBar
-          isOpen={isInteractive && (isAudio || isMoving || isHovering || !isPlaying)}
+          isOpen={isAudio || (isInteractive && (isMoving || isHovering || !isPlaying))}
           isPlaying={isPlaying}
           togglePlay={togglePlay}
           currentTime={currentTime}

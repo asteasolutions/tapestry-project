@@ -1,0 +1,79 @@
+.root {
+  background-color: var(--color-section-red);
+  padding: 50px var(--section-padding-x) 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+
+  @media screen and (width <= 600px) {
+    padding-bottom: 100px;
+  }
+
+  .learn-more-container {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+
+    .learn-more-button {
+      border-radius: 50%;
+      padding: 10px;
+
+      --bg-color: white;
+      --active-border-color: var(--internal-hover-border-color);
+
+      :global(.button-icon) {
+        font-size: 26px;
+      }
+    }
+
+    .learn-more-text {
+      position: absolute;
+      bottom: calc(100% + 10px);
+      left: 50%;
+      transform: translate(-50%);
+      font-size: 16px;
+      font-style: italic;
+      white-space: nowrap;
+      color: white;
+    }
+  }
+
+  .text-wrapper {
+    max-width: 740px;
+    text-align: center;
+
+    .title {
+      margin-bottom: 10px;
+    }
+  }
+
+  .events-button {
+    margin-top: 25px;
+    width: 200px;
+    z-index: 1;
+
+    @media screen and (width <= 600px) {
+      width: 100%;
+    }
+  }
+
+  .events-string {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: min(95%, 1000px);
+
+    @media screen and (width <= 1200px) {
+      transform: translateX(-10%);
+    }
+
+    @media screen and (width <= 600px) {
+      transform: unset;
+      width: 100%;
+      bottom: 20px;
+    }
+  }
+}

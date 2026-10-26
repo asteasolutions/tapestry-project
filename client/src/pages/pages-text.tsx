@@ -36,6 +36,11 @@ export const LANDING_PAGE_TEXT = {
       },
     },
   },
+  events: {
+    title: 'Join our weekly weaving circle',
+    content:
+      "Tapestries is just coming out into the world and we want to connect with anyone who's exploring it. To start, we're holding weekly video calls where folks can come to learn about the project, meet the team behind it, get technical help, share their projects, and see what others are working on.",
+  },
   media: {
     title: (
       <>
@@ -74,7 +79,7 @@ export const LANDING_PAGE_TEXT = {
         “Everything is falling apart because of lack of connections. Weaving is the connection that
         is missing, the connection between people and themselves, people and nature.”
         <br />
-        <br />- Cecilia Vicuña'
+        <br />- Cecilia Vicuña
       </>
     ),
   },
@@ -206,8 +211,9 @@ export const ABOUT_PAGE_TEXT = {
         The idea for Tapestries emerged a few years back as Bob Stein, founder of the Criterion
         Collection and Voyager Company, was wrestling with how to put his archive (now at Stanford)
         online.
-      </>,
-      <>
+        <br />
+        <br />
+        <br />
         An archive is like a life, containing multitudes. Bob's comprises 250+ linear feet of
         correspondence, planning documents, contracts, magazines, protest literature and ephemera,
         plus CD-ROMs, laser discs, cassettes, and hard drives full of digital media. Innumerable
@@ -216,9 +222,8 @@ export const ABOUT_PAGE_TEXT = {
         it needs a way to coalesce into a cosmology of its own. It needs context, guiding
         commentary, connections to other archives, multiple entry points and pathways for
         exploration.
-        <br />
-        <br />
-        <br />
+      </>,
+      <>
         Tapestries started with this desire for a more imaginative, even playful, approach to
         archival presentation - and with the broader question of how we make the past meaningfully
         accessible to the future. Bob brought in Dan Visel, an old colleague from the{' '}
@@ -237,10 +242,10 @@ export const ABOUT_PAGE_TEXT = {
           As We May Think
         </a>
         . Bob founded the Institute at another moment of techno-cultural transition: the dawn of
-        "Web 2.0" and social media. Through its blog, book, and experiments in communal knowledge
-        production, the Institute carved out a unique perspective joining the formative period of
-        personal computing with a critique of the contemporary social web. As We May Think, and
-        Tapestries with it, carries on this intergenerational tradition.
+        "Web 2.0" and social media. Through its blog, "if:book," and experiments in communal
+        knowledge production, the Institute carved out a unique perspective joining the formative
+        period of personal computing with a critique of the contemporary social web. As We May
+        Think, and Tapestries with it, carries on this intergenerational tradition.
         <br />
         <br />
         <br />
@@ -352,7 +357,7 @@ export const ABOUT_PAGE_TEXT = {
             Dan Visel (Solutions Architect/Developer, Internet Archive)
             <br />
             <br />
-            Jess Klein (Designer)
+            Jess Klein (Homepage Designer)
             <br />
             <br />
             Abbey Ignacio (Design Intern)
@@ -375,6 +380,9 @@ export const ABOUT_PAGE_TEXT = {
             <br />
             <br />
             Radan Ganchev
+            <br />
+            <br />
+            Marta Petrova
           </>
         ),
       },
