@@ -6,11 +6,14 @@ import IALogo from '../../assets/icons/ia-logo-circle-grey.svg?react'
 import { IALoginDialog } from './login-dialog'
 import styles from './styles.module.css'
 import { Breakpoint, useResponsive } from '../../providers/responsive-provider'
-import { AUTH_PROVIDERS } from '../providers-registry'
 
-export function IALoginButton() {
+interface IALoginButtonProps {
+  isSingleProvider?: boolean
+}
+
+export function IALoginButton({ isSingleProvider = false }: IALoginButtonProps) {
   const [dialogOpen, setDialogOpen] = useState(false)
-  const isStandaloneMobile = useResponsive() <= Breakpoint.SM && AUTH_PROVIDERS.length === 1
+  const isStandaloneMobile = useResponsive() <= Breakpoint.SM && isSingleProvider
 
   return (
     <>
