@@ -109,13 +109,14 @@ function bindEndpoint<E extends Endpoint, ListFilter>(
       ) as EndpointTypes<E>['request']['query']['output']
       validateIncludes(query, endpoint.allowedIncludes as string[])
 
+      setHeaders(res, endpoint.responseHeaders)
+
       const isFile = req.headers['content-type']?.toLowerCase() === 'application/octet-stream'
       if (isFile) {
         const chunks: ArrayBuffer[] = []
         req.on('data', (chunk: ArrayBuffer) => chunks.push(chunk))
         req.on('end', async () => {
           try {
-            setHeaders(res, endpoint.responseHeaders)
             res.json(await handler({ pathParams, query, body: new Blob(chunks) }, context))
           } catch (error) {
             next(error)
@@ -128,7 +129,6 @@ function bindEndpoint<E extends Endpoint, ListFilter>(
 
         const canAccess = await authorize({ pathParams, query, body }, context)
         if (!canAccess) throw new ForbiddenError()
-        setHeaders(res, endpoint.responseHeaders)
         res.json(await handler({ pathParams, query, body }, context))
       }
     } catch (error) {
