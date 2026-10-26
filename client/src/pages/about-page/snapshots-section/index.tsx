@@ -35,7 +35,7 @@ const SECOND_SNAPSHOT: TapestryListItem = {
   id: '',
   createdAt: new Date('Mar 21, 2025'),
   updatedAt: new Date('Mar 21, 2025'),
-  title: 'The Encyclopedia Project',
+  title: 'Dominoes by John Ré',
   description:
     'Voyager published this laserdisc in 1991, gathering 15 Music Videos on political subjects + 1000+ photos from 70s underground newspapers',
   isBookmarked: false,

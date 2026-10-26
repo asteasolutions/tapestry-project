@@ -11,29 +11,14 @@ import { Link } from 'react-router'
 import { dashboardPath } from '../../../utils/paths'
 import { ConcreteWall } from '../../../components/positioned-component'
 import { Button } from 'tapestry-core-client/src/components/lib/buttons'
-import { useRef } from 'react'
 
 export function MediaSection() {
   const {
     media: { title, subtitle, subsections },
   } = LANDING_PAGE_TEXT
 
-  const sectionRef = useRef<HTMLDivElement>(null)
-
   return (
-    <div className={styles.root} ref={sectionRef}>
-      <div className={styles.learnMoreContainer}>
-        <Button
-          icon="keyboard_double_arrow_down"
-          variant="secondary"
-          aria-label="Learn more"
-          className={styles.learnMoreButton}
-          onClick={() => sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-        />
-        <Text component="div" variant="h6" className={styles.learnMoreText}>
-          Learn more
-        </Text>
-      </div>
+    <div className={styles.root}>
       <ConcreteWall width={400} height={300} top={40} left={100} style={{ opacity: '25%' }} />
       <div className={styles.sectionWrapper}>
         <div className={styles.titles}>
@@ -43,6 +28,19 @@ export function MediaSection() {
           <Text component="div" variant="bodySm">
             {subtitle}
           </Text>
+        </div>
+        <div className={styles.buttons}>
+          <Button component={Link} variant="mono" to={dashboardPath('home')}>
+            Explore the public gallery
+          </Button>
+          <Button
+            component="a"
+            variant="secondary"
+            href="https://drive.google.com/file/d/110DthOEk0mQJOVXy_UDjUsFWp-0YafMc/view?usp=drive_link"
+            target="_blank"
+          >
+            Watch demo
+          </Button>
         </div>
         <div className={styles.content}>
           <div className={styles.subsections}>
@@ -66,26 +64,16 @@ export function MediaSection() {
               </div>
             ))}
           </div>
-          <div className={styles.videoSection}>
-            <video
-              src={TapestriesPresentation}
-              className={styles.video}
-              controls
-              autoPlay
-              loop
-              disablePictureInPicture
-              muted
-              playsInline
-            />
-            <Button
-              component={Link}
-              className={styles.link}
-              variant="mono"
-              to={dashboardPath('home')}
-            >
-              Explore the public gallery
-            </Button>
-          </div>
+          <video
+            src={TapestriesPresentation}
+            className={styles.video}
+            controls
+            autoPlay
+            loop
+            disablePictureInPicture
+            muted
+            playsInline
+          />
         </div>
       </div>
     </div>

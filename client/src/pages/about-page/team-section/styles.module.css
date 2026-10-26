@@ -33,11 +33,12 @@
       gap: 25px;
 
       :global(.typography) {
-        font-size: 12px;
+        font-size: 14px;
       }
     }
 
     @media screen and (width <= 600px) {
+      align-self: start;
       grid-template-columns: auto;
     }
   }
