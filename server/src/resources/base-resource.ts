@@ -129,6 +129,7 @@ function bindEndpoint<E extends Endpoint, ListFilter>(
 
         const canAccess = await authorize({ pathParams, query, body }, context)
         if (!canAccess) throw new ForbiddenError()
+
         res.json(await handler({ pathParams, query, body }, context))
       }
     } catch (error) {
