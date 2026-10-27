@@ -248,8 +248,7 @@ export class GestureDetector extends TypedEventTarget<
       if (!this.panState) {
         this.onPanStart(cursorLocation, 'scroll')
       } else {
-        const { deltaX: dx, deltaY: dy } = event
-        const delta: Vector = event.shiftKey ? { dx: -dy, dy: -dx } : { dx: -dx, dy: -dy }
+        const delta: Vector = { dx: -event.deltaX, dy: -event.deltaY }
         this.onPan(translate(this.panState.lastPoint, delta), 'scroll')
         clearTimeout(this.panState.stopTimeout)
         this.panState.stopTimeout = window.setTimeout(() => this.onPanEnd('scroll'), 200)
