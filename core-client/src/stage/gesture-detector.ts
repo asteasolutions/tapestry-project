@@ -48,6 +48,7 @@ interface SmoothZoomState {
   pending: number
   anchorPoint: Point
   frame: number
+  timestamp?: number
 }
 
 interface PinchState {
@@ -161,19 +162,24 @@ export class GestureDetector extends TypedEventTarget<
   }
 
   private mouseWheelZoom(delta: number, anchorPoint: Point) {
-    const pending = this.mouseWheelZoomState?.pending ?? 0
-    const frame = this.mouseWheelZoomState?.frame ?? requestAnimationFrame(this.smoothZoomStep)
-    this.mouseWheelZoomState = { pending: pending + delta, anchorPoint, frame }
+    const {
+      pending = 0,
+      frame = requestAnimationFrame(this.smoothZoomStep),
+      timestamp,
+    } = this.mouseWheelZoomState ?? {}
+    this.mouseWheelZoomState = { pending: pending + delta, anchorPoint, frame, timestamp }
   }
 
-  private smoothZoomStep = () => {
+  private smoothZoomStep = (timestamp: number) => {
     const state = this.mouseWheelZoomState
     if (!state) return
 
     const last = Math.abs(state.pending) < 0.01
-    const step = last ? state.pending : state.pending * 0.2
+    const deltaTime = state.timestamp ? timestamp - state.timestamp : 0
+    const step = state.pending - (last ? 0 : state.pending * 0.8 ** (deltaTime * 0.06))
     state.pending -= step
     this.onZoom({ deltaScale: step, anchorPoint: state.anchorPoint })
+    state.timestamp = timestamp
 
     if (last) {
       this.mouseWheelZoomState = null
