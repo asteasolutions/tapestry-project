@@ -36,6 +36,7 @@ export interface Viewport {
 }
 
 export type PointerMode = 'pan' | 'select'
+export type ScreenshotMode = 'dashboard' | 'embed'
 
 export interface PointerSelection {
   readonly rect: Rectangle
@@ -138,7 +139,11 @@ export interface TapestryViewModel<
    */
   readonly disableOptimizations?: boolean
   readonly thumbnailsInitialized?: boolean
-  readonly hideControls?: boolean
+  /**
+   * Set when the tapestry is opened by the thumbnail generator. In `dashboard` mode all controls are
+   * hidden. In both modes the initial "<title> by <owner>" snackbar is not shown.
+   */
+  readonly screenshotMode?: ScreenshotMode
   readonly outlinedItemId?: string
   readonly searchTerm?: string | null
   readonly items: Readonly<IdMap<I>>

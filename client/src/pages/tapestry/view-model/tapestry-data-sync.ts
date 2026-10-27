@@ -2,6 +2,7 @@ import { compact } from 'lodash-es'
 import { IdMap, idMapToArray, isMediaItem } from 'tapestry-core/src/utils'
 import { MediaItemDto } from 'tapestry-shared/src/data-transfer/resources/dtos/item'
 import { Store, StoreMutationCommand } from 'tapestry-core-client/src/lib/store/index'
+import { ScreenshotMode } from 'tapestry-core-client/src/view-model'
 import {
   EditableTapestryViewModel,
   InteractionMode,
@@ -99,7 +100,7 @@ export class TapestryDataSync {
     private initialMode: InteractionMode,
     private userAccess: UserAccess,
     private deoptimize: boolean,
-    private hideControls: boolean,
+    private screenshotMode: ScreenshotMode | undefined,
   ) {
     this.socketManager = new SocketManager(tapestryId)
     // The conversion is made because TS forbids more generic add/remove event listener functions
@@ -151,7 +152,7 @@ export class TapestryDataSync {
       commentThreads,
       idMapToArray(this.tapestryRepo.value.presentationSteps),
       this.deoptimize,
-      this.hideControls,
+      this.screenshotMode,
     )
     this._store = new Store(tapestryViewModel, [
       {

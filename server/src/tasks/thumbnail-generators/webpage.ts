@@ -26,7 +26,10 @@ async function takeScreenshot(site: WebpageConfig, options?: ScreenshotOptions) 
 }
 
 export async function generateWebpageThumbnail(site: WebpageConfig, options?: ScreenshotOptions) {
-  const screenshot = await takeScreenshot(site, options)
+  // Tells embedded tapestries they are being screenshotted. Other pages ignore it.
+  const url = new URL(site.url)
+  url.searchParams.set('screenshotMode', 'embed')
+  const screenshot = await takeScreenshot({ ...site, url: url.toString() }, options)
   return generateThumbnail(Buffer.from(screenshot))
 }
 

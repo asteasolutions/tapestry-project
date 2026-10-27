@@ -66,7 +66,7 @@ import {
   viewModelFromTapestry,
 } from 'tapestry-core-client/src/view-model/utils'
 import { DEFAULT_LAYER } from '../../pages/tapestry/view-model/utils'
-import { ItemViewModel } from 'tapestry-core-client/src/view-model'
+import { ItemViewModel, ScreenshotMode } from 'tapestry-core-client/src/view-model'
 import {
   ItemThumbnailController,
   LoadedRendition,
@@ -182,7 +182,7 @@ export function fromTapestryDto(
   commentThreads: CommentThreadsDto,
   presentationSteps: PresentationStepDto[],
   deoptimize: boolean,
-  hideControls: boolean,
+  screenshotMode: ScreenshotMode | undefined,
 ): EditableTapestryViewModel {
   const presentationStepViewModels = presentationSteps.map((dto) => ({ dto }))
 
@@ -202,7 +202,7 @@ export function fromTapestryDto(
   const editableTapestryViewModel: EditableTapestryViewModel = {
     ...baseViewModel,
     disableOptimizations: mode === 'edit' || deoptimize,
-    hideControls,
+    screenshotMode,
     items: Object.fromEntries(tapestry.items?.map((item) => [item.id, { dto: item }]) ?? []),
     rels: Object.fromEntries(tapestry.rels?.map((rel) => [rel.id, { dto: rel }]) ?? []),
     groups: Object.fromEntries(tapestry.groups?.map((group) => [group.id, { dto: group }]) ?? []),
