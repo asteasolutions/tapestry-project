@@ -83,19 +83,33 @@ services:
     ports:
       - "${REDIS_PORT:-6379}:6379"
 
-  localstack:
-    container_name: "${LOCALSTACK_DOCKER_NAME:-localstack-main}"
-    build:
-      dockerfile: ./Dockerfile.localstack
-    ports:
-      - "127.0.0.1:4566:4566" # LocalStack Gateway
-      - "127.0.0.1:4510-4559:4510-4559" # external services port range
+  seaweedfs:
+    image: chrislusf/seaweedfs:4.50
+    # `mini` runs master, volume, filer and S3 gateway in a single process.
+    # The admin identity is created from AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY.
+    command: mini -dir=/data -admin.allowInsecureBind
     environment:
-      # LocalStack configuration: https://docs.localstack.cloud/references/configuration/
-      - DEBUG=${DEBUG:-0}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+    ports:
+      - "${S3_PORT:-8333}:8333"
+      - "${S3_ADMIN_UI_PORT:-12535}:12535"
     volumes:
-      - "${LOCALSTACK_VOLUME_DIR:-./localstack-volume}:/var/lib/localstack"
-      - "/var/run/docker.sock:/var/run/docker.sock"
+      - s3data:/data
+
+  s3-init:
+    image: amazon/aws-cli:2.27.0
+    entrypoint: ["/scripts/init.sh"]
+    environment:
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_DEFAULT_REGION: ${AWS_REGION:-us-east-1}
+      AWS_S3_BUCKET_NAME: ${AWS_S3_BUCKET_NAME}
+    volumes:
+      - ./deployment/s3:/scripts:ro
+    depends_on:
+      - seaweedfs
+    restart: "no"
 
   vault:
     image: hashicorp/vault
@@ -114,3 +128,4 @@ services:
 
 volumes:
   pgdata:
+  s3data:

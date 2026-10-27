@@ -21,17 +21,16 @@ export interface GestureDetectorOptions {
   dragToPan: boolean
 }
 
-export type ZoomEvent = TypedEvent<'zoom', { deltaScale: number; anchorPoint: Point }>
+type ZoomData = { deltaScale: number; anchorPoint: Point }
+export type ZoomEvent = TypedEvent<'zoom', ZoomData>
 export type ZoomEndEvent = TypedEvent<'zoomend'>
-export type PanEvent = TypedEvent<'pan', { translation: Vector; method: PanMethod }>
+
+type PanData = { translation: Vector; method: PanMethod }
+export type PanEvent = TypedEvent<'pan', PanData>
 export type PanEndEvent = TypedEvent<'panend'>
-export type ClickEvent = TypedEvent<
-  'click' | 'double-click',
-  {
-    hoverTarget: HoverTarget | null
-    originalEvent: PointerEvent | TouchEvent
-  }
->
+
+type ClickData = { hoverTarget: HoverTarget | null; originalEvent: PointerEvent | TouchEvent }
+export type ClickEvent = TypedEvent<'click' | 'double-click', ClickData>
 
 type PanMethod = 'scroll' | 'drag'
 
@@ -43,6 +42,12 @@ interface PanState {
 
 interface ZoomState {
   stopTimeout?: number
+}
+
+interface SmoothZoomState {
+  pending: number
+  anchorPoint: Point
+  frame: number
 }
 
 interface PinchState {
@@ -74,6 +79,7 @@ export class GestureDetector extends TypedEventTarget<
   private panState: PanState | null = null
   private zoomState: ZoomState | null = null
   private pinchState: PinchState | null = null
+  private mouseWheelZoomState: SmoothZoomState | null = null
 
   private dragHandler!: DomDragHandler
 
@@ -128,6 +134,10 @@ export class GestureDetector extends TypedEventTarget<
     this.maybeClick = null
     this.panState = null
     this.zoomState = null
+    if (this.mouseWheelZoomState) {
+      cancelAnimationFrame(this.mouseWheelZoomState.frame)
+      this.mouseWheelZoomState = null
+    }
   }
 
   private onPanStart = (point: Point, method: PanMethod) => {
@@ -150,8 +160,30 @@ export class GestureDetector extends TypedEventTarget<
     this.panState = null
   }
 
-  private onZoom = (deltaScale: number, anchorPoint: Point) => {
-    this.dispatchEvent('zoom', { deltaScale, anchorPoint })
+  private mouseWheelZoom(delta: number, anchorPoint: Point) {
+    const pending = this.mouseWheelZoomState?.pending ?? 0
+    const frame = this.mouseWheelZoomState?.frame ?? requestAnimationFrame(this.smoothZoomStep)
+    this.mouseWheelZoomState = { pending: pending + delta, anchorPoint, frame }
+  }
+
+  private smoothZoomStep = () => {
+    const state = this.mouseWheelZoomState
+    if (!state) return
+
+    const last = Math.abs(state.pending) < 0.01
+    const step = last ? state.pending : state.pending * 0.2
+    state.pending -= step
+    this.onZoom({ deltaScale: step, anchorPoint: state.anchorPoint })
+
+    if (last) {
+      this.mouseWheelZoomState = null
+    } else {
+      state.frame = requestAnimationFrame(this.smoothZoomStep)
+    }
+  }
+
+  private onZoom = (data: ZoomData) => {
+    this.dispatchEvent('zoom', data)
     clearTimeout(this.zoomState?.stopTimeout)
     this.zoomState = { stopTimeout: window.setTimeout(this.onZoomEnd, 200) }
   }
@@ -185,7 +217,7 @@ export class GestureDetector extends TypedEventTarget<
 
       const d1 = distance(this.pinchState.p1, this.pinchState.p2)
       const d2 = distance(p1, p2)
-      this.onZoom((d1 - d2) * -0.005, midpoint(p1, p2))
+      this.onZoom({ deltaScale: (d1 - d2) * -0.005, anchorPoint: midpoint(p1, p2) })
 
       this.pinchState = { p1, p2 }
     }
@@ -207,7 +239,11 @@ export class GestureDetector extends TypedEventTarget<
 
     // The pinch gesture toggles the control key
     if (this.options.scrollGesture === 'zoom' || event.ctrlKey) {
-      this.onZoom(-event.deltaY * 0.01, cursorLocation)
+      if (event.deltaX === 0 && Math.abs(event.deltaY) > 20) {
+        this.mouseWheelZoom(-Math.sign(event.deltaY) * 0.15, cursorLocation)
+      } else {
+        this.onZoom({ deltaScale: -event.deltaY * 0.01, anchorPoint: cursorLocation })
+      }
     } else {
       if (!this.panState) {
         this.onPanStart(cursorLocation, 'scroll')
@@ -248,20 +284,15 @@ export class GestureDetector extends TypedEventTarget<
     ) {
       // It's a click!
 
+      const data = { hoverTarget: obtainHoverTarget(this.stage, event), originalEvent: event }
       if (this.firstClickTimeout) {
         clearTimeout(this.firstClickTimeout)
         this.firstClickTimeout = undefined
-        this.dispatchEvent('double-click', {
-          hoverTarget: obtainHoverTarget(this.stage, event),
-          originalEvent: event,
-        })
+        this.dispatchEvent('double-click', data)
       } else {
         this.firstClickTimeout = window.setTimeout(() => {
           this.firstClickTimeout = undefined
-          this.dispatchEvent('click', {
-            hoverTarget: obtainHoverTarget(this.stage, event),
-            originalEvent: event,
-          })
+          this.dispatchEvent('click', data)
         }, 250)
       }
     }
