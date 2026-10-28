@@ -14,6 +14,7 @@ import {
   ItemDto,
   ItemUpdateDto,
   MediaItemUpdateDto,
+  ThumbnailUpdate,
 } from 'tapestry-shared/src/data-transfer/resources/dtos/item.js'
 import { ReadParamsDto } from 'tapestry-shared/src/data-transfer/resources/dtos/common.js'
 import { determineImageFormat, ensureArray, OneOrMore } from 'tapestry-core/src/utils.js'
@@ -116,7 +117,7 @@ async function scheduleConvertToPdf(item: ItemWithAssets) {
 
 async function processCustomThumbnailUpdate(
   item: Item,
-  thumbnailUpdate: ItemUpdateDto['thumbnail'] | null | undefined,
+  thumbnailUpdate: ThumbnailUpdate | null | undefined,
   tx?: Prisma.TransactionClient,
   include?: Prisma.ItemInclude | null,
 ) {
@@ -127,9 +128,9 @@ async function processCustomThumbnailUpdate(
       await tx.imageAsset.delete({ where: { id: item.thumbnailId } })
     }
 
-    if (!thumbnailUpdate) return
+    if (!thumbnailUpdate?.thumbnail) return
 
-    const { source: url, size } = thumbnailUpdate
+    const { source: url, size } = thumbnailUpdate.thumbnail
     const source = extractInternallyHostedS3Key(url) ?? url
     await tx.item.update({
       where: { id: item.id },
@@ -192,14 +193,16 @@ export async function createItems(
       const { thumbnail } = items[index]
       if (!thumbnail) continue
 
-      dbItems[index] = (await processCustomThumbnailUpdate(dbItem, thumbnail, tx, include))!
+      dbItems[index] = (await processCustomThumbnailUpdate(dbItem, { thumbnail }, tx, include))!
     }
 
     const itemIds = dbItems
       .filter((dbItem) => shouldProcessItemThumbnail(dbItem))
       .map(({ id }) => id)
-    const data = { scheduledThumbnailProcessing: 'derive' } as const
-    await tx.item.updateMany({ where: { id: { in: itemIds } }, data })
+    await tx.item.updateMany({
+      where: { id: { in: itemIds } },
+      data: { scheduledThumbnailProcessing: 'derive' },
+    })
 
     return serialize('Item', dbItems)
   })
@@ -238,7 +241,7 @@ export async function updateItems(
           await resolveWebSource(update)
         }
 
-        await processCustomThumbnailUpdate(dbItem, update.thumbnail, tx)
+        await processCustomThumbnailUpdate(dbItem, { thumbnail: update.thumbnail }, tx)
         const patch = itemDtoToDb(omit(update, 'thumbnail'), ['id', 'createdAt', 'updatedAt'])
         let updatedDbItem = (await tx.item.update({
           where: { id },
