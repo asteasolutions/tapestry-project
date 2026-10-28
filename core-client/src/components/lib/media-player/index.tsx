@@ -5,6 +5,7 @@ import styles from './styles.module.css'
 import { ControlBar } from './control-bar'
 import clsx from 'clsx'
 import { Id } from 'tapestry-core/src/data-format/schemas/common'
+import { Icon } from '../icon'
 
 type ComponentType = 'video' | 'audio'
 type MediaElement<T extends ComponentType> = T extends 'video' ? HTMLVideoElement : HTMLAudioElement
@@ -226,8 +227,8 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
             display: isPlaying ? 'block' : 'none',
             width: '100%',
             height: '100%',
-            objectFit: 'contain',
           }}
+          className={styles.video}
           crossOrigin="anonymous"
         >
           <source src={options.src} type={options.mediaType || 'video/mp4'} />
@@ -248,6 +249,15 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
             pointerEvents: 'none',
           }}
         />
+      )}
+      {!isAudio && isInteractive && (
+        <div className={styles.playArea} onClick={() => void togglePlay()}>
+          {!isPlaying && (
+            <div className={styles.playButton}>
+              <Icon icon="play_arrow" filled />
+            </div>
+          )}
+        </div>
       )}
       <div
         className={styles.controlBar}

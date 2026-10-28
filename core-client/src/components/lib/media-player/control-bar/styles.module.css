@@ -5,6 +5,7 @@
 
   :global(.wrapper) {
     width: 100%;
+    height: 100%;
     box-sizing: border-box;
     border-radius: 0;
 
@@ -12,7 +13,21 @@
       display: flex;
       align-items: center;
       width: 100%;
+      height: 100%;
+      padding: calc(var(--control-bar-unit, 1px) * 8);
+      gap: calc(var(--control-bar-unit, 1px) * 8);
       box-sizing: border-box;
+    }
+
+    :global(.button-tertiary) {
+      width: calc(var(--control-bar-unit, 1px) * 32);
+      height: calc(var(--control-bar-unit, 1px) * 32);
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :global(.button-icon) {
+      font-size: calc(var(--control-bar-unit, 1px) * 20);
     }
   }
 
@@ -31,6 +46,12 @@
   flex: 1 1 auto;
   text-wrap: nowrap;
   font-variant-numeric: tabular-nums;
+  font-size: calc(var(--control-bar-unit, 1px) * 14);
+}
+
+.progress-slider,
+.volume-slider {
+  zoom: max(calc(var(--control-bar-unit, 1px) / 1px), 0.5);
 }
 
 .progress-slider {
@@ -41,43 +62,54 @@
 
 .volume-slider {
   accent-color: var(--theme-background-brand-secondary);
+  inline-size: 120px;
   writing-mode: vertical-lr;
   direction: rtl;
-  position: absolute;
-  z-index: 2;
-}
-
-.volume-slider-fullscreen {
-  bottom: 50px;
-  left: 0;
-}
-
-.volume-slider-normal {
-  bottom: 48px;
-  left: 58px;
 }
 
 .playback-rate {
   background-color: var(--theme-background-primary);
-  width: 40px;
+  width: calc(var(--control-bar-unit, 1px) * 40);
+  height: calc(var(--control-bar-unit, 1px) * 32);
+  padding: 0;
   border: none;
   border-radius: 0;
   box-shadow: none;
   box-sizing: border-box;
 }
 
+.root .playback-rate,
+.playback-rate-buttons .playback-rate {
+  font-size: calc(var(--control-bar-unit, 1px) * 14);
+  line-height: 1;
+}
+
+.playback-rate-buttons .playback-rate {
+  font-size: calc(var(--control-bar-unit, 1px) * 12);
+}
+
 .playback-rate-buttons {
   background-color: var(--theme-background-primary);
+}
+
+.anchored-submenu {
   position: absolute;
   z-index: 2;
+  position-area: top;
+  align-self: unsafe end;
+  margin-bottom: 2px;
 }
 
-.playback-rate-buttons-fullscreen {
-  bottom: 50px;
-  left: 0;
-}
+@supports not (position-area: top) {
+  .volume-slider {
+    zoom: 1;
+    inline-size: calc(var(--control-bar-unit, 1px) * 120);
+    bottom: calc(var(--control-bar-unit, 1px) * 48);
+    left: calc(var(--control-bar-unit, 1px) * 64 - 10px);
+  }
 
-.playback-rate-buttons-normal {
-  bottom: 48px;
-  right: 50px;
+  .playback-rate-buttons {
+    bottom: calc(var(--control-bar-unit, 1px) * 48);
+    right: calc(var(--control-bar-unit, 1px) * 48);
+  }
 }

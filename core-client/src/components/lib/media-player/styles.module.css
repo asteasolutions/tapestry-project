@@ -12,6 +12,29 @@
   display: flex;
 }
 
+.root:not(.audio-only) {
+  container-type: size;
+}
+
+.video {
+  object-fit: cover;
+}
+
+.root:fullscreen .video {
+  object-fit: contain;
+}
+
+.root:not(.audio-only) .control-bar {
+  height: var(--control-bar-height);
+}
+
+:global([data-model-id]):has(.root:not(.audio-only)) {
+  --control-bar-height: min(10cqh, 64px);
+  --control-bar-unit: calc(var(--control-bar-height) / 48);
+
+  container-type: size;
+}
+
 .audio-only {
   position: relative;
   display: flex;
@@ -22,4 +45,35 @@
 .audio-only:has(.control-bar) {
   position: static;
   bottom: auto;
+}
+
+.play-area {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  container-type: size;
+}
+
+.play-button {
+  --play-button-size: clamp(24px, 10cqmin, 160px);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--play-button-size);
+  height: var(--play-button-size);
+  border-radius: 50%;
+  color: var(--theme-icon-inverse);
+  background-color: var(--theme-background-brand-secondary);
+}
+
+.play-button > * {
+  font-size: calc(var(--play-button-size) / 2);
+}
+
+.play-area:hover .play-button {
+  background-color: var(--theme-background-brand-secondary-hover);
 }
