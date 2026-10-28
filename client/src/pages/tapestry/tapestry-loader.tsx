@@ -5,6 +5,7 @@ import { useAsync } from 'tapestry-core-client/src/components/lib/hooks/use-asyn
 import { useObservable } from 'tapestry-core-client/src/components/lib/hooks/use-observable'
 import { TapestryConfig, TapestryConfigContext } from 'tapestry-core-client/src/components/tapestry'
 import { createStoreHooks, createUseStoreHook } from 'tapestry-core-client/src/lib/store/provider'
+import { ScreenshotModeSchema } from 'tapestry-core/src/data-format/schemas/common'
 import { auth } from '../../auth'
 import { ItemInfoModal } from '../../components/item-info-modal'
 import { LoadingLogo } from '../../components/loading-logo'
@@ -123,13 +124,13 @@ export function TapestryLoader({ id, mode }: TapestryLoaderProps) {
       const pixiIconsLoader = ThumbnailContainer.loadIconTextures()
 
       const deopt = !!searchParams.get('deopt')
-      const hideControls = !!searchParams.get('hideControls')
+      const screenshotMode = ScreenshotModeSchema.safeParse(searchParams.get('screenshotMode')).data
       const dataSync = new TapestryDataSync(
         id,
         canEdit ? mode : 'view',
         userAccess,
         deopt,
-        hideControls,
+        screenshotMode,
       )
       onCleanup(() => dataSync.dispose())
 

@@ -10,7 +10,7 @@ import { PresentationStep } from 'tapestry-core/src/data-format/schemas/presenta
 import { Rel } from 'tapestry-core/src/data-format/schemas/rel.js'
 import { Tapestry } from 'tapestry-core/src/data-format/schemas/tapestry.js'
 import { IdMap } from 'tapestry-core/src/utils.js'
-import { Id } from 'tapestry-core/src/data-format/schemas/common'
+import { Id, ScreenshotMode } from 'tapestry-core/src/data-format/schemas/common'
 
 export const MAX_SCALE = 4
 export const MIN_RESTRICTED_SCALE = 0.5
@@ -138,7 +138,11 @@ export interface TapestryViewModel<
    */
   readonly disableOptimizations?: boolean
   readonly thumbnailsInitialized?: boolean
-  readonly hideControls?: boolean
+  /**
+   * Set when the tapestry is opened by the thumbnail generator. In `dashboard` mode all controls are
+   * hidden. In both modes the initial "<title> by <owner>" snackbar is not shown.
+   */
+  readonly screenshotMode?: ScreenshotMode
   readonly outlinedItemId?: string
   readonly searchTerm?: string | null
   readonly items: Readonly<IdMap<I>>
