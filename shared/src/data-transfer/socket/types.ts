@@ -51,7 +51,7 @@ type SubscribeEmitters<T extends Record<string, ServerEventDescriptor>> = {
 type ClientSubscriptions = { subscribe: SubscribeEmitters<SubscriptionEventDescriptors> }
 
 type OnSubscribeHelper<T extends Record<string, ServerEventDescriptor>> = {
-  [K in keyof T]: (params: T[K]['params'], callback: T[K]['ack']) => void
+  [K in keyof T]: (params: T[K]['params'], callback: T[K]['ack']) => Promise<unknown>
 }
 
 export type OnSubscribe = OnSubscribeHelper<SubscriptionEventDescriptors>
