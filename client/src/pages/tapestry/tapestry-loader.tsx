@@ -35,7 +35,7 @@ import { InteractionMode } from './view-model'
 import { TapestryDataSync } from './view-model/tapestry-data-sync'
 import { ThumbnailContainer } from 'tapestry-core-client/src/stage/renderer/thumbnail-container'
 
-const INITIAL_THUMBNAILS_LOAD_TIMEOUT = 4_500
+const INITIAL_THUMBNAILS_LOAD_TIMEOUT = 3_000
 
 function getErrorMessage(error: unknown) {
   if (error instanceof APIError) {
@@ -120,6 +120,8 @@ export function TapestryLoader({ id, mode }: TapestryLoaderProps) {
         void navigate(tapestryViewPath)
       }
 
+      const pixiIconsLoader = ThumbnailContainer.loadIconTextures()
+
       const deopt = !!searchParams.get('deopt')
       const hideControls = !!searchParams.get('hideControls')
       const dataSync = new TapestryDataSync(
@@ -138,7 +140,7 @@ export function TapestryLoader({ id, mode }: TapestryLoaderProps) {
         INITIAL_THUMBNAILS_LOAD_TIMEOUT,
       )
 
-      await ThumbnailContainer.loadIconTextures()
+      await pixiIconsLoader
 
       return { tapestryDataSync: dataSync, initialThumbnails }
     },

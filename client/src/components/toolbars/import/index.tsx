@@ -45,7 +45,7 @@ export function ImportToolbar({ className }: GlobalMenuProps) {
 
   useKeyboardShortcuts({
     KeyI: () => uploadButtonRef.current?.click(),
-    'meta + KeyK | KeyK': () => selectSubmenu('add-link'),
+    'meta + KeyK | KeyK': () => selectSubmenu('import-from-link'),
     KeyR: openMediaCaptureDialog,
   })
 
@@ -69,18 +69,20 @@ export function ImportToolbar({ className }: GlobalMenuProps) {
       },
     },
     {
-      id: 'add-link',
+      id: 'import-from-link',
       ui: {
         element: (
           <IconButton
-            aria-label="Add link"
+            aria-label="Import from link"
             icon="add_link"
-            onClick={() => selectSubmenu('add-link')}
+            onClick={() => selectSubmenu('import-from-link')}
           />
         ),
         tooltip: {
           side: 'right',
-          children: <ShortcutLabel text="Add link">{shortcutLabel('meta + K')}</ShortcutLabel>,
+          children: (
+            <ShortcutLabel text="Import from link">{shortcutLabel('meta + K')}</ShortcutLabel>
+          ),
         },
       },
       submenu: [

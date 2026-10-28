@@ -6,63 +6,46 @@
   justify-content: center;
 
   @media screen and (width <= 1200px) {
-    padding-bottom: 80px;
-  }
-
-  .learn-more-container {
-    position: absolute;
-    top: 0;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 1;
-
-    .learn-more-button {
-      border-radius: 50%;
-      padding: 10px;
-
-      --bg-color: white;
-      --active-border-color: var(--internal-hover-border-color);
-
-      :global(.button-icon) {
-        font-size: 26px;
-      }
-    }
-
-    .learn-more-text {
-      position: absolute;
-      bottom: calc(100% + 10px);
-      left: 50%;
-      transform: translate(-50%);
-      font-size: 16px;
-      font-style: italic;
-      white-space: nowrap;
-      color: white;
-    }
+    padding-bottom: 40px;
   }
 
   .section-wrapper {
     max-width: var(--section-max-width);
+    position: relative;
+    display: flex;
+    flex-direction: column;
 
     .titles {
+      align-self: center;
       display: flex;
       flex-direction: column;
       align-items: center;
-      margin: 0 170px 50px;
+      margin-bottom: 25px;
       text-align: center;
+      max-width: 960px;
 
       .title {
-        text-shadow: 0 4px var(--color-bright-red);
         margin-bottom: 25px;
         white-space: pre-line;
         font-style: italic;
-      }
 
-      @media screen and (width <= 1200px) {
-        margin: 0 0 50px;
-
-        .title {
+        @media screen and (width <= 1200px) {
           font-size: 28px;
         }
+      }
+    }
+
+    .buttons {
+      align-self: center;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 50px;
+
+      @media screen and (width <= 600px) {
+        display: flex;
+        flex-direction: column;
+        align-self: unset;
       }
     }
 
@@ -72,7 +55,8 @@
       gap: 50px;
 
       @media screen and (width <= 1200px) {
-        grid-template-columns: auto;
+        display: flex;
+        flex-direction: column-reverse;
       }
 
       .subsections {
@@ -89,6 +73,7 @@
 
           .subsection-title {
             font-weight: 700;
+            margin-bottom: 8px;
           }
 
           .media-icons {
@@ -104,19 +89,11 @@
         }
       }
 
-      .video-section {
-        padding-top: 40px;
+      .video {
         place-self: center;
-
-        .video {
-          width: 100%;
-          max-width: 550px;
-          border-radius: 16px;
-        }
-
-        .link {
-          margin-top: 20px;
-        }
+        width: 100%;
+        max-width: 550px;
+        border-radius: 16px;
       }
     }
   }
