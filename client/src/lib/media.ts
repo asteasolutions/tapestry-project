@@ -132,10 +132,14 @@ const DEFAULT_WEBPAGE_SIZE: Size = {
   width: 400,
   height: 500,
 }
-const EMBEDDED_TAPESTRY_MAX_SIDE_SIZE = 700
+
+const EMBEDDED_TAPESTRY_MIN_WIDTH = 300
+const EMBEDDED_TAPESTRY_MAX_WIDTH = 700
+const EMBEDDED_TAPESTRY_HEIGHT = 500
+
 const EMBEDDED_TAPESTRY_DEFAULT_SIZE: Size = {
-  width: EMBEDDED_TAPESTRY_MAX_SIDE_SIZE,
-  height: EMBEDDED_TAPESTRY_MAX_SIDE_SIZE / 2,
+  width: EMBEDDED_TAPESTRY_MAX_WIDTH,
+  height: EMBEDDED_TAPESTRY_HEIGHT,
 }
 const EMBEDDED_TAPESTRY_TOOLBAR_PADDING = 130
 
@@ -193,14 +197,13 @@ async function getEmbeddedTapestrySize(source: string): Promise<Size> {
     return EMBEDDED_TAPESTRY_DEFAULT_SIZE
   }
 
-  const fittedSize = innerFit(
-    { width, height },
-    { width: EMBEDDED_TAPESTRY_MAX_SIDE_SIZE, height: EMBEDDED_TAPESTRY_MAX_SIDE_SIZE },
-  )
+  // All embedded tapestries have the same height. The width follows the tapestry's
+  // aspect ratio, but is kept above a minimum so that tall tapestries remain usable.
+  const contentHeight = EMBEDDED_TAPESTRY_HEIGHT - EMBEDDED_TAPESTRY_TOOLBAR_PADDING
 
   return {
-    width: fittedSize.width,
-    height: fittedSize.height + EMBEDDED_TAPESTRY_TOOLBAR_PADDING,
+    width: Math.max(contentHeight * aspectRatio({ width, height }), EMBEDDED_TAPESTRY_MIN_WIDTH),
+    height: EMBEDDED_TAPESTRY_HEIGHT,
   }
 }
 
