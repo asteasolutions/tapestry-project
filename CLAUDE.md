@@ -25,7 +25,7 @@ cd <workspace> && npm run lint   # tsc --build + eslint (--max-warnings 0) + pre
 npx prettier ./src --write  # fix formatting (no semicolons, single quotes, trailing commas, width 100)
 ```
 
-Local infrastructure (Docker, reads `server/.env`): `npm run db:start`, `npm run redis:start`, `npm run localstack:start` (S3; the free version has no persistence), `npm run vault:start` (optional, only needed for AI chat API keys). Each one has a matching `*:logs` script.
+Local infrastructure (Docker, reads `server/.env`): `npm run db:start`, `npm run redis:start`, `npm run s3:start` (SeaweedFS as a persistent S3; also creates the bucket and its CORS rules), `npm run vault:start` (optional, only needed for AI chat API keys). Each one has a matching `*:logs` script.
 
 Server (`cd server`):
 ```sh
@@ -80,5 +80,5 @@ The canvas is rendered with PixiJS. `core-client/src/stage` contains the rendere
 - Changing a `VITE_*` value requires rebuilding the client, including the Docker image. Client secrets must never be put in `VITE_*` variables.
 - `VITE_AUTH_PROVIDERS` is a comma-separated subset of `google,ia,orcid,wikimedia`.
 - ORCID doesn't accept `localhost` as a redirect URI, so use `http://127.0.0.1:<port>/`. Start and finish a login on the same origin.
-- S3 works with LocalStack or MinIO through `AWS_ENDPOINT_URL`. Set `AWS_S3_FORCE_PATH_STYLE=true` for path-style URLs.
+- S3 works with SeaweedFS (local default) or any S3-compatible store through `AWS_ENDPOINT_URL`. Set `AWS_S3_FORCE_PATH_STYLE=true` for path-style URLs.
 - Deployment: pushes to `main` deploy to dev (`docker compose`), pushes to `demo` deploy to AWS (`deployment/docker/*.sh`).

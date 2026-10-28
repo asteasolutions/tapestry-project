@@ -27,6 +27,9 @@ class S3Service {
       region: region || undefined,
       credentials: accessKeyId && secretAccessKey ? { accessKeyId, secretAccessKey } : undefined,
       forcePathStyle: config.aws.s3.forcePathStyle,
+      // By default the SDK adds a checksum of the (empty) request body to presigned PUT URLs,
+      // which S3-compatible stores such as SeaweedFS reject once the client uploads real content.
+      requestChecksumCalculation: 'WHEN_REQUIRED',
     })
   }
 
