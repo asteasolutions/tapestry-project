@@ -70,10 +70,10 @@ export function Tapestry({ initialThumbnails }: TapestryProps) {
   const pixiContainerRef = useRef<HTMLDivElement>(null)
   const presentationOrderContainerRef = useRef<HTMLDivElement>(null)
   const { title, owner } = useTapestryData(['title', 'owner'])
-  const { presentationOrderState, hideEditControls, hideControls } = useTapestryData([
+  const { presentationOrderState, hideEditControls, screenshotMode } = useTapestryData([
     'presentationOrderState',
     'hideEditControls',
-    'hideControls',
+    'screenshotMode',
   ])
   const documentTitle = `Tapestry - ${title}`
   const dispatch = useDispatch()
@@ -107,7 +107,7 @@ export function Tapestry({ initialThumbnails }: TapestryProps) {
         initialThumbnails,
       ),
     onInit: () => {
-      if (title && !hideControls) {
+      if (title && !screenshotMode) {
         dispatch(
           setSnackbar({
             text: `"${title}" by ${fullName(owner)}`,
@@ -136,14 +136,14 @@ export function Tapestry({ initialThumbnails }: TapestryProps) {
         <ViewportScrollbars />
       </div>
       <QuickTips />
-      {!hideControls && <MainToolbar className={styles.mainToolbar} />}
+      {screenshotMode !== 'dashboard' && <MainToolbar className={styles.mainToolbar} />}
       <TapestrySnackbar />
       {!hideEditControls && (
         <>
           <div className={styles.usersData}>
             <DoingWorkIndicator />
             <CollaboratorIndicators />
-            {!hideControls && <UserToolbar />}
+            {screenshotMode !== 'dashboard' && <UserToolbar />}
           </div>
           <CollaboratorCursors />
         </>

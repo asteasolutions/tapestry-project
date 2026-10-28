@@ -99,7 +99,7 @@ export async function* takeTapestryScreenshots(
 ) {
   const url = new URL(tapestryPath, config.server.viewerUrl)
   url.searchParams.set('deopt', '1')
-  url.searchParams.set('hideControls', '1')
+  url.searchParams.set('screenshotMode', 'dashboard')
   const src = url.toString()
   const { windowSize, timeout } = site
   console.log(`Taking screenshots of ${src}...`)
