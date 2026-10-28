@@ -77,17 +77,19 @@ class S3Service {
   }
 
   async copyObject(key: string, newObjectKey: string) {
-    return this.s3Client.send(
+    const result = await this.s3Client.send(
       new CopyObjectCommand({
         Bucket,
         CopySource: `/${Bucket}/${key}`,
         Key: newObjectKey,
       }),
     )
+    await this.cache.delete(newObjectKey)
+    return result
   }
 
   async putObject(key: string, body: PutObjectCommandInput['Body'], contentType?: string) {
-    return this.s3Client.send(
+    const result = await this.s3Client.send(
       new PutObjectCommand({
         Bucket,
         Key: key,
@@ -95,16 +97,20 @@ class S3Service {
         ContentType: contentType,
       }),
     )
+    await this.cache.delete(key)
+    return result
   }
 
   async deleteObject(key: string) {
     try {
-      return this.s3Client.send(
+      const result = await this.s3Client.send(
         new DeleteObjectCommand({
           Bucket,
           Key: key,
         }),
       )
+      await this.cache.delete(key)
+      return result
     } catch (e) {
       console.warn(`There was an error deleting ${key} from S3`, e)
       throw e
@@ -119,17 +125,19 @@ class S3Service {
     }
   }
 
-  deleteObjects(keys: string[]) {
+  async deleteObjects(keys: string[]) {
     if (keys.length === 0) {
       return
     }
 
-    return this.s3Client.send(
+    const result = await this.s3Client.send(
       new DeleteObjectsCommand({
         Bucket,
         Delete: { Objects: keys.map((Key) => ({ Key })) },
       }),
     )
+    await this.cache.delete(...keys)
+    return result
   }
 
   async *listBucket() {
