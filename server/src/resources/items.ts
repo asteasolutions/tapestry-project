@@ -132,7 +132,7 @@ async function processCustomThumbnailUpdate(
 
     const { source: url, size } = thumbnailUpdate.thumbnail
     const source = extractInternallyHostedS3Key(url) ?? url
-    await tx.item.update({
+    return await tx.item.update({
       where: { id: item.id },
       data: {
         thumbnail: {
