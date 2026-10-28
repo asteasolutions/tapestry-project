@@ -4,6 +4,7 @@ import { WEB_SOURCE_PARSERS } from 'tapestry-core/src/web-sources/index.js'
 import { generateThumbnail } from './image'
 import { ScreenshotOptions } from 'puppeteer'
 import { downloadImageToArrayBuffer, initWebpage, inNewBrowserPage, WebpageConfig } from '../utils'
+import { config } from '../../config.js'
 
 async function takeScreenshot(site: WebpageConfig, options?: ScreenshotOptions) {
   let generator: ReturnType<typeof inNewBrowserPage<Uint8Array>> | undefined
@@ -26,9 +27,11 @@ async function takeScreenshot(site: WebpageConfig, options?: ScreenshotOptions) 
 }
 
 export async function generateWebpageThumbnail(site: WebpageConfig, options?: ScreenshotOptions) {
-  // Tells embedded tapestries they are being screenshotted. Other pages ignore it.
   const url = new URL(site.url)
-  url.searchParams.set('screenshotMode', 'embed')
+  // Pages of our own client may be embedded tapestries, so let them know they're being screenshotted
+  if (url.host === new URL(config.server.viewerUrl).host) {
+    url.searchParams.set('screenshotMode', 'embed')
+  }
   const screenshot = await takeScreenshot({ ...site, url: url.toString() }, options)
   return generateThumbnail(Buffer.from(screenshot))
 }

@@ -2,7 +2,7 @@ import { compact } from 'lodash-es'
 import { IdMap, idMapToArray, isMediaItem } from 'tapestry-core/src/utils'
 import { MediaItemDto } from 'tapestry-shared/src/data-transfer/resources/dtos/item'
 import { Store, StoreMutationCommand } from 'tapestry-core-client/src/lib/store/index'
-import { ScreenshotMode } from 'tapestry-core-client/src/view-model'
+import { ScreenshotMode } from 'tapestry-core/src/data-format/schemas/common'
 import {
   EditableTapestryViewModel,
   InteractionMode,

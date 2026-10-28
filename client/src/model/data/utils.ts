@@ -66,7 +66,8 @@ import {
   viewModelFromTapestry,
 } from 'tapestry-core-client/src/view-model/utils'
 import { DEFAULT_LAYER } from '../../pages/tapestry/view-model/utils'
-import { ItemViewModel, ScreenshotMode } from 'tapestry-core-client/src/view-model'
+import { ItemViewModel } from 'tapestry-core-client/src/view-model'
+import { ScreenshotMode } from 'tapestry-core/src/data-format/schemas/common'
 import {
   ItemThumbnailController,
   LoadedRendition,

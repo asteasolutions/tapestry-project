@@ -31,6 +31,8 @@ export const IdentifiableSchema = z.object({
   id: z.string(),
 })
 
+export const ScreenshotModeSchema = z.enum(['dashboard', 'embed'])
+
 type OptionalNumber = ZodOptional<
   ZodUnion<[ZodPipe<ZodLiteral<''>, ZodTransform<undefined, ''>>, ZodCoercedNumber<unknown>]>
 >
@@ -65,3 +67,4 @@ export type Size = z.infer<typeof SizeSchema>
 export type Rectangle = z.infer<typeof RectangleSchema>
 export type Identifiable = z.infer<typeof IdentifiableSchema>
 export type Id = Identifiable['id']
+export type ScreenshotMode = z.infer<typeof ScreenshotModeSchema>
