@@ -125,7 +125,6 @@ export function ControlBar({
           variant="secondary"
           onClick={() => onRateSelect(rate)}
           className={styles.playbackRate}
-          style={{ fontSize: '12px' }}
         >
           {`${rate}x`}
         </Button>
@@ -176,7 +175,7 @@ export function ControlBar({
         onChange={(e) => onSeek(Number(e.target.value))}
         className={styles.progressSlider}
       />
-      <span style={{ fontSize: '14px' }}>
+      <span>
         {formatTime(currentTime)} / {formatTime(duration)}
       </span>
     </div>,
