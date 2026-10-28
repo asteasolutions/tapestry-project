@@ -13,7 +13,7 @@ import { createEventRegistry } from '../lib/events/event-registry'
 import { DomDragHandler, DragEvent, DragStartEvent } from './drag-handler'
 import { obtainHoverTarget, toPoint } from './utils'
 import { capturesPointerEvents } from '../lib/dom'
-import { isMobile } from '../lib/user-agent'
+import { isMac, isMobile } from '../lib/user-agent'
 import { HoverTarget } from '../view-model'
 
 export interface GestureDetectorOptions {
@@ -254,7 +254,11 @@ export class GestureDetector extends TypedEventTarget<
       if (!this.panState) {
         this.onPanStart(cursorLocation, 'scroll')
       } else {
-        const delta: Vector = { dx: -event.deltaX, dy: -event.deltaY }
+        let delta: Vector = { dx: -event.deltaX, dy: -event.deltaY }
+        // The event is converted to a horizontal scroll on OS level on MacOS
+        if (!isMac && event.shiftKey) {
+          delta = { dx: delta.dy, dy: delta.dx }
+        }
         this.onPan(translate(this.panState.lastPoint, delta), 'scroll')
         clearTimeout(this.panState.stopTimeout)
         this.panState.stopTimeout = window.setTimeout(() => this.onPanEnd('scroll'), 200)
