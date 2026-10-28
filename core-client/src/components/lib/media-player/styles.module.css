@@ -31,6 +31,7 @@
 :global([data-model-id]):has(.root:not(.audio-only)) {
   --control-bar-height: min(10cqh, 64px);
   --control-bar-unit: calc(var(--control-bar-height) / 48);
+
   container-type: size;
 }
 
