@@ -143,11 +143,11 @@ function DraggedGroupBackground() {
   const { items, selection, viewport } = useStoreData(['items', 'selection', 'viewport'])
   const group = useSingleGroupSelection()
 
-  if (!group?.dto.hasBackground || !group.dto.color) {
+  if (!group?.dto.color || !(group.dto.hasBackground || group.dto.hasBorder)) {
     return null
   }
 
-  const { color, hasBorder } = group.dto
+  const { color, hasBackground, hasBorder } = group.dto
   const borderWidth =
     (2 * computeRestrictedScale(viewport, idMapToArray(items))) / viewport.transform.scale
 
@@ -166,7 +166,7 @@ function DraggedGroupBackground() {
         zIndex: ZOrder.selection,
         pointerEvents: 'none',
         boxSizing: 'border-box',
-        backgroundColor: color,
+        backgroundColor: hasBackground ? color : undefined,
         border: `${borderWidth}px solid ${hasBorder ? getOpaqueColor(color) : 'var(--theme-background-brand)'}`,
         ...cssTransformForLocation({ x: left, y: top }, viewport.transform),
       }}
