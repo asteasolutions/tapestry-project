@@ -26,15 +26,25 @@ export async function fetchIIIFManifest(url: string, signal?: AbortSignal) {
   }
 }
 
-export async function isIIIFManifest(url: string, signal?: AbortSignal) {
-  return (await fetchIIIFManifest(url, signal)) !== null
+async function parseIIIFManifestFile(file: File) {
+  try {
+    return normalizeManifestJson(JSON.parse(await file.text()))
+  } catch (error) {
+    console.warn('Failed to parse IIIF manifest file', error)
+    return null
+  }
+}
+
+function loadIIIFManifest(source: string | File, signal?: AbortSignal) {
+  return source instanceof File ? parseIIIFManifestFile(source) : fetchIIIFManifest(source, signal)
+}
+
+export async function isIIIFManifest(source: string | File, signal?: AbortSignal) {
+  return (await loadIIIFManifest(source, signal)) !== null
 }
 
 export async function fetchIIIFCanvasCount(source: string | File, signal?: AbortSignal) {
-  const manifest =
-    source instanceof File
-      ? normalizeManifestJson(await JSON.parse(await source.text()))
-      : await fetchIIIFManifest(source, signal)
+  const manifest = await loadIIIFManifest(source, signal)
 
   return manifest ? Object.keys(manifest.entities.Canvas).length : null
 }
