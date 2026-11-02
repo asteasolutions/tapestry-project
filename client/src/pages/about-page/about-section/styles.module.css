@@ -1,7 +1,4 @@
 .root {
-  --big-letter-margin: 105px;
-  --center-text-width: 700px;
-
   .yellow-part {
     position: relative;
     padding: 65px var(--section-padding-x) 0;
@@ -13,15 +10,38 @@
 
     .subtitle-quote {
       position: relative;
-      margin: 80px 0;
-      width: 640px;
+      box-sizing: border-box;
+      width: 100%;
+      max-width: 710px;
+      min-height: 161px;
+      margin: 16px 0 48px;
+      padding: 38px 55px 56px 33px;
 
       @media screen and (width <= 1200px) {
-        max-width: 330px;
-        padding-top: 20px;
-        padding-left: 20px;
-        margin: 45px 0;
-        width: auto;
+        margin: 24px 0 40px;
+      }
+
+      @media screen and (width <= 600px) {
+        min-height: 266px;
+        margin: 24px 0 48px;
+        padding: 48px 20px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+
+      .subtitle-quote-blob {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: fill;
+        user-select: none;
+
+        @media screen and (width <= 600px) {
+          transform: scaleY(-1);
+        }
       }
 
       .subtitle-quote-text {
@@ -30,9 +50,8 @@
     }
 
     .subtitle {
-      padding-left: 70px;
       font-style: italic;
-      margin-bottom: 45px;
+      margin-bottom: 32px;
     }
 
     @media screen and (width <= 1200px) {
@@ -41,54 +60,61 @@
       }
 
       .subtitle {
-        padding-left: 0;
         margin-bottom: 20px;
         font-size: 35px;
       }
     }
 
     .content {
-      width: var(--center-text-width);
-      margin: 0 auto;
+      margin-left: 272px;
 
       .content-text {
-        width: 610px;
+        width: 580px;
         font-weight: 500;
-        margin-bottom: 20px;
+        margin-bottom: 32px;
       }
 
       .choice-titles {
-        margin-left: var(--big-letter-margin);
+        display: grid;
+        grid-template-columns: minmax(0, 573px) auto;
+        align-items: start;
+        margin-left: 110px;
+        padding-bottom: 16px;
 
-        .choice-quote {
+        .choice-quote-text {
           margin-top: 10px;
-          padding-bottom: 20px;
-          position: relative;
+          font-weight: 500;
+        }
 
-          .choice-quote-text {
-            font-weight: 500;
+        .choice-quote-blocks {
+          display: flex;
+          gap: 16px;
+
+          @media screen and (width > 1400px) {
+            margin-bottom: -84px;
           }
 
-          .choice-quote-blocks {
-            position: absolute;
-            top: 0;
-            left: calc(100% + 5px);
-            display: flex;
-            gap: 10px;
+          .choice-quote-line {
+            margin: 21px 0 13px;
+            width: 132px;
+            border-top: 1px solid black;
+            border-right: 1px solid black;
+          }
 
-            .choice-quote-line {
-              margin: 13px 0;
-              width: 120px;
-              border-top: 1px solid black;
-              border-right: 1px solid black;
-            }
-
-            .mc-luhan-image {
-              width: 130px;
-            }
+          .mc-luhan-image {
+            width: 117px;
           }
         }
       }
+    }
+
+    .mc-luhan {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      width: fit-content;
+      white-space: nowrap;
     }
 
     @media screen and (width <= 1200px) {
@@ -96,34 +122,55 @@
         margin: 30px 0 15px;
       }
 
-      .big-letter {
-        font-size: 48px;
-      }
-
       .choice-subtitle {
         font-weight: 500;
-        margin-bottom: 30px;
+        margin-bottom: 16px;
+      }
+
+      .mc-luhan-image {
+        width: 122px;
       }
     }
   }
 
   .white-part {
-    padding-top: 15px;
-    height: 230px;
-    display: flex;
-    justify-content: center;
+    padding: 16px var(--section-padding-x) 64px;
 
-    .choice-content-container {
-      width: var(--center-text-width);
+    @media screen and (width <= 1200px) {
+      padding-block: 48px;
+    }
+
+    .choice-content {
+      display: flex;
+      align-items: flex-start;
+      gap: 4px;
+      margin-left: 375px;
+
+      @media screen and (width <= 1200px) {
+        margin-left: 0;
+      }
+
+      .big-letter {
+        flex-shrink: 0;
+        width: 80px;
+        text-align: center;
+        font-size: 96px;
+        line-height: 70px;
+
+        @media screen and (width <= 1200px) {
+          width: auto;
+          font-size: 72px;
+          line-height: 1.2;
+        }
+      }
 
       .choice-content-text {
-        position: relative;
-        margin-left: var(--big-letter-margin);
+        width: 506px;
 
-        .big-letter {
-          position: absolute;
-          right: calc(100% + 10px);
-          bottom: calc(100% - 30px);
+        @media screen and (width <= 1200px) {
+          flex: 1;
+          width: auto;
+          min-width: 0;
         }
       }
     }
