@@ -55,27 +55,25 @@ class S3Service {
     key: string,
     expiresIn = config.server.assetReadUrlExpiresIn,
   ): Promise<string> {
+    let validFor = expiresIn
     return this.cache.memoize(
       key,
-      () =>
-        this.getPresignedUrl(
+      async () => {
+        // A presigned URL stops working when the credentials that
+        // signed it expire, regardless of its own expiration time.
+        const { expiration } = await this.s3Client.config.credentials()
+        if (expiration) {
+          validFor = Math.min(validFor, Math.floor((expiration.getTime() - Date.now()) / 1000))
+        }
+        return this.getPresignedUrl(
           new GetObjectCommand({
             Bucket,
             Key: key,
           }),
-          expiresIn,
-        ),
-      expiresIn >> 1,
-      async (cachedUrl) => {
-        try {
-          const response = await fetch(cachedUrl, { headers: { Range: 'bytes=0-0' } })
-          return response.ok
-        } catch (error) {
-          console.error('Error while validating cached URL', error)
-          return false
-        }
+          validFor,
+        )
       },
-      config.server.assetReadUrlValidationExpiresIn,
+      () => Math.max(validFor >> 1, 1),
     )
   }
 
