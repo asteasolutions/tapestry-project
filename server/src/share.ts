@@ -21,13 +21,15 @@ export async function shareTapestry(req: ShareRequest, res: Response) {
 
   const image = tapestry.thumbnail
     ? new URL(`/api/share${path}/image`, config.server.externalUrl).href
-    : `${config.server.viewerUrl}/og-logo-orange.png`
+    : `${config.server.viewerUrl}/open-graph-logo-orange.png`
 
   res.send(`<!doctype html>
 <html>
 <head>
   <meta charset="UTF-8" />
   <title>${escape(tapestry.title)}</title>
+  <link rel="icon" type="image/png" href="${config.server.viewerUrl}/favicon.png" />
+  <meta property="og:site_name" content="Tapestries" />
   <meta property="og:title" content="${escape(tapestry.title)}" />
   <meta property="og:description" content="${escape(tapestry.description ?? '')}" />
   <meta property="og:image" content="${escape(image)}" />
