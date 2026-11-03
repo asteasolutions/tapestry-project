@@ -7,6 +7,7 @@ import { useViewportObstruction } from 'tapestry-core-client/src/components/tape
 import { SearchButton } from 'tapestry-core-client/src/components/tapestry/search/search-button'
 import { shortcutLabel } from 'tapestry-core-client/src/lib/keyboard-event'
 import { config } from '../../../config'
+import { useTapestryPath } from '../../../hooks/use-tapestry-path'
 import { useSession } from '../../../layouts/session'
 import { useDispatch, useTapestryData } from '../../../pages/tapestry/tapestry-providers'
 import { setSnackbar } from '../../../pages/tapestry/view-model/store-commands/tapestry'
@@ -24,6 +25,7 @@ export function UserToolbar({ className }: UserToolbarProps) {
   const obstruction = useViewportObstruction({ clear: { top: true, right: true } })
   const [joinPopup, setJoinPopup] = useState(false)
   const [sharePopup, setSharePopup] = useState(false)
+  const tapestryViewPath = useTapestryPath('view')
   const { id, commentThread, userAccess, visibility } = useTapestryData([
     'id',
     'commentThread',
@@ -37,7 +39,7 @@ export function UserToolbar({ className }: UserToolbarProps) {
     if (userAccess === 'edit') {
       setSharePopup(true)
     } else {
-      await navigator.clipboard.writeText(`${config.apiUrl}/share/t/${id}`)
+      await navigator.clipboard.writeText(`${config.apiUrl}/share${tapestryViewPath}`)
       dispatch(setSnackbar('Share link copied to clipboard'))
     }
   }
