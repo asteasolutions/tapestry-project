@@ -12,7 +12,7 @@ type ShareRequest = Request<{ username: string; slug: string }>
 export async function shareTapestry(req: ShareRequest, res: Response) {
   const path = `/u/${encodeURIComponent(req.params.username)}/${encodeURIComponent(req.params.slug)}`
   const url = `${config.server.viewerUrl}${path}`
-  const tapestry = await findSharedTapestry(req)
+  const tapestry = await findSharedTapestry(req.params)
 
   if (!tapestry) {
     res.redirect(url)
@@ -44,7 +44,7 @@ export async function shareTapestry(req: ShareRequest, res: Response) {
 
 // The tapestry thumbnail fitted into the 1200x630 size that link previews expect, so it isn't cropped.
 export async function shareTapestryImage(req: ShareRequest, res: Response) {
-  const tapestry = await findSharedTapestry(req)
+  const tapestry = await findSharedTapestry(req.params)
   if (!tapestry?.thumbnail) {
     res.sendStatus(404)
     return
@@ -60,11 +60,11 @@ export async function shareTapestryImage(req: ShareRequest, res: Response) {
   res.type('jpeg').set('Cache-Control', 'public, max-age=3600').send(image)
 }
 
-function findSharedTapestry(req: ShareRequest) {
+function findSharedTapestry({ username, slug }: ShareRequest['params']) {
   return prisma.tapestry.findFirst({
     where: {
-      slug: req.params.slug,
-      owner: { username: req.params.username },
+      slug,
+      owner: { username },
       visibility: { not: 'private' },
     },
   })
