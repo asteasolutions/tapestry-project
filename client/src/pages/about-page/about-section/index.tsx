@@ -24,7 +24,22 @@ export function AboutSection() {
       <div className={styles.yellowPart}>
         <ConcreteWall width={400} height={300} top={40} left={100} style={{ opacity: '25%' }} />
         <ConcreteWall width={490} height={200} bottom={160} right={0} style={{ opacity: '15%' }} />
-        {!LGOrLess && (
+        {LGOrLess ? (
+          <>
+            <PositionedCircle
+              diameter={60}
+              top={65}
+              right={46}
+              backgroundColor="var(--color-section-blue)"
+            />
+            <PositionedCircle
+              diameter={65}
+              top={65}
+              right={-29}
+              backgroundColor="var(--color-section-red)"
+            />
+          </>
+        ) : (
           <>
             <PositionedCircle
               diameter={120}
