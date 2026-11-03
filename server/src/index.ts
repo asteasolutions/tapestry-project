@@ -39,6 +39,7 @@ import { socketServer } from './socket/index.js'
 import { userSecrets } from './resources/user-secrets.js'
 import { tapestryBookmarks } from './resources/tapestry-bookmarks.js'
 import qs from 'qs'
+import { shareTapestry } from './share.js'
 
 export const app = express()
 
@@ -60,6 +61,8 @@ app.use(cookieParser())
 app.use(bodyParser.json())
 
 app.use(morgan('dev'))
+
+app.get('/api/share/t/:id', (req, res, next) => shareTapestry(req, res).catch(next))
 
 app.use(
   '/api',

@@ -7,7 +7,7 @@ import { Options } from 'react-select'
 import { Select, SelectOption } from '../select'
 import { useSession } from '../../layouts/session'
 import { Icon, IconName } from 'tapestry-core-client/src/components/lib/icon/index'
-import { tapestryPath } from '../../utils/paths'
+import { config } from '../../config'
 import { IconButton } from 'tapestry-core-client/src/components/lib/buttons/index'
 import clsx from 'clsx'
 
@@ -55,7 +55,7 @@ export function GeneralAccess({ tapestry, onCopied }: GeneralAccessProps) {
 
   const isOwner = useSession().user?.id === tapestry.ownerId
   const visibility = lastUpdatedTapestry?.visibility ?? tapestry.visibility
-  const tapestryLink = `${window.origin}${tapestryPath(tapestry.owner!.username, tapestry.slug)}`
+  const tapestryLink = `${config.apiUrl}/share/t/${tapestry.id}`
   const isPrivate = visibility === 'private'
 
   async function copyTapestryLink() {
