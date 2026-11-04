@@ -35,7 +35,7 @@ export function MediaSection() {
             component={Link}
             variant="mono"
             to={dashboardPath('home')}
-            {...clickTracking('Landing Explore gallery')}
+            {...clickTracking('Landing Explore the public gallery')}
           >
             Explore the public gallery
           </Button>
@@ -43,6 +43,7 @@ export function MediaSection() {
             component="a"
             variant="secondary"
             href="https://drive.google.com/file/d/110DthOEk0mQJOVXy_UDjUsFWp-0YafMc/view?usp=drive_link"
+            {...clickTracking('Landing Watch demo')}
             target="_blank"
           >
             Watch demo

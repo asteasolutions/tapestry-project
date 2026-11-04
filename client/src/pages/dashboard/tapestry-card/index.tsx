@@ -8,7 +8,7 @@ import {
 import { Toolbar } from 'tapestry-core-client/src/components/lib/toolbar/index'
 import { useState } from 'react'
 import { useOutsideClick } from 'tapestry-core-client/src/components/lib/hooks/use-outside-click'
-import { Link, useParams } from 'react-router'
+import { Link } from 'react-router'
 import { DeleteTapestryModal } from '../../../components/delete-tapestry-modal'
 import { ShareDialog } from '../../../components/share-dialog'
 import { fullName, userAccess } from '../../../model/data/utils'
@@ -22,8 +22,6 @@ import { TapestryInfoDialog } from 'tapestry-core-client/src/components/tapestry
 import { Icon } from 'tapestry-core-client/src/components/lib/icon/index'
 import { tapestryPath } from '../../../utils/paths'
 import { TapestryListItem } from '../tapestry-list'
-import { trackEvent } from '../../../services/analytics'
-import { DashboardSection } from '..'
 
 interface TapestryCardProps {
   tapestry: TapestryListItem
@@ -40,7 +38,6 @@ export function TapestryCard({
   viewURL,
   viewOnly,
 }: TapestryCardProps) {
-  const { section } = useParams<{ section: DashboardSection }>()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const menuContainerRef = useOutsideClick<HTMLDivElement>(() => setIsMenuOpen(false))
   // TODO: Implement a hook, which provides the controls and JSX for the modals
@@ -73,11 +70,7 @@ export function TapestryCard({
   return (
     <div className={styles.root}>
       {tapestry.isBookmarked && <Icon icon="bookmark" className={styles.bookmark} inert />}
-      <Link
-        to={finalViewUrl}
-        style={{ color: 'transparent' }}
-        onClick={() => trackEvent(`Gallery tapestry opened: ${section ?? 'other'}`)}
-      >
+      <Link to={finalViewUrl} style={{ color: 'transparent' }}>
         <div className={styles.preview}>
           {tapestry.thumbnail ? (
             <img src={tapestry.thumbnail} className={styles.thumbnail} />

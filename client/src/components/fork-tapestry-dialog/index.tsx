@@ -11,7 +11,6 @@ import { JSX, useState } from 'react'
 import { getCopyName } from 'tapestry-core/src/utils'
 import { Icon } from 'tapestry-core-client/src/components/lib/icon/index'
 import { useAsyncAction } from 'tapestry-core-client/src/components/lib/hooks/use-async-action'
-import { trackEvent } from '../../services/analytics'
 
 export const forkStatusIcons: Record<TapestryCreateJobDto['status'], JSX.Element> = {
   pending: <Icon icon="pending" />,
@@ -84,7 +83,6 @@ export function ForkTapestryDialog({ onClose, tapestryId, tapestryInfo }: ForkTa
       undefined,
       { signal },
     )
-    trackEvent('Tapestry forked')
     setJobId(id)
   })
 

@@ -37,7 +37,6 @@ import { deleteRels } from './rels'
 import { selectItems, setInteractiveElement } from './tapestry'
 import { setIsZoomingLocked } from './viewport'
 import { sortByPath } from 'tapestry-core/src/lib/array'
-import { trackItemsAdded } from '../../../../services/analytics'
 
 export function insertItems(
   items: OneOrMore<EditableItemViewModel>,
@@ -90,7 +89,6 @@ export function addAndPositionItems(
       item.dto.layer = ++maxLayer
     })
 
-    trackItemsAdded(items.map((i) => i.dto))
     store.dispatch(insertItems(items), selectItems(items.map((i) => i.dto.id)))
     if (items.length === 1) {
       store.dispatch(setInteractiveElement({ modelId: items[0].dto.id, modelType: 'item' }))

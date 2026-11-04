@@ -10,7 +10,6 @@ import { JobStatus } from 'tapestry-shared/src/data-transfer/resources/dtos/tape
 import { mapNotNull } from 'tapestry-core/src/lib/array'
 import { usePropRef } from 'tapestry-core-client/src/components/lib/hooks/use-prop-ref'
 import { CanceledError } from 'axios'
-import { trackEvent } from '../services/analytics'
 
 export type FileStatus = 'uploading' | JobStatus | 'cancelled'
 
@@ -116,7 +115,6 @@ export function useTapestryImport(onComplete: () => unknown) {
             undefined,
             { signal },
           )
-          trackEvent('Tapestry imported')
           updateFile(i, { jobId: id })
         } catch (e) {
           console.warn('Error importing file', f, e)

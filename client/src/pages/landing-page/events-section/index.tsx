@@ -24,7 +24,6 @@ export function EventsSection() {
           variant="secondary"
           aria-label="Learn more"
           className={styles.learnMoreButton}
-          {...clickTracking('Landing Learn more')}
           onClick={() =>
             learnMoreRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
           }
@@ -45,6 +44,7 @@ export function EventsSection() {
         component="a"
         variant="mono"
         href="https://luma.com/tapestries"
+        {...clickTracking('Landing Join a circle')}
         target="_blank"
         className={styles.eventsButton}
       >

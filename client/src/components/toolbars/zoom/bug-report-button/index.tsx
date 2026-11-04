@@ -5,7 +5,6 @@ import { MenuItemButton } from 'tapestry-core-client/src/components/lib/buttons'
 import { useSession } from '../../../../layouts/session'
 import { useTapestryStore } from '../../../../pages/tapestry/tapestry-providers'
 import { TapestryEditorStore } from '../../../../pages/tapestry/view-model'
-import { trackEvent } from '../../../../services/analytics'
 
 interface BugReportButtonProps {
   onClick?: () => unknown
@@ -40,7 +39,6 @@ export function BugReportButton({ onClick }: BugReportButtonProps) {
       icon="call"
       onClick={() => {
         bugReportHandler(store, user?.id)
-        trackEvent('Contact us opened')
         onClick?.()
       }}
     >

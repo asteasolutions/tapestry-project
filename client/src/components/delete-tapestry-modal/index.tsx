@@ -2,7 +2,6 @@ import { SimpleModal } from 'tapestry-core-client/src/components/lib/modal/index
 import { Text } from 'tapestry-core-client/src/components/lib/text/index'
 import { useAsyncAction } from 'tapestry-core-client/src/components/lib/hooks/use-async-action'
 import { resource } from '../../services/rest-resources'
-import { trackEvent } from '../../services/analytics'
 
 interface DeleteTapestryModalProps {
   id: string
@@ -14,12 +13,7 @@ interface DeleteTapestryModalProps {
 export function DeleteTapestryModal({ id, title, onCancel, onConfirm }: DeleteTapestryModalProps) {
   const { perform: deleteTapestry } = useAsyncAction(
     async ({ signal }) => await resource('tapestries').destroy({ id }, { signal }),
-    {
-      onAfterAction: () => {
-        trackEvent('Tapestry deleted')
-        onConfirm?.()
-      },
-    },
+    { onAfterAction: () => onConfirm?.() },
   )
 
   return (

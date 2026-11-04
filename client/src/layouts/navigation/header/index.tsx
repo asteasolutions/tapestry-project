@@ -52,7 +52,6 @@ export function Header() {
               <MenuItemButton
                 to={'/about'}
                 component={Link}
-                {...clickTracking('Header About')}
                 onClick={() => setIsMobileNavOpen(false)}
               >
                 About
@@ -77,12 +76,7 @@ export function Header() {
                 Gallery
               </Button>
             )}
-            <Button
-              to={'/about'}
-              component={Link}
-              variant="tertiary"
-              {...clickTracking('Header About')}
-            >
+            <Button to={'/about'} component={Link} variant="tertiary">
               About
             </Button>
           </>

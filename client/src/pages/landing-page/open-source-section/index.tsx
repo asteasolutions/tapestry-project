@@ -45,6 +45,7 @@ export function OpenSourceSection() {
             variant="secondary"
             component="a"
             href="https://github.com/asteasolutions/tapestry-project"
+            {...clickTracking('Landing View GitHub repo')}
             target="_blank"
           >
             View GitHub Repo
