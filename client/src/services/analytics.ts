@@ -141,8 +141,6 @@ if (isAnalyticsEnabled) {
     domain: config.plausibleDomain,
     outboundLinks: true,
     fileDownloads: true,
-    // Lets you verify tracking locally by setting VITE_PLAUSIBLE_DOMAIN in client/.env.
-    captureOnLocalhost: import.meta.env.DEV,
   })
 
   document.addEventListener(
