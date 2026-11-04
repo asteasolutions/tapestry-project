@@ -12,7 +12,7 @@ export const featureRequests: RESTResourceImpl<
   Prisma.FeatureRequestWhereInput
 > = {
   accessPolicy: {
-    canCreate: async ({ body: { tapestryId } }, { userId }) => ownsTapestry(tapestryId, userId),
+    canCreate: async ({ body: { tapestryId } }, { userId }) => ownsTapestry(userId, tapestryId),
     canList: () => Promise.resolve(true),
     // Owners see the requests for their own tapestries. Admins use the admin endpoint.
     createListFilter: (userId) => ({

@@ -5,7 +5,7 @@ import { useSession } from '../../session'
 import { LoginButton } from '../../../auth'
 import Logo from '../../../assets/icons/logo-large.svg?react'
 import { Link, useLocation } from 'react-router'
-import { DASHBOARD_ROOT, dashboardPath } from '../../../utils/paths'
+import { adminPath, DASHBOARD_ROOT, dashboardPath } from '../../../utils/paths'
 import { Button, IconButton, MenuItemButton } from 'tapestry-core-client/src/components/lib/buttons'
 import { Breakpoint, useResponsive } from '../../../providers/responsive-provider'
 import { Toolbar } from 'tapestry-core-client/src/components/lib/toolbar'
@@ -19,6 +19,7 @@ export function Header() {
   const SMOrLess = useResponsive() <= Breakpoint.SM
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
   const mobileNavRef = useOutsideClick<HTMLDivElement>(() => setIsMobileNavOpen(false))
+  const isAdmin = user?.role === 'admin'
 
   return (
     <div className={styles.root}>
@@ -36,24 +37,31 @@ export function Header() {
             className={styles.mobileNavToolbar}
             direction="column"
             items={[
-              ...(showGallery
-                ? [
-                    <MenuItemButton
-                      to={dashboardPath('public')}
-                      component={Link}
-                      onClick={() => setIsMobileNavOpen(false)}
-                    >
-                      Gallery
-                    </MenuItemButton>,
-                  ]
-                : []),
+              showGallery && (
+                <MenuItemButton
+                  to={dashboardPath('public')}
+                  component={Link}
+                  onClick={() => setIsMobileNavOpen(false)}
+                >
+                  Gallery
+                </MenuItemButton>
+              ),
               <MenuItemButton
-                to={'/about'}
+                to="/about"
                 component={Link}
                 onClick={() => setIsMobileNavOpen(false)}
               >
                 About
               </MenuItemButton>,
+              isAdmin && (
+                <MenuItemButton
+                  to={adminPath('tapestries')}
+                  component={Link}
+                  onClick={() => setIsMobileNavOpen(false)}
+                >
+                  Admin
+                </MenuItemButton>
+              ),
             ]}
           />
         </div>
@@ -69,9 +77,14 @@ export function Header() {
                 Gallery
               </Button>
             )}
-            <Button to={'/about'} component={Link} variant="tertiary">
+            <Button to="/about" component={Link} variant="tertiary">
               About
             </Button>
+            {isAdmin && (
+              <Button to={adminPath('tapestries')} component={Link} variant="tertiary">
+                Admin
+              </Button>
+            )}
           </>
         )}
         {user ? <UserMenu user={user} /> : <LoginButton />}

@@ -53,7 +53,8 @@ function NotAuthorized() {
   )
 }
 
-function AdminPanel({ section, id }: { section: AdminSection; id?: string }) {
+function AdminPanel({ section }: { section: AdminSection }) {
+  const { id } = useParams<{ id?: string }>()
   const { data: pendingCount, reload: refreshPendingCount } = useAsync(
     async ({ signal }) =>
       (
@@ -122,7 +123,7 @@ function AdminPanel({ section, id }: { section: AdminSection; id?: string }) {
 
 export function AdminPage() {
   const { user } = useSession()
-  const { section, id } = useParams<{ section?: string; id?: string }>()
+  const { section } = useParams<{ section?: string }>()
 
   if (!user) {
     return <Navigate to={dashboardPath('public')} replace />
@@ -143,7 +144,7 @@ export function AdminPage() {
 
   return (
     <div className={styles.root}>
-      <AdminPanel section={section as AdminSection} id={id} />
+      <AdminPanel section={section as AdminSection} />
     </div>
   )
 }

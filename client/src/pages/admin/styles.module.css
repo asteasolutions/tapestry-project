@@ -25,12 +25,12 @@
 }
 
 .navigation {
-  /* Keeps the section buttons at their natural width */
   display: flex;
   padding: 8px var(--padding-x);
   border-top: 1px solid var(--bg-color);
   background-color: var(--theme-background-primary);
   overflow-x: auto;
+  flex-shrink: 0;
 }
 
 .count-badge {
