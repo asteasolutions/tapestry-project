@@ -5,6 +5,7 @@ ADD core/package.json /app/core/
 ADD shared/package.json /app/shared/
 ADD server/package.json /app/server/
 
+ENV PUPPETEER_SKIP_DOWNLOAD=true
 RUN cd /app && npm ci
 
 ADD core/ /app/core
@@ -21,7 +22,7 @@ CMD ["start:api"]
 FROM node:24-alpine3.24 AS worker
 
 RUN apk add --no-cache \
-  chromium \
+  'chromium>=156.0.8078.79' \
   nss \
   freetype \
   harfbuzz \
@@ -32,7 +33,7 @@ RUN apk add --no-cache \
   mesa-gl \
   mesa-dev \
   vulkan-loader \
-  chromium-swiftshader \
+  'chromium-swiftshader>=156.0.8078.79' \
   yarn \
   ffmpeg \
   imagemagick \
