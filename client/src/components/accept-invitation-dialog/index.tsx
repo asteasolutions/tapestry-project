@@ -12,6 +12,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router'
 import { fullName } from '../../model/data/utils'
 import { tapestryPath } from '../../utils/paths'
 import { APIError } from '../../errors'
+import { trackEvent } from '../../services/analytics'
 
 function parseErrorMessage(error: unknown) {
   if (!error) {
@@ -52,6 +53,7 @@ export function AcceptInvitationDialog() {
   const { trigger: accept, error } = useAsyncAction(
     async ({ signal }, tapestryInvitationId: string) => {
       await resource('tapestryAccess').create({ tapestryInvitationId }, undefined, { signal })
+      trackEvent('Invite accepted')
       searchParams.delete('invitation')
       setSearchParams(searchParams, { replace: true })
       setShowDialog(false)

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { ZodError } from 'zod/v4'
 import { download } from 'tapestry-core-client/src/lib/file'
 import { TapestryExporter, ProgressEvent } from '../services/tapestry-exporter'
+import { trackEvent } from '../services/analytics'
 
 export interface UseTapestryExportOptions {
   tapestryId: string
@@ -28,6 +29,7 @@ export function useTapestryExport({ tapestryId, onError, onSuccess }: UseTapestr
     }).export((url, title) => {
       setProgress(undefined)
       download(url, `${title}.zip`)
+      trackEvent('Tapestry exported')
       onSuccess()
     })
   }

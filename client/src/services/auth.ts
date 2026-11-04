@@ -6,6 +6,7 @@ import { APIError } from '../errors'
 import { resource } from '../services/rest-resources'
 import { AUTH_PROVIDERS } from '../auth/providers-registry'
 import { RegistrationSuggestions } from 'tapestry-shared/src/data-transfer/resources/dtos/errors'
+import { LoginProvider, loginProvider, trackEvent } from './analytics'
 
 interface Token {
   token: string
@@ -53,6 +54,7 @@ export class AuthService extends Observable<AuthServiceState> {
   private autoRefreshTimeout: number | undefined
   private preparing = defer()
   private _accessToken: Token | null = null
+  private registrationProvider: LoginProvider | undefined
 
   get accessToken() {
     return structuredClone(this._accessToken)
@@ -79,6 +81,18 @@ export class AuthService extends Observable<AuthServiceState> {
     }
   }
 
+  private trackSessionCreated(params: SessionCreateDto) {
+    if (params.authType === 'registerUser') {
+      if (this.registrationProvider) {
+        trackEvent(`Sign up completed: ${this.registrationProvider}`)
+      }
+      this.registrationProvider = undefined
+      return
+    }
+    const provider = loginProvider(params)
+    if (provider) trackEvent(`Login: ${provider}`)
+  }
+
   private async doLogin(params: SessionCreateDto, loadUser: boolean, signal?: GenericAbortSignal) {
     await this.preparing.promise
 
@@ -98,6 +112,7 @@ export class AuthService extends Observable<AuthServiceState> {
         this.autoRefreshTimeout = window.setTimeout(this.refresh.bind(this, false), renewAfter)
       }
       this._accessToken = { token: accessToken, expiresAt }
+      this.trackSessionCreated(params)
       this.update((state) => {
         state.user = user ?? state.user ?? null
         state.isInitialized = true
@@ -114,6 +129,10 @@ export class AuthService extends Observable<AuthServiceState> {
           if (errorName === 'SessionExpiredError') {
             state.user = null
           } else if (errorName === 'UserDoesNotExistError') {
+            this.registrationProvider = loginProvider(params)
+            if (this.registrationProvider) {
+              trackEvent(`Sign up started: ${this.registrationProvider}`)
+            }
             state.pendingRegistration = {
               usernameSuggestion: error.data.usernameSuggestion,
               firstNameSuggestion: error.data.firstNameSuggestion,
@@ -164,6 +183,8 @@ export class AuthService extends Observable<AuthServiceState> {
   }
 
   cancelRegistration() {
+    trackEvent('Sign up cancelled')
+    this.registrationProvider = undefined
     this.update((state) => {
       state.pendingRegistration = undefined
     })

@@ -10,6 +10,7 @@ import { Icon, IconName } from 'tapestry-core-client/src/components/lib/icon/ind
 import { tapestryPath } from '../../utils/paths'
 import { IconButton } from 'tapestry-core-client/src/components/lib/buttons/index'
 import clsx from 'clsx'
+import { trackEvent } from '../../services/analytics'
 
 type Option = SelectOption<TapestryDto['visibility']>
 
@@ -48,8 +49,16 @@ export function GeneralAccess({ tapestry, onCopied }: GeneralAccessProps) {
     data: lastUpdatedTapestry,
     loading: updatingVisibility,
   } = useAsyncAction(
-    async ({ signal }, visibility: TapestryDto['visibility']) =>
-      resource('tapestries').update({ id: tapestry.id }, { visibility }, {}, { signal }),
+    async ({ signal }, visibility: TapestryDto['visibility']) => {
+      const updated = await resource('tapestries').update(
+        { id: tapestry.id },
+        { visibility },
+        {},
+        { signal },
+      )
+      trackEvent(`Tapestry visibility: ${visibility}`)
+      return updated
+    },
     { clearDataOnReload: false },
   )
 

@@ -10,6 +10,7 @@ import styles from './styles.module.css'
 import { Button } from 'tapestry-core-client/src/components/lib/buttons'
 import { PositionedMask } from '../../../components/positioned-component'
 import { Breakpoint, useResponsive } from '../../../providers/responsive-provider'
+import { clickTracking } from '../../../services/analytics'
 
 export function UsageSection() {
   const {
@@ -102,6 +103,7 @@ export function UsageSection() {
           variant="mono"
           component="a"
           href="mailto:tapestries@awmt.org"
+          {...clickTracking('Landing Reach out')}
           target="_blank"
         >
           Reach out

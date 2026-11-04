@@ -4,6 +4,7 @@ import LogoWhite from '../../../assets/icons/logo-large-white.svg?react'
 import { Link } from 'react-router'
 import { SvgIcon } from 'tapestry-core-client/src/components/lib/svg-icon'
 import { Breakpoint, useResponsive } from '../../../providers/responsive-provider'
+import { clickTracking } from '../../../services/analytics'
 
 export function Footer() {
   const breakpoint = useResponsive()
@@ -19,7 +20,9 @@ export function Footer() {
           </Link>
         )}
         <Text component="div" variant="bodySm">
-          <Link to={'/about'}>About</Link>
+          <Link to={'/about'} {...clickTracking('Footer About')}>
+            About
+          </Link>
         </Text>
         <Text
           component="a"
@@ -29,7 +32,12 @@ export function Footer() {
         >
           GitHub
         </Text>
-        <Text variant="bodySm" component="a" href="mailto:tapestries@awmt.org">
+        <Text
+          variant="bodySm"
+          component="a"
+          href="mailto:tapestries@awmt.org"
+          {...clickTracking('Footer Contact')}
+        >
           Contact
         </Text>
       </div>

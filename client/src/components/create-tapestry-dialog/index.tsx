@@ -4,6 +4,7 @@ import { newTapestry } from '../../model/data/utils'
 import { resource } from '../../services/rest-resources'
 import { TapestryDialog, TapestryInfo } from '../tapestry-dialog'
 import { tapestryPath } from '../../utils/paths'
+import { trackEvent } from '../../services/analytics'
 
 interface CreateTapestryDialogProps {
   onCancel: () => unknown
@@ -28,6 +29,7 @@ export function CreateTapestryDialog({ onCancel }: CreateTapestryDialogProps) {
       submitText="Create"
       handleSubmit={async (tapestryInfo) => {
         const tapestry = await createNew(tapestryInfo)
+        trackEvent('Tapestry created')
         await navigate(tapestryPath(tapestry.owner!.username, tapestry.slug, 'edit'))
       }}
       error={error}

@@ -7,6 +7,7 @@ import styles from './styles.module.css'
 import { Button } from 'tapestry-core-client/src/components/lib/buttons'
 import { useRef } from 'react'
 import { Breakpoint, useResponsive } from '../../../providers/responsive-provider'
+import { clickTracking } from '../../../services/analytics'
 
 export function EventsSection() {
   const { title, content } = LANDING_PAGE_TEXT.events
@@ -23,6 +24,7 @@ export function EventsSection() {
           variant="secondary"
           aria-label="Learn more"
           className={styles.learnMoreButton}
+          {...clickTracking('Landing Learn more')}
           onClick={() =>
             learnMoreRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
           }

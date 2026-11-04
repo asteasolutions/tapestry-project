@@ -10,6 +10,7 @@ import { useSession } from '../../layouts/session'
 import { useState } from 'react'
 import { SimpleModal } from 'tapestry-core-client/src/components/lib/modal/index'
 import clsx from 'clsx'
+import { trackEvent } from '../../services/analytics'
 
 interface CollaboratorsAccessProps {
   tapestry: TapestryDto
@@ -33,11 +34,15 @@ export function CollaboratorsAccess({ tapestry, onCopied }: CollaboratorsAccessP
 
   const invitation = invitationsResponse?.data[0]
 
-  const { perform: createInvitation } = useAsyncAction(({ signal }) =>
-    resource('tapestryInvitations').create({ canEdit: true, tapestryId: id }, undefined, {
-      signal,
-    }),
-  )
+  const { perform: createInvitation } = useAsyncAction(async ({ signal }) => {
+    const created = await resource('tapestryInvitations').create(
+      { canEdit: true, tapestryId: id },
+      undefined,
+      { signal },
+    )
+    trackEvent('Invite link created')
+    return created
+  })
 
   async function regenerateInvitation() {
     await createInvitation()
