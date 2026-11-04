@@ -12,11 +12,14 @@ type SectionButtons<S extends string> = Record<
 
 interface SectionListProps<S extends string> {
   activeSection: S
-  buttons: SectionButtons<S>
+  buttons: Partial<SectionButtons<S>>
 }
 
 export function SectionList<S extends string>({ activeSection, buttons }: SectionListProps<S>) {
-  const buttonProps = Object.entries(buttons) as [S, SectionButtons<S>[S]][]
+  const buttonProps = Object.entries(buttons).filter(([, props]) => !!props) as [
+    S,
+    SectionButtons<S>[S],
+  ][]
   return (
     <div className={styles.root}>
       {buttonProps.map(([section, props]) => (

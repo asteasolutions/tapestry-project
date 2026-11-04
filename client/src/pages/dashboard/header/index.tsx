@@ -8,7 +8,7 @@ import Gemini from '../../../assets/icons/gemini.svg?react'
 import styles from './styles.module.css'
 import { Text } from 'tapestry-core-client/src/components/lib/text/index'
 import { SectionList } from '../../../components/section-list'
-import { dashboardPath } from '../../../utils/paths'
+import { adminPath, dashboardPath } from '../../../utils/paths'
 
 interface DashboardHeaderProps {
   onImport: (files: File[]) => unknown
@@ -24,7 +24,7 @@ export function DashboardHeader({ onImport, section, onNewTapestry }: DashboardH
     <div className={styles.root}>
       {user && (
         <div className={styles.sectionsContainer}>
-          <SectionList<DashboardSection>
+          <SectionList<DashboardSection | 'admin'>
             activeSection={section}
             buttons={{
               home: {
@@ -47,6 +47,13 @@ export function DashboardHeader({ onImport, section, onNewTapestry }: DashboardH
                 to: dashboardPath('public'),
                 children: 'Gallery',
               },
+              ...(user.role === 'admin' && {
+                admin: {
+                  icon: 'admin_panel_settings',
+                  to: adminPath('tapestries'),
+                  children: 'Admin',
+                },
+              }),
             }}
           />
           <div className={styles.createTapestryButtons}>

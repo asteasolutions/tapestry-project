@@ -32,6 +32,20 @@ model User {
   aiChats              AiChat[]
   secrets              UserSecret[]
   tapestryBookmarks    TapestryBookmark[]
+  role                 UserRole              @default(user)
+  featureRequests      FeatureRequest[]      @relation("requester")
+  decidedRequests      FeatureRequest[]      @relation("decider")
+  adminActivities      AdminActivity[]
+  ownedDeletions       TapestryDeletion[]    @relation("deletedTapestryOwner")
+  performedDeletions   TapestryDeletion[]    @relation("tapestryDeleter")
+  tapestryExports      TapestryExport[]
+
+  @@index([role])
+}
+
+enum UserRole {
+  user
+  admin
 }
 
 enum UITheme {
@@ -42,7 +56,6 @@ enum UITheme {
 enum TapestryVisibility {
   private
   link
-  public
 }
 
 model Tapestry {
@@ -76,8 +89,16 @@ model Tapestry {
   aiChats          AiChat[]
   groups           Group[]
   bookmarks        TapestryBookmark[]
+  // A featured tapestry is listed in the public Gallery. Featured tapestries are always link-shared.
+  featured         Boolean               @default(false)
+  featuredAt       DateTime?
+  // Position in the Gallery (ascending). Set only for featured tapestries.
+  galleryPosition  Int?
+  featureRequests  FeatureRequest[]
+  exports          TapestryExport[]
 
   @@unique([ownerId, slug])
+  @@index([featured, galleryPosition])
 }
 
 model TapestryAccess {
@@ -433,4 +454,103 @@ model UserSecret {
   ownerId     String
 
   @@index([ownerId])
+}
+
+enum FeatureRequestStatus {
+  pending
+  approved
+  declined
+  // Closed automatically, e.g. because the owner restricted sharing or the tapestry was deleted
+  closed
+}
+
+model FeatureRequest {
+  id            String               @id @default(uuid())
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  // Kept nullable so that request statistics survive tapestry deletion
+  tapestryId    String?
+  tapestry      Tapestry?            @relation(fields: [tapestryId], references: [id], onDelete: SetNull)
+  tapestryTitle String
+  requesterId   String?
+  requester     User?                @relation("requester", fields: [requesterId], references: [id], onDelete: SetNull)
+  status        FeatureRequestStatus @default(pending)
+  decidedAt     DateTime?
+  decidedById   String?
+  decidedBy     User?                @relation("decider", fields: [decidedById], references: [id], onDelete: SetNull)
+
+  @@index([tapestryId])
+  @@index([status, createdAt])
+  @@index([requesterId])
+  @@index([decidedById])
+}
+
+enum AdminAction {
+  openTapestry
+  changeSharing
+  changeFeatured
+  approveFeatureRequest
+  declineFeatureRequest
+  reorderGallery
+  deleteTapestry
+  deleteItems
+  changeRole
+}
+
+enum AdminActivityTargetType {
+  tapestry
+  user
+  featureRequest
+  gallery
+}
+
+// Append-only log of admin actions. There is no API to edit or delete entries.
+model AdminActivity {
+  id            String                  @id @default(uuid())
+  createdAt     DateTime                @default(now())
+  adminId       String?
+  admin         User?                   @relation(fields: [adminId], references: [id], onDelete: SetNull)
+  // Snapshot, so that the entry stays readable if the admin account is removed
+  adminUsername String
+  action        AdminAction
+  targetType    AdminActivityTargetType
+  targetId      String?
+  // Snapshot of a human-readable target name (e.g. tapestry title), since targets can be deleted
+  targetLabel   String?
+  details       Json?
+
+  @@index([createdAt])
+  @@index([adminId])
+  @@index([action])
+}
+
+// Tapestries are deleted outright, so deletions are recorded here for reporting.
+model TapestryDeletion {
+  id            String   @id @default(uuid())
+  createdAt     DateTime @default(now())
+  tapestryId    String
+  title         String
+  ownerId       String?
+  owner         User?    @relation("deletedTapestryOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  ownerUsername String
+  deletedById   String?
+  deletedBy     User?    @relation("tapestryDeleter", fields: [deletedById], references: [id], onDelete: SetNull)
+  byAdmin       Boolean
+
+  @@index([createdAt])
+  @@index([ownerId])
+  @@index([deletedById])
+}
+
+model TapestryExport {
+  id         String    @id @default(uuid())
+  createdAt  DateTime  @default(now())
+  tapestryId String?
+  tapestry   Tapestry? @relation(fields: [tapestryId], references: [id], onDelete: SetNull)
+  userId     String?
+  user       User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([tapestryId])
+  @@index([userId])
 }

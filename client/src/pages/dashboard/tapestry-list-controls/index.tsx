@@ -21,6 +21,9 @@ const CUSTOM_LABELS: Partial<Record<DashboardSection, { latest: string }>> = {
   shared: {
     latest: 'Last shared',
   },
+  public: {
+    latest: 'Gallery order',
+  },
 }
 function getSortOptions(section: DashboardSection, isLoggedIn: boolean): Options<SortOption> {
   const sortOptions: Options<SortOption> = [

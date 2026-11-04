@@ -287,8 +287,9 @@ export async function destroyItems(
     ids = ensureArray(ids)
     const presentationSteps = await tx.presentationStep.findMany({ where: { itemId: { in: ids } } })
     await destroyPresentationSteps(
-      presentationSteps.map((step) => step.id, tx),
+      presentationSteps.map((step) => step.id),
       context,
+      tx,
     )
 
     const items = await tx.item.findMany({

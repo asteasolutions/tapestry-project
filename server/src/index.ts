@@ -38,6 +38,13 @@ import { presentationStepBatchMutations } from './resources/presentation-step-ba
 import { socketServer } from './socket/index.js'
 import { userSecrets } from './resources/user-secrets.js'
 import { tapestryBookmarks } from './resources/tapestry-bookmarks.js'
+import { featureRequests } from './resources/feature-requests.js'
+import { tapestryExports } from './resources/tapestry-exports.js'
+import { adminTapestries } from './resources/admin/tapestries.js'
+import { adminFeatureRequests } from './resources/admin/feature-requests.js'
+import { adminUsers } from './resources/admin/users.js'
+import { adminActivity } from './resources/admin/activity.js'
+import { adminReportQueries } from './resources/admin/report-queries.js'
 import qs from 'qs'
 
 export const app = express()
@@ -87,6 +94,13 @@ app.use(
   bindEndpoints(resources.presentationStepBatchMutations, presentationStepBatchMutations),
   bindEndpoints(resources.userSecrets, userSecrets),
   bindEndpoints(resources.tapestryBookmarks, tapestryBookmarks),
+  bindEndpoints(resources.featureRequests, featureRequests),
+  bindEndpoints(resources.tapestryExports, tapestryExports),
+  bindEndpoints(resources.adminTapestries, adminTapestries),
+  bindEndpoints(resources.adminFeatureRequests, adminFeatureRequests),
+  bindEndpoints(resources.adminUsers, adminUsers),
+  bindEndpoints(resources.adminActivity, adminActivity),
+  bindEndpoints(resources.adminReportQueries, adminReportQueries),
 )
 app.use(express.static(path.join(import.meta.dirname, 'assets')))
 

@@ -10,6 +10,8 @@ import { Icon, IconName } from 'tapestry-core-client/src/components/lib/icon/ind
 import { tapestryPath } from '../../utils/paths'
 import { IconButton } from 'tapestry-core-client/src/components/lib/buttons/index'
 import clsx from 'clsx'
+import { useState } from 'react'
+import { SimpleModal } from 'tapestry-core-client/src/components/lib/modal/index'
 
 type Option = SelectOption<TapestryDto['visibility']>
 
@@ -35,23 +37,32 @@ const VISIBILITY_OPTIONS: Options<Option> = [
   },
 ]
 
-const publicLabel = <VisibilityOption icon="public" text="Public" />
-
 interface GeneralAccessProps {
   tapestry: TapestryDto
   onCopied: () => unknown
+  onUpdated: (tapestry: TapestryDto) => unknown
 }
 
-export function GeneralAccess({ tapestry, onCopied }: GeneralAccessProps) {
+export function GeneralAccess({ tapestry, onCopied, onUpdated }: GeneralAccessProps) {
+  const [confirmingRestriction, setConfirmingRestriction] = useState(false)
   const {
     perform: updateVisibility,
     data: lastUpdatedTapestry,
     loading: updatingVisibility,
   } = useAsyncAction(
-    async ({ signal }, visibility: TapestryDto['visibility']) =>
-      resource('tapestries').update({ id: tapestry.id }, { visibility }, {}, { signal }),
+    async ({ signal }, visibility: TapestryDto['visibility']) => {
+      const updated = await resource('tapestries').update(
+        { id: tapestry.id },
+        { visibility },
+        {},
+        { signal },
+      )
+      onUpdated(updated)
+      return updated
+    },
     { clearDataOnReload: false },
   )
+  const isFeatured = lastUpdatedTapestry?.featured ?? tapestry.featured
 
   const isOwner = useSession().user?.id === tapestry.ownerId
   const visibility = lastUpdatedTapestry?.visibility ?? tapestry.visibility
@@ -74,9 +85,12 @@ export function GeneralAccess({ tapestry, onCopied }: GeneralAccessProps) {
           className={styles.visibilityDropdown}
           value={visibility}
           options={VISIBILITY_OPTIONS}
-          placeholder={visibility === 'public' ? publicLabel : undefined}
           onChange={(opt) => {
-            if (opt) {
+            if (!opt) return
+            // Restricting a featured tapestry removes it from the Gallery, so ask first
+            if (opt.value === 'private' && isFeatured) {
+              setConfirmingRestriction(true)
+            } else {
               void updateVisibility(opt.value)
             }
           }}
@@ -145,6 +159,25 @@ export function GeneralAccess({ tapestry, onCopied }: GeneralAccessProps) {
           />
         )}
       </div>
+      {confirmingRestriction && (
+        <SimpleModal
+          title="Remove from the Gallery?"
+          cancel={{ onClick: () => setConfirmingRestriction(false) }}
+          confirm={{
+            text: 'Make private',
+            variant: 'primary-negative',
+            onClick: () => {
+              setConfirmingRestriction(false)
+              void updateVisibility('private')
+            },
+          }}
+        >
+          <Text>
+            This tapestry is featured in the public Gallery. If you make it private, it will leave
+            the Gallery immediately. To feature it again, you will need to submit a new request.
+          </Text>
+        </SimpleModal>
+      )}
     </>
   )
 }

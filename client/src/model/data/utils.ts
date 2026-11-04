@@ -49,7 +49,10 @@ import {
 } from 'tapestry-core/src/utils'
 import { userSettings } from '../../services/user-settings'
 import { itemUpload } from '../../services/item-upload'
-import { PublicUserProfileDto } from 'tapestry-shared/src/data-transfer/resources/dtos/user'
+import {
+  PublicUserProfileDto,
+  UserDto,
+} from 'tapestry-shared/src/data-transfer/resources/dtos/user'
 import { RelDto, RelUpdateDto } from 'tapestry-shared/src/data-transfer/resources/dtos/rel'
 import { CommentThreadsDto } from 'tapestry-shared/src/data-transfer/resources/dtos/comment-threads'
 import { produce, WritableDraft } from 'immer'
@@ -416,14 +419,17 @@ export type UserAccess = 'view' | 'edit'
 
 export function userAccess(
   tapestry: Pick<TapestryDto, 'ownerId' | 'userAccess'>,
-  userId?: string,
+  user?: Pick<UserDto, 'id' | 'role'> | null,
 ): UserAccess {
-  if (tapestry.ownerId === userId) return 'edit'
+  if (tapestry.ownerId === user?.id) return 'edit'
 
-  const personalAccess = tapestry.userAccess?.find((access) => access.userId === userId)
-  if (personalAccess) {
-    return personalAccess.canEdit ? 'edit' : 'view'
-  }
+  const personalAccess = tapestry.userAccess?.find((access) => access.userId === user?.id)
+  if (personalAccess?.canEdit) return 'edit'
+
+  // Admins have full access to every tapestry
+  if (user?.role === 'admin') return 'edit'
+
+  if (personalAccess) return 'view'
 
   // You cannot obtain a TapestryDto from the server if you don't have at least view access to it.
   return 'view'

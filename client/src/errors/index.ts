@@ -41,3 +41,14 @@ export function getErrorMessage(error: unknown, name?: string, overrides?: Parti
     }
   }
 }
+
+/** A human-readable message for a failed request, preferring the message sent by the server. */
+export function describeError(
+  error: unknown,
+  fallback = 'Something went wrong. Please try again.',
+) {
+  if (error instanceof APIError && error.data.name !== 'ForbiddenError' && error.data.message) {
+    return error.data.message
+  }
+  return getErrorMessage(error) ?? fallback
+}

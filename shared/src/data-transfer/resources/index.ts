@@ -88,6 +88,35 @@ import {
   TapestryBookmarkSchema,
 } from './schemas/tapestry-bookmark.js'
 
+import { FeatureRequestCreateDto, FeatureRequestDto } from './dtos/feature-request.js'
+import { FeatureRequestCreateSchema, FeatureRequestSchema } from './schemas/feature-request.js'
+import { TapestryExportCreateDto, TapestryExportDto } from './dtos/tapestry-export.js'
+import { TapestryExportCreateSchema, TapestryExportSchema } from './schemas/tapestry-export.js'
+import {
+  AdminActivityCreateDto,
+  AdminActivityDto,
+  AdminFeatureRequestDto,
+  AdminFeatureRequestUpdateDto,
+  AdminTapestryDto,
+  AdminTapestryUpdateDto,
+  AdminUserDto,
+  AdminUserUpdateDto,
+  ReportDto,
+  ReportQueryCreateDto,
+} from './dtos/admin.js'
+import {
+  AdminActivityCreateSchema,
+  AdminActivitySchema,
+  AdminFeatureRequestSchema,
+  AdminFeatureRequestUpdateSchema,
+  AdminTapestrySchema,
+  AdminTapestryUpdateSchema,
+  AdminUserSchema,
+  AdminUserUpdateSchema,
+  ReportQueryCreateSchema,
+  ReportSchema,
+} from './schemas/admin.js'
+
 const tapestryIncludes = [
   'owner',
   'items.thumbnail.renditions',
@@ -313,6 +342,66 @@ export const resources = {
     requireAuth: 'crudl',
     createParamsSchema: UserSecretCreateSchema,
     updateParamsSchema: UserSecretUpdateSchema,
+  }),
+  featureRequests: createRESTEndpoints<IO<FeatureRequestDto>, IO<FeatureRequestCreateDto>>()({
+    name: 'feature-requests',
+    schema: FeatureRequestSchema,
+    endpoints: 'cl',
+    requireAuth: 'cl',
+    createParamsSchema: FeatureRequestCreateSchema,
+  }),
+  tapestryExports: createRESTEndpoints<IO<TapestryExportDto>, IO<TapestryExportCreateDto>>()({
+    name: 'tapestry-exports',
+    schema: TapestryExportSchema,
+    endpoints: 'c',
+    requireAuth: 'c',
+    createParamsSchema: TapestryExportCreateSchema,
+  }),
+
+  // ---- Admin-only resources ----
+  adminTapestries: createRESTEndpoints<
+    IO<AdminTapestryDto>,
+    IO<never>,
+    IO<AdminTapestryUpdateDto>
+  >()({
+    name: 'admin/tapestries',
+    schema: AdminTapestrySchema,
+    endpoints: 'rudl',
+    requireAuth: 'rudl',
+    updateParamsSchema: AdminTapestryUpdateSchema,
+  }),
+  adminFeatureRequests: createRESTEndpoints<
+    IO<AdminFeatureRequestDto>,
+    IO<never>,
+    IO<AdminFeatureRequestUpdateDto>
+  >()({
+    name: 'admin/feature-requests',
+    schema: AdminFeatureRequestSchema,
+    endpoints: 'ul',
+    requireAuth: 'ul',
+    updateParamsSchema: AdminFeatureRequestUpdateSchema,
+  }),
+  adminUsers: createRESTEndpoints<IO<AdminUserDto>, IO<never>, IO<AdminUserUpdateDto>>()({
+    name: 'admin/users',
+    schema: AdminUserSchema,
+    endpoints: 'ul',
+    requireAuth: 'ul',
+    updateParamsSchema: AdminUserUpdateSchema,
+  }),
+  // Creating an entry performs the admin action it describes (see AdminActivityCreateDto)
+  adminActivity: createRESTEndpoints<IO<AdminActivityDto>, IO<AdminActivityCreateDto>>()({
+    name: 'admin/activity',
+    schema: AdminActivitySchema,
+    endpoints: 'cl',
+    requireAuth: 'cl',
+    createParamsSchema: AdminActivityCreateSchema,
+  }),
+  adminReportQueries: createRESTEndpoints<IO<ReportDto>, IO<ReportQueryCreateDto>>()({
+    name: 'admin/report-queries',
+    schema: ReportSchema,
+    endpoints: 'c',
+    requireAuth: 'c',
+    createParamsSchema: ReportQueryCreateSchema,
   }),
 }
 

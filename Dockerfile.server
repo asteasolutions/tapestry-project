@@ -1,4 +1,4 @@
-FROM node:24-alpine AS server
+FROM node:24-alpine3.24 AS server
 
 ADD package.json package-lock.json /app/
 ADD core/package.json /app/core/
@@ -18,7 +18,7 @@ ENTRYPOINT ["npm", "run"]
 CMD ["start:api"]
 
 
-FROM node:24-alpine3.22 AS worker
+FROM node:24-alpine3.24 AS worker
 
 RUN apk add --no-cache \
   chromium \

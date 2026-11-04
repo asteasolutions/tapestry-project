@@ -24,6 +24,7 @@ import { dashboardPath } from './utils/paths'
 import { NavigationLayout } from './layouts/navigation'
 import { LandingPage } from './pages/landing-page'
 import { AboutPage } from './pages/about-page'
+import { AdminPage } from './pages/admin'
 
 enableMapSet()
 enablePatches()
@@ -54,6 +55,7 @@ export const router = createBrowserRouter([
         children: [
           { path: '/', element: <LandingPage /> },
           { path: '/about', element: <AboutPage /> },
+          { path: '/dashboard/admin/:section?/:id?', element: <AdminPage /> },
           { path: '/dashboard/:section?', element: <Dashboard /> },
           { path: '/user-profile/:section?', element: <UserProfile /> },
         ],
