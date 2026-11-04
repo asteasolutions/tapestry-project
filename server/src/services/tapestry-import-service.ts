@@ -88,7 +88,7 @@ export function actionMap(
   }
 }
 
-async function generateSlug(
+export async function generateSlug(
   tx: Prisma.TransactionClient,
   ownerId: string,
   title: string,

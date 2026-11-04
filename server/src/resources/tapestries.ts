@@ -17,6 +17,7 @@ import { ListParamsOutputDto } from 'tapestry-shared/src/data-transfer/resources
 import { createItems } from './items.js'
 import { createRels } from './rels.js'
 import { socketIdFromRequest, socketServer } from '../socket/index.js'
+import { generateSlug } from '../services/tapestry-import-service.js'
 
 function sharedWithFilters(userId: string): Prisma.TapestryWhereInput[] {
   return [
@@ -225,7 +226,8 @@ export async function createTapestry(
   await prisma.$transaction(async (tx) => {
     const createInput: Prisma.TapestryCreateInput = {
       id: newTapestryId,
-      slug: createParams.slug || newTapestryId,
+      slug:
+        createParams.slug || (await generateSlug(tx, authorId, createParams.title, newTapestryId)),
       ...tapestryDtoToDb(createParams as TapestryDto, [
         'id',
         'slug',
