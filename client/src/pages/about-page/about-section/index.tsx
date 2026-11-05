@@ -117,7 +117,7 @@ export function AboutSection() {
                 <div className={styles.choiceQuoteBlocks}>
                   <div className={styles.choiceQuoteLine} />
                   <div>
-                    <img src={McLuhan} className={styles.mcLuhanImage} draggable={false} />
+                    <img src={McLuhan} alt="" className={styles.mcLuhanImage} draggable={false} />
                     <Text variant="bodySm">Marshall McLuhan</Text>
                   </div>
                 </div>
