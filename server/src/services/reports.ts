@@ -453,11 +453,10 @@ const METRICS: Record<ReportMetric, MetricDefinition> = {
             'byTapestries',
             'Users by number of tapestries',
             [
-              { label: '0', min: 0, max: 0 },
+              { label: 'None yet', min: 0, max: 0 },
               { label: '1', min: 1, max: 1 },
               { label: '2–5', min: 2, max: 5 },
-              { label: '6–20', min: 6, max: 20 },
-              { label: '21+', min: 21, max: Infinity },
+              { label: '6 or more', min: 6, max: Infinity },
             ],
             users.map((u) => u.tapestries),
           ),
@@ -751,41 +750,6 @@ const METRICS: Record<ReportMetric, MetricDefinition> = {
             })),
           },
         ],
-      }
-    },
-  },
-
-  'M-10': {
-    title: 'Feature requests',
-    dataStatus: 'available',
-    limitations:
-      'Requests are counted by submission date and shown with their current status. "Closed" requests were ' +
-      'closed automatically because the owner restricted sharing or the tapestry was deleted.',
-    isCurrentState: false,
-    compute: async (range) => {
-      const rows = await prisma.$queryRaw<WeeklyRow[]>`
-        SELECT date_trunc('week', "createdAt") AS week,
-          count(*)::INTEGER AS total,
-          (count(*) FILTER (WHERE "status" = 'approved'))::INTEGER AS approved,
-          (count(*) FILTER (WHERE "status" = 'declined'))::INTEGER AS declined,
-          (count(*) FILTER (WHERE "status" = 'pending'))::INTEGER AS pending,
-          (count(*) FILTER (WHERE "status" = 'closed'))::INTEGER AS closed
-        FROM "FeatureRequest"
-        WHERE ${inRange(Prisma.sql`"createdAt"`, range)}
-        GROUP BY 1 ORDER BY 1
-      `
-      const sum = (key: string) => rows.reduce((acc, row) => acc + Number(row[key]), 0)
-      const columns = [
-        { key: 'total', label: 'Submitted' },
-        { key: 'approved', label: 'Approved' },
-        { key: 'declined', label: 'Declined' },
-        { key: 'pending', label: 'Pending' },
-        { key: 'closed', label: 'Closed' },
-      ]
-
-      return {
-        figures: columns.map((c) => figure(c.key, c.label, sum(c.key))),
-        tables: [weeklyTable('byWeek', 'Feature requests by week', range, columns, rows)],
       }
     },
   },

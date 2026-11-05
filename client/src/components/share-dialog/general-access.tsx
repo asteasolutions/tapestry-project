@@ -40,26 +40,17 @@ const VISIBILITY_OPTIONS: Options<Option> = [
 interface GeneralAccessProps {
   tapestry: TapestryDto
   onCopied: () => unknown
-  onUpdated: (tapestry: TapestryDto) => unknown
 }
 
-export function GeneralAccess({ tapestry, onCopied, onUpdated }: GeneralAccessProps) {
+export function GeneralAccess({ tapestry, onCopied }: GeneralAccessProps) {
   const [confirmingRestriction, setConfirmingRestriction] = useState(false)
   const {
     perform: updateVisibility,
     data: lastUpdatedTapestry,
     loading: updatingVisibility,
   } = useAsyncAction(
-    async ({ signal }, visibility: TapestryDto['visibility']) => {
-      const updated = await resource('tapestries').update(
-        { id: tapestry.id },
-        { visibility },
-        {},
-        { signal },
-      )
-      onUpdated(updated)
-      return updated
-    },
+    async ({ signal }, visibility: TapestryDto['visibility']) =>
+      resource('tapestries').update({ id: tapestry.id }, { visibility }, {}, { signal }),
     { clearDataOnReload: false },
   )
   const isFeatured = lastUpdatedTapestry?.featured ?? tapestry.featured
@@ -174,7 +165,7 @@ export function GeneralAccess({ tapestry, onCopied, onUpdated }: GeneralAccessPr
         >
           <Text>
             This tapestry is featured in the public Gallery. If you make it private, it will leave
-            the Gallery immediately. To feature it again, you will need to submit a new request.
+            the Gallery immediately, and only an admin can feature it again.
           </Text>
         </SimpleModal>
       )}

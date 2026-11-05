@@ -6,7 +6,10 @@ import { prisma } from '../db.js'
  */
 export async function logAdminActivity(
   adminId: string,
-  entry: Pick<Prisma.AdminActivityCreateInput, 'action' | 'targetType' | 'targetId' | 'targetLabel' | 'details'>,
+  entry: Pick<
+    Prisma.AdminActivityCreateInput,
+    'action' | 'targetType' | 'targetId' | 'targetLabel' | 'details'
+  >,
   tx: Prisma.TransactionClient = prisma,
 ) {
   const admin = await tx.user.findUniqueOrThrow({

@@ -1,0 +1,35 @@
+.root {
+  flex: none;
+  display: block;
+  box-sizing: border-box;
+  border-radius: 4px;
+  object-fit: cover;
+
+  &.small {
+    width: 56px;
+    height: 36px;
+  }
+
+  &.large {
+    width: 160px;
+    height: 100px;
+    border-radius: 8px;
+  }
+
+  &.placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--theme-border-subtle);
+
+    > :global(.material-symbols-outlined) {
+      font-size: 16px;
+    }
+  }
+
+  &.restricted {
+    border: 1px dashed var(--color-neutral-200);
+    background-color: var(--color-neutral-50);
+    color: var(--color-neutral-500);
+  }
+}

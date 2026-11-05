@@ -4,22 +4,49 @@ import { UserMenu } from '../../../components/user-menu'
 import { useSession } from '../../session'
 import { LoginButton } from '../../../auth'
 import Logo from '../../../assets/icons/logo-large.svg?react'
-import { Link, useLocation } from 'react-router'
-import { adminPath, DASHBOARD_ROOT, dashboardPath } from '../../../utils/paths'
+import { Link } from 'react-router'
+import { ADMIN_ROOT, adminPath, DASHBOARD_ROOT, dashboardPath } from '../../../utils/paths'
 import { Button, IconButton, MenuItemButton } from 'tapestry-core-client/src/components/lib/buttons'
 import { Breakpoint, useResponsive } from '../../../providers/responsive-provider'
 import { Toolbar } from 'tapestry-core-client/src/components/lib/toolbar'
 import { useState } from 'react'
 import { useOutsideClick } from 'tapestry-core-client/src/components/lib/hooks/use-outside-click'
+import clsx from 'clsx'
+
+function useButtons() {
+  const { user } = useSession()
+  const isAdmin = user?.role === 'admin'
+  const { pathname } = window.location
+  return [
+    {
+      to: dashboardPath('public'),
+      label: 'Gallery',
+      active: pathname.startsWith(DASHBOARD_ROOT) && !pathname.startsWith(ADMIN_ROOT),
+    },
+    {
+      to: '/about',
+      label: 'About',
+      active: pathname.startsWith('/about'),
+    },
+    ...(isAdmin
+      ? [
+          {
+            to: adminPath('tapestries'),
+            label: 'Admin',
+            active: pathname.startsWith(ADMIN_ROOT),
+          },
+        ]
+      : []),
+  ]
+}
 
 export function Header() {
   const { user } = useSession()
-  const { pathname } = useLocation()
-  const showGallery = !pathname.startsWith(DASHBOARD_ROOT)
   const SMOrLess = useResponsive() <= Breakpoint.SM
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
   const mobileNavRef = useOutsideClick<HTMLDivElement>(() => setIsMobileNavOpen(false))
-  const isAdmin = user?.role === 'admin'
+
+  const buttons = useButtons()
 
   return (
     <div className={styles.root}>
@@ -36,33 +63,11 @@ export function Header() {
             isOpen={isMobileNavOpen}
             className={styles.mobileNavToolbar}
             direction="column"
-            items={[
-              showGallery && (
-                <MenuItemButton
-                  to={dashboardPath('public')}
-                  component={Link}
-                  onClick={() => setIsMobileNavOpen(false)}
-                >
-                  Gallery
-                </MenuItemButton>
-              ),
-              <MenuItemButton
-                to="/about"
-                component={Link}
-                onClick={() => setIsMobileNavOpen(false)}
-              >
-                About
-              </MenuItemButton>,
-              isAdmin && (
-                <MenuItemButton
-                  to={adminPath('tapestries')}
-                  component={Link}
-                  onClick={() => setIsMobileNavOpen(false)}
-                >
-                  Admin
-                </MenuItemButton>
-              ),
-            ]}
+            items={buttons.map((b) => (
+              <MenuItemButton to={b.to} component={Link} onClick={() => setIsMobileNavOpen(false)}>
+                {b.label}
+              </MenuItemButton>
+            ))}
           />
         </div>
       )}
@@ -72,19 +77,17 @@ export function Header() {
       <div className={styles.navigation}>
         {!SMOrLess && (
           <>
-            {showGallery && (
-              <Button to={dashboardPath('public')} component={Link} variant="tertiary">
-                Gallery
+            {buttons.map((b) => (
+              <Button
+                key={b.to}
+                to={b.to}
+                component={Link}
+                variant="tertiary"
+                className={clsx({ [styles.active]: b.active })}
+              >
+                {b.label}
               </Button>
-            )}
-            <Button to="/about" component={Link} variant="tertiary">
-              About
-            </Button>
-            {isAdmin && (
-              <Button to={adminPath('tapestries')} component={Link} variant="tertiary">
-                Admin
-              </Button>
-            )}
+            ))}
           </>
         )}
         {user ? <UserMenu user={user} /> : <LoginButton />}

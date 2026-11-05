@@ -1,0 +1,109 @@
+.trigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  margin-left: auto;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--theme-text-secondary);
+  cursor: pointer;
+
+  &:hover,
+  &.open {
+    background-color: var(--theme-background-hover);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--theme-border-focus);
+    outline-offset: 2px;
+  }
+}
+
+.menu {
+  position: fixed;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  width: 260px;
+  padding: 6px;
+  border: 1px solid var(--theme-border-subtle);
+  border-radius: 8px;
+  background-color: var(--theme-background-primary);
+  box-shadow:
+    0 4px 4px -4px rgb(12 12 13 / 50%),
+    0 16px 32px -4px rgb(12 12 13 / 50%);
+  font-size: 14px;
+  line-height: 20px;
+
+  .item {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--theme-text-primary);
+    font: inherit;
+    font-weight: 500;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      outline: none;
+      background-color: var(--theme-background-hover);
+      color: var(--theme-text-primary);
+    }
+
+    &.separated {
+      position: relative;
+      margin-top: 9px;
+
+      &::before {
+        content: '';
+        position: absolute;
+        top: -5px;
+        right: -6px;
+        left: -6px;
+        height: 1px;
+        background-color: var(--theme-border-subtle);
+      }
+    }
+
+    &.danger {
+      color: var(--theme-text-negative);
+      font-weight: 600;
+
+      &:hover,
+      &:focus-visible {
+        background-color: var(--theme-background-negative-subtle);
+        color: var(--theme-text-negative);
+      }
+    }
+
+    &[aria-disabled='true'] {
+      color: var(--color-neutral-400);
+      cursor: not-allowed;
+
+      &:hover,
+      &:focus-visible {
+        background: transparent;
+        color: var(--color-neutral-400);
+      }
+    }
+  }
+
+  .hint {
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 400;
+    color: var(--color-neutral-500);
+  }
+}

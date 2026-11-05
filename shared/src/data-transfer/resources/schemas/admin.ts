@@ -1,7 +1,6 @@
 import z from 'zod/v4'
 import { BaseResourceSchema } from './common.js'
 import { UserSchema } from './user.js'
-import { FeatureRequestSchema } from './feature-request.js'
 import { USER_ROLES } from '../dtos/user.js'
 import { TAPESTRY_VISIBILITIES } from '../dtos/tapestry.js'
 import {
@@ -53,29 +52,16 @@ export const AdminTapestrySchema = BaseResourceSchema.extend({
   featuredAt: z.coerce.date<Date>().nullable(),
   galleryPosition: z.number().int().nullable(),
   itemCount: z.number().int().nonnegative(),
+  invitedCount: z.number().int().nonnegative(),
   parentId: z.string().nullable(),
   ownerId: z.string(),
   owner: AdminUserSchema,
-  pendingFeatureRequestId: z.string().nullable(),
   userAccess: AdminTapestryAccessSchema.array().nullish(),
   parent: AdminTapestryParentSchema.nullish(),
 }).describe('A tapestry as seen by admins.')
 
 export const AdminTapestryUpdateSchema = z.object({
-  sharingLevel: z.enum(SHARING_LEVELS).optional(),
-  featured: z.boolean().optional(),
-})
-
-// ---- Feature requests ----
-
-export const AdminFeatureRequestSchema = FeatureRequestSchema.extend({
-  tapestry: AdminTapestrySchema.nullable(),
-  requester: AdminUserSchema.nullable(),
-  decidedByUsername: z.string().nullable(),
-})
-
-export const AdminFeatureRequestUpdateSchema = z.object({
-  status: z.enum(['approved', 'declined']),
+  featured: z.boolean(),
 })
 
 // ---- Activity log ----
@@ -102,6 +88,7 @@ export const AdminActivityCreateSchema = z
     z.object({
       action: z.literal('reorderGallery'),
       tapestryIds: z.string().array(),
+      removedTapestryIds: z.string().array().optional(),
     }),
   ])
   .describe(

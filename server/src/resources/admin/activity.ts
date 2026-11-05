@@ -9,9 +9,10 @@ import { RequestContext, RESTResourceImpl } from '../base-resource.js'
 import { parseListFilter } from '../utils.js'
 import { adminOnly } from '../../auth/roles.js'
 import { serialize } from '../../transformers/index.js'
-import { BadRequestError, ConflictError } from '../../errors/index.js'
+import { BadRequestError, ConflictError, ForbiddenError } from '../../errors/index.js'
 import { logAdminActivity } from '../../services/admin-activity.js'
 import { destroyItems } from '../items.js'
+import { unfeatureTapestry } from '../../services/tapestry-sharing.js'
 
 type Tx = Prisma.TransactionClient
 
@@ -27,6 +28,12 @@ async function deleteItems(
   const ids = [...new Set(itemIds)]
 
   const tapestry = await tx.tapestry.findUniqueOrThrow({ where: { id: tapestryId } })
+  // Admins have no access to the content of tapestries that aren't shared with anyone with the link
+  if (tapestry.visibility !== 'link') {
+    throw new ForbiddenError(
+      'Only items of tapestries shared with anyone with the link can be deleted',
+    )
+  }
   const items = await tx.item.findMany({
     where: { id: { in: ids }, tapestryId },
     select: { id: true, type: true, title: true },
@@ -52,17 +59,43 @@ async function deleteItems(
   )
 }
 
-/** Saves the complete order of the Gallery. The list must contain exactly the featured tapestries. */
-async function reorderGallery(tx: Tx, { tapestryIds }: ReorderGalleryCommandDto, adminId: string) {
-  const featured = await tx.tapestry.findMany({ where: { featured: true }, select: { id: true } })
+/**
+ * Publishes the Gallery: removes the given tapestries from it and saves the order of the rest.
+ * Together, the two lists must contain exactly the featured tapestries, so that changes made by
+ * another admin in the meantime are never overwritten.
+ */
+async function reorderGallery(
+  tx: Tx,
+  { tapestryIds, removedTapestryIds = [] }: ReorderGalleryCommandDto,
+  adminId: string,
+) {
+  const featured = await tx.tapestry.findMany({
+    where: { featured: true },
+    select: { id: true, title: true },
+  })
   const featuredIds = new Set(featured.map((t) => t.id))
-  const requestedIds = new Set(tapestryIds)
+  const allIds = [...tapestryIds, ...removedTapestryIds]
   if (
-    requestedIds.size !== tapestryIds.length ||
-    featuredIds.size !== requestedIds.size ||
-    !tapestryIds.every((id) => featuredIds.has(id))
+    new Set(allIds).size !== allIds.length ||
+    featuredIds.size !== allIds.length ||
+    !allIds.every((id) => featuredIds.has(id))
   ) {
     throw new ConflictError('The Gallery has changed. Reload it and try again.')
+  }
+
+  for (const id of removedTapestryIds) {
+    await unfeatureTapestry(tx, id)
+    await logAdminActivity(
+      adminId,
+      {
+        action: 'changeFeatured',
+        targetType: 'tapestry',
+        targetId: id,
+        targetLabel: featured.find((t) => t.id === id)?.title,
+        details: { featured: false },
+      },
+      tx,
+    )
   }
 
   // Raw SQL leaves "updatedAt" untouched, so reordering does not change what users see as the
@@ -76,7 +109,11 @@ async function reorderGallery(tx: Tx, { tapestryIds }: ReorderGalleryCommandDto,
 
   return logAdminActivity(
     adminId,
-    { action: 'reorderGallery', targetType: 'gallery', details: { tapestryIds } },
+    {
+      action: 'reorderGallery',
+      targetType: 'gallery',
+      details: { tapestryIds, removedTapestryIds },
+    },
     tx,
   )
 }

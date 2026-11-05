@@ -88,15 +88,11 @@ import {
   TapestryBookmarkSchema,
 } from './schemas/tapestry-bookmark.js'
 
-import { FeatureRequestCreateDto, FeatureRequestDto } from './dtos/feature-request.js'
-import { FeatureRequestCreateSchema, FeatureRequestSchema } from './schemas/feature-request.js'
 import { TapestryExportCreateDto, TapestryExportDto } from './dtos/tapestry-export.js'
 import { TapestryExportCreateSchema, TapestryExportSchema } from './schemas/tapestry-export.js'
 import {
   AdminActivityCreateDto,
   AdminActivityDto,
-  AdminFeatureRequestDto,
-  AdminFeatureRequestUpdateDto,
   AdminTapestryDto,
   AdminTapestryUpdateDto,
   AdminUserDto,
@@ -107,8 +103,6 @@ import {
 import {
   AdminActivityCreateSchema,
   AdminActivitySchema,
-  AdminFeatureRequestSchema,
-  AdminFeatureRequestUpdateSchema,
   AdminTapestrySchema,
   AdminTapestryUpdateSchema,
   AdminUserSchema,
@@ -343,13 +337,6 @@ export const resources = {
     createParamsSchema: UserSecretCreateSchema,
     updateParamsSchema: UserSecretUpdateSchema,
   }),
-  featureRequests: createRESTEndpoints<IO<FeatureRequestDto>, IO<FeatureRequestCreateDto>>()({
-    name: 'feature-requests',
-    schema: FeatureRequestSchema,
-    endpoints: 'cl',
-    requireAuth: 'cl',
-    createParamsSchema: FeatureRequestCreateSchema,
-  }),
   tapestryExports: createRESTEndpoints<IO<TapestryExportDto>, IO<TapestryExportCreateDto>>()({
     name: 'tapestry-exports',
     schema: TapestryExportSchema,
@@ -369,17 +356,6 @@ export const resources = {
     endpoints: 'rudl',
     requireAuth: 'rudl',
     updateParamsSchema: AdminTapestryUpdateSchema,
-  }),
-  adminFeatureRequests: createRESTEndpoints<
-    IO<AdminFeatureRequestDto>,
-    IO<never>,
-    IO<AdminFeatureRequestUpdateDto>
-  >()({
-    name: 'admin/feature-requests',
-    schema: AdminFeatureRequestSchema,
-    endpoints: 'ul',
-    requireAuth: 'ul',
-    updateParamsSchema: AdminFeatureRequestUpdateSchema,
   }),
   adminUsers: createRESTEndpoints<IO<AdminUserDto>, IO<never>, IO<AdminUserUpdateDto>>()({
     name: 'admin/users',

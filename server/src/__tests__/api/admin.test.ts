@@ -19,15 +19,18 @@ beforeAll(async () => {
 
 afterAll(teardownTestSuite)
 
-async function privateTapestry() {
+async function tapestryWith(visibility: 'private' | 'link') {
   const { tapestry, owner, items } = await generateTapestry()
   // The data generator randomizes required booleans, so reset the featured flag explicitly
   await prisma.tapestry.update({
     where: { id: tapestry.id },
-    data: { visibility: 'private', featured: false, galleryPosition: null },
+    data: { visibility, featured: false, galleryPosition: null },
   })
   return { tapestry, owner, items }
 }
+
+const privateTapestry = () => tapestryWith('private')
+const linkTapestry = () => tapestryWith('link')
 
 describe('access control', () => {
   test('regular users cannot use admin endpoints', async () => {
@@ -39,7 +42,6 @@ describe('access control', () => {
       '/api/admin/tapestries',
       `/api/admin/tapestries/${tapestry.id}`,
       '/api/admin/users',
-      '/api/admin/feature-requests',
       '/api/admin/activity',
     ]) {
       expect((await asUser.get(path)).statusCode, path).toBe(403)
@@ -60,8 +62,24 @@ describe('access control', () => {
     expect((await request(app).get('/api/admin/tapestries')).statusCode).toBe(401)
   })
 
-  test('admins can open private tapestries without being counted as user activity', async () => {
-    const { tapestry } = await privateTapestry()
+  test('admins cannot open or edit private tapestries', async () => {
+    const { tapestry, items } = await privateTapestry()
+    const asAdmin = loginUser(adminId)
+
+    expect((await asAdmin.get(`/api/tapestries/${tapestry.id}`)).statusCode).toBe(403)
+    expect(
+      (
+        await asAdmin
+          .patch(`/api/items/${items[0].id}`)
+          .send({ type: 'image', title: 'Edited by admin' })
+      ).statusCode,
+    ).toBe(403)
+    // Admins still see private tapestries in the admin list
+    expect((await asAdmin.get(`/api/admin/tapestries/${tapestry.id}`)).statusCode).toBe(200)
+  })
+
+  test('admin opens of link-shared tapestries are logged, not counted as user activity', async () => {
+    const { tapestry } = await linkTapestry()
     const asAdmin = loginUser(adminId)
 
     expect((await asAdmin.get(`/api/tapestries/${tapestry.id}`)).statusCode).toBe(200)
@@ -79,116 +97,71 @@ describe('access control', () => {
       }),
     ).toBe(1)
   })
-
-  test('admins can edit items of any tapestry', async () => {
-    const { items } = await privateTapestry()
-    const response = await loginUser(adminId)
-      .patch(`/api/items/${items[0].id}`)
-      .send({ type: 'image', title: 'Edited by admin' })
-    expect(response.statusCode).toBe(200)
-  })
 })
 
 describe('featuring', () => {
-  test('owners request featuring and admins approve it', async () => {
-    const { tapestry, owner } = await privateTapestry()
-    const asOwner = loginUser(owner.id)
-
-    // Private tapestries cannot be submitted
-    let response = await asOwner.post('/api/feature-requests').send({ tapestryId: tapestry.id })
-    expect(response.statusCode).toBe(400)
-
-    await asOwner.patch(`/api/tapestries/${tapestry.id}`).send({ visibility: 'link' })
-    response = await asOwner.post('/api/feature-requests').send({ tapestryId: tapestry.id })
-    expect(response.statusCode).toBe(200)
-    const requestId = response.body.id as string
-
-    // Only one pending request per tapestry
-    response = await asOwner.post('/api/feature-requests').send({ tapestryId: tapestry.id })
-    expect(response.statusCode).toBe(409)
-
-    // Other users cannot submit someone else's tapestry
-    const stranger = await generate('User', { role: 'user' })
-    response = await loginUser(stranger.id)
-      .post('/api/feature-requests')
-      .send({ tapestryId: tapestry.id })
-    expect(response.statusCode).toBe(403)
-
-    const asAdmin = loginUser(adminId)
-    response = await asAdmin.get('/api/admin/feature-requests?filter[status:eq]=pending')
-    expect(response.body.data.map((r: { id: string }) => r.id)).toContain(requestId)
-    expect(response.body.data[0].requester).toMatchObject({ id: owner.id, email: owner.email })
-
-    response = await asAdmin
-      .patch(`/api/admin/feature-requests/${requestId}`)
-      .send({ status: 'approved' })
-    expect(response.statusCode).toBe(200)
-    expect(response.body).toMatchObject({ status: 'approved', tapestry: { featured: true } })
-
-    // The tapestry appears in the public Gallery
-    response = await request(app).get('/api/tapestries?filter[featured:eq]=true')
-    expect(response.body.data.map((t: { id: string }) => t.id)).toContain(tapestry.id)
-
-    // A closed request cannot be decided again
-    response = await asAdmin
-      .patch(`/api/admin/feature-requests/${requestId}`)
-      .send({ status: 'declined' })
-    expect(response.statusCode).toBe(409)
-  })
-
-  test('restricting a featured tapestry removes it from the Gallery and closes requests', async () => {
-    const { tapestry, owner } = await privateTapestry()
-    const asAdmin = loginUser(adminId)
-    await asAdmin.patch(`/api/admin/tapestries/${tapestry.id}`).send({ featured: true })
-
-    let dbTapestry = await prisma.tapestry.findUniqueOrThrow({ where: { id: tapestry.id } })
-    expect(dbTapestry).toMatchObject({ featured: true, visibility: 'link' })
-
-    await loginUser(owner.id)
-      .patch(`/api/tapestries/${tapestry.id}`)
-      .send({ visibility: 'private' })
-    dbTapestry = await prisma.tapestry.findUniqueOrThrow({ where: { id: tapestry.id } })
-    expect(dbTapestry).toMatchObject({ featured: false, galleryPosition: null })
-
-    // A pending request is closed when the owner restricts sharing
-    await loginUser(owner.id).patch(`/api/tapestries/${tapestry.id}`).send({ visibility: 'link' })
-    const { body } = await loginUser(owner.id)
-      .post('/api/feature-requests')
-      .send({ tapestryId: tapestry.id })
-    await loginUser(owner.id)
-      .patch(`/api/tapestries/${tapestry.id}`)
-      .send({ visibility: 'private' })
-    const featureRequest = await prisma.featureRequest.findUniqueOrThrow({
-      where: { id: body.id as string },
-    })
-    expect(featureRequest.status).toBe('closed')
-  })
-
-  test('admin sharing changes keep the "last updated" date', async () => {
-    const { tapestry } = await privateTapestry()
+  test('admins feature link-shared tapestries without changing them', async () => {
+    const { tapestry } = await linkTapestry()
     const before = await prisma.tapestry.findUniqueOrThrow({ where: { id: tapestry.id } })
 
     const response = await loginUser(adminId)
       .patch(`/api/admin/tapestries/${tapestry.id}`)
-      .send({ sharingLevel: 'link' })
+      .send({ featured: true })
     expect(response.statusCode).toBe(200)
-    expect(response.body.sharingLevel).toBe('link')
+    expect(response.body).toMatchObject({ featured: true, sharingLevel: 'link' })
 
     const after = await prisma.tapestry.findUniqueOrThrow({ where: { id: tapestry.id } })
     expect(after.updatedAt).toEqual(before.updatedAt)
     expect(
       await prisma.adminActivity.count({
-        where: { action: 'changeSharing', targetId: tapestry.id },
+        where: { action: 'changeFeatured', targetId: tapestry.id },
       }),
     ).toBe(1)
+
+    // The tapestry appears in the public Gallery
+    const gallery = await request(app).get('/api/tapestries?filter[featured:eq]=true')
+    expect(gallery.body.data.map((t: { id: string }) => t.id)).toContain(tapestry.id)
   })
 
-  test('newly featured tapestries go first and the Gallery can be reordered', async () => {
+  test('admins cannot feature restricted tapestries or change sharing', async () => {
+    const { tapestry } = await privateTapestry()
     const asAdmin = loginUser(adminId)
-    const first = (await privateTapestry()).tapestry
-    const second = (await privateTapestry()).tapestry
-    await asAdmin.patch(`/api/admin/tapestries/${first.id}`).send({ featured: true })
-    await asAdmin.patch(`/api/admin/tapestries/${second.id}`).send({ featured: true })
+
+    let response = await asAdmin
+      .patch(`/api/admin/tapestries/${tapestry.id}`)
+      .send({ featured: true })
+    expect(response.statusCode).toBe(400)
+
+    response = await asAdmin
+      .patch(`/api/admin/tapestries/${tapestry.id}`)
+      .send({ sharingLevel: 'link' })
+    expect(response.statusCode).toBe(400)
+
+    expect(await prisma.tapestry.findUniqueOrThrow({ where: { id: tapestry.id } })).toMatchObject({
+      visibility: 'private',
+      featured: false,
+    })
+  })
+
+  test('restricting a featured tapestry removes it from the Gallery', async () => {
+    const { tapestry, owner } = await linkTapestry()
+    await loginUser(adminId).patch(`/api/admin/tapestries/${tapestry.id}`).send({ featured: true })
+
+    await loginUser(owner.id)
+      .patch(`/api/tapestries/${tapestry.id}`)
+      .send({ visibility: 'private' })
+    const dbTapestry = await prisma.tapestry.findUniqueOrThrow({ where: { id: tapestry.id } })
+    expect(dbTapestry).toMatchObject({ featured: false, galleryPosition: null })
+  })
+
+  test('newly featured tapestries go first and the Gallery is published atomically', async () => {
+    const asAdmin = loginUser(adminId)
+    const first = (await linkTapestry()).tapestry
+    const second = (await linkTapestry()).tapestry
+    const third = (await linkTapestry()).tapestry
+    for (const t of [first, second, third]) {
+      await asAdmin.patch(`/api/admin/tapestries/${t.id}`).send({ featured: true })
+    }
 
     const galleryIds = async () =>
       (
@@ -199,27 +172,34 @@ describe('featuring', () => {
       ).map((t) => t.id)
 
     const ids = await galleryIds()
+    expect(ids.indexOf(third.id)).toBeLessThan(ids.indexOf(second.id))
     expect(ids.indexOf(second.id)).toBeLessThan(ids.indexOf(first.id))
 
-    const reordered = [...ids].reverse()
+    // Reorder and remove one tapestry in one step
+    const reordered = [...ids].reverse().filter((id) => id !== second.id)
     let response = await asAdmin
       .post('/api/admin/activity')
-      .send({ action: 'reorderGallery', tapestryIds: reordered })
+      .send({ action: 'reorderGallery', tapestryIds: reordered, removedTapestryIds: [second.id] })
     expect(response.statusCode).toBe(200)
     expect(response.body).toMatchObject({
       action: 'reorderGallery',
       adminId,
       targetType: 'gallery',
-      details: { tapestryIds: reordered },
+      details: { tapestryIds: reordered, removedTapestryIds: [second.id] },
     })
     expect(await galleryIds()).toEqual(reordered)
+    expect(await prisma.tapestry.findUniqueOrThrow({ where: { id: second.id } })).toMatchObject({
+      featured: false,
+      visibility: 'link',
+    })
 
-    // The order must list exactly the featured tapestries, and a failed action leaves no entry
+    // The lists must cover exactly the featured tapestries, and a failed action changes nothing
     const entriesBefore = await prisma.adminActivity.count({ where: { action: 'reorderGallery' } })
     response = await asAdmin
       .post('/api/admin/activity')
-      .send({ action: 'reorderGallery', tapestryIds: reordered.slice(1) })
+      .send({ action: 'reorderGallery', tapestryIds: reordered.slice(2), removedTapestryIds: [] })
     expect(response.statusCode).toBe(409)
+    expect(await galleryIds()).toEqual(reordered)
     expect(await prisma.adminActivity.count({ where: { action: 'reorderGallery' } })).toBe(
       entriesBefore,
     )
@@ -228,7 +208,7 @@ describe('featuring', () => {
 
 describe('deletion', () => {
   test('admins delete selected items, including ones used in a presentation', async () => {
-    const { tapestry, items } = await privateTapestry()
+    const { tapestry, items } = await linkTapestry()
     const step = await prisma.presentationStep.create({ data: { itemId: items[0].id } })
     await prisma.presentationStep.create({ data: { itemId: items[1].id, prevStepId: step.id } })
 
@@ -251,9 +231,18 @@ describe('deletion', () => {
     ).toBe(1)
   })
 
+  test('items of private tapestries cannot be deleted by admins', async () => {
+    const { tapestry, items } = await privateTapestry()
+    const response = await loginUser(adminId)
+      .post('/api/admin/activity')
+      .send({ action: 'deleteItems', tapestryId: tapestry.id, itemIds: [items[0].id] })
+    expect(response.statusCode).toBe(403)
+    expect(await prisma.item.count({ where: { id: items[0].id } })).toBe(1)
+  })
+
   test('items from another tapestry are rejected', async () => {
-    const { tapestry } = await privateTapestry()
-    const { items: otherItems } = await privateTapestry()
+    const { tapestry } = await linkTapestry()
+    const { items: otherItems } = await linkTapestry()
     const response = await loginUser(adminId)
       .post('/api/admin/activity')
       .send({ action: 'deleteItems', tapestryId: tapestry.id, itemIds: [otherItems[0].id] })
@@ -274,12 +263,8 @@ describe('deletion', () => {
     }
   })
 
-  test('deleting a tapestry is logged and closes its feature request', async () => {
+  test('deleting a tapestry is logged and recorded for reporting', async () => {
     const { tapestry, owner } = await privateTapestry()
-    await prisma.tapestry.update({ where: { id: tapestry.id }, data: { visibility: 'link' } })
-    const { body } = await loginUser(owner.id)
-      .post('/api/feature-requests')
-      .send({ tapestryId: tapestry.id })
 
     const response = await loginUser(adminId).delete(`/api/admin/tapestries/${tapestry.id}`)
     expect(response.statusCode).toBe(200)
@@ -293,9 +278,6 @@ describe('deletion', () => {
         where: { action: 'deleteTapestry', targetId: tapestry.id },
       }),
     ).toMatchObject({ targetLabel: tapestry.title })
-    expect(
-      await prisma.featureRequest.findUniqueOrThrow({ where: { id: body.id as string } }),
-    ).toMatchObject({ status: 'closed', tapestryId: null })
   })
 
   test('owner deletions are recorded for reporting', async () => {

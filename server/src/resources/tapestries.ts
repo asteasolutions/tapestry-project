@@ -19,7 +19,7 @@ import { createRels } from './rels.js'
 import { socketIdFromRequest, socketServer } from '../socket/index.js'
 import { isAdmin } from '../auth/roles.js'
 import { logAdminOpenedTapestry } from '../services/admin-activity.js'
-import { deleteTapestryPermanently, onSharingRestricted } from '../services/tapestry-sharing.js'
+import { deleteTapestryPermanently, unfeatureTapestry } from '../services/tapestry-sharing.js'
 
 function sharedWithFilters(userId: string): Prisma.TapestryWhereInput[] {
   return [
@@ -160,23 +160,16 @@ export async function canViewTapestry(
 
   if (!userId) return false
 
-  return (
-    !!(await prisma.tapestryAccess.findFirst({ where: { tapestryId: tapestry.id, userId } })) ||
-    (await isAdmin(userId))
-  )
+  return !!(await prisma.tapestryAccess.findFirst({ where: { tapestryId: tapestry.id, userId } }))
 }
 
 /**
- * Whether the user is an admin who neither owns the tapestry nor was invited to it. By default only
- * private tapestries are considered, i.e. ones that the user can view only because they are an admin.
+ * Whether the user is an admin who neither owns the tapestry nor was invited to it. Admins have no
+ * extra access to tapestries, so this can only be the case for link-shared ones. Such views are
+ * recorded in the admin activity log and never count as user activity.
  */
-export async function viewsAsAdminOnly(
-  userId: string | null,
-  tapestry: Tapestry,
-  { includeLinkShared = false } = {},
-) {
-  if (!userId || tapestry.ownerId === userId) return false
-  if (!includeLinkShared && tapestry.visibility !== 'private') return false
+export async function viewsAsAdminOnly(userId: string | null, tapestry: Tapestry) {
+  if (!userId || tapestry.ownerId === userId || tapestry.visibility !== 'link') return false
 
   const access = await prisma.tapestryAccess.findFirst({
     where: { tapestryId: tapestry.id, userId },
@@ -197,11 +190,9 @@ export async function canEditTapestry(
 
   if (tapestry.ownerId === userId) return true
 
-  return (
-    !!(await prisma.tapestryAccess.findFirst({
-      where: { tapestryId: tapestry.id, userId, canEdit: true },
-    })) || (await isAdmin(userId))
-  )
+  return !!(await prisma.tapestryAccess.findFirst({
+    where: { tapestryId: tapestry.id, userId, canEdit: true },
+  }))
 }
 
 async function canUpdateTapestry(userId: string, tapestryId: string, update: TapestryUpdateDto) {
@@ -358,7 +349,7 @@ export const tapestries: RESTResourceImpl<Resources['tapestries'], Prisma.Tapest
 
         // Restricting a featured tapestry removes it from the Gallery immediately
         if (tapestry.visibility === 'private') {
-          await onSharingRestricted(tx, id, false)
+          await unfeatureTapestry(tx, id, false)
         }
       })
 

@@ -33,8 +33,6 @@ model User {
   secrets              UserSecret[]
   tapestryBookmarks    TapestryBookmark[]
   role                 UserRole              @default(user)
-  featureRequests      FeatureRequest[]      @relation("requester")
-  decidedRequests      FeatureRequest[]      @relation("decider")
   adminActivities      AdminActivity[]
   ownedDeletions       TapestryDeletion[]    @relation("deletedTapestryOwner")
   performedDeletions   TapestryDeletion[]    @relation("tapestryDeleter")
@@ -94,7 +92,6 @@ model Tapestry {
   featuredAt       DateTime?
   // Position in the Gallery (ascending). Set only for featured tapestries.
   galleryPosition  Int?
-  featureRequests  FeatureRequest[]
   exports          TapestryExport[]
 
   @@unique([ownerId, slug])
@@ -456,41 +453,9 @@ model UserSecret {
   @@index([ownerId])
 }
 
-enum FeatureRequestStatus {
-  pending
-  approved
-  declined
-  // Closed automatically, e.g. because the owner restricted sharing or the tapestry was deleted
-  closed
-}
-
-model FeatureRequest {
-  id            String               @id @default(uuid())
-  createdAt     DateTime             @default(now())
-  updatedAt     DateTime             @updatedAt
-  // Kept nullable so that request statistics survive tapestry deletion
-  tapestryId    String?
-  tapestry      Tapestry?            @relation(fields: [tapestryId], references: [id], onDelete: SetNull)
-  tapestryTitle String
-  requesterId   String?
-  requester     User?                @relation("requester", fields: [requesterId], references: [id], onDelete: SetNull)
-  status        FeatureRequestStatus @default(pending)
-  decidedAt     DateTime?
-  decidedById   String?
-  decidedBy     User?                @relation("decider", fields: [decidedById], references: [id], onDelete: SetNull)
-
-  @@index([tapestryId])
-  @@index([status, createdAt])
-  @@index([requesterId])
-  @@index([decidedById])
-}
-
 enum AdminAction {
   openTapestry
-  changeSharing
   changeFeatured
-  approveFeatureRequest
-  declineFeatureRequest
   reorderGallery
   deleteTapestry
   deleteItems
@@ -500,7 +465,6 @@ enum AdminAction {
 enum AdminActivityTargetType {
   tapestry
   user
-  featureRequest
   gallery
 }
 

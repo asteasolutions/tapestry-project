@@ -101,21 +101,6 @@
       margin: 20px 0;
     }
 
-    .feature-request {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 30px;
-
-      .pending-badge {
-        padding: 4px 10px;
-        border-radius: 12px;
-        background-color: var(--theme-background-neutral);
-        color: var(--theme-text-secondary);
-        white-space: nowrap;
-      }
-    }
-
     .forking-permissions {
       display: flex;
       justify-content: space-between;

@@ -1,12 +1,10 @@
 import { Prisma } from '@prisma/client'
 import {
   AdminActivityDto,
-  AdminFeatureRequestDto,
   AdminTapestryDto,
   AdminUserDto,
   SharingLevel,
 } from 'tapestry-shared/src/data-transfer/resources/dtos/admin.js'
-import { FeatureRequestDto } from 'tapestry-shared/src/data-transfer/resources/dtos/feature-request.js'
 import { s3Service } from '../services/s3-service.js'
 import { userDbToDto } from './user.js'
 
@@ -30,7 +28,6 @@ export async function adminUserDbToDto(user: AdminDbUser): Promise<AdminUserDto>
 export const adminTapestryInclude = {
   owner: { include: adminUserInclude },
   _count: { select: { items: true, userAccess: true } },
-  featureRequests: { where: { status: 'pending' }, select: { id: true }, take: 1 },
 } satisfies Prisma.TapestryInclude
 
 export const adminTapestryDetailInclude = {
@@ -66,10 +63,10 @@ export async function adminTapestryDbToDto(
     featuredAt: tapestry.featuredAt,
     galleryPosition: tapestry.galleryPosition,
     itemCount: tapestry._count.items,
+    invitedCount: tapestry._count.userAccess,
     parentId: tapestry.parentId,
     ownerId: tapestry.ownerId,
     owner: await adminUserDbToDto(tapestry.owner),
-    pendingFeatureRequestId: tapestry.featureRequests[0]?.id ?? null,
   }
 
   if ('userAccess' in tapestry) {
@@ -90,38 +87,6 @@ export async function adminTapestryDbToDto(
   }
 
   return dto
-}
-
-export function featureRequestDbToDto(
-  request: Prisma.FeatureRequestGetPayload<null>,
-): FeatureRequestDto {
-  return {
-    id: request.id,
-    createdAt: request.createdAt,
-    updatedAt: request.updatedAt,
-    tapestryId: request.tapestryId,
-    tapestryTitle: request.tapestryTitle,
-    requesterId: request.requesterId,
-    status: request.status,
-    decidedAt: request.decidedAt,
-  }
-}
-
-export const adminFeatureRequestInclude = {
-  tapestry: { include: adminTapestryInclude },
-  requester: { include: adminUserInclude },
-  decidedBy: { select: { username: true } },
-} satisfies Prisma.FeatureRequestInclude
-
-export async function adminFeatureRequestDbToDto(
-  request: Prisma.FeatureRequestGetPayload<{ include: typeof adminFeatureRequestInclude }>,
-): Promise<AdminFeatureRequestDto> {
-  return {
-    ...featureRequestDbToDto(request),
-    tapestry: request.tapestry && (await adminTapestryDbToDto(request.tapestry)),
-    requester: request.requester && (await adminUserDbToDto(request.requester)),
-    decidedByUsername: request.decidedBy?.username ?? null,
-  }
 }
 
 export function adminActivityDbToDto(

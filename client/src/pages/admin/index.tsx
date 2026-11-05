@@ -1,123 +1,74 @@
-import { createContext, useContext } from 'react'
-import { noop } from 'lodash-es'
-import { Navigate, useParams } from 'react-router'
-import { useAsync } from 'tapestry-core-client/src/components/lib/hooks/use-async'
-import { Text } from 'tapestry-core-client/src/components/lib/text/index'
+import { Link, Navigate, useParams } from 'react-router'
+import clsx from 'clsx'
 import { Icon } from 'tapestry-core-client/src/components/lib/icon/index'
 import { useSession } from '../../layouts/session'
-import { SectionList } from '../../components/section-list'
-import { resource } from '../../services/rest-resources'
 import { adminPath, dashboardPath } from '../../utils/paths'
 import { AdminTapestryList } from './tapestries/list'
 import { AdminTapestryDetail } from './tapestries/detail'
 import { AdminGallery } from './gallery'
-import { AdminFeatureRequests } from './feature-requests'
 import { AdminUsers } from './users'
 import { AdminReports } from './reports'
 import { AdminActivityLog } from './activity'
 import styles from './styles.module.css'
 
-export const ADMIN_SECTIONS = [
-  'tapestries',
-  'gallery',
-  'feature-requests',
-  'users',
-  'reports',
-  'activity',
-] as const
+export const ADMIN_SECTIONS = ['tapestries', 'gallery', 'users', 'reports', 'activity'] as const
 
 export type AdminSection = (typeof ADMIN_SECTIONS)[number]
 
-interface AdminContextValue {
-  /** Refreshes the pending feature request count shown in the navigation */
-  refreshPendingCount: () => unknown
-}
-
-const AdminContext = createContext<AdminContextValue>({ refreshPendingCount: noop })
-
-export function useAdminContext() {
-  return useContext(AdminContext)
+const SECTION_LABELS: Record<AdminSection, string> = {
+  tapestries: 'All tapestries',
+  gallery: 'Gallery',
+  users: 'Users',
+  reports: 'Reports',
+  activity: 'Activity log',
 }
 
 function NotAuthorized() {
   return (
     <div className={styles.notAuthorized} role="alert">
-      <Icon icon="lock" />
-      <Text variant="h6" component="h1">
-        Not authorized
-      </Text>
-      <Text component="p" className={styles.muted}>
-        You need to be an administrator to view this page.
-      </Text>
+      <Icon icon="lock" aria-hidden />
+      <h1>Not authorized</h1>
+      <p>You need to be an administrator to view this page.</p>
     </div>
+  )
+}
+
+function AdminNavigation({ section }: { section: AdminSection }) {
+  return (
+    <nav aria-label="Admin sections" className={styles.navigation}>
+      <p className={styles.navigationTitle}>Admin</p>
+      <ul>
+        {ADMIN_SECTIONS.map((s) => (
+          <li key={s}>
+            <Link
+              to={adminPath(s)}
+              aria-current={s === section ? 'page' : undefined}
+              className={clsx({ [styles.active]: s === section })}
+            >
+              {SECTION_LABELS[s]}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </nav>
   )
 }
 
 function AdminPanel({ section }: { section: AdminSection }) {
   const { id } = useParams<{ id?: string }>()
-  const { data: pendingCount, reload: refreshPendingCount } = useAsync(
-    async ({ signal }) =>
-      (
-        await resource('adminFeatureRequests').list(
-          { filter: { 'status:eq': 'pending' }, limit: 0 },
-          { signal },
-        )
-      ).total,
-    [],
-    { clearDataOnReload: false },
-  )
-
-  const sectionLabel = {
-    tapestries: 'All tapestries',
-    gallery: 'Gallery',
-    'feature-requests': 'Feature requests',
-    users: 'Users',
-    reports: 'Reports',
-    activity: 'Activity log',
-  }[section]
 
   return (
-    <AdminContext value={{ refreshPendingCount: () => refreshPendingCount(noop) }}>
-      <title>{`Admin · ${sectionLabel}`}</title>
-      <div className={styles.navigation}>
-        <SectionList<AdminSection>
-          activeSection={section}
-          buttons={{
-            tapestries: {
-              icon: 'note_stack',
-              to: adminPath('tapestries'),
-              children: 'All tapestries',
-            },
-            gallery: { icon: 'public', to: adminPath('gallery'), children: 'Gallery' },
-            'feature-requests': {
-              icon: 'inbox',
-              to: adminPath('feature-requests'),
-              children: (
-                <>
-                  Feature requests
-                  {!!pendingCount && (
-                    <span className={styles.countBadge} aria-label={`${pendingCount} pending`}>
-                      {pendingCount}
-                    </span>
-                  )}
-                </>
-              ),
-            },
-            users: { icon: 'group', to: adminPath('users'), children: 'Users' },
-            reports: { icon: 'bar_chart', to: adminPath('reports'), children: 'Reports' },
-            activity: { icon: 'history', to: adminPath('activity'), children: 'Activity log' },
-          }}
-        />
-      </div>
+    <div className={styles.panel}>
+      <title>{`Admin · ${SECTION_LABELS[section]}`}</title>
+      <AdminNavigation section={section} />
       <main className={styles.content}>
         {section === 'tapestries' && (id ? <AdminTapestryDetail id={id} /> : <AdminTapestryList />)}
         {section === 'gallery' && <AdminGallery />}
-        {section === 'feature-requests' && <AdminFeatureRequests />}
         {section === 'users' && <AdminUsers />}
         {section === 'reports' && <AdminReports />}
         {section === 'activity' && <AdminActivityLog />}
       </main>
-    </AdminContext>
+    </div>
   )
 }
 

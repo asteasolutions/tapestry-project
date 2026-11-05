@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react'
 import { noop } from 'lodash-es'
 import { useAsync } from 'tapestry-core-client/src/components/lib/hooks/use-async'
-import { ListParamsInputDto } from 'tapestry-shared/src/data-transfer/resources/dtos/common'
-import { ListResponseDto } from 'tapestry-shared/src/data-transfer/resources/dtos/common'
+import {
+  ListParamsInputDto,
+  ListResponseDto,
+} from 'tapestry-shared/src/data-transfer/resources/dtos/common'
 
-export const PAGE_SIZE = 25
+export const PAGE_SIZES = [10, 25, 50, 100] as const
 
 export type ListFilter = NonNullable<ListParamsInputDto['filter']>
 
@@ -26,7 +28,10 @@ export function cleanFilter(filter: Record<string, string | string[] | undefined
   ) as ListFilter
 }
 
-/** Server-side paginated list with filters and sorting. Changing the filter resets the page. */
+/**
+ * Server-side paginated list with filters and sorting. Changing the filter, the sort order or the
+ * page size returns to the first page.
+ */
 export function useAdminList<T>(
   fetchPage: (
     query: Required<Pick<ListParamsInputDto, 'filter' | 'orderBy' | 'skip' | 'limit'>>,
@@ -36,6 +41,7 @@ export function useAdminList<T>(
   initialSort: Sort,
 ) {
   const [page, setPage] = useState(0)
+  const [pageSize, setPageSize] = useState<number>(25)
   const [sort, setSort] = useState(initialSort)
   const filterKey = JSON.stringify(filter)
 
@@ -49,10 +55,10 @@ export function useAdminList<T>(
     () => ({
       filter: JSON.parse(filterKey) as ListFilter,
       orderBy: sortParam(sort),
-      skip: page * PAGE_SIZE,
-      limit: PAGE_SIZE,
+      skip: page * pageSize,
+      limit: pageSize,
     }),
-    [filterKey, sort, page],
+    [filterKey, sort, page, pageSize],
   )
 
   const { data, loading, error, reload } = useAsync(
@@ -70,6 +76,11 @@ export function useAdminList<T>(
     reload: () => reload(noop),
     page,
     setPage,
+    pageSize,
+    setPageSize: (size: number) => {
+      setPageSize(size)
+      setPage(0)
+    },
     sort,
     setSort: (next: Sort) => {
       setSort(next)

@@ -1,457 +1,248 @@
 import { useMemo, useState } from 'react'
-import { useNavigate } from 'react-router'
-import clsx from 'clsx'
 import { Button } from 'tapestry-core-client/src/components/lib/buttons/index'
-import { Text } from 'tapestry-core-client/src/components/lib/text/index'
-import { useAsync } from 'tapestry-core-client/src/components/lib/hooks/use-async'
+import { Icon } from 'tapestry-core-client/src/components/lib/icon/index'
 import {
   DrillTargetDto,
   REPORT_METRICS,
   ReportComparison,
-  ReportDto,
-  ReportFigureDto,
-  ReportMetric,
-  ReportTableDto,
-  ReportUnit,
 } from 'tapestry-shared/src/data-transfer/resources/dtos/admin'
-import { resource } from '../../../services/rest-resources'
-import { adminPath } from '../../../utils/paths'
+import { PageHeader } from '../components/page-header'
+import { ErrorText } from '../components/error-text'
+import { Field, Select, TextInput } from '../components/field'
+import { pluralize } from '../format'
 import {
-  Badge,
-  DateInput,
-  ErrorText,
-  FilterField,
-  NativeSelect,
-  SectionHeader,
-} from '../components'
-import { CsvValue, downloadCsv } from '../csv'
-import { formatDate } from '../format'
-import styles from '../styles.module.css'
+  COMPARISON_LABELS,
+  describeRange,
+  Preset,
+  PRESET_LABELS,
+  PRESETS,
+  rangeFor,
+  TOTAL_LABELS,
+} from './range'
+import { fetchReport, useReport } from './use-report'
+import { downloadReportsCsv } from './report-csv'
+import { Series, WeeklyChartCard } from './weekly-chart'
+import { GettingStartedCard } from './getting-started'
+import { InvitesCard } from './invites'
+import { UsersByActivityCard } from './users-by-activity'
+import { SharingLevelsCard } from './sharing-levels'
+import { BarListCard } from './bar-list'
+import { DrillDrawer } from './drill-drawer'
+import styles from './styles.module.css'
+import { useAsyncAction } from 'tapestry-core-client/src/components/lib/hooks/use-async-action'
 
-// ---- Time range ----
+const ACCOUNT_SERIES: Series[] = [
+  { key: 'google', label: 'Google', color: 'var(--color-primary-900)' },
+  { key: 'orcid', label: 'ORCID', color: 'var(--color-primary-200)' },
+  { key: 'wikimedia', label: 'Wikimedia', color: 'var(--color-secondary-400)' },
+  { key: 'bluesky', label: 'Bluesky', color: 'var(--color-primary-500)' },
+  { key: 'ia', label: 'Internet Archive', color: 'var(--color-secondary-200)' },
+]
 
-const PRESETS = ['7d', '30d', '90d', 'ytd', 'all', 'custom'] as const
-type Preset = (typeof PRESETS)[number]
-
-const PRESET_LABELS: Record<Preset, string> = {
-  '7d': 'Last 7 days',
-  '30d': 'Last 30 days',
-  '90d': 'Last 90 days',
-  ytd: 'Year to date',
-  all: 'All time',
-  custom: 'Custom range',
-}
-
-interface Range {
-  from: Date | null
-  to: Date
-}
-
-function startOfDay(date: Date) {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate())
-}
-
-function addDays(date: Date, days: number) {
-  const result = new Date(date)
-  result.setDate(result.getDate() + days)
-  return result
-}
-
-/** Ranges include today and end at the start of tomorrow (exclusive). */
-function rangeFor(preset: Preset, customFrom: string, customTo: string): Range | null {
-  const tomorrow = addDays(startOfDay(new Date()), 1)
-  switch (preset) {
-    case '7d':
-      return { from: addDays(tomorrow, -7), to: tomorrow }
-    case '30d':
-      return { from: addDays(tomorrow, -30), to: tomorrow }
-    case '90d':
-      return { from: addDays(tomorrow, -90), to: tomorrow }
-    case 'ytd':
-      return { from: new Date(tomorrow.getFullYear(), 0, 1), to: tomorrow }
-    case 'all':
-      return { from: null, to: tomorrow }
-    case 'custom': {
-      if (!customFrom || !customTo) return null
-      const from = new Date(`${customFrom}T00:00:00`)
-      const to = addDays(new Date(`${customTo}T00:00:00`), 1)
-      return from < to ? { from, to } : null
-    }
-  }
-}
-
-function describeRange(range: Range | null) {
-  if (!range) return 'all time'
-  return `${range.from ? formatDate(range.from) : 'the beginning'} – ${formatDate(addDays(range.to, -1))}`
-}
-
-// ---- Formatting ----
-
-const numberFormat = new Intl.NumberFormat(undefined, { maximumFractionDigits: 1 })
-
-function formatValue(value: number | null, unit: ReportUnit) {
-  if (value === null) return '—'
-  if (unit === 'percent') return `${numberFormat.format(value)}%`
-  if (unit === 'days') return `${numberFormat.format(value)} ${value === 1 ? 'day' : 'days'}`
-  return numberFormat.format(value)
-}
-
-function percentChange(current: number | null, previous: number | null) {
-  if (current === null || previous === null || previous === 0) return null
-  return ((current - previous) / previous) * 100
-}
-
-function drillPath(drill: DrillTargetDto, label: string) {
-  return adminPath(
-    drill.kind,
-    undefined,
-    new URLSearchParams({ filter: JSON.stringify(drill.filter), label }),
-  )
-}
-
-// ---- Report panel ----
-
-function Figure({
-  figure,
-  comparison,
-  onDrill,
-}: {
-  figure: ReportFigureDto
-  comparison: ReportFigureDto | undefined
-  onDrill: (drill: DrillTargetDto, label: string) => unknown
-}) {
-  const value = formatValue(figure.value, figure.unit)
-  const change =
-    comparison && figure.unit !== 'percent' ? percentChange(figure.value, comparison.value) : null
-  const pointsChange =
-    comparison && figure.unit === 'percent' && figure.value !== null && comparison.value !== null
-      ? figure.value - comparison.value
-      : null
-
-  return (
-    <div className={styles.figure}>
-      <Text variant="bodyXs" className={styles.muted}>
-        {figure.label}
-      </Text>
-      {figure.drill ? (
-        <button
-          type="button"
-          className={styles.figureValue}
-          title="Show the underlying records"
-          onClick={() => onDrill(figure.drill!, `${figure.label}: ${value}`)}
-        >
-          {value}
-        </button>
-      ) : (
-        <span className={styles.figureValue}>{value}</span>
-      )}
-      {comparison && (
-        <Text variant="bodyXs" className={styles.muted}>
-          vs {formatValue(comparison.value, comparison.unit)}
-          {change !== null && (
-            <span
-              className={clsx(styles.change, change > 0 ? styles.up : change < 0 && styles.down)}
-            >
-              {' '}
-              ({change > 0 ? '+' : ''}
-              {numberFormat.format(change)}%)
-            </span>
-          )}
-          {pointsChange !== null && (
-            <span className={styles.change}>
-              {' '}
-              ({pointsChange > 0 ? '+' : ''}
-              {numberFormat.format(pointsChange)} pts)
-            </span>
-          )}
-        </Text>
-      )}
-    </div>
-  )
-}
-
-function ReportTable({
-  table,
-  onDrill,
-}: {
-  table: ReportTableDto
-  onDrill: (drill: DrillTargetDto, label: string) => unknown
-}) {
-  // The first column is drawn as a bar so that magnitudes can be compared at a glance
-  const max = Math.max(1, ...table.rows.map((row) => row.values[0] ?? 0))
-
-  return (
-    <div className={styles.tableContainer}>
-      <table className={styles.table}>
-        <caption className={styles.visuallyHidden}>{table.title}</caption>
-        <thead>
-          <tr>
-            <th scope="col">{table.title}</th>
-            {table.columns.map((column) => (
-              <th key={column.key} scope="col" className={styles.numeric}>
-                {column.label}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {table.rows.map((row) => (
-            <tr key={row.key}>
-              <th scope="row" style={{ fontWeight: 400 }}>
-                {row.label}
-              </th>
-              {row.values.map((value, index) => {
-                const column = table.columns[index]
-                const drill = row.drill?.[index]
-                const text = formatValue(value, column.unit)
-                const content = drill ? (
-                  <button
-                    type="button"
-                    className={styles.linkButton}
-                    onClick={() =>
-                      onDrill(drill, `${table.title} · ${row.label} · ${column.label}`)
-                    }
-                  >
-                    {text}
-                  </button>
-                ) : (
-                  text
-                )
-                return (
-                  <td key={column.key} className={styles.numeric}>
-                    {index === 0 && column.unit === 'count' ? (
-                      <div className={styles.barCell}>
-                        <span
-                          className={styles.bar}
-                          title={`${row.label}: ${text} ${column.label.toLowerCase()}`}
-                          aria-hidden
-                        >
-                          <span style={{ width: `${((value ?? 0) / max) * 100}%` }} />
-                        </span>
-                        {content}
-                      </div>
-                    ) : (
-                      content
-                    )}
-                  </td>
-                )
-              })}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  )
-}
-
-function reportCsvRows(report: ReportDto): CsvValue[][] {
-  const rows: CsvValue[][] = []
-  const period = (data: ReportDto['current']) =>
-    `${data.from ? data.from.toISOString() : 'all time'} – ${data.to.toISOString()}`
-
-  rows.push(['Figure', 'Label', 'Value', 'Unit', 'Comparison value', 'Change %'])
-  for (const figure of report.current.figures) {
-    const comparison = report.comparison?.figures.find((f) => f.key === figure.key)
-    const change = comparison ? percentChange(figure.value, comparison.value) : null
-    rows.push([
-      figure.key,
-      figure.label,
-      figure.value,
-      figure.unit,
-      comparison?.value,
-      change === null ? '' : Math.round(change * 10) / 10,
-    ])
-  }
-
-  const tables = [
-    ...report.current.tables.map((table) => ({
-      table,
-      data: report.current,
-      kind: 'Selected period',
-    })),
-    ...(report.comparison?.tables.map((table) => ({
-      table,
-      data: report.comparison!,
-      kind: 'Comparison period',
-    })) ?? []),
-  ]
-  for (const { table, data, kind } of tables) {
-    rows.push([])
-    rows.push([`${table.title} (${kind}: ${period(data)})`])
-    rows.push(['', ...table.columns.map((c) => c.label)])
-    for (const row of table.rows) {
-      rows.push([row.label, ...row.values])
-    }
-  }
-  return rows
-}
-
-function ReportPanel({
-  metric,
-  range,
-  compare,
-}: {
-  metric: ReportMetric
-  range: Range
-  compare: ReportComparison
-}) {
-  const navigate = useNavigate()
-  const fromTime = range.from?.getTime() ?? null
-  const toTime = range.to.getTime()
-  const {
-    data: report,
-    error,
-    loading,
-  } = useAsync(
-    ({ signal }) =>
-      resource('adminReportQueries').create(
-        {
-          metric,
-          from: fromTime === null ? null : new Date(fromTime),
-          to: new Date(toTime),
-          compare,
-        },
-        {},
-        { signal },
-      ),
-    [metric, fromTime, toTime, compare],
-    { clearDataOnReload: false },
-  )
-
-  const onDrill = (drill: DrillTargetDto, label: string) => void navigate(drillPath(drill, label))
-
-  return (
-    <section
-      className={clsx(styles.panel, { [styles.loading]: loading })}
-      aria-labelledby={`report-${metric}`}
-      aria-busy={loading}
-    >
-      <div className={styles.sectionHeader}>
-        <div>
-          <Text variant="body" component="h2" id={`report-${metric}`} style={{ fontWeight: 600 }}>
-            {report?.title ?? metric}{' '}
-            <Text variant="bodyXs" className={styles.muted}>
-              {metric}
-            </Text>
-          </Text>
-          <div className={styles.actions} style={{ marginTop: 4 }}>
-            {report?.isCurrentState && <Badge>Current state · today’s values</Badge>}
-            {report?.dataStatus === 'partial' && <Badge tone="negative">Partial data</Badge>}
-            {report && !report.isCurrentState && (
-              <Text variant="bodyXs" className={styles.muted}>
-                {describeRange(report.current)}
-                {report.comparison && ` vs ${describeRange(report.comparison)}`}
-              </Text>
-            )}
-          </div>
-        </div>
-        <Button
-          variant="secondary"
-          size="small"
-          icon="download"
-          disabled={!report}
-          onClick={() =>
-            report &&
-            downloadCsv(
-              `${metric}-${report.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
-              [`${report.title} (${metric})`],
-              reportCsvRows(report),
-            )
-          }
-        >
-          CSV
-        </Button>
-      </div>
-      {report?.limitations && (
-        <Text variant="bodyXs" component="p" className={styles.muted} style={{ margin: 0 }}>
-          {report.limitations}
-        </Text>
-      )}
-      <ErrorText error={error} />
-      {report && (
-        <>
-          <div className={styles.figures}>
-            {report.current.figures.map((figure) => (
-              <Figure
-                key={figure.key}
-                figure={figure}
-                comparison={report.comparison?.figures.find((f) => f.key === figure.key)}
-                onDrill={onDrill}
-              />
-            ))}
-          </div>
-          {report.current.tables.map((table) => (
-            <ReportTable key={table.key} table={table} onDrill={onDrill} />
-          ))}
-        </>
-      )}
-    </section>
-  )
-}
+const TAPESTRY_SERIES: Series[] = [
+  { key: 'new', label: 'New', breakdownLabel: 'new', color: 'var(--color-primary-900)' },
+  { key: 'forked', label: 'Forked', breakdownLabel: 'forked', color: 'var(--color-primary-200)' },
+  {
+    key: 'imported',
+    label: 'Imported',
+    breakdownLabel: 'imported',
+    color: 'var(--color-secondary-400)',
+  },
+]
 
 export function AdminReports() {
-  const [preset, setPreset] = useState<Preset>('7d')
+  const [preset, setPreset] = useState<Preset>('90d')
   const [customFrom, setCustomFrom] = useState('')
   const [customTo, setCustomTo] = useState('')
   const [compare, setCompare] = useState<ReportComparison>('previous')
+  const [drill, setDrill] = useState<{ target: DrillTargetDto; title: string } | null>(null)
 
   const range = useMemo(
     () => rangeFor(preset, customFrom, customTo),
     [preset, customFrom, customTo],
   )
 
+  // Reports for the selected period
+  const accounts = useReport('M-01', range, compare)
+  const tapestries = useReport('M-02', range, compare)
+  const gettingStarted = useReport('M-03', range, compare)
+  const invites = useReport('M-08', range, compare)
+  // Current state: today's values, regardless of the selected period
+  const usersByActivity = useReport('M-04', null, 'none')
+  const mediaTypes = useReport('M-05', null, 'none')
+  const sources = useReport('M-06', null, 'none')
+  const editors = useReport('M-07', null, 'none')
+  const sharing = useReport('M-09', null, 'none')
+
+  const comparison = accounts.report?.comparison
+  const compareLabel = comparison ? COMPARISON_LABELS[compare] : ''
+  const totalLabel = TOTAL_LABELS[preset]
+  const periodText = range ? describeRange(range) : ''
+  let comparisonText = ''
+  if (comparison) {
+    comparisonText = `compared with ${describeRange(comparison)}`
+  } else if (compare === 'previous' && preset === 'all') {
+    comparisonText = '· “All time” has no previous period to compare with.'
+  }
+
+  const {
+    loading: exporting,
+    error: exportError,
+    trigger: exportAll,
+  } = useAsyncAction(async ({ signal }) => {
+    if (!range) return
+    downloadReportsCsv(
+      await Promise.all(
+        REPORT_METRICS.map((metric) => fetchReport(metric, range, compare, signal)),
+      ),
+    )
+  })
+
+  const onDrill = (target: DrillTargetDto, title: string) => setDrill({ target, title })
+
   return (
     <>
-      <SectionHeader
+      <PageHeader
         title="Reports"
-        description="Usage of this instance. Admin accounts and the content they own are excluded from usage figures. Select a highlighted number to see the underlying records."
-      />
-      <div className={clsx(styles.panel, styles.reportControls)}>
-        <div className={styles.filters}>
-          <FilterField label="Time range">
-            <NativeSelect<Preset>
+        description="Usage on this instance only. Admin accounts and the content they own are excluded from every figure. Select a headline number to see the users or tapestries behind it."
+        actions={
+          <Button
+            variant="secondary"
+            icon="download"
+            disabled={exporting || !range}
+            onClick={exportAll}
+          >
+            {exporting ? 'Exporting…' : 'Export all as CSV'}
+          </Button>
+        }
+      >
+        <div className={styles.controls}>
+          <Field label="Time range" grow={0}>
+            <Select<Preset>
               value={preset}
               onChange={setPreset}
               options={PRESETS.map((value) => ({ value, label: PRESET_LABELS[value] }))}
             />
-          </FilterField>
+          </Field>
           {preset === 'custom' && (
             <>
-              <FilterField label="From">
-                <DateInput value={customFrom} onChange={setCustomFrom} ariaLabel="From" />
-              </FilterField>
-              <FilterField label="To">
-                <DateInput value={customTo} onChange={setCustomTo} ariaLabel="To" />
-              </FilterField>
+              <Field label="From" grow={0}>
+                <TextInput
+                  type="date"
+                  value={customFrom}
+                  onChange={(e) => setCustomFrom(e.target.value)}
+                />
+              </Field>
+              <Field label="To" grow={0}>
+                <TextInput
+                  type="date"
+                  value={customTo}
+                  onChange={(e) => setCustomTo(e.target.value)}
+                />
+              </Field>
             </>
           )}
-          <FilterField label="Compare with">
-            <NativeSelect<ReportComparison>
+          <Field label="Compare with" grow={0}>
+            <Select<ReportComparison>
               value={compare}
               onChange={setCompare}
               options={[
-                { value: 'none', label: 'No comparison' },
                 { value: 'previous', label: 'Previous period' },
                 { value: 'lastYear', label: 'Same period last year' },
+                { value: 'none', label: 'No comparison' },
               ]}
             />
-          </FilterField>
+          </Field>
+          {range ? (
+            <p className={styles.period}>
+              <strong>{periodText}</strong> <span>{comparisonText}</span>
+            </p>
+          ) : (
+            <p className={styles.period} role="alert">
+              {preset === 'custom' && customFrom && customTo
+                ? 'Choose a start date that is before the end date.'
+                : 'Choose the start and end dates.'}
+            </p>
+          )}
         </div>
-        {preset === 'all' && compare === 'previous' && (
-          <Text variant="bodyXs" className={styles.muted}>
-            “All time” has no previous period to compare with.
-          </Text>
-        )}
-        {!range && (
-          <Text variant="bodySm" textType="error">
-            Choose a start date that is before the end date.
-          </Text>
-        )}
-      </div>
-      {range &&
-        REPORT_METRICS.map((metric) => (
-          <ReportPanel key={metric} metric={metric} range={range} compare={compare} />
-        ))}
+      </PageHeader>
+      <ErrorText error={exportError} />
+
+      {range && (
+        <section aria-labelledby="period-heading" className={styles.section}>
+          <h2 id="period-heading">Activity in this period</h2>
+          <div className={styles.grid}>
+            <WeeklyChartCard
+              state={accounts}
+              kpiLabel="Accounts created"
+              chartTitle="Accounts created by week"
+              chartSubtitle="By login provider"
+              drillNoun="accounts"
+              series={ACCOUNT_SERIES}
+              totalLabel={totalLabel}
+              compareLabel={compareLabel}
+              onDrill={onDrill}
+            />
+            <WeeklyChartCard
+              state={tapestries}
+              kpiLabel="Tapestries created"
+              chartTitle="Tapestries created by week"
+              chartSubtitle="New, forked or imported"
+              drillNoun="tapestries"
+              series={TAPESTRY_SERIES}
+              totalLabel={totalLabel}
+              compareLabel={compareLabel}
+              onDrill={onDrill}
+            />
+            <GettingStartedCard state={gettingStarted} compareLabel={compareLabel} />
+            <InvitesCard state={invites} totalLabel={totalLabel} compareLabel={compareLabel} />
+          </div>
+        </section>
+      )}
+
+      <section aria-labelledby="state-heading" className={styles.section}>
+        <div className={styles.sectionTitle}>
+          <h2 id="state-heading">Current state</h2>
+          <span>
+            <Icon icon="schedule" aria-hidden />
+            Today’s values · the time range doesn’t apply
+          </span>
+        </div>
+        <div className={styles.grid}>
+          <UsersByActivityCard state={usersByActivity} editorsState={editors} />
+          <SharingLevelsCard state={sharing} />
+          <BarListCard
+            state={mediaTypes}
+            title="Items by media type"
+            tableKey="byType"
+            color="var(--color-primary-900)"
+            subtitle={(report) => {
+              const figure = (key: string) =>
+                report.current.figures.find((f) => f.key === key)?.value ?? 0
+              return `${pluralize(figure('items'), 'item')} · ${figure('perTapestry').toLocaleString()} per tapestry on average`
+            }}
+          />
+          <BarListCard
+            state={sources}
+            title="Items by source"
+            tableKey="bySource"
+            color="var(--color-primary-400)"
+            subtitle={(report) =>
+              `${pluralize(report.current.figures.find((f) => f.key === 'total')?.value ?? 0, 'media item')}`
+            }
+            note={(report) => report.limitations}
+          />
+        </div>
+      </section>
+
+      {drill && range && (
+        <DrillDrawer
+          drill={drill.target}
+          title={drill.title}
+          subtitle={periodText}
+          onClose={() => setDrill(null)}
+        />
+      )}
     </>
   )
 }

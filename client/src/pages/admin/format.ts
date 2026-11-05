@@ -34,7 +34,9 @@ export interface LoginProfile {
 /** Every login provider identifier stored for the user (more than one is possible). */
 export function loginProfiles(user: AdminUserDto): LoginProfile[] {
   const profiles: LoginProfile[] = []
-  if (user.gsiUserId) profiles.push({ provider: 'Google', id: user.gsiUserId, url: null })
+  if (user.gsiUserId) {
+    profiles.push({ provider: 'Google', id: user.gsiUserId, url: null })
+  }
   if (user.orcidId) {
     profiles.push({ provider: 'ORCID', id: user.orcidId, url: `https://orcid.org/${user.orcidId}` })
   }
@@ -55,13 +57,28 @@ export function loginProfiles(user: AdminUserDto): LoginProfile[] {
   return profiles
 }
 
+/** How to reach a user when they have no email: by the login provider they use. */
+export function contactLine(user: AdminUserDto) {
+  if (user.email) {
+    return user.email
+  }
+  const providers = loginProfiles(user).map((profile) => profile.provider)
+  return providers.length ? `No email · signs in with ${providers.join(', ')}` : 'No email'
+}
+
+export function pluralize(count: number, singular: string, plural = `${singular}s`) {
+  return `${count.toLocaleString()} ${count === 1 ? singular : plural}`
+}
+
 export function displayName(user: Pick<AdminUserDto, 'givenName' | 'familyName' | 'username'>) {
   return [user.givenName, user.familyName].filter(Boolean).join(' ') || user.username
 }
 
 /** Converts a "YYYY-MM-DD" date input value to the start of that day (local time) as ISO. */
 export function dayStart(value: string, offsetDays = 0) {
-  if (!value) return undefined
+  if (!value) {
+    return undefined
+  }
   const date = new Date(`${value}T00:00:00`)
   date.setDate(date.getDate() + offsetDays)
   return date.toISOString()

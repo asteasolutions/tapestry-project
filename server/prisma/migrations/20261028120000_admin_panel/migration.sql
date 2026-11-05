@@ -2,13 +2,10 @@
 CREATE TYPE "UserRole" AS ENUM ('user', 'admin');
 
 -- CreateEnum
-CREATE TYPE "FeatureRequestStatus" AS ENUM ('pending', 'approved', 'declined', 'closed');
+CREATE TYPE "AdminAction" AS ENUM ('openTapestry', 'changeFeatured', 'reorderGallery', 'deleteTapestry', 'deleteItems', 'changeRole');
 
 -- CreateEnum
-CREATE TYPE "AdminAction" AS ENUM ('openTapestry', 'changeSharing', 'changeFeatured', 'approveFeatureRequest', 'declineFeatureRequest', 'reorderGallery', 'deleteTapestry', 'deleteItems', 'changeRole');
-
--- CreateEnum
-CREATE TYPE "AdminActivityTargetType" AS ENUM ('tapestry', 'user', 'featureRequest', 'gallery');
+CREATE TYPE "AdminActivityTargetType" AS ENUM ('tapestry', 'user', 'gallery');
 
 -- AlterTable
 ALTER TABLE "Tapestry" ADD COLUMN     "featured" BOOLEAN NOT NULL DEFAULT false,
@@ -41,21 +38,6 @@ COMMIT;
 
 -- AlterTable
 ALTER TABLE "User" ADD COLUMN     "role" "UserRole" NOT NULL DEFAULT 'user';
-
--- CreateTable
-CREATE TABLE "FeatureRequest" (
-    "id" TEXT NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-    "tapestryId" TEXT,
-    "tapestryTitle" TEXT NOT NULL,
-    "requesterId" TEXT,
-    "status" "FeatureRequestStatus" NOT NULL DEFAULT 'pending',
-    "decidedAt" TIMESTAMP(3),
-    "decidedById" TEXT,
-
-    CONSTRAINT "FeatureRequest_pkey" PRIMARY KEY ("id")
-);
 
 -- CreateTable
 CREATE TABLE "AdminActivity" (
@@ -97,18 +79,6 @@ CREATE TABLE "TapestryExport" (
 );
 
 -- CreateIndex
-CREATE INDEX "FeatureRequest_tapestryId_idx" ON "FeatureRequest"("tapestryId");
-
--- CreateIndex
-CREATE INDEX "FeatureRequest_status_createdAt_idx" ON "FeatureRequest"("status", "createdAt");
-
--- CreateIndex
-CREATE INDEX "FeatureRequest_requesterId_idx" ON "FeatureRequest"("requesterId");
-
--- CreateIndex
-CREATE INDEX "FeatureRequest_decidedById_idx" ON "FeatureRequest"("decidedById");
-
--- CreateIndex
 CREATE INDEX "AdminActivity_createdAt_idx" ON "AdminActivity"("createdAt");
 
 -- CreateIndex
@@ -140,15 +110,6 @@ CREATE INDEX "Tapestry_featured_galleryPosition_idx" ON "Tapestry"("featured", "
 
 -- CreateIndex
 CREATE INDEX "User_role_idx" ON "User"("role");
-
--- AddForeignKey
-ALTER TABLE "FeatureRequest" ADD CONSTRAINT "FeatureRequest_tapestryId_fkey" FOREIGN KEY ("tapestryId") REFERENCES "Tapestry"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "FeatureRequest" ADD CONSTRAINT "FeatureRequest_requesterId_fkey" FOREIGN KEY ("requesterId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "FeatureRequest" ADD CONSTRAINT "FeatureRequest_decidedById_fkey" FOREIGN KEY ("decidedById") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "AdminActivity" ADD CONSTRAINT "AdminActivity_adminId_fkey" FOREIGN KEY ("adminId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;

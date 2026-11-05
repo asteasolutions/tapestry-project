@@ -1,23 +1,23 @@
 import { Prisma } from '@prisma/client'
 import { prisma } from '../db.js'
+import { BadRequestError } from '../errors/index.js'
 
 type Tx = Prisma.TransactionClient
 
-/** Closes the pending feature request of a tapestry, if any (e.g. when sharing gets restricted). */
-export async function closePendingFeatureRequests(tx: Tx, tapestryId: string) {
-  await tx.featureRequest.updateMany({
-    where: { tapestryId, status: 'pending' },
-    data: { status: 'closed', decidedAt: new Date() },
-  })
-}
-
 /**
- * Features a tapestry: it is placed at the beginning of the Gallery and becomes link-shared.
- * Admin changes keep the "last updated" date that users see, so `updatedAt` is preserved.
+ * Features a tapestry: it is placed at the beginning of the Gallery. Only link-shared tapestries can
+ * be featured, and only owners change sharing. Admin changes keep the "last updated" date that
+ * users see, so `updatedAt` is preserved.
  */
 export async function featureTapestry(tx: Tx, tapestryId: string) {
   const tapestry = await tx.tapestry.findUniqueOrThrow({ where: { id: tapestryId } })
-  if (tapestry.featured) return tapestry
+  if (tapestry.featured) {
+    return tapestry
+  }
+
+  if (tapestry.visibility !== 'link') {
+    throw new BadRequestError('Only tapestries shared with anyone with the link can be featured')
+  }
 
   const { _min } = await tx.tapestry.aggregate({
     where: { featured: true },
@@ -30,7 +30,6 @@ export async function featureTapestry(tx: Tx, tapestryId: string) {
       featured: true,
       featuredAt: new Date(),
       galleryPosition: (_min.galleryPosition ?? 1) - 1,
-      visibility: 'link',
       updatedAt: tapestry.updatedAt,
     },
   })
@@ -53,15 +52,6 @@ export async function unfeatureTapestry(tx: Tx, tapestryId: string, preserveUpda
 }
 
 /**
- * Applied whenever a tapestry stops being link-shared: it leaves the Gallery immediately and its
- * pending feature request is closed.
- */
-export async function onSharingRestricted(tx: Tx, tapestryId: string, preserveUpdatedAt = true) {
-  await unfeatureTapestry(tx, tapestryId, preserveUpdatedAt)
-  await closePendingFeatureRequests(tx, tapestryId)
-}
-
-/**
  * Permanently deletes a tapestry and records the deletion for reporting, since deleted tapestries
  * leave no other trace in the database.
  */
@@ -80,7 +70,6 @@ export async function deleteTapestryPermanently(
       include: { owner: { select: { username: true } }, _count: { select: { items: true } } },
     })
 
-    await closePendingFeatureRequests(tx, tapestryId)
     await tx.presentationStep.deleteMany({
       where: {
         OR: [{ item: { tapestryId } }, { group: { tapestryId } }],

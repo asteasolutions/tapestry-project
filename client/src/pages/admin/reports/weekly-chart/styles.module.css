@@ -1,0 +1,177 @@
+.kpi {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--color-neutral-50);
+  border-radius: 8px;
+  background-color: color-mix(
+    in srgb,
+    var(--color-primary-50) 25%,
+    var(--theme-background-primary)
+  );
+  color: var(--theme-text-primary);
+  font: inherit;
+  text-align: left;
+
+  &:is(button) {
+    cursor: pointer;
+    transition:
+      border-color 0.15s,
+      box-shadow 0.15s;
+
+    &:hover {
+      border-color: var(--theme-text-link);
+      box-shadow: 0 4px 6px 0 rgb(0 0 0 / 8%);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--theme-border-focus);
+      outline-offset: 2px;
+    }
+  }
+
+  .value {
+    font-size: 28px;
+    line-height: 36px;
+    font-weight: 600;
+    color: var(--theme-text-brand);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .label {
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--color-neutral-500);
+  }
+
+  .breakdown {
+    display: flex;
+    flex-basis: 100%;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 4px 12px;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--color-neutral-700);
+  }
+
+  .drill-link {
+    font-weight: 600;
+    color: var(--theme-text-link);
+  }
+}
+
+.titles {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-top: 8px;
+
+  h4 {
+    margin: 0;
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 600;
+  }
+
+  span {
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--color-neutral-500);
+  }
+}
+
+.chart {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 16px;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--theme-text-secondary);
+
+    > span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+  }
+
+  .swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+  }
+
+  .plot {
+    display: flex;
+    gap: 8px;
+  }
+
+  .axis {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-width: 20px;
+    height: 180px;
+    font-size: 11px;
+    line-height: 12px;
+    color: var(--color-neutral-500);
+    text-align: right;
+  }
+
+  .area {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .ticks {
+    display: flex;
+    gap: 4px;
+    font-size: 11px;
+    line-height: 14px;
+    color: var(--color-neutral-500);
+
+    > span {
+      flex: 1;
+      min-width: 0;
+      max-width: 48px;
+      overflow: visible;
+      text-align: center;
+      white-space: nowrap;
+    }
+  }
+
+  .bars {
+    display: flex;
+    align-items: stretch;
+    gap: 4px;
+    height: 180px;
+    border-bottom: 1px solid var(--color-neutral-200);
+    background: linear-gradient(var(--color-neutral-50) 1px, transparent 1px) 0 0 / 100% 90px;
+
+    > div {
+      display: flex;
+      flex: 1;
+      flex-direction: column-reverse;
+      min-width: 0;
+      max-width: 48px;
+      border-radius: 3px 3px 0 0;
+      overflow: hidden;
+
+      > span {
+        flex: none;
+        border-top: 1px solid var(--theme-background-primary);
+      }
+    }
+  }
+}

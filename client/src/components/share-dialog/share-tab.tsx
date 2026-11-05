@@ -4,9 +4,6 @@ import { CollaboratorsAccess } from './collaborators-access'
 import styles from './styles.module.css'
 import { UserWithAccess, PeopleWithAccess } from './people-with-access'
 import { ForkingPermissions } from './forking-permissions'
-import { FeatureRequestSection } from './feature-request-section'
-import { useState } from 'react'
-import { useSession } from '../../layouts/session'
 
 export interface ShareTabProps {
   tapestry: TapestryDto
@@ -14,27 +11,10 @@ export interface ShareTabProps {
   onViewAllWithAccess: (people: UserWithAccess[]) => unknown
 }
 
-export function ShareTab({
-  tapestry: initialTapestry,
-  onMessage,
-  onViewAllWithAccess,
-}: ShareTabProps) {
-  const [tapestry, setTapestry] = useState(initialTapestry)
-  const isOwner = useSession().user?.id === tapestry.ownerId
-
+export function ShareTab({ tapestry, onMessage, onViewAllWithAccess }: ShareTabProps) {
   return (
     <>
-      <GeneralAccess
-        tapestry={tapestry}
-        onCopied={() => onMessage('Link copied to clipboard')}
-        onUpdated={(updated) => setTapestry((current) => ({ ...current, ...updated }))}
-      />
-      {isOwner && (
-        <>
-          <hr className={styles.separator} />
-          <FeatureRequestSection tapestry={tapestry} />
-        </>
-      )}
+      <GeneralAccess tapestry={tapestry} onCopied={() => onMessage('Link copied to clipboard')} />
       <hr className={styles.separator} />
       <CollaboratorsAccess
         tapestry={tapestry}

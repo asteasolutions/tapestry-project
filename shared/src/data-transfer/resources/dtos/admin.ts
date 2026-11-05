@@ -1,5 +1,4 @@
 import { BaseResourceDto } from './common.js'
-import { FeatureRequestDto } from './feature-request.js'
 import { TapestryVisibility } from './tapestry.js'
 import { UserDto, UserRole } from './user.js'
 
@@ -52,40 +51,26 @@ export interface AdminTapestryDto extends BaseResourceDto {
   featuredAt: Date | null
   galleryPosition: number | null
   itemCount: number
+  /** The number of people who have been given access to the tapestry */
+  invitedCount: number
   parentId: string | null
   ownerId: string
   owner: AdminUserDto
-  pendingFeatureRequestId: string | null
   // Returned only by the "read" endpoint
   userAccess?: AdminTapestryAccessDto[] | null
   parent?: AdminTapestryParentDto | null
 }
 
+/** Admins can only feature or unfeature tapestries; sharing is changed by owners only. */
 export interface AdminTapestryUpdateDto {
-  sharingLevel?: SharingLevel
-  featured?: boolean
-}
-
-// ---- Feature requests ----
-
-export interface AdminFeatureRequestDto extends FeatureRequestDto {
-  tapestry: AdminTapestryDto | null
-  requester: AdminUserDto | null
-  decidedByUsername: string | null
-}
-
-export interface AdminFeatureRequestUpdateDto {
-  status: 'approved' | 'declined'
+  featured: boolean
 }
 
 // ---- Activity log ----
 
 export const ADMIN_ACTIONS = [
   'openTapestry',
-  'changeSharing',
   'changeFeatured',
-  'approveFeatureRequest',
-  'declineFeatureRequest',
   'reorderGallery',
   'deleteTapestry',
   'deleteItems',
@@ -94,12 +79,7 @@ export const ADMIN_ACTIONS = [
 
 export type AdminAction = (typeof ADMIN_ACTIONS)[number]
 
-export const ADMIN_ACTIVITY_TARGET_TYPES = [
-  'tapestry',
-  'user',
-  'featureRequest',
-  'gallery',
-] as const
+export const ADMIN_ACTIVITY_TARGET_TYPES = ['tapestry', 'user', 'gallery'] as const
 
 export type AdminActivityTargetType = (typeof ADMIN_ACTIVITY_TARGET_TYPES)[number]
 
@@ -122,10 +102,14 @@ export interface DeleteItemsCommandDto {
   itemIds: string[]
 }
 
-/** Saves the complete Gallery order. The list must contain exactly the featured tapestries. */
+/**
+ * Publishes the Gallery: removes `removedTapestryIds` from it and saves the order of the rest.
+ * Together, the two lists must contain exactly the featured tapestries.
+ */
 export interface ReorderGalleryCommandDto {
   action: Extract<AdminAction, 'reorderGallery'>
   tapestryIds: string[]
+  removedTapestryIds?: string[]
 }
 
 /**
@@ -146,7 +130,6 @@ export const REPORT_METRICS = [
   'M-07',
   'M-08',
   'M-09',
-  'M-10',
   'M-11',
   'M-12',
 ] as const

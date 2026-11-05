@@ -18,7 +18,7 @@ export const tapestryInteractions: RESTResourceImpl<Resources['tapestryInteracti
 
       // Admin views of tapestries they could not otherwise access are not user activity
       const tapestry = await prisma.tapestry.findUniqueOrThrow({ where: { id: tapestryId } })
-      if (await viewsAsAdminOnly(userId, tapestry, { includeLinkShared: true })) {
+      if (await viewsAsAdminOnly(userId, tapestry)) {
         return {
           id: crypto.randomUUID(),
           createdAt: lastSeen,
