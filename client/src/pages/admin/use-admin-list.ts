@@ -60,7 +60,6 @@ export function useAdminList<T>(
     // fetchPage is expected to be stable for the lifetime of the list
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [query],
-    // Keep showing the current page while the next one loads
     { clearDataOnReload: false },
   )
 
