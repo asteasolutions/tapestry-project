@@ -2,9 +2,12 @@ import { isEqual } from 'lodash-es'
 import { useRef, useState, CSSProperties, useMemo } from 'react'
 import { usePropRef } from '../hooks/use-prop-ref'
 import styles from './styles.module.css'
-import { ControlBar } from './control-bar'
+import { CONTROL_BAR_WIDTH, ControlBar } from './control-bar'
 import clsx from 'clsx'
 import { Id } from 'tapestry-core/src/data-format/schemas/common'
+import { Icon } from '../icon'
+import { Size } from 'tapestry-core/src/lib/geometry'
+import { getItemOverlayScale } from '../../../view-model/utils'
 
 type ComponentType = 'video' | 'audio'
 type MediaElement<T extends ComponentType> = T extends 'video' ? HTMLVideoElement : HTMLAudioElement
@@ -38,6 +41,7 @@ export interface MediaPlayerProps<T extends ComponentType, Component = MediaElem
   onLoadedMetadata?: React.ReactEventHandler<Component>
   isInteractive: boolean
   thumbnail?: string
+  size?: Size
 }
 
 export function MediaPlayer<T extends 'video' | 'audio'>({
@@ -54,11 +58,13 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
   onLoadedMetadata,
   isInteractive,
   thumbnail,
+  size,
 }: MediaPlayerProps<T>) {
   const mediaRef = useRef<MediaElement<T> | null>(null)
   const [volume, setVolume] = useState<number>(1)
   const [playbackRate, setPlaybackRate] = useState<number>(1)
   const isAudio = component === 'audio' || options.audioOnlyMode
+  const controlBarScale = !isAudio && size ? Math.max(size.width / CONTROL_BAR_WIDTH, 1) : undefined
 
   const autoStop = useRef(!!stopTime)
   const [currentPlaybackInterval, setCurrentPlaybackInterval] = useState({ startTime, stopTime })
@@ -226,8 +232,8 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
             display: isPlaying ? 'block' : 'none',
             width: '100%',
             height: '100%',
-            objectFit: 'contain',
           }}
+          className={styles.video}
           crossOrigin="anonymous"
         >
           <source src={options.src} type={options.mediaType || 'video/mp4'} />
@@ -249,8 +255,28 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
           }}
         />
       )}
+      {!isAudio && isInteractive && (
+        <div className={styles.playArea} onClick={() => void togglePlay()}>
+          {!isPlaying && (
+            <div
+              className={styles.playButton}
+              style={{ transform: `scale(${size ? getItemOverlayScale(size) : 1})` }}
+            >
+              <Icon icon="play_arrow" filled />
+            </div>
+          )}
+        </div>
+      )}
       <div
         className={styles.controlBar}
+        style={
+          controlBarScale !== undefined
+            ? ({
+                '--control-bar-scale': controlBarScale,
+                '--control-bar-width': `${CONTROL_BAR_WIDTH}px`,
+              } as CSSProperties)
+            : undefined
+        }
         onMouseEnter={() => setIsHovering(true)}
         onMouseLeave={() => setIsHovering(false)}
       >
@@ -269,6 +295,7 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
           onPlaybackRateChange={onPlaybackRateChange}
           toggleFullScreen={toggleFullscreen}
           mediaId={id}
+          scale={controlBarScale}
         />
       </div>
     </div>

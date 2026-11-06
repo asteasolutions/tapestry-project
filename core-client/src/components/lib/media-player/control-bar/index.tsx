@@ -2,7 +2,7 @@ import clsx from 'clsx'
 import { Button, IconButton } from '../../buttons'
 import { MaybeMenuItem, Toolbar } from '../../toolbar'
 import styles from './styles.module.css'
-import { useRef, useState } from 'react'
+import { CSSProperties, ReactNode, useRef, useState } from 'react'
 import { isMobile } from '../../../../lib/user-agent'
 import { createPortal } from 'react-dom'
 
@@ -22,9 +22,12 @@ interface ControlBarProps {
   onPlaybackRateChange: (rate: number) => void
   toggleFullScreen: () => void
   mediaId: string
+  scale?: number
 }
 
 const PLAYBACK_RATES = [4, 2, 1.5, 1, 0.5]
+
+export const CONTROL_BAR_WIDTH = 500
 
 export function ControlBar({
   isOpen = true,
@@ -42,6 +45,7 @@ export function ControlBar({
   onPlaybackRateChange,
   toggleFullScreen,
   mediaId,
+  scale,
 }: ControlBarProps) {
   function formatTime(seconds: number): string {
     if (isNaN(seconds)) {
@@ -75,7 +79,27 @@ export function ControlBar({
     setSelectedSubmenu('')
   }
 
-  const portal = document.querySelector(`[data-model-id="${mediaId}"]`)
+  const portal =
+    document.fullscreenElement ?? document.querySelector(`[data-model-id="${mediaId}"]`)
+
+  const submenuPortal = (submenu: ReactNode) =>
+    portal &&
+    createPortal(
+      <div
+        className={clsx(styles.submenu, { [styles.scaled]: scale !== undefined })}
+        style={
+          scale !== undefined
+            ? ({
+                '--control-bar-scale': scale,
+                '--control-bar-width': `${CONTROL_BAR_WIDTH}px`,
+              } as CSSProperties)
+            : undefined
+        }
+      >
+        {submenu}
+      </div>,
+      portal,
+    )
 
   const volumeSubmenuRef = useRef<HTMLInputElement>(null)
   const playbackRateSubmenuRef = useRef<HTMLDivElement>(null)
@@ -101,23 +125,12 @@ export function ControlBar({
       onMouseEnter={() => handleMouseEnter('volume')}
       onMouseLeave={handleMouseLeave}
       onChange={(e) => onVolumeChange(Number(e.target.value))}
-      className={clsx(
-        styles.volumeSlider,
-        document.fullscreenElement ? styles.volumeSliderFullscreen : styles.volumeSliderNormal,
-      )}
+      className={styles.volumeSlider}
     />
   )
 
   const playbackRateSubmenu = (
-    <div
-      ref={playbackRateSubmenuRef}
-      className={clsx(
-        styles.playbackRateButtons,
-        document.fullscreenElement
-          ? styles.playbackRateButtonsFullscreen
-          : styles.playbackRateButtonsNormal,
-      )}
-    >
+    <div ref={playbackRateSubmenuRef} className={styles.playbackRateButtons}>
       {PLAYBACK_RATES.map((rate) => (
         <Button
           key={rate}
@@ -125,7 +138,6 @@ export function ControlBar({
           variant="secondary"
           onClick={() => onRateSelect(rate)}
           className={styles.playbackRate}
-          style={{ fontSize: '12px' }}
         >
           {`${rate}x`}
         </Button>
@@ -161,9 +173,7 @@ export function ControlBar({
         ),
       },
       direction: 'column',
-      submenu: [
-        document.fullscreenElement ? volumeSubmenu : portal && createPortal(volumeSubmenu, portal),
-      ],
+      submenu: [submenuPortal(volumeSubmenu)],
     },
     <div className={styles.progress}>
       <input
@@ -176,7 +186,7 @@ export function ControlBar({
         onChange={(e) => onSeek(Number(e.target.value))}
         className={styles.progressSlider}
       />
-      <span style={{ fontSize: '14px' }}>
+      <span>
         {formatTime(currentTime)} / {formatTime(duration)}
       </span>
     </div>,
@@ -197,11 +207,7 @@ export function ControlBar({
         tooltip: { side: 'top', children: 'Playback Rate' },
       },
       direction: 'column',
-      submenu: [
-        document.fullscreenElement
-          ? playbackRateSubmenu
-          : portal && createPortal(playbackRateSubmenu, portal),
-      ],
+      submenu: [submenuPortal(playbackRateSubmenu)],
     },
     {
       element: (
