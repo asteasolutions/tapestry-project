@@ -1,0 +1,48 @@
+.step {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  line-height: 20px;
+
+  .line {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 4px 16px;
+
+    strong {
+      font-weight: 600;
+      color: var(--theme-text-brand);
+    }
+  }
+
+  .label {
+    font-weight: 600;
+  }
+
+  .detail {
+    color: var(--color-neutral-700);
+  }
+
+  .track {
+    height: 12px;
+    border-radius: 6px;
+    background-color: var(--color-neutral-50);
+    overflow: hidden;
+
+    span {
+      display: block;
+      height: 100%;
+      border-radius: 6px;
+    }
+
+    .primary {
+      background-color: var(--color-primary-900);
+    }
+
+    .secondary {
+      background-color: var(--color-primary-400);
+    }
+  }
+}

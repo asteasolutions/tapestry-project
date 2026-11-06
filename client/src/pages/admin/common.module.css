@@ -1,0 +1,53 @@
+/* Utility classes shared by every admin section */
+
+.muted {
+  color: var(--color-neutral-500);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  line-height: 16px;
+  overflow-wrap: anywhere;
+}
+
+.link-button {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--theme-text-link);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--theme-text-link-hover);
+    text-decoration: underline;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--theme-border-focus);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+}
+
+.underlined-link {
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+
+  &:hover {
+    text-decoration-thickness: 2px;
+  }
+}

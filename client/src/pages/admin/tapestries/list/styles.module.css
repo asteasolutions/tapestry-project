@@ -1,0 +1,127 @@
+.filters {
+  padding: 0 16px;
+}
+
+.clear-filters {
+  height: 40px;
+  padding: 0 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--theme-text-link);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:disabled {
+    color: var(--color-neutral-400);
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--theme-border-focus);
+    outline-offset: 2px;
+  }
+
+  &:hover:not(:disabled) {
+    background-color: var(--theme-background-hover);
+  }
+}
+
+.summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 16px;
+
+  h2 {
+    margin: 0;
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 600;
+  }
+
+  span {
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--color-neutral-500);
+  }
+}
+
+.tapestry {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 360px;
+
+  .title-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .title {
+    overflow: hidden;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  a.title {
+    color: var(--theme-text-brand);
+    text-decoration: none;
+
+    &:hover {
+      color: var(--theme-text-link-hover);
+      text-decoration: underline;
+    }
+  }
+
+  .restricted-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+
+    > :global(.material-symbols-outlined) {
+      flex: none;
+      font-size: 14px;
+      color: var(--color-neutral-500);
+    }
+  }
+
+  :global(.material-symbols-outlined) + .title {
+    min-width: 0;
+  }
+
+  .path {
+    overflow: hidden;
+    color: var(--color-neutral-500);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.table {
+  tbody > tr {
+    height: 64px;
+  }
+
+  .owner {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+
+    .contact {
+      font-size: 12px;
+      line-height: 16px;
+    }
+  }
+
+  .date {
+    color: var(--color-neutral-700);
+  }
+}

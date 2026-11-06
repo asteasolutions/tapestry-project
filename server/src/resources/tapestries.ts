@@ -17,6 +17,9 @@ import { ListParamsOutputDto } from 'tapestry-shared/src/data-transfer/resources
 import { createItems } from './items.js'
 import { createRels } from './rels.js'
 import { socketIdFromRequest, socketServer } from '../socket/index.js'
+import { isAdmin } from '../auth/roles.js'
+import { logAdminOpenedTapestry } from '../services/admin-activity.js'
+import { deleteTapestryPermanently, unfeatureTapestry } from '../services/tapestry-sharing.js'
 
 function sharedWithFilters(userId: string): Prisma.TapestryWhereInput[] {
   return [
@@ -25,7 +28,7 @@ function sharedWithFilters(userId: string): Prisma.TapestryWhereInput[] {
   ]
 }
 
-type CustomFilterProp = 'sharedWith' | 'bookmarkedBy'
+type CustomFilterProp = 'sharedWith' | 'bookmarkedBy' | 'featured'
 
 const customFilters: CustomFilters<CustomFilterProp, Prisma.TapestryWhereInput> = {
   sharedWith: ({ op, value }) => {
@@ -37,6 +40,11 @@ const customFilters: CustomFilters<CustomFilterProp, Prisma.TapestryWhereInput> 
     checkOpSupport({ op: 'eq', valueType: 'string' }, op, value)
 
     return { bookmarks: { some: { userId: value } } }
+  },
+  featured: ({ op, value }) => {
+    checkOpSupport({ op: 'eq', valueType: 'string' }, op, value)
+
+    return { featured: value === 'true' }
   },
 }
 
@@ -155,6 +163,20 @@ export async function canViewTapestry(
   return !!(await prisma.tapestryAccess.findFirst({ where: { tapestryId: tapestry.id, userId } }))
 }
 
+/**
+ * Whether the user is an admin who neither owns the tapestry nor was invited to it. Admins have no
+ * extra access to tapestries, so this can only be the case for link-shared ones. Such views are
+ * recorded in the admin activity log and never count as user activity.
+ */
+export async function viewsAsAdminOnly(userId: string | null, tapestry: Tapestry) {
+  if (!userId || tapestry.ownerId === userId || tapestry.visibility !== 'link') return false
+
+  const access = await prisma.tapestryAccess.findFirst({
+    where: { tapestryId: tapestry.id, userId },
+  })
+  return !access && (await isAdmin(userId))
+}
+
 export async function canEditTapestry(
   userId: string | null,
   tapestryOrId: Prisma.TapestryGetPayload<null> | string,
@@ -186,14 +208,14 @@ async function canUpdateTapestry(userId: string, tapestryId: string, update: Tap
   return canEditTapestry(userId, tapestry)
 }
 
-async function ownsTapestry(userId: string, tapestryId: string) {
+export async function ownsTapestry(userId: string, tapestryId: string) {
   return !!(await prisma.tapestry.findUnique({ where: { id: tapestryId, ownerId: userId } }))
 }
 
 function createTapestriesListFilter(userId: string | null): Prisma.TapestryWhereInput {
   return {
     OR: [
-      { visibility: 'public' },
+      { featured: true },
       ...(userId ? [{ ownerId: userId }, ...sharedWithFilters(userId)] : []),
     ],
   }
@@ -217,10 +239,6 @@ export async function createTapestry(
   authorId: string,
   context?: RequestContext<true>,
 ) {
-  if (createParams.visibility === 'public') {
-    throw new ForbiddenError('Public tapestries are not allowed')
-  }
-
   const newTapestryId = crypto.randomUUID()
   await prisma.$transaction(async (tx) => {
     const createInput: Prisma.TapestryCreateInput = {
@@ -233,6 +251,9 @@ export async function createTapestry(
         'updatedAt',
         'ownerId',
         'parentId',
+        'featured',
+        'featuredAt',
+        'galleryPosition',
       ]),
       owner: { connect: { id: authorId } },
       parent: { connect: createParams.parentId ? { id: createParams.parentId } : undefined },
@@ -294,31 +315,42 @@ export const tapestries: RESTResourceImpl<Resources['tapestries'], Prisma.Tapest
       return serialize('Tapestry', dbTapestry)
     },
 
-    read: async ({ pathParams: { id }, query }) => {
-      return serialize(
-        'Tapestry',
-        await fecthTapestryByPathSegment(id, { include: parseIncludes('Tapestry', query.include) }),
-      )
+    read: async ({ pathParams: { id }, query }, { userId }) => {
+      const tapestry = await fecthTapestryByPathSegment(id, {
+        include: parseIncludes('Tapestry', query.include),
+      })
+
+      if (await viewsAsAdminOnly(userId, tapestry)) {
+        await logAdminOpenedTapestry(userId!, tapestry)
+      }
+
+      return serialize('Tapestry', tapestry)
     },
 
     update: async ({ pathParams: { id }, query, body: tapestry }, context) => {
-      if (tapestry.visibility === 'public') {
-        throw new ForbiddenError('Public tapestries are not allowed')
-      }
-
       const patch: Prisma.TapestryUpdateInput = tapestryDtoToDb(tapestry, [
         'id',
         'slug',
         'createdAt',
         'updatedAt',
+        'featured',
+        'featuredAt',
+        'galleryPosition',
       ])
       if (tapestry.slug) {
         // Update the slug only if it's a non-empty string
         patch.slug = tapestry.slug
       }
-      await prisma.tapestry.update({
-        where: { id },
-        data: patch,
+      await prisma.$transaction(async (tx) => {
+        await tx.tapestry.update({
+          where: { id },
+          data: patch,
+        })
+
+        // Restricting a featured tapestry removes it from the Gallery immediately
+        if (tapestry.visibility === 'private') {
+          await unfeatureTapestry(tx, id, false)
+        }
       })
 
       const dbTapestry = await prisma.tapestry.findUniqueOrThrow({
@@ -333,18 +365,8 @@ export const tapestries: RESTResourceImpl<Resources['tapestries'], Prisma.Tapest
       return serialize('Tapestry', dbTapestry)
     },
 
-    destroy: async ({ pathParams: { id } }) => {
-      await prisma.$transaction(async (tx) => {
-        await tx.presentationStep.deleteMany({
-          where: {
-            OR: [{ item: { tapestryId: id } }, { group: { tapestryId: id } }],
-          },
-        })
-        await tx.imageAsset.deleteMany({
-          where: { thumbnailForItems: { some: { tapestryId: id } } },
-        })
-        await tx.tapestry.delete({ where: { id } })
-      })
+    destroy: async ({ pathParams: { id } }, { userId }) => {
+      await deleteTapestryPermanently(id, userId, false)
     },
 
     list: async ({ query }, { listFilter, userId }) => {

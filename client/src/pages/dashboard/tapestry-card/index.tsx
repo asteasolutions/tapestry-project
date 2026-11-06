@@ -61,7 +61,7 @@ export function TapestryCard({
   if (viewOnly) {
     user = null
   }
-  const canEdit = userAccess(tapestry, user?.id) === 'edit'
+  const canEdit = userAccess(tapestry, user) === 'edit'
   const isOwner = tapestry.ownerId === user?.id
   const finalViewUrl = viewURL || tapestryPath(tapestry.owner.username, tapestry.slug)
   const editUrl = tapestryPath(tapestry.owner.username, tapestry.slug, 'edit')

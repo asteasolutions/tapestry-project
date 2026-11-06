@@ -1,0 +1,15 @@
+.filters {
+  padding: 0 16px;
+}
+
+.summary {
+  margin: 0;
+  padding: 0 16px;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+}
+
+.details {
+  color: var(--color-neutral-700);
+}
