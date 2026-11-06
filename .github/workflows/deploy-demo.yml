@@ -11,6 +11,7 @@ jobs:
       - uses: actions/checkout@v5
       - run: ./deployment/docker/build-backend.sh
         env: &demo_env
+          ASSET_READ_URL_EXPIRES_IN: ${{ vars.ASSET_READ_URL_EXPIRES_IN }}
           AUTH_PROVIDERS: ${{ vars.AUTH_PROVIDERS }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
