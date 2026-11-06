@@ -1,4 +1,4 @@
 {
-  "chrome": { "version": "157.0.8103.38" },
-  "chrome-headless-shell": { "version": "157.0.8103.38" }
+  "chrome": { "version": "stable" },
+  "chrome-headless-shell": { "version": "stable" }
 }
