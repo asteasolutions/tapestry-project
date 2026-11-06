@@ -14,7 +14,7 @@ export function Footer() {
     <div className={styles.root}>
       <div className={styles.links}>
         {xsOrLess ? null : (
-          <Link to={'/'} className={styles.logoLink}>
+          <Link to={'/'} className={styles.logoLink} aria-label="Tapestries home">
             <SvgIcon Icon={LogoWhite} height={25} />
           </Link>
         )}
