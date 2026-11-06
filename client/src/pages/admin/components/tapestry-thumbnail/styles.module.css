@@ -17,19 +17,6 @@
   }
 
   &.placeholder {
-    display: flex;
-    align-items: center;
-    justify-content: center;
     background-color: var(--theme-border-subtle);
-
-    > :global(.material-symbols-outlined) {
-      font-size: 16px;
-    }
-  }
-
-  &.restricted {
-    border: 1px dashed var(--color-neutral-200);
-    background-color: var(--color-neutral-50);
-    color: var(--color-neutral-500);
   }
 }

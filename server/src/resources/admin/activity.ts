@@ -28,7 +28,8 @@ async function deleteItems(
   const ids = [...new Set(itemIds)]
 
   const tapestry = await tx.tapestry.findUniqueOrThrow({ where: { id: tapestryId } })
-  // Admins have no access to the content of tapestries that aren't shared with anyone with the link
+  // Admin moderation applies only to tapestries shared with anyone with the link. For private ones
+  // the admin owns or was invited to, they have only their normal access.
   if (tapestry.visibility !== 'link') {
     throw new ForbiddenError(
       'Only items of tapestries shared with anyone with the link can be deleted',

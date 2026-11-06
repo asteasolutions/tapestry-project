@@ -2,7 +2,6 @@ import { useState } from 'react'
 import clsx from 'clsx'
 import { Link } from 'react-router'
 import { Button } from 'tapestry-core-client/src/components/lib/buttons/index'
-import { Icon } from 'tapestry-core-client/src/components/lib/icon/index'
 import {
   AdminTapestryDto,
   SharingLevel,
@@ -113,20 +112,9 @@ function TapestryTitle({ tapestry }: { tapestry: AdminTapestryDto }) {
     <div className={styles.tapestry}>
       <TapestryThumbnail tapestry={tapestry} />
       <div className={styles.titleText}>
-        {tapestry.sharingLevel === 'link' ? (
-          <a href={path} target="_blank" rel="noreferrer" className={styles.title}>
-            {tapestry.title}
-          </a>
-        ) : (
-          <span
-            className={styles.restrictedTitle}
-            title="Admins can’t open Owner only or Invited people tapestries"
-          >
-            <Icon icon="lock" aria-hidden />
-            <span className={styles.title}>{tapestry.title}</span>
-            <span className={common.visuallyHidden}>, can’t be opened by admins</span>
-          </span>
-        )}
+        <a href={path} target="_blank" rel="noreferrer" className={styles.title}>
+          {tapestry.title}
+        </a>
         <span className={clsx(common.mono, styles.path)}>{path}</span>
       </div>
     </div>
@@ -291,7 +279,7 @@ export function AdminTapestryList() {
     <>
       <PageHeader
         title="All tapestries"
-        description="Every tapestry on this instance, at every sharing level. Only owners change sharing; admins can feature tapestries shared as “Anyone with the link” and remove them from the Gallery. Owner only and Invited people tapestries are listed but can’t be opened. Opening a tapestry is recorded in the activity log and never counts as user activity."
+        description="Tapestries shared as “Anyone with the link”, plus Owner only and Invited people tapestries that you own or were invited to. Other private tapestries aren’t shown to admins. Only owners change sharing; admins can feature tapestries shared as “Anyone with the link” and remove them from the Gallery. Opening a tapestry is recorded in the activity log and never counts as user activity."
         actions={
           <Button variant="secondary" icon="download" disabled={exporting} onClick={exportCsv}>
             {exporting ? 'Exporting…' : 'Export view as CSV'}

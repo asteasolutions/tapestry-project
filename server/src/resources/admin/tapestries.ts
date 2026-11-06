@@ -3,7 +3,8 @@ import { Resources } from 'tapestry-shared/src/data-transfer/resources/index.js'
 import { prisma } from '../../db.js'
 import { RESTResourceImpl } from '../base-resource.js'
 import { parseListFilter } from '../utils.js'
-import { adminOnly } from '../../auth/roles.js'
+import { adminOnly, isAdmin } from '../../auth/roles.js'
+import { canViewTapestry } from '../tapestries.js'
 import {
   adminTapestryDbToDto,
   adminTapestryDetailInclude,
@@ -19,7 +20,27 @@ import { logAdminActivity } from '../../services/admin-activity.js'
 
 type Tx = Prisma.TransactionClient
 
-export async function setFeatured(tx: Tx, adminId: string, id: string, featured: boolean) {
+/**
+ * The tapestries an admin may see in the admin panel: those shared with anyone with the link, plus
+ * private ones the admin owns or was invited to. This is the list counterpart of `canViewTapestry`.
+ */
+function adminVisibleTapestries(adminId: string): Prisma.TapestryWhereInput {
+  return {
+    OR: [
+      { visibility: 'link' },
+      { ownerId: adminId },
+      { userAccess: { some: { userId: adminId } } },
+    ],
+  }
+}
+
+/** Admins have no extra access to tapestries: they manage only the ones they can view. */
+const canManageTapestry = async (
+  { pathParams: { id } }: { pathParams: { id: string } },
+  { userId }: { userId: string | null },
+) => (await isAdmin(userId)) && canViewTapestry(userId, id)
+
+async function setFeatured(tx: Tx, adminId: string, id: string, featured: boolean) {
   const tapestry = await tx.tapestry.findUniqueOrThrow({ where: { id } })
   if (tapestry.featured === featured) return
 
@@ -48,21 +69,26 @@ export const adminTapestries: RESTResourceImpl<
   Prisma.TapestryWhereInput
 > = {
   accessPolicy: {
-    canRead: adminOnly,
-    canUpdate: adminOnly,
-    canDestroy: adminOnly,
+    canRead: canManageTapestry,
+    canUpdate: canManageTapestry,
+    canDestroy: canManageTapestry,
     canList: adminOnly,
-    createListFilter: () => ({}),
+    createListFilter: (userId) => adminVisibleTapestries(userId!),
   },
 
   handlers: {
-    list: async ({ query }) => {
-      const { where, skip, limit, orderBy } = parseListFilter<
-        Prisma.TapestryWhereInput,
-        keyof typeof adminTapestryFilters
-      >({ ...query, orderBy: query.orderBy ?? { updatedAt: 'desc' } }, adminTapestryFilters)
+    list: async ({ query }, { listFilter }) => {
+      const {
+        where: filter,
+        skip,
+        limit,
+        orderBy,
+      } = parseListFilter<Prisma.TapestryWhereInput, keyof typeof adminTapestryFilters>(
+        { ...query, orderBy: query.orderBy ?? { updatedAt: 'desc' } },
+        adminTapestryFilters,
+      )
+      const where: Prisma.TapestryWhereInput = { AND: [filter, listFilter] }
 
-      console.log(where, skip, limit)
       const [total, tapestries] = await Promise.all([
         prisma.tapestry.count({ where }),
         prisma.tapestry.findMany({

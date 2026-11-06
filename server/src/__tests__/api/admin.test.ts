@@ -74,8 +74,32 @@ describe('access control', () => {
           .send({ type: 'image', title: 'Edited by admin' })
       ).statusCode,
     ).toBe(403)
-    // Admins still see private tapestries in the admin list
-    expect((await asAdmin.get(`/api/admin/tapestries/${tapestry.id}`)).statusCode).toBe(200)
+  })
+
+  test('private tapestries are hidden from admins unless they own or were invited to them', async () => {
+    const { tapestry: hidden } = await privateTapestry()
+    const { tapestry: invited } = await privateTapestry()
+    const { tapestry: shared } = await linkTapestry()
+    await prisma.tapestryAccess.create({
+      data: { tapestryId: invited.id, userId: adminId, canEdit: false },
+    })
+    const owned = await generate('Tapestry', { ownerId: adminId, visibility: 'private' })
+    const asAdmin = loginUser(adminId)
+
+    const list = await asAdmin.get('/api/admin/tapestries?limit=1000')
+    expect(list.statusCode).toBe(200)
+    const ids = list.body.data.map((t: { id: string }) => t.id)
+    expect(ids).not.toContain(hidden.id)
+    expect(ids).toEqual(expect.arrayContaining([invited.id, shared.id, owned.id]))
+
+    expect((await asAdmin.get(`/api/admin/tapestries/${hidden.id}`)).statusCode).toBe(403)
+    expect((await asAdmin.get(`/api/admin/tapestries/${invited.id}`)).statusCode).toBe(200)
+    expect(
+      (await asAdmin.patch(`/api/admin/tapestries/${hidden.id}`).send({ featured: false }))
+        .statusCode,
+    ).toBe(403)
+    expect((await asAdmin.delete(`/api/admin/tapestries/${hidden.id}`)).statusCode).toBe(403)
+    expect(await prisma.tapestry.count({ where: { id: hidden.id } })).toBe(1)
   })
 
   test('admin opens of link-shared tapestries are logged, not counted as user activity', async () => {
@@ -124,7 +148,11 @@ describe('featuring', () => {
   })
 
   test('admins cannot feature restricted tapestries or change sharing', async () => {
+    // A private tapestry the admin was invited to, so that it's visible in the admin panel
     const { tapestry } = await privateTapestry()
+    await prisma.tapestryAccess.create({
+      data: { tapestryId: tapestry.id, userId: adminId, canEdit: false },
+    })
     const asAdmin = loginUser(adminId)
 
     let response = await asAdmin
@@ -264,7 +292,7 @@ describe('deletion', () => {
   })
 
   test('deleting a tapestry is logged and recorded for reporting', async () => {
-    const { tapestry, owner } = await privateTapestry()
+    const { tapestry, owner } = await linkTapestry()
 
     const response = await loginUser(adminId).delete(`/api/admin/tapestries/${tapestry.id}`)
     expect(response.statusCode).toBe(200)

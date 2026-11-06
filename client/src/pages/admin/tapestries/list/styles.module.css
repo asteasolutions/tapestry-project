@@ -80,19 +80,6 @@
     }
   }
 
-  .restricted-title {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    min-width: 0;
-
-    > :global(.material-symbols-outlined) {
-      flex: none;
-      font-size: 14px;
-      color: var(--color-neutral-500);
-    }
-  }
-
   :global(.material-symbols-outlined) + .title {
     min-width: 0;
   }

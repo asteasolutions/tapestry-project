@@ -156,9 +156,13 @@ export async function canViewTapestry(
       ? await prisma.tapestry.findUniqueOrThrow({ where: { id: tapestryOrId } })
       : tapestryOrId
 
-  if (tapestry.visibility !== 'private' || tapestry.ownerId === userId) return true
+  if (tapestry.visibility !== 'private' || tapestry.ownerId === userId) {
+    return true
+  }
 
-  if (!userId) return false
+  if (!userId) {
+    return false
+  }
 
   return !!(await prisma.tapestryAccess.findFirst({ where: { tapestryId: tapestry.id, userId } }))
 }

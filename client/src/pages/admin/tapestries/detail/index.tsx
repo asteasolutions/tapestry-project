@@ -61,7 +61,8 @@ export function AdminTapestryDetail({ id }: { id: string }) {
 
   const { owner } = tapestry
   const userAccess = tapestry.userAccess ?? []
-  const canOpen = tapestry.sharingLevel === 'link'
+  // Only link-shared tapestries can be featured, and only their items can be deleted by admins
+  const isLinkShared = tapestry.sharingLevel === 'link'
   const path = tapestryPath(owner.username, tapestry.slug)
 
   return (
@@ -72,18 +73,16 @@ export function AdminTapestryDetail({ id }: { id: string }) {
         description={tapestry.description ?? undefined}
         actions={
           <>
-            {canOpen && (
-              <Button
-                variant="secondary"
-                icon="open_in_new"
-                component="a"
-                href={path}
-                target="_blank"
-                rel="noreferrer"
-              >
-                Open tapestry
-              </Button>
-            )}
+            <Button
+              variant="secondary"
+              icon="open_in_new"
+              component="a"
+              href={path}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Open tapestry
+            </Button>
             {tapestry.featured ? (
               <Button
                 variant="secondary"
@@ -92,7 +91,7 @@ export function AdminTapestryDetail({ id }: { id: string }) {
                 Remove from Gallery
               </Button>
             ) : (
-              canOpen && (
+              isLinkShared && (
                 <Button variant="secondary" icon="star" onClick={() => setFeaturing(true)}>
                   Feature in Gallery…
                 </Button>
@@ -115,13 +114,9 @@ export function AdminTapestryDetail({ id }: { id: string }) {
           <dl className={styles.details}>
             <dt>Address</dt>
             <dd>
-              {canOpen ? (
-                <a href={path} target="_blank" rel="noreferrer">
-                  {tapestryUrl(owner.username, tapestry.slug)}
-                </a>
-              ) : (
-                <span className={common.mono}>{tapestryUrl(owner.username, tapestry.slug)}</span>
-              )}
+              <a href={path} target="_blank" rel="noreferrer">
+                {tapestryUrl(owner.username, tapestry.slug)}
+              </a>
             </dd>
             <dt>Items</dt>
             <dd>{tapestry.itemCount.toLocaleString()}</dd>
@@ -152,10 +147,7 @@ export function AdminTapestryDetail({ id }: { id: string }) {
               )}
             </dd>
           </dl>
-          <p className={styles.hint}>
-            Only the owner can change sharing.
-            {!canOpen && ' Admins can’t open Owner only or Invited people tapestries.'}
-          </p>
+          <p className={styles.hint}>Only the owner can change sharing.</p>
         </Panel>
 
         <Panel title="Owner">
@@ -197,7 +189,7 @@ export function AdminTapestryDetail({ id }: { id: string }) {
         />
       </Panel>
 
-      {canOpen ? (
+      {isLinkShared ? (
         <ItemsPanel
           tapestry={tapestry}
           onDeleted={() => {
@@ -207,7 +199,8 @@ export function AdminTapestryDetail({ id }: { id: string }) {
         />
       ) : (
         <Notice tone="info">
-          The items of Owner only and Invited people tapestries aren’t shown to admins.
+          Admins can delete items only in tapestries shared as “Anyone with the link”. Open the
+          tapestry to see its items.
         </Notice>
       )}
 
