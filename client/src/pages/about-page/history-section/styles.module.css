@@ -32,6 +32,10 @@
       color: white;
     }
 
+    .figure {
+      margin: 0;
+    }
+
     .image-column {
       align-self: center;
     }
