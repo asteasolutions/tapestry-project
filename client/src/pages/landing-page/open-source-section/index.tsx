@@ -8,6 +8,7 @@ import { NARRATIVE_DESIGN_SYSTEM } from '../../../theme/narrative-design-system'
 import { PositionedImage } from '../../../components/positioned-component'
 import { Button } from 'tapestry-core-client/src/components/lib/buttons'
 import { Breakpoint, useResponsive } from '../../../providers/responsive-provider'
+import { clickTracking } from '../../../services/analytics'
 
 export function OpenSourceSection() {
   const { title, subtitle, content } = LANDING_PAGE_TEXT.openSource
@@ -51,6 +52,7 @@ export function OpenSourceSection() {
             variant="secondary"
             component="a"
             href="https://github.com/asteasolutions/tapestry-project"
+            {...clickTracking('Landing View GitHub repo')}
             target="_blank"
           >
             View GitHub Repo
@@ -60,6 +62,7 @@ export function OpenSourceSection() {
             className={styles.outlineButton}
             component="a"
             href="mailto:tapestries@awmt.org"
+            {...clickTracking('Landing Contact')}
           >
             Contact
           </Button>

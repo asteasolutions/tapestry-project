@@ -11,6 +11,7 @@ import { Breakpoint, useResponsive } from '../../../providers/responsive-provide
 import { Toolbar } from 'tapestry-core-client/src/components/lib/toolbar'
 import { useState } from 'react'
 import { useOutsideClick } from 'tapestry-core-client/src/components/lib/hooks/use-outside-click'
+import { clickTracking } from '../../../services/analytics'
 
 export function Header() {
   const { user } = useSession()
@@ -41,6 +42,7 @@ export function Header() {
                     <MenuItemButton
                       to={dashboardPath('public')}
                       component={Link}
+                      {...clickTracking('Header Gallery')}
                       onClick={() => setIsMobileNavOpen(false)}
                     >
                       Gallery
@@ -65,7 +67,12 @@ export function Header() {
         {!SMOrLess && (
           <>
             {showGallery && (
-              <Button to={dashboardPath('public')} component={Link} variant="tertiary">
+              <Button
+                to={dashboardPath('public')}
+                component={Link}
+                variant="tertiary"
+                {...clickTracking('Header Gallery')}
+              >
                 Gallery
               </Button>
             )}
