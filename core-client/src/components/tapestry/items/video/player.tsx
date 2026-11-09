@@ -88,6 +88,7 @@ export const VideoItemPlayer = memo(
           }}
           isInteractive={isInteractive}
           thumbnail={thumbnail || primaryThumbnail}
+          size={dto.size}
           // The video is hidden in order to optimize the Safari layering algorithm
           //MediaPlayer handles display: none of the video
           style={{
