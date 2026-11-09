@@ -7,7 +7,7 @@ import { Size } from 'tapestry-core/src/lib/geometry'
 import { idMapToArray } from 'tapestry-core/src/utils'
 import { useTapestryData } from '../../../../pages/tapestry/tapestry-providers'
 import { itemUpload } from '../../../../services/item-upload'
-import { UploadIndicator } from '../../../upload-indicator'
+import { UploadingPlaceholder } from '../../../uploading-placeholder'
 import { ResizeHandles } from '../../resize-handles'
 import styles from './styles.module.css'
 
@@ -43,9 +43,7 @@ export function TapestryItem({ id, children, halo }: TapestryItemProps) {
       title={<span>{dto.title}</span>}
       overlay={
         <>
-          {item?.state === 'uploading' && (
-            <UploadIndicator progress={item.progress} className={styles.uploadIndicator} />
-          )}
+          {(item?.state === 'pending' || item?.state === 'uploading') && <UploadingPlaceholder />}
           {isEditMode && isContentInteractive && <ResizeHandles withRelAnchors />}
           {resizeState && (
             <ResizeIndicators

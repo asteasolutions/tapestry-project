@@ -4,7 +4,7 @@ import { Navigate, useLocation, useParams } from 'react-router'
 import { useSession } from '../../layouts/session'
 import { LazyListLoader } from '../../components/lazy-list/lazy-list-loader'
 import { useTapestryImport } from '../../hooks/use-tapestry-import'
-import { ImportTapestryDialog } from './import-tapestry-button/import-tapestry-dialog'
+import { ImportTapestryPanel } from './import-tapestry-button/import-tapestry-panel'
 import { dataTransferToFiles } from '../../stage/data-transfer-handler'
 import { TYPE } from 'tapestry-core/src/data-format/export'
 import { useObservable } from 'tapestry-core-client/src/components/lib/hooks/use-observable'
@@ -189,7 +189,7 @@ export function Dashboard() {
         />
       </DropArea>
       {creatingTapestry && <CreateTapestryDialog onCancel={() => setCreatingTapestry(false)} />}
-      {imports && <ImportTapestryDialog imports={imports} onClose={resetImports} />}
+      {imports && <ImportTapestryPanel imports={imports} onClose={resetImports} />}
       <Snackbar value={initialPrompt} onChange={() => setInitialPrompt(undefined)} />
     </div>
   )

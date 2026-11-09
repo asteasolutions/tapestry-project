@@ -1,11 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { uploadAsset } from '../model/data/utils'
 import { resource } from '../services/rest-resources'
-import { useAsyncAction } from 'tapestry-core-client/src/components/lib/hooks/use-async-action'
 import { parseRootJson, ROOT_FILE } from 'tapestry-core/src/data-format/export'
 import { BlobReader, TextWriter, ZipReader, FileEntry } from '@zip.js/zip.js'
 import { useAsyncPolled } from './use-poll'
-import { isNumber } from 'lodash-es'
 import { JobStatus } from 'tapestry-shared/src/data-transfer/resources/dtos/tapestry-create-job'
 import { mapNotNull } from 'tapestry-core/src/lib/array'
 import { usePropRef } from 'tapestry-core-client/src/components/lib/hooks/use-prop-ref'
@@ -16,6 +14,7 @@ export type FileStatus = 'uploading' | JobStatus | 'cancelled'
 const TERMINAL_STATUSES: FileStatus[] = ['cancelled', 'complete', 'failed']
 
 export interface TapestryImport {
+  id: string
   name: string
   progress: number
   status: FileStatus
@@ -45,20 +44,15 @@ async function checkZipValidity(file: File) {
 export function useTapestryImport(onComplete: () => unknown) {
   const [imports, setImports] = useState<TapestryImport[]>()
   const onCompleteRef = usePropRef(onComplete)
+  const importsRef = usePropRef(imports)
 
-  function updateFile(indexOrJobId: number | string, data: Partial<TapestryImport>) {
-    setImports((current) => {
-      if (!current) {
-        return
-      }
-      const elem = isNumber(indexOrJobId)
-        ? current[indexOrJobId]
-        : current.find(({ jobId }) => jobId === indexOrJobId)
-      if (elem) {
-        Object.assign(elem, data)
-      }
-      return [...current]
-    })
+  // Cancel all ongoing uploads when leaving the page
+  useEffect(() => () => importsRef.current?.forEach((i) => i.killSwitch.abort()), [importsRef])
+
+  function updateFile(idOrJobId: string, data: Partial<TapestryImport>) {
+    setImports((current) =>
+      current?.map((i) => (i.id === idOrJobId || i.jobId === idOrJobId ? { ...i, ...data } : i)),
+    )
   }
 
   useAsyncPolled({
@@ -83,22 +77,25 @@ export function useTapestryImport(onComplete: () => unknown) {
     paused: !imports || imports.every((i) => TERMINAL_STATUSES.includes(i.status)),
   })
 
-  const { perform: importTapestries } = useAsyncAction(
-    async ({ signal: unmountSignal }, files: File[]) => {
-      const imports = files.map<TapestryImport>((f) => ({
-        name: f.name,
-        progress: 0,
-        status: 'uploading',
-        killSwitch: new AbortController(),
-      }))
-      setImports(imports)
+  // New files are added to the ones already being imported, so that all of them are shown together
+  const importTapestries = async (files: File[]) => {
+    const newImports = files.map<TapestryImport>((f) => ({
+      id: crypto.randomUUID(),
+      name: f.name,
+      progress: 0,
+      status: 'uploading',
+      killSwitch: new AbortController(),
+    }))
+    setImports((current) => [...(current ?? []), ...newImports])
 
-      const promises = files.map(async (f, i) => {
-        const signal = AbortSignal.any([unmountSignal, imports[i].killSwitch.signal])
+    await Promise.all(
+      files.map(async (f, index) => {
+        const { id: importId, killSwitch } = newImports[index]
+        const { signal } = killSwitch
         try {
           if (!(await checkZipValidity(f))) {
             console.warn('Invalid zip file')
-            updateFile(i, { status: 'failed' })
+            updateFile(importId, { status: 'failed' })
             return
           }
           const s3Key = await uploadAsset(
@@ -106,24 +103,23 @@ export function useTapestryImport(onComplete: () => unknown) {
             { type: 'import' },
             {
               signal,
-              onProgress: (e) => updateFile(i, { progress: e.progress ?? 0 }),
+              onProgress: (e) => updateFile(importId, { progress: e.progress ?? 0 }),
             },
           )
-          updateFile(i, { status: 'pending' })
+          updateFile(importId, { status: 'pending' })
           const { id } = await resource('tapestryCreateJob').create(
             { type: 'import', s3Key },
             undefined,
             { signal },
           )
-          updateFile(i, { jobId: id })
+          updateFile(importId, { jobId: id })
         } catch (e) {
           console.warn('Error importing file', f, e)
-          updateFile(i, { status: e instanceof CanceledError ? 'cancelled' : 'failed' })
+          updateFile(importId, { status: e instanceof CanceledError ? 'cancelled' : 'failed' })
         }
-      })
-      await Promise.all(promises)
-    },
-  )
+      }),
+    )
+  }
 
   return {
     imports,

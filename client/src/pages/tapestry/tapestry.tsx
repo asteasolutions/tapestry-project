@@ -16,6 +16,7 @@ import { CollaboratorCursors } from '../../components/collaborator-cursors'
 import { CollaboratorIndicators } from '../../components/collaborator-indicators'
 import { EditorTitleBar } from '../../components/editor-title-bar'
 import { ExportProgressBar } from '../../components/progress-bar/export-progress-bar'
+import { ItemUploadProgressBar } from '../../components/progress-bar/item-upload-progress-bar'
 import { CollectionImportDialog } from '../../components/collection-import-dialog'
 import { LargeFileUploadDialog } from '../../components/large-file-upload-dialog'
 import { LeaveTapestryDialog } from '../../components/leave-tapestry-dialog'
@@ -190,14 +191,15 @@ const MainToolbar = memo(function MainToolbar({ className, style }: PropsWithSty
           </div>
         </div>
       )}
-      {tapestryExport.progress && (
-        <div className={styles.statusIndicators}>
+      <div className={styles.statusIndicators}>
+        <ItemUploadProgressBar />
+        {tapestryExport.progress && (
           <ExportProgressBar
             progress={tapestryExport.progress}
             onCancel={tapestryExport.cancelExport}
           />
-        </div>
-      )}
+        )}
+      </div>
     </>
   )
 })
