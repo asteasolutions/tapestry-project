@@ -175,6 +175,56 @@ export async function fetchWikimediaMedia(
 
 const CATEGORY_THUMBNAIL_WIDTH = 300
 
+const WIKIDATA_API_URL = 'https://www.wikidata.org/w/api.php'
+
+interface WikidataEntitiesResponse {
+  entities?: Partial<
+    Record<
+      string,
+      {
+        claims?: Partial<Record<string, { mainsnak: { datavalue?: { value: { id?: string } } } }[]>>
+        descriptions?: Partial<Record<string, { value: string }>>
+      }
+    >
+  >
+}
+
+async function fetchWikidataEntity(
+  id: string,
+  params: Record<string, string>,
+  signal?: AbortSignal,
+) {
+  const url = new URL(WIKIDATA_API_URL)
+  url.searchParams.set('action', 'wbgetentities')
+  url.searchParams.set('ids', id)
+  for (const [key, value] of Object.entries(params)) url.searchParams.set(key, value)
+  url.searchParams.set('format', 'json')
+  url.searchParams.set('origin', '*')
+
+  const res = await fetch(url, { signal })
+  if (!res.ok) return undefined
+  return ((await res.json()) as WikidataEntitiesResponse).entities?.[id]
+}
+
+// Most categories have no prose of their own. Their page shows the description of the category's
+// main topic (Wikidata property P301) through the {{Wikidata Infobox}} template instead.
+async function fetchMainTopicDescription(categoryItemId: string, signal?: AbortSignal) {
+  try {
+    const category = await fetchWikidataEntity(categoryItemId, { props: 'claims' }, signal)
+    const topicId = category?.claims?.P301?.[0]?.mainsnak.datavalue?.value.id
+    if (!topicId) return null
+
+    const topic = await fetchWikidataEntity(
+      topicId,
+      { props: 'descriptions', languages: 'en', languagefallback: '1' },
+      signal,
+    )
+    return topic?.descriptions?.en?.value ?? null
+  } catch {
+    return null
+  }
+}
+
 export interface WikimediaCategoryDetails {
   thumbnail: string | null
   // `extracts` (Wikipedia's article-summary API) returns real prose for a category page whose own
@@ -195,11 +245,12 @@ export async function fetchWikimediaCategoryDetails(
     const url = new URL(COMMONS_API_URL)
     url.searchParams.set('action', 'query')
     url.searchParams.set('titles', category)
-    url.searchParams.set('prop', 'pageimages|extracts|categoryinfo')
+    url.searchParams.set('prop', 'pageimages|extracts|categoryinfo|pageprops')
     url.searchParams.set('piprop', 'thumbnail')
     url.searchParams.set('pithumbsize', String(CATEGORY_THUMBNAIL_WIDTH))
     url.searchParams.set('exintro', 'true')
     url.searchParams.set('explaintext', 'true')
+    url.searchParams.set('ppprop', 'wikibase_item')
     url.searchParams.set('format', 'json')
     url.searchParams.set('origin', '*')
 
@@ -210,12 +261,17 @@ export async function fetchWikimediaCategoryDetails(
       thumbnail?: { source: string }
       extract?: string
       categoryinfo?: { files: number }
+      pageprops?: { wikibase_item?: string }
     }
     const data = (await res.json()) as CommonsQueryResponse<CategoryPage>
     const page = Object.values(data.query?.pages ?? {})[0] ?? {}
     return {
       thumbnail: page.thumbnail?.source ?? null,
-      description: page.extract?.trim() || null,
+      description:
+        page.extract?.trim() ||
+        (page.pageprops?.wikibase_item
+          ? await fetchMainTopicDescription(page.pageprops.wikibase_item, signal)
+          : null),
       total: page.categoryinfo?.files,
     }
   } catch {

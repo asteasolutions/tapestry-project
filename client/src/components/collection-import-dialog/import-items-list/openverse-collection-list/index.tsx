@@ -1,9 +1,8 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import {
   fetchOpenverseCollectionPage,
   openverseMediaPageURL,
   OpenverseMedia,
-  OPENVERSE_MAX_PAGE_SIZE,
 } from 'tapestry-core/src/openverse'
 import { ImportItemsListProps } from '..'
 import { CollectionImport } from '../../../../pages/tapestry/view-model'
@@ -12,6 +11,7 @@ import { IconName } from 'tapestry-core-client/src/components/lib/icon/index'
 import { Text } from 'tapestry-core-client/src/components/lib/text/index'
 import { BaseCollectionList, CollectionListItem } from '../base-collection-list'
 import { createDerivedSourceMediaItem } from '../../../../model/data/utils'
+import { sequentialPagesRequest } from '../sequential-pages'
 
 const NO_THUMBNAIL_ICON: Record<'image' | 'audio', IconName> = {
   image: 'image',
@@ -31,38 +31,35 @@ export function OpenverseCollectionList({
   ...props
 }: OpenverseCollectionListProps) {
   const mdOrLess = useResponsive() <= Breakpoint.MD
+  const [failed, setFailed] = useState(false)
 
-  const requestItems = useMemo(() => {
-    // Openverse's real per-request cap is OPENVERSE_MAX_PAGE_SIZE -- walk forward one real page
-    // at a time, buffering everything fetched so far, until the buffer covers the requested
-    // window. Always report collection.total (not a page's own result_count): LazyListLoader
-    // treats a change in total as a change in the list and does a full reload.
-    const fetched: OpenverseMedia[] = []
-    let nextRealPage = 1
-    let done = false
-
-    return async (skip: number, limit: number, signal: AbortSignal) => {
-      while (fetched.length < skip + limit && !done) {
-        const page = await fetchOpenverseCollectionPage(
+  const requestItems = useMemo(
+    () =>
+      sequentialPagesRequest<OpenverseMedia, number>(async (page = 1, signal) => {
+        const response = await fetchOpenverseCollectionPage(
           collection.mediaType,
           collection.collection,
-          nextRealPage,
-          OPENVERSE_MAX_PAGE_SIZE,
+          page,
           signal,
         )
-        if (!page) break
-        fetched.push(...page.results)
-        nextRealPage++
-        done = fetched.length >= page.result_count
-      }
-      return { skip, total: collection.total, data: fetched.slice(skip, skip + limit) }
-    }
-  }, [collection.mediaType, collection.collection, collection.total])
+        setFailed(!response && !signal.aborted)
+        return (
+          response && {
+            items: response.results,
+            nextCursor: page < response.page_count ? page + 1 : undefined,
+            total: response.result_count,
+          }
+        )
+      }),
+    [collection.mediaType, collection.collection],
+  )
+
+  const mediaLabel = collection.mediaType === 'image' ? 'images' : 'audio items'
 
   return (
     <BaseCollectionList
       {...props}
-      windowSize={25}
+      windowSize={10}
       loadingEdgeProximity={5}
       requestItems={requestItems}
       mdOrLess={mdOrLess}
@@ -86,7 +83,9 @@ export function OpenverseCollectionList({
       }
       emptyPlaceholder={
         <Text>
-          {`No ${collection.mediaType === 'image' ? 'images' : 'audio items'} in this collection`}
+          {failed
+            ? 'Openverse did not respond. Please try again later.'
+            : `No ${mediaLabel} in this collection`}
         </Text>
       }
     />
