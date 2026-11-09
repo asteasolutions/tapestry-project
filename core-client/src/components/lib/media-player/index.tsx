@@ -260,7 +260,7 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
           {!isPlaying && (
             <div
               className={styles.playButton}
-              style={{ transform: `scale(${size ? getItemOverlayScale(size) : 1})` }}
+              style={{ transform: size ? `scale(${getItemOverlayScale(size)})` : undefined }}
             >
               <Icon icon="play_arrow" filled />
             </div>

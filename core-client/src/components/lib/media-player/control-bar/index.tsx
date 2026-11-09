@@ -27,7 +27,7 @@ interface ControlBarProps {
 
 const PLAYBACK_RATES = [4, 2, 1.5, 1, 0.5]
 
-export const CONTROL_BAR_WIDTH = 500
+export const CONTROL_BAR_WIDTH = 700
 
 export function ControlBar({
   isOpen = true,
