@@ -21,6 +21,7 @@ interface ControlBarProps {
   playbackRate?: number
   onPlaybackRateChange: (rate: number) => void
   toggleFullScreen: () => void
+  isFullscreen: boolean
   mediaId: string
   scale?: number
 }
@@ -44,6 +45,7 @@ export function ControlBar({
   playbackRate = 1,
   onPlaybackRateChange,
   toggleFullScreen,
+  isFullscreen,
   mediaId,
   scale,
 }: ControlBarProps) {
@@ -79,8 +81,9 @@ export function ControlBar({
     setSelectedSubmenu('')
   }
 
-  const portal =
-    document.fullscreenElement ?? document.querySelector(`[data-model-id="${mediaId}"]`)
+  const portal = isFullscreen
+    ? document.fullscreenElement
+    : document.querySelector(`[data-model-id="${mediaId}"]`)
 
   const submenuPortal = (submenu: ReactNode) =>
     portal &&
@@ -212,14 +215,14 @@ export function ControlBar({
     {
       element: (
         <IconButton
-          icon={document.fullscreenElement ? 'fullscreen_exit' : 'fullscreen'}
-          aria-label={document.fullscreenElement ? 'exit fullscreen' : 'enter fullscreen'}
+          icon={isFullscreen ? 'fullscreen_exit' : 'fullscreen'}
+          aria-label={isFullscreen ? 'exit fullscreen' : 'enter fullscreen'}
           onClick={toggleFullScreen}
         />
       ),
       tooltip: {
         side: 'top',
-        children: document.fullscreenElement ? 'Exit Fullscreen' : 'Fullscreen',
+        children: isFullscreen ? 'Exit Fullscreen' : 'Fullscreen',
         align: 'end',
         arrowFollowsAlignment: true,
       },

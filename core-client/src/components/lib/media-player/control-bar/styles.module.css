@@ -60,7 +60,7 @@
   }
 }
 
-:fullscreen .submenu.scaled {
+:fullscreen > .submenu.scaled {
   width: 100%;
   transform: none;
 }

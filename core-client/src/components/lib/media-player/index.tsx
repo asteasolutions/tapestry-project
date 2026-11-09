@@ -1,5 +1,5 @@
 import { isEqual } from 'lodash-es'
-import { useRef, useState, CSSProperties, useMemo } from 'react'
+import { useRef, useState, CSSProperties, useMemo, useEffect } from 'react'
 import { usePropRef } from '../hooks/use-prop-ref'
 import styles from './styles.module.css'
 import { CONTROL_BAR_WIDTH, ControlBar } from './control-bar'
@@ -180,14 +180,24 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
     }
   }
 
+  const [isFullscreen, setIsFullscreen] = useState(false)
+  useEffect(() => {
+    const onFullscreenChange = () => {
+      const fullscreenContainer = mediaRef.current?.parentElement
+      setIsFullscreen(!!fullscreenContainer && document.fullscreenElement === fullscreenContainer)
+    }
+    document.addEventListener('fullscreenchange', onFullscreenChange)
+    return () => document.removeEventListener('fullscreenchange', onFullscreenChange)
+  }, [mediaRef])
+
   const toggleFullscreen = async () => {
-    if (document.fullscreenElement) {
+    const fullscreenContainer = mediaRef.current?.parentElement
+    if (!fullscreenContainer) return
+
+    if (document.fullscreenElement === fullscreenContainer) {
       await document.exitFullscreen()
     } else {
-      const fullscreenContainer = mediaRef.current?.parentElement
-      if (fullscreenContainer) {
-        await fullscreenContainer.requestFullscreen()
-      }
+      await fullscreenContainer.requestFullscreen()
     }
   }
 
@@ -294,6 +304,7 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
           playbackRate={playbackRate}
           onPlaybackRateChange={onPlaybackRateChange}
           toggleFullScreen={toggleFullscreen}
+          isFullscreen={isFullscreen}
           mediaId={id}
           scale={controlBarScale}
         />
