@@ -85,13 +85,15 @@ export function ControlBar({
     ? document.fullscreenElement
     : document.querySelector(`[data-model-id="${mediaId}"]`)
 
+  const isScaled = scale !== undefined && !isFullscreen
+
   const submenuPortal = (submenu: ReactNode) =>
     portal &&
     createPortal(
       <div
-        className={clsx(styles.submenu, { [styles.scaled]: scale !== undefined })}
+        className={clsx(styles.submenu, { [styles.scaled]: isScaled })}
         style={
-          scale !== undefined
+          isScaled
             ? ({
                 '--control-bar-scale': scale,
                 '--control-bar-width': `${CONTROL_BAR_WIDTH}px`,

@@ -60,11 +60,6 @@
   }
 }
 
-:fullscreen > .submenu.scaled {
-  width: 100%;
-  transform: none;
-}
-
 .volume-slider {
   accent-color: var(--theme-background-brand-secondary);
   writing-mode: vertical-lr;
