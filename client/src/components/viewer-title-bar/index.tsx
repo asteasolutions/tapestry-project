@@ -18,10 +18,13 @@ import { ForkTapestryDialog } from '../fork-tapestry-dialog'
 import { JoinTapestriesModal } from '../join-tapestries-modal'
 import styles from './styles.module.css'
 import { Avatar } from '../avatar'
-import { useTapestryExport } from '../../hooks/use-tapestry-export'
-import { ExportProgressIndicator } from '../editor-title-bar/export-progress-indicator'
+import { TapestryExport } from '../../hooks/use-tapestry-export'
 
-export function ViewerTitleBar({ className, style }: PropsWithStyle) {
+interface ViewerTitleBarProps extends PropsWithStyle {
+  tapestryExport: TapestryExport
+}
+
+export function ViewerTitleBar({ className, style, tapestryExport }: ViewerTitleBarProps) {
   const obstruction = useViewportObstruction({ clear: { top: true, left: true } })
   const {
     id,
@@ -44,11 +47,7 @@ export function ViewerTitleBar({ className, style }: PropsWithStyle) {
     'updatedAt',
     'owner',
   ])
-  const { progress, triggerExport } = useTapestryExport({
-    tapestryId: id,
-    onError: () => dispatch(setSnackbar({ text: 'Error during export', variant: 'error' })),
-    onSuccess: () => setViewingInfo(false),
-  })
+  const { progress, triggerExport } = tapestryExport
   const { user } = useSession()
   const [joinPopup, setJoinPopup] = useState(false)
   const [forkingTapestry, setForkingTapestry] = useState(false)
@@ -107,14 +106,17 @@ export function ViewerTitleBar({ className, style }: PropsWithStyle) {
         className={styles.secondaryButton}
         icon="upload"
         disabled={!canForkTapestry || !!progress}
-        onClick={triggerExport}
+        onClick={() => {
+          setViewingInfo(false)
+          void triggerExport()
+        }}
         tooltip={
           canForkTapestry
             ? undefined
             : { children: "You don't have export permissions", side: 'bottom' }
         }
       >
-        Export Zip file {progress && <ExportProgressIndicator progress={progress} />}
+        {progress ? 'Exporting…' : 'Export Zip file'}
       </Button>
       <Button
         variant="primary"

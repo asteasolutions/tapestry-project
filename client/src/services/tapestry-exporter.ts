@@ -48,6 +48,10 @@ export class TapestryExporter {
     }
   }
 
+  cancel() {
+    this.killSwitch.abort()
+  }
+
   private async download(filePath: string, source: string) {
     const { data } = await axios.get<Blob>(source, {
       responseType: 'blob',
