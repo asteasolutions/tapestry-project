@@ -73,7 +73,11 @@ export function TapestryCard({
       <Link to={finalViewUrl} style={{ color: 'transparent' }}>
         <div className={styles.preview}>
           {tapestry.thumbnail ? (
-            <img src={tapestry.thumbnail} className={styles.thumbnail} />
+            <img
+              src={tapestry.thumbnail}
+              alt="Snapshot of the tapestry"
+              className={styles.thumbnail}
+            />
           ) : (
             <Icon icon="wallpaper" style={{ fontSize: 100, color: 'var(--color-neutral-150)' }} />
           )}

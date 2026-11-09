@@ -20,6 +20,7 @@ import { socketIdFromRequest, socketServer } from '../socket/index.js'
 import { isAdmin } from '../auth/roles.js'
 import { logAdminOpenedTapestry } from '../services/admin-activity.js'
 import { deleteTapestryPermanently, unfeatureTapestry } from '../services/tapestry-sharing.js'
+import { generateSlug } from '../services/tapestry-import-service.js'
 
 function sharedWithFilters(userId: string): Prisma.TapestryWhereInput[] {
   return [
@@ -247,7 +248,8 @@ export async function createTapestry(
   await prisma.$transaction(async (tx) => {
     const createInput: Prisma.TapestryCreateInput = {
       id: newTapestryId,
-      slug: createParams.slug || newTapestryId,
+      slug:
+        createParams.slug || (await generateSlug(tx, authorId, createParams.title, newTapestryId)),
       ...tapestryDtoToDb(createParams as TapestryDto, [
         'id',
         'slug',

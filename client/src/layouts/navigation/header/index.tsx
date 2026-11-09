@@ -71,7 +71,7 @@ export function Header() {
           />
         </div>
       )}
-      <Link to={'/'} className={styles.iconLink}>
+      <Link to={'/'} className={styles.iconLink} aria-label="Tapestries home">
         <SvgIcon Icon={Logo} width={150} />
       </Link>
       <div className={styles.navigation}>

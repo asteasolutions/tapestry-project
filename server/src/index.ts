@@ -44,6 +44,7 @@ import { adminUsers } from './resources/admin/users.js'
 import { adminActivity } from './resources/admin/activity.js'
 import { adminReportQueries } from './resources/admin/report-queries.js'
 import qs from 'qs'
+import { shareRouter } from './resources/share.js'
 
 export const app = express()
 
@@ -97,6 +98,7 @@ app.use(
   bindEndpoints(resources.adminUsers, adminUsers),
   bindEndpoints(resources.adminActivity, adminActivity),
   bindEndpoints(resources.adminReportQueries, adminReportQueries),
+  shareRouter,
 )
 app.use(express.static(path.join(import.meta.dirname, 'assets')))
 
