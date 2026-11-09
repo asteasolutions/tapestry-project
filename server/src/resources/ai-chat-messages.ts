@@ -107,7 +107,7 @@ async function processUserMessage(
 
   const context: AIChatContext = {
     userId: chat.user.id,
-    userName: chat.user.givenName,
+    userName: chat.user.givenName || chat.user.username,
     tapestryId: chat.tapestryId,
     history: await Promise.all(chat.messages.map(serializeMessageForAi).reverse()),
   }

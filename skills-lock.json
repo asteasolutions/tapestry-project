@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "skills": {
+    "codebase-design": {
+      "source": "asteasolutions/ai-toolkit",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/codebase-design/SKILL.md",
+      "computedHash": "1edf1014306c00cd3242416352c7b7047edca93c16dd7c4a1dc8c2cf8c9f3f99"
+    },
+    "diagnosing-bugs": {
+      "source": "asteasolutions/ai-toolkit",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/diagnosing-bugs/SKILL.md",
+      "computedHash": "af016fd2362cb78a17ba151d3769c8f9f9bab7e54e0248b04a5e8745857b0c2d"
+    },
+    "grill-me": {
+      "source": "asteasolutions/ai-toolkit",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/grill-me/SKILL.md",
+      "computedHash": "645ef899cd9168200ac5a12caacddf93129f6c7cdfd285e56518f2f9cc7cba38"
+    },
+    "handoff": {
+      "source": "asteasolutions/ai-toolkit",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/handoff/SKILL.md",
+      "computedHash": "3116fd8828b32da65a7a4ea4ac79f744e6b3a0e4afc175fef6d766357412fa1b"
+    },
+    "tdd": {
+      "source": "asteasolutions/ai-toolkit",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/tdd/SKILL.md",
+      "computedHash": "b1ef1a56c6a20e856f2fa6a80557f7b4d9951881dd6a419f75910ab80e56ae88"
+    },
+    "thermo-nuclear-review": {
+      "source": "asteasolutions/ai-toolkit",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/thermo-nuclear-review/SKILL.md",
+      "computedHash": "604d809ee1089195714daab1af52a0ff1f6c6c6b5f80578708b896cdad0a8e0d"
+    }
+  }
+}

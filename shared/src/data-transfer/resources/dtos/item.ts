@@ -6,6 +6,7 @@ import {
   AudioItem,
   BookItem,
   ImageItem,
+  IiifItem,
   Item,
   PdfItem,
   TextItem,
@@ -24,7 +25,7 @@ interface BaseMediaItemDto extends BaseItemDto {
   internallyHosted: boolean
 }
 
-interface ThumbnailUpdate {
+export interface ThumbnailUpdate {
   thumbnail?: {
     source: string
     size: Size
@@ -35,8 +36,10 @@ type ItemReadonlyProps = keyof BaseItemDto | 'thumbnail'
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 type NonNullishType = { type: {} }
 
-type CreateDto<I extends Item & BaseItemDto> = Omit<I, Exclude<ItemReadonlyProps, 'tapestryId'>>
-type CreateInTapestryDto<I extends Item & BaseItemDto> = Omit<I, Exclude<ItemReadonlyProps, 'id'>>
+type CreateDto<I extends Item & BaseItemDto> = Omit<I, Exclude<ItemReadonlyProps, 'tapestryId'>> &
+  ThumbnailUpdate
+type CreateInTapestryDto<I extends Item & BaseItemDto> = Omit<I, Exclude<ItemReadonlyProps, 'id'>> &
+  ThumbnailUpdate
 type UpdateDto<I extends Item & BaseItemDto> = Omit<Partial<I>, ItemReadonlyProps> &
   NonNullishType &
   ThumbnailUpdate
@@ -56,6 +59,7 @@ export interface AudioItemDto extends AudioItem, BaseMediaItemDto {}
 export interface VideoItemDto extends VideoItem, BaseMediaItemDto {}
 export interface BookItemDto extends BookItem, BaseMediaItemDto {}
 export interface ImageItemDto extends ImageItem, BaseMediaItemDto {}
+export interface IiifItemDto extends IiifItem, BaseMediaItemDto {}
 export interface PdfItemDto extends PdfItem, BaseMediaItemDto {}
 export interface WebpageItemDto extends WebpageItem, BaseMediaItemDto {}
 
@@ -63,6 +67,7 @@ export type MediaItemDto =
   | AudioItemDto
   | BookItemDto
   | ImageItemDto
+  | IiifItemDto
   | PdfItemDto
   | VideoItemDto
   | WebpageItemDto
@@ -76,14 +81,16 @@ type BaseMediaItemWriteProps = MediaItemDto & {
 export type MediaItemCreateDto = DistributiveOmit<
   BaseMediaItemWriteProps,
   Exclude<MediaItemReadonlyProps, 'tapestryId'>
->
+> &
+  ThumbnailUpdate
 
 // When creating items as part of a tapestry, the client needs to generate and pass IDs
 // so that the backend can know which items each rel points to
 export type MediaItemCreateInTapestryDto = DistributiveOmit<
   BaseMediaItemWriteProps,
   Exclude<MediaItemReadonlyProps, 'id'>
->
+> &
+  ThumbnailUpdate
 
 export type MediaItemUpdateDto = DistributiveOmit<
   Partial<BaseMediaItemWriteProps>,

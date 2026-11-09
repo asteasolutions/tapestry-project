@@ -31,6 +31,6 @@ export async function generatePDFThumbnail(
     'jpg:-',
   ]
 
-  const image = await spawn('magick', magickArgs, inputBuffer)
+  const image = await spawn('magick', magickArgs, { input: inputBuffer })
   return generateThumbnail(image)
 }

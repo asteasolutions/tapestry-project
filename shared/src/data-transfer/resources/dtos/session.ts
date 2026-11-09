@@ -16,6 +16,19 @@ export interface LoginWithGoogleDto {
   gsiCredential: string
 }
 
+interface OAuthCodeLoginDto {
+  code: string
+  redirectUri: string
+}
+
+export interface LoginWithOrcidDto extends OAuthCodeLoginDto {
+  authType: 'orcid'
+}
+
+export interface LoginWithWikimediaDto extends OAuthCodeLoginDto {
+  authType: 'wikimedia'
+}
+
 export interface LoginWithIACookiesDto {
   authType: 'iaCookies'
 }
@@ -26,14 +39,24 @@ export interface LoginWithIACredentialsDto {
   password: string
 }
 
+export interface LoginWithBlueskyDto {
+  authType: 'bluesky'
+  serviceToken: string
+}
+
 export interface RegisterUserDto {
   authType: 'registerUser'
   username: string
+  firstName?: string
+  lastName?: string
 }
 
 export type SessionCreateDto =
   | SessionRefreshDto
   | LoginWithGoogleDto
+  | LoginWithOrcidDto
+  | LoginWithWikimediaDto
   | LoginWithIACookiesDto
   | LoginWithIACredentialsDto
+  | LoginWithBlueskyDto
   | RegisterUserDto

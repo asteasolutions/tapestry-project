@@ -3,6 +3,11 @@
   height: 100%;
   overflow: hidden;
 
+  &,
+  * {
+    -webkit-user-drag: none !important;
+  }
+
   &:global(.scene-cursor) {
     &,
     * {
@@ -13,6 +18,8 @@
   :global(> .pixi-container) {
     position: absolute;
     inset: 0;
+    user-select: none;
+    -webkit-user-select: none;
 
     > canvas {
       display: block;

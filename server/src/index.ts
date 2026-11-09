@@ -40,6 +40,7 @@ import { userSecrets } from './resources/user-secrets.js'
 import { tapestryBookmarks } from './resources/tapestry-bookmarks.js'
 import { annotations } from './resources/annotations'
 import qs from 'qs'
+import { shareRouter } from './resources/share.js'
 
 export const app = express()
 
@@ -89,6 +90,7 @@ app.use(
   bindEndpoints(resources.userSecrets, userSecrets),
   bindEndpoints(resources.tapestryBookmarks, tapestryBookmarks),
   bindEndpoints(resources.annotations, annotations),
+  shareRouter,
 )
 app.use(express.static(path.join(import.meta.dirname, 'assets')))
 

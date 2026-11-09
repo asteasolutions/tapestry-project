@@ -33,12 +33,7 @@ import {
   toggleGroupSelection,
   toggleItemSelection,
 } from '../../view-model/store-commands/tapestry'
-import {
-  getMinScale,
-  getZoomParameters,
-  isSingleGroupSelected,
-  zoomToPoint,
-} from '../../view-model/utils'
+import { getMinScale, getZoomParameters, zoomToPoint } from '../../view-model/utils'
 import { hasActionType, idMapToArray, isHTTPURL } from 'tapestry-core/src/utils'
 import { Id } from 'tapestry-core/src/data-format/schemas/common'
 import {
@@ -161,18 +156,7 @@ export abstract class ItemController implements TapestryStageController {
       (hoverTarget.uiComponent === 'line-highlight-from' ||
         hoverTarget.uiComponent === 'line-highlight-to' ||
         hoverTarget.uiComponent === 'line')
-    const clickedItemGroupId =
-      isItemClicked && this.store.get(`items.${hoverTarget.modelId}.dto.groupId`)
-    const clickedGroupId =
-      (isHoveredGroup(hoverTarget) && hoverTarget.modelId) || clickedItemGroupId
-
-    const selection = this.store.get('selection')
-    // clicking on an item in a standalone selected group should make the item interactive
-    // while preserving the selection
-    const shouldActivateGroupedItem =
-      clickedItemGroupId &&
-      isSingleGroupSelected(selection) &&
-      selection.groupIds.has(clickedItemGroupId)
+    const clickedGroupId = isHoveredGroup(hoverTarget) && hoverTarget.modelId
 
     let preventClick = false
     const interactiveElement = this.store.get('interactiveElement')
@@ -184,23 +168,17 @@ export abstract class ItemController implements TapestryStageController {
       } else if (clickedGroupId) {
         this.store.dispatch(toggleGroupSelection(clickedGroupId))
       }
-    } else if (clickedGroupId && !shouldActivateGroupedItem) {
-      // selecting a single group
-      preventClick = true
-      this.store.dispatch(selectGroups([clickedGroupId]))
     } else if (isItemClicked || isRelClicked) {
       const handled = this.handleActionItemClick(hoverTarget.modelId)
       if (!handled) {
-        // activating a rel or item
         preventClick = interactiveElement?.modelId !== hoverTarget.modelId
         this.store.dispatch(
           setInteractiveElement({ modelType: hoverTarget.type, modelId: hoverTarget.modelId }),
         )
       }
-    } else if (isHoveredGroup(hoverTarget)) {
-      // clicking on empty space inside a standalone group
-      preventClick = !!interactiveElement
-      this.store.dispatch(setInteractiveElement(null))
+    } else if (clickedGroupId) {
+      preventClick = true
+      this.store.dispatch(selectGroups([clickedGroupId]))
     } else {
       // clicking inside a non-group multiselection, or on the canvas
       this.store.dispatch(deselectAll())

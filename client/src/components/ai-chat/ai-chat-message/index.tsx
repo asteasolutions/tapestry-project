@@ -11,6 +11,7 @@ import { AIChatMessageDto } from 'tapestry-shared/src/data-transfer/resources/dt
 import { Tooltip } from 'tapestry-core-client/src/components/lib/tooltip/index'
 import { Markdown } from '../../markdown'
 import { Icon } from 'tapestry-core-client/src/components/lib/icon/index'
+import { fullName } from '../../../model/data/utils'
 
 interface AIChatMessageProps {
   message: AIChatMessageDto
@@ -33,7 +34,7 @@ export function AIChatMessage({ message, user }: AIChatMessageProps) {
           <SvgIcon Icon={GeminiIcon} size={24} />
         )}
         <span className={styles.messageAuthor}>
-          {message.role === 'user' ? `${user.givenName} ${user.familyName}` : 'Assistant'}
+          {message.role === 'user' ? fullName(user) : 'Assistant'}
         </span>
         <span style={{ flex: 1 }} />
         {message.state === 'error' && (

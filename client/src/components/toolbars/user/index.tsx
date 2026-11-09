@@ -6,6 +6,7 @@ import { Toolbar } from 'tapestry-core-client/src/components/lib/toolbar/index'
 import { useViewportObstruction } from 'tapestry-core-client/src/components/tapestry/hooks/use-viewport-obstruction'
 import { SearchButton } from 'tapestry-core-client/src/components/tapestry/search/search-button'
 import { shortcutLabel } from 'tapestry-core-client/src/lib/keyboard-event'
+import { config } from '../../../config'
 import { useTapestryPath } from '../../../hooks/use-tapestry-path'
 import { useSession } from '../../../layouts/session'
 import { useDispatch, useTapestryData } from '../../../pages/tapestry/tapestry-providers'
@@ -38,7 +39,7 @@ export function UserToolbar({ className }: UserToolbarProps) {
     if (userAccess === 'edit') {
       setSharePopup(true)
     } else {
-      await navigator.clipboard.writeText(`${window.origin}${tapestryViewPath}`)
+      await navigator.clipboard.writeText(`${config.apiUrl}/share${tapestryViewPath}`)
       dispatch(setSnackbar('Share link copied to clipboard'))
     }
   }

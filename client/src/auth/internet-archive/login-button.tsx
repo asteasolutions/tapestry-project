@@ -1,18 +1,33 @@
 import { useState } from 'react'
 import { Button } from 'tapestry-core-client/src/components/lib/buttons/index'
+import { Text } from 'tapestry-core-client/src/components/lib/text/index'
+import { SvgIcon } from 'tapestry-core-client/src/components/lib/svg-icon/index'
+import IALogo from '../../assets/icons/ia-logo-circle-grey.svg?react'
 import { IALoginDialog } from './login-dialog'
+import styles from './styles.module.css'
+import { Breakpoint, useResponsive } from '../../providers/responsive-provider'
 
-export function IALoginButton() {
-  const [showDialog, setShowDialog] = useState(false)
+interface IALoginButtonProps {
+  isSingleProvider?: boolean
+}
 
-  function close() {
-    setShowDialog(false)
-  }
+export function IALoginButton({ isSingleProvider = false }: IALoginButtonProps) {
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const isStandaloneMobile = useResponsive() <= Breakpoint.SM && isSingleProvider
 
   return (
     <>
-      <Button onClick={() => setShowDialog(true)}>Log in</Button>
-      {showDialog && <IALoginDialog onClose={close} />}
+      <Button className={styles.iaButton} variant="outline" onClick={() => setDialogOpen(true)}>
+        <SvgIcon Icon={IALogo} size={20} />
+        <Text>{isStandaloneMobile ? 'Log in' : 'Continue with Internet Archive'}</Text>
+      </Button>
+
+      {dialogOpen && (
+        <IALoginDialog
+          onClose={() => setDialogOpen(false)}
+          title={isStandaloneMobile ? 'Log in with Internet Archive' : 'Log In'}
+        />
+      )}
     </>
   )
 }

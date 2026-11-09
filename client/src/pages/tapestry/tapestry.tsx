@@ -16,7 +16,7 @@ import { CollaboratorCursors } from '../../components/collaborator-cursors'
 import { CollaboratorIndicators } from '../../components/collaborator-indicators'
 import { DoingWorkIndicator } from '../../components/doing-work-indicator'
 import { EditorTitleBar } from '../../components/editor-title-bar'
-import { HandleIAImportDialog } from '../../components/handle-ia-import-dialog'
+import { CollectionImportDialog } from '../../components/collection-import-dialog'
 import { LargeFileUploadDialog } from '../../components/large-file-upload-dialog'
 import { LeaveTapestryDialog } from '../../components/leave-tapestry-dialog'
 import { OfflineIndicator } from '../../components/offline-indicator'
@@ -45,6 +45,7 @@ import { PropsWithStyle } from 'tapestry-core-client/src/components/lib'
 import { ZOrder } from 'tapestry-core-client/src/components/tapestry'
 import { LoadedRendition } from 'tapestry-core-client/src/stage/controller/item-thumbnail-controller'
 import { IdMap } from 'tapestry-core/src/utils'
+import { fullName } from '../../model/data/utils'
 
 function useInteractionModeUrlParam() {
   const { username, slug, edit } = useTapestryPathParams()
@@ -68,13 +69,14 @@ export function Tapestry({ initialThumbnails }: TapestryProps) {
   const sceneRef = useRef<HTMLDivElement>(null)
   const pixiContainerRef = useRef<HTMLDivElement>(null)
   const presentationOrderContainerRef = useRef<HTMLDivElement>(null)
-  const tapestryTitle = useTapestryData('title')
-  const { presentationOrderState, hideEditControls, hideControls } = useTapestryData([
+  const { title, owner } = useTapestryData(['title', 'owner'])
+  const { presentationOrderState, hideEditControls, screenshotMode } = useTapestryData([
     'presentationOrderState',
     'hideEditControls',
-    'hideControls',
+    'screenshotMode',
   ])
-  const documentTitle = `Tapestry - ${tapestryTitle}`
+  const documentTitle = `Tapestry - ${title}`
+  const dispatch = useDispatch()
 
   const store = useTapestryStore()
   const tapestryDataSyncCommandsRef = usePropRef(useTapestryDataSyncCommands())
@@ -104,6 +106,16 @@ export function Tapestry({ initialThumbnails }: TapestryProps) {
         tapestryDataSyncCommandsRef.current,
         initialThumbnails,
       ),
+    onInit: () => {
+      if (title && !screenshotMode) {
+        dispatch(
+          setSnackbar({
+            text: `"${title}" by ${fullName(owner)}`,
+            duration: 4,
+          }),
+        )
+      }
+    },
   })
 
   useInteractionModeUrlParam()
@@ -124,14 +136,14 @@ export function Tapestry({ initialThumbnails }: TapestryProps) {
         <ViewportScrollbars />
       </div>
       <QuickTips />
-      {!hideControls && <MainToolbar className={styles.mainToolbar} />}
+      {screenshotMode !== 'dashboard' && <MainToolbar className={styles.mainToolbar} />}
       <TapestrySnackbar />
       {!hideEditControls && (
         <>
           <div className={styles.usersData}>
             <DoingWorkIndicator />
             <CollaboratorIndicators />
-            {!hideControls && <UserToolbar />}
+            {screenshotMode !== 'dashboard' && <UserToolbar />}
           </div>
           <CollaboratorCursors />
         </>
@@ -144,7 +156,7 @@ export function Tapestry({ initialThumbnails }: TapestryProps) {
       <OfflineIndicator className={styles.offlineIndicator} />
       <LeaveTapestryDialog />
       <LargeFileUploadDialog />
-      <HandleIAImportDialog />
+      <CollectionImportDialog />
     </div>
   )
 }

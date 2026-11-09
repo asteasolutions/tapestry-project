@@ -18,7 +18,7 @@ interface TopToolbarProps {
 export function TopToolbar({ onBack }: TopToolbarProps) {
   const obstruction = useViewportObstruction({ clear: { top: true, left: true } })
   const [viewingInfo, setViewingInfo] = useState(false)
-  const tapestry = useTapestryData(['title', 'description', 'thumbnail', 'createdAt'])
+  const tapestry = useTapestryData(['title', 'description', 'thumbnail', 'createdAt', 'updatedAt'])
 
   return (
     <>

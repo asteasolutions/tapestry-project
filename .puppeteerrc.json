@@ -1,0 +1,4 @@
+{
+  "chrome": { "version": "stable" },
+  "chrome-headless-shell": { "version": "stable" }
+}

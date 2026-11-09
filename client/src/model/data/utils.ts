@@ -30,6 +30,7 @@ import {
 } from '../../pages/tapestry/view-model'
 import {
   getImageItemSize,
+  getIiifItemSize,
   getPDFItemSize,
   getVideoItemSize,
   getWebpageItemSize,
@@ -66,6 +67,7 @@ import {
 } from 'tapestry-core-client/src/view-model/utils'
 import { DEFAULT_LAYER } from '../../pages/tapestry/view-model/utils'
 import { ItemViewModel } from 'tapestry-core-client/src/view-model'
+import { ScreenshotMode } from 'tapestry-core/src/data-format/schemas/common'
 import {
   ItemThumbnailController,
   LoadedRendition,
@@ -181,7 +183,7 @@ export function fromTapestryDto(
   commentThreads: CommentThreadsDto,
   presentationSteps: PresentationStepDto[],
   deoptimize: boolean,
-  hideControls: boolean,
+  screenshotMode: ScreenshotMode | undefined,
 ): EditableTapestryViewModel {
   const presentationStepViewModels = presentationSteps.map((dto) => ({ dto }))
 
@@ -201,7 +203,7 @@ export function fromTapestryDto(
   const editableTapestryViewModel: EditableTapestryViewModel = {
     ...baseViewModel,
     disableOptimizations: mode === 'edit' || deoptimize,
-    hideControls,
+    screenshotMode,
     items: Object.fromEntries(tapestry.items?.map((item) => [item.id, { dto: item }]) ?? []),
     rels: Object.fromEntries(tapestry.rels?.map((rel) => [rel.id, { dto: rel }]) ?? []),
     groups: Object.fromEntries(tapestry.groups?.map((group) => [group.id, { dto: group }]) ?? []),
@@ -218,7 +220,7 @@ export function fromTapestryDto(
     pendingRequests: 0,
     userAccess,
     largeFiles: [],
-    iaImports: [],
+    collectionImports: [],
     collaborators: {},
   }
 
@@ -229,14 +231,15 @@ export function fromTapestryDto(
 
 export const itemSizes = {
   actionButton: { width: 350, height: 75 },
-  audio: { width: 300, height: 50 },
+  audio: { width: 400, height: 50 },
   book: { width: 700, height: 500 },
   image: getImageItemSize,
+  iiif: getIiifItemSize,
   pdf: getPDFItemSize,
   video: getVideoItemSize,
   webpage: getWebpageItemSize,
   text: { height: 200, width: 400 },
-} as const satisfies Record<ItemType, Size | ((file: MediaItemSource) => Promise<Size>)>
+} as const satisfies Record<ItemType, Size | ((file: MediaItemSource | Size) => Promise<Size>)>
 
 export function createTextItem(text = '', tapestryId: string): TextItemCreateDto {
   const { textItemColor } = userSettings.getTapestrySettings(tapestryId)
@@ -299,12 +302,12 @@ export async function uploadAsset(
   return key
 }
 
-function prepareMediaSource(source: MediaItemSource): string {
+function prepareMediaSources(source: MediaItemSource, originalSource?: string) {
   if (typeof source === 'string') {
-    return source
+    return { source, originalSource: originalSource ?? source }
   }
 
-  return itemUpload.prepare(source)
+  return { source: itemUpload.prepare(source) }
 }
 
 export async function getItemSize(item: ItemDto): Promise<Size> {
@@ -314,7 +317,10 @@ export async function getItemSize(item: ItemDto): Promise<Size> {
   return itemSizes[item.type]
 }
 
-async function getMediaItemSize(type: MediaItemType, source: MediaItemSource): Promise<Size> {
+async function getMediaItemSize(
+  type: MediaItemType,
+  source: MediaItemSource | Size,
+): Promise<Size> {
   const sizeGetter = itemSizes[type]
   return isFunction(sizeGetter) ? await sizeGetter(source) : sizeGetter
 }
@@ -323,18 +329,38 @@ export async function createMediaItem<T extends MediaItemType>(
   type: T,
   source: MediaItemSource,
   tapestryId: string,
+  originalSource?: string,
+  knownSize?: Size,
 ) {
-  const size = await getMediaItemSize(type, source)
+  const size = await getMediaItemSize(type, knownSize ?? source)
   return {
     type,
     size,
-    source: prepareMediaSource(source),
+    ...prepareMediaSources(source, originalSource),
     title: '',
     dropShadow: true,
     position: ORIGIN,
     tapestryId,
     layer: DEFAULT_LAYER,
   } satisfies MediaItemCreateDto as MediaItemCreateDto & { type: T }
+}
+
+// Creates an item from a source on another platform, keeping the platform page as an original source.
+export async function createDerivedSourceMediaItem(
+  tapestryId: string,
+  media: { source: string; originalSource: string; mediaType: MediaItemType; size?: Size },
+) {
+  try {
+    return await createMediaItem(
+      media.mediaType,
+      media.source,
+      tapestryId,
+      media.originalSource,
+      media.size,
+    )
+  } catch {
+    return null
+  }
 }
 
 // TODO: Handle the scenario where the source is an S3 object and therefore needs to be cloned.
@@ -403,8 +429,12 @@ export function userAccess(
   return 'view'
 }
 
-export function fullName({ givenName, familyName }: PublicUserProfileDto) {
-  return `${givenName} ${familyName}`
+export function firstName({ givenName, username }: PublicUserProfileDto) {
+  return givenName || username
+}
+
+export function fullName({ givenName, familyName, username }: PublicUserProfileDto) {
+  return [givenName, familyName].filter(Boolean).join(' ') || username
 }
 
 export async function loadInitialThumbnails(

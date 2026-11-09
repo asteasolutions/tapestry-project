@@ -8,7 +8,7 @@ import { useViewportObstruction } from '../hooks/use-viewport-obstruction'
 import styles from './styles.module.css'
 import { maxEmptyArea, ORIGIN, Rectangle } from 'tapestry-core/src/lib/geometry'
 import { idMapToArray } from 'tapestry-core/src/utils'
-import { omit } from 'lodash'
+import { omit } from 'lodash-es'
 
 const PADDING = 16
 const PANEL_WIDTH = 416

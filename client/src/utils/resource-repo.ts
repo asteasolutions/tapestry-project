@@ -326,16 +326,22 @@ export abstract class ResourceRepo<
     this.update((workingCopy) => {
       toSetInWorkingCopy.forEach((resource) => {
         const resourcePath = [resourceName, resource.id]
+
         // Don't override local changes that may have happened since the push operation started
-        if (get(this.resourceVersions, resourcePath, 0) <= commitVersion) {
+        if (
+          get(this.resourceVersions, resourcePath) !== undefined &&
+          get(this.resourceVersions, resourcePath) <= commitVersion
+        ) {
           // eslint-disable-next-line @typescript-eslint/no-floating-promises
           set(workingCopy, resourcePath, resource)
         }
       })
 
       toRemoveFromWorkingCopy.forEach((id) => {
-        delete (workingCopy as ResourceIdMaps<R, TypeMap>)[resourceName][id]
-        delete this.resourceVersions[resourceName][id]
+        if (get(this.resourceVersions, [resourceName, id], 0) <= commitVersion) {
+          delete (workingCopy as ResourceIdMaps<R, TypeMap>)[resourceName][id]
+          delete this.resourceVersions[resourceName][id]
+        }
       })
     })
 

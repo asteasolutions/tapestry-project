@@ -13,6 +13,10 @@
     "shared",
     "viewer"
   ],
+  "_comment_overrides": "@samvera/clover-iiif depends on @radix-ui/react-form@^0.0.3, which only supports react@^16-18. Without this override, npm installs a duplicate react@18, which crashes at runtime. @radix-ui/react-form@^0.1.16 supports react@^19. Remove this once clover-iiif upgrades past that version.",
+  "overrides": {
+    "@radix-ui/react-form": "^0.1.16"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "sh -c 'cd core && npm run lint' && sh -c 'cd core-client && npm run lint' && sh -c 'cd shared && npm run lint' && sh -c 'cd client && npm run lint' && sh -c 'cd server && npm run lint' && sh -c 'cd viewer && npm run lint'",
@@ -20,8 +24,8 @@
     "db:logs": "docker compose -f ./docker-compose.local.yml logs -f db",
     "redis:start": "docker compose -f ./docker-compose.local.yml --env-file ./server/.env up -d --build redis",
     "redis:logs": "docker compose -f ./docker-compose.local.yml logs -f redis",
-    "localstack:start": "docker compose -f ./docker-compose.local.yml --env-file ./server/.env up -d --build localstack",
-    "localstack:logs": "docker compose -f ./docker-compose.local.yml logs -f localstack",
+    "s3:start": "docker compose -f ./docker-compose.local.yml --env-file ./server/.env up -d seaweedfs s3-init",
+    "s3:logs": "docker compose -f ./docker-compose.local.yml logs -f seaweedfs s3-init",
     "worker:start": "docker compose -f ./docker-compose.local.yml --env-file ./server/.env up -d --build worker",
     "worker:logs": "docker compose -f ./docker-compose.local.yml logs -f worker",
     "vault:start": "docker compose -f ./docker-compose.local.yml --env-file=./server/.env up -d --build vault",

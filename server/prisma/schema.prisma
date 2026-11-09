@@ -16,10 +16,13 @@ model User {
   createdAt            DateTime              @default(now())
   updatedAt            DateTime              @updatedAt
   gsiUserId            String?               @unique
-  email                String                @unique
+  blueskyDid           String?               @unique
+  orcidId              String?               @unique
+  wikimediaId          String?               @unique
+  email                String?               @unique
   username             String                @unique
-  givenName            String
-  familyName           String
+  givenName            String?
+  familyName           String?
   avatar               String?
   tapestries           Tapestry[]
   tapestryAccess       TapestryAccess[]
@@ -89,6 +92,7 @@ model TapestryAccess {
   canEdit    Boolean  @default(false)
 
   @@unique([userId, tapestryId])
+  @@index([tapestryId])
 }
 
 model TapestryInvitation {
@@ -98,6 +102,8 @@ model TapestryInvitation {
   tapestryId String
   tapestry   Tapestry @relation(fields: [tapestryId], references: [id], onDelete: Cascade)
   canEdit    Boolean  @default(false)
+
+  @@index([tapestryId])
 }
 
 model TapestryInteraction {
@@ -133,6 +139,7 @@ enum ItemType {
   video
   book
   image
+  iiif
   pdf
   webpage
 }
@@ -170,6 +177,8 @@ model ImageAssetRendition {
   format          String
   width           Int
   height          Int
+
+  @@index([assetId])
 }
 
 enum ThumbnailProcessing {
@@ -194,6 +203,7 @@ model Item {
   text                         String?
   backgroundColor              String?
   source                       String?
+  originalSource               String?
   thumbnailId                  String?
   thumbnail                    ImageAsset?               @relation("thumbnail", fields: [thumbnailId], references: [id], onDelete: SetNull)
   scheduledThumbnailProcessing ThumbnailProcessing?
@@ -212,6 +222,10 @@ model Item {
   presentationSteps            PresentationStep[]
   referencingAttachments       AiChatMessageAttachment[]
   itemAnnotations              ItemAnnotation[]
+
+  @@index([tapestryId])
+  @@index([thumbnailId])
+  @@index([groupId])
 }
 
 model PresentationStep {
@@ -225,6 +239,10 @@ model PresentationStep {
   prevStepId String?
   prevStep   PresentationStep?  @relation("order", fields: [prevStepId], references: [id], onDelete: Restrict)
   nextSteps  PresentationStep[] @relation("order")
+
+  @@index([itemId])
+  @@index([groupId])
+  @@index([prevStepId])
 }
 
 enum RelArrowhead {
@@ -257,6 +275,10 @@ model Rel {
   color         String
   weight        LineWeight   @default(light)
   comments      Comment[]
+
+  @@index([tapestryId])
+  @@index([fromItemId])
+  @@index([toItemId])
 }
 
 enum CommentContextType {
@@ -287,6 +309,11 @@ model Comment {
   annotation      ItemAnnotation?    @relation(fields: [annotationId], references: [id], onDelete: Cascade)
   annotationId    String?
   deletedAt       DateTime?
+
+  @@index([tapestryId])
+  @@index([itemId])
+  @@index([relId])
+  @@index([parentCommentId])
 }
 
 enum JobStatus {
@@ -334,6 +361,9 @@ model AiChat {
   tapestry      Tapestry?       @relation(fields: [tapestryId], references: [id], onDelete: Cascade)
   tapestryId    String?
   messages      AiChatMessage[]
+
+  @@index([userId])
+  @@index([tapestryId])
 }
 
 enum AiChatParticipantRole {
@@ -357,6 +387,8 @@ model AiChatMessage {
   content     String
   state       AiChatMessageState
   attachments AiChatMessageAttachment[]
+
+  @@index([chatId])
 }
 
 enum AiChatMessageAttachmentType {
@@ -372,6 +404,9 @@ model AiChatMessageAttachment {
   type      AiChatMessageAttachmentType
   itemId    String?
   item      Item?                       @relation(fields: [itemId], references: [id], onDelete: SetNull)
+
+  @@index([messageId])
+  @@index([itemId])
 }
 
 model Group {
@@ -385,6 +420,8 @@ model Group {
   hasBackground     Boolean            @default(true)
   hasBorder         Boolean            @default(true)
   presentationSteps PresentationStep[]
+
+  @@index([tapestryId])
 }
 
 enum UserSecretType {
@@ -399,6 +436,8 @@ model UserSecret {
   maskedValue String
   owner       User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   ownerId     String
+
+  @@index([ownerId])
 }
 
 model ItemAnnotation {

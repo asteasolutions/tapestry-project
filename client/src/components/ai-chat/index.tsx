@@ -28,6 +28,7 @@ import { useItemPicker } from '../item-picker/use-item-picker'
 import clsx from 'clsx'
 import { Tooltip } from 'tapestry-core-client/src/components/lib/tooltip/index'
 import { userProfilePath } from '../../utils/paths'
+import { firstName } from '../../model/data/utils'
 
 export interface AIChatProps {
   tapestryId?: string
@@ -191,7 +192,7 @@ export function AIChat({ tapestryId, canAttachItems, onPickingItems }: AIChatPro
             emptyPlaceholder={
               <>
                 <Text component="div" variant="h5" className={styles.greetingColored}>
-                  Hello, {user.givenName}
+                  Hello, {firstName(user)}
                 </Text>
                 <Text component="div" variant="h5" className={styles.greeting}>
                   How can I help you today?

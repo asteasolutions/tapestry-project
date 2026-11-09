@@ -1,0 +1,59 @@
+.root {
+  position: relative;
+  overflow-y: clip;
+  padding: 40px var(--section-padding-x) 0;
+  background-color: var(--color-section-blue);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: white;
+
+  @media screen and (width >= 1200px) {
+    padding: 70px 330px 35px;
+
+    .text-wrapper {
+      max-width: 800px;
+    }
+  }
+
+  .text-wrapper {
+    .subtitle {
+      margin-bottom: 25px;
+    }
+
+    .content a {
+      color: white;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 15px;
+      margin: 20px 0 25px;
+
+      > * {
+        box-sizing: border-box;
+        width: 200px;
+      }
+
+      @media screen and (width <= 600px) {
+        flex-direction: column;
+
+        > * {
+          width: 100%;
+        }
+      }
+    }
+
+    .outline-button {
+      color: white;
+
+      --hover-bg-color: transparent;
+    }
+  }
+
+  .mobile-hands-container {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+  }
+}

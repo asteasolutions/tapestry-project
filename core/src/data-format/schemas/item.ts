@@ -62,6 +62,12 @@ export const commonItemProps = {
       .string()
       .describe('The URL from which the contents of this media item will be loaded.'),
   },
+  originalSource: {
+    originalSource: z
+      .string()
+      .nullish()
+      .describe('The original URL that the user pasted, before it was modified to source field.'),
+  },
   playbackRange: {
     startTime: z.number().nullish().describe('Optional start time for audio or video content.'),
     stopTime: z.number().nullish().describe('Optional stop time for audio or video content.'),
@@ -98,6 +104,7 @@ export const AudioItemSchema = z.object({
   type: z.literal('audio').describe('The type of this item.'),
   ...commonItemProps.base,
   ...commonItemProps.source,
+  ...commonItemProps.originalSource,
   ...commonItemProps.playbackRange,
 })
 
@@ -105,19 +112,29 @@ export const BookItemSchema = z.object({
   type: z.literal('book').describe('The type of this item.'),
   ...commonItemProps.base,
   ...commonItemProps.source,
+  ...commonItemProps.originalSource,
 })
 
 export const ImageItemSchema = z.object({
   type: z.literal('image').describe('The type of this item.'),
   ...commonItemProps.base,
   ...commonItemProps.source,
+  ...commonItemProps.originalSource,
   ...commonItemProps.action,
+})
+
+export const IiifItemSchema = z.object({
+  type: z.literal('iiif').describe('The type of this item.'),
+  ...commonItemProps.base,
+  ...commonItemProps.source,
+  ...commonItemProps.originalSource,
 })
 
 export const PdfItemSchema = z.object({
   type: z.literal('pdf').describe('The type of this item.'),
   ...commonItemProps.base,
   ...commonItemProps.source,
+  ...commonItemProps.originalSource,
   defaultPage: z
     .int()
     .nullish()
@@ -128,12 +145,14 @@ export const VideoItemSchema = z.object({
   type: z.literal('video').describe('The type of this item.'),
   ...commonItemProps.base,
   ...commonItemProps.source,
+  ...commonItemProps.originalSource,
   ...commonItemProps.playbackRange,
 })
 
 export const WebpageItemSchema = z.object({
   ...commonItemProps.base,
   ...commonItemProps.source,
+  ...commonItemProps.originalSource,
   type: z.literal('webpage').describe('The type of this item.'),
   webpageType: z
     .enum(KNOWN_WEBPAGE_TYPES)
@@ -152,6 +171,7 @@ export const MediaItemSchema = z.discriminatedUnion('type', [
   AudioItemSchema,
   BookItemSchema,
   ImageItemSchema,
+  IiifItemSchema,
   PdfItemSchema,
   VideoItemSchema,
   WebpageItemSchema,
@@ -178,6 +198,7 @@ export type ActionButtonItem = z.infer<typeof ActionButtonItemSchema>
 export type AudioItem = z.infer<typeof AudioItemSchema>
 export type BookItem = z.infer<typeof BookItemSchema>
 export type ImageItem = z.infer<typeof ImageItemSchema>
+export type IiifItem = z.infer<typeof IiifItemSchema>
 export type PdfItem = z.infer<typeof PdfItemSchema>
 export type VideoItem = z.infer<typeof VideoItemSchema>
 export type WebpageItem = z.infer<typeof WebpageItemSchema>

@@ -1,0 +1,36 @@
+.root {
+  padding: 70px var(--section-padding-x);
+  background-color: var(--color-section-red);
+  display: grid;
+  grid-template-columns: min(100%, 1000px);
+  justify-content: center;
+
+  @media screen and (width <= 1200px) {
+    grid-template-columns: min(100%, 500px);
+  }
+
+  .title {
+    font-style: italic;
+    margin-bottom: 15px;
+
+    @media screen and (width <= 1200px) {
+      font-size: 28px;
+    }
+  }
+
+  .title,
+  .subtitle {
+    text-align: center;
+  }
+
+  .cards {
+    margin-top: 30px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+
+    @media screen and (width <= 1200px) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+}

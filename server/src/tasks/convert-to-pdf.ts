@@ -25,6 +25,7 @@ const CONVERT_ITEM_PROPS = [
   'tapestryId',
   'groupId',
   'dropShadow',
+  'originalSource',
 ] satisfies (keyof Item)[]
 
 type FaviconWindow = {

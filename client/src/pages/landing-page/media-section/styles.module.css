@@ -1,0 +1,100 @@
+.root {
+  background-color: var(--color-section-yellow);
+  padding: 80px var(--section-padding-x) 180px;
+  position: relative;
+  display: flex;
+  justify-content: center;
+
+  @media screen and (width <= 1200px) {
+    padding-bottom: 40px;
+  }
+
+  .section-wrapper {
+    max-width: var(--section-max-width);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+
+    .titles {
+      align-self: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 25px;
+      text-align: center;
+      max-width: 960px;
+
+      .title {
+        margin-bottom: 25px;
+        white-space: pre-line;
+        font-style: italic;
+
+        @media screen and (width <= 1200px) {
+          font-size: 28px;
+        }
+      }
+    }
+
+    .buttons {
+      align-self: center;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 50px;
+
+      @media screen and (width <= 600px) {
+        display: flex;
+        flex-direction: column;
+        align-self: unset;
+      }
+    }
+
+    .content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 50px;
+
+      @media screen and (width <= 1200px) {
+        display: flex;
+        flex-direction: column-reverse;
+      }
+
+      .subsections {
+        padding-right: 50px;
+
+        @media screen and (width <=1200px) {
+          padding-right: unset;
+        }
+
+        .subsection {
+          &:not(:first-child, :last-child) {
+            margin-bottom: 50px;
+          }
+
+          .subsection-title {
+            font-weight: 700;
+            margin-bottom: 8px;
+          }
+
+          .media-icons {
+            margin: 16px 0 50px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+
+            .media-icon {
+              width: 40px;
+            }
+          }
+        }
+      }
+
+      .video {
+        place-self: center;
+        width: 100%;
+        max-width: 550px;
+        border-radius: 16px;
+      }
+    }
+  }
+}

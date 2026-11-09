@@ -85,6 +85,7 @@ export function createRESTEndpoints<
           body: EmptyObjectSchema,
         },
         responseSchema: schema,
+        responseHeaders: { 'Cache-Control': 'no-cache' },
       }
     }
 
@@ -134,6 +135,7 @@ export function createRESTEndpoints<
           body: EmptyObjectSchema,
         },
         responseSchema: listResponse(schema),
+        responseHeaders: { 'Cache-Control': 'no-cache' },
       }
     }
 

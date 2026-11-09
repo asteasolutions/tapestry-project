@@ -114,12 +114,19 @@ class SocketServer {
 
       socket.on('subscribe', (e: SubscriptionEvent, params: unknown, callback: unknown) => {
         // @ts-expect-error Hard to convince TS here
-        this.onSubscribe[e](connection, params, callback)
+        this.onSubscribe[e](connection, params, callback).catch((error) =>
+          console.error(`Error while subscribing to ${e}`, error),
+        )
       })
 
-      socket.on('rtc-signaling-message', (e) =>
-        this.notifyPeers(RTCSignalingMessageSchema.parse(e), e.tapestryId, socket.id),
-      )
+      socket.on('rtc-signaling-message', (e) => {
+        const result = RTCSignalingMessageSchema.safeParse(e)
+        if (!result.success) {
+          console.error('Error while rtc-signaling-message', result.error)
+          return
+        }
+        this.notifyPeers(result.data, e.tapestryId, socket.id)
+      })
 
       socket.on('disconnect', () => {
         this.connections
@@ -142,66 +149,66 @@ class SocketServer {
 
     this.dbSubscriber = new DBSubscriber()
     await this.dbSubscriber.init()
-    this.dbSubscriber.onNotification(async (payload) => {
-      const notification = DBNotificationSchema.parse(payload)
-      for (const c of this.connections) {
-        if (c.id === notification.socketId) {
-          continue
-        }
+    this.dbSubscriber.onNotification((payload) => {
+      this.handleNotification(payload).catch((error) =>
+        console.error('Error while handling DB notification', error),
+      )
+    })
+  }
 
-        for (const s of c.subscriptions) {
-          switch (notification.name) {
-            case 'tapestry-elements-removed':
+  private async handleNotification(payload: unknown) {
+    const notification = DBNotificationSchema.parse(payload)
+    for (const c of this.connections) {
+      if (c.id === notification.socketId) {
+        continue
+      }
+
+      for (const s of c.subscriptions) {
+        switch (notification.name) {
+          case 'tapestry-elements-removed':
+            if (s.name === 'tapestry-updated' && s.params.tapestryId === notification.tapestryId) {
+              c.socket.emit('tapestry-updated', {
+                [notification.modelType]: {
+                  destroyed: notification.ids,
+                  created: [],
+                  updated: [],
+                },
+              })
+              s.params.lastUpdate = new Date()
+            }
+            break
+          case 'tapestry-updated':
+            if (s.name === 'tapestry-updated' && s.params.tapestryId === notification.tapestryId) {
+              const tapestry = await this.getTapestryAsOf(
+                notification.tapestryId,
+                s.params.lastUpdate as Date,
+                notification.deletedIds,
+              )
+              c.socket.emit('tapestry-updated', tapestry)
+              s.params.lastUpdate = new Date()
+            }
+            break
+          case 'rtc-signaling-message':
+            if (
+              s.name === 'rtc-signaling-message' &&
+              s.params.tapestryId === notification.tapestryId
+            ) {
+              const message = notification.message
+              // Request and disconnect messages are broadcast to all
+              // rtc message subscribes for the same tapestry.
+              // Negotiation and ice candidate messages are sent to a specific peer.
               if (
-                s.name === 'tapestry-updated' &&
-                s.params.tapestryId === notification.tapestryId
+                message.type === 'request' ||
+                message.type === 'disconnect' ||
+                message.receiverId === s.params.peerId
               ) {
-                c.socket.emit('tapestry-updated', {
-                  [notification.modelType]: {
-                    destroyed: notification.ids,
-                    created: [],
-                    updated: [],
-                  },
-                })
-                s.params.lastUpdate = new Date()
+                c.socket.emit('rtc-signaling-message', message)
               }
-              break
-            case 'tapestry-updated':
-              if (
-                s.name === 'tapestry-updated' &&
-                s.params.tapestryId === notification.tapestryId
-              ) {
-                const tapestry = await this.getTapestryAsOf(
-                  notification.tapestryId,
-                  s.params.lastUpdate as Date,
-                  notification.deletedIds,
-                )
-                c.socket.emit('tapestry-updated', tapestry)
-                s.params.lastUpdate = new Date()
-              }
-              break
-            case 'rtc-signaling-message':
-              if (
-                s.name === 'rtc-signaling-message' &&
-                s.params.tapestryId === notification.tapestryId
-              ) {
-                const message = notification.message
-                // Request and disconnect messages are broadcast to all
-                // rtc message subscribes for the same tapestry.
-                // Negotiation and ice candidate messages are sent to a specific peer.
-                if (
-                  message.type === 'request' ||
-                  message.type === 'disconnect' ||
-                  message.receiverId === s.params.peerId
-                ) {
-                  c.socket.emit('rtc-signaling-message', message)
-                }
-              }
-              break
-          }
+            }
+            break
         }
       }
-    })
+    }
   }
 
   async destroy() {

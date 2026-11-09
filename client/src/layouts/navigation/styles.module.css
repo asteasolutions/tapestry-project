@@ -1,0 +1,11 @@
+.root {
+  height: 100%;
+  display: grid;
+  grid-template-rows: 80px 1fr 50px;
+
+  --padding-navigation-x: 100px;
+
+  @media screen and (width <= 1200px) {
+    --padding-navigation-x: 22px;
+  }
+}

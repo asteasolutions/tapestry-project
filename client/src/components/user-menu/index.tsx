@@ -19,7 +19,12 @@ export function UserMenu({ user, className }: UserMenuProps) {
 
   return (
     <div className={clsx(styles.avatarContainer, className)} ref={avatarContainerRef}>
-      <Avatar size="large" user={user} onClick={() => setIsUserMenuOpen((t) => !t)} />
+      <Avatar
+        size="large"
+        user={user}
+        aria-label="Account menu"
+        onClick={() => setIsUserMenuOpen((t) => !t)}
+      />
       <Toolbar
         isOpen={isUserMenuOpen}
         className={styles.userMenu}

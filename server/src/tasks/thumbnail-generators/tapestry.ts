@@ -62,6 +62,16 @@ async function takeItemScreenshot(page: Page, item: Item) {
       await window.document.fonts.ready
     })
 
+    if (item.type === 'iiif') {
+      // Let the manifest and its image tiles load before screenshotting.
+      console.log('> Waiting for iiif viewer network activity to settle...')
+      try {
+        await page.waitForNetworkIdle({ idleTime: 1000, timeout: 15_000 })
+      } catch {
+        console.log('> Network did not settle in time. Proceeding anyway.')
+      }
+    }
+
     console.log('> Taking screenshot...')
     const screenshot = await element.screenshot({ type: 'png', omitBackground: true })
 
@@ -89,12 +99,12 @@ export async function* takeTapestryScreenshots(
 ) {
   const url = new URL(tapestryPath, config.server.viewerUrl)
   url.searchParams.set('deopt', '1')
-  url.searchParams.set('hideControls', '1')
+  url.searchParams.set('screenshotMode', 'dashboard')
   const src = url.toString()
   const { windowSize, timeout } = site
   console.log(`Taking screenshots of ${src}...`)
   yield* inNewBrowserPage(async function* (page, context): AsyncGenerator<
-    ThumbnailRenditionOutput,
+    ThumbnailRenditionOutput | undefined,
     void,
     Item | null
   > {
@@ -130,9 +140,7 @@ export async function* takeTapestryScreenshots(
 
     while (item) {
       const thumbnail = await takeItemScreenshot(page, item)
-      if (thumbnail) {
-        item = yield thumbnail
-      }
+      item = yield thumbnail ?? undefined
     }
   })
 }

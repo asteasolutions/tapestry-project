@@ -68,6 +68,12 @@ function validateIncludes(query: object, allowedIncludes: string[]) {
   }
 }
 
+function setHeaders(res: Response, headers?: Record<string, string>) {
+  if (headers) {
+    res.header(headers)
+  }
+}
+
 function bindEndpoint<E extends Endpoint, ListFilter>(
   router: Router,
   endpoint: E,
@@ -102,6 +108,8 @@ function bindEndpoint<E extends Endpoint, ListFilter>(
         req.query,
       ) as EndpointTypes<E>['request']['query']['output']
       validateIncludes(query, endpoint.allowedIncludes as string[])
+
+      setHeaders(res, endpoint.responseHeaders)
 
       const isFile = req.headers['content-type']?.toLowerCase() === 'application/octet-stream'
       if (isFile) {

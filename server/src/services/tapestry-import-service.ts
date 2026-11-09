@@ -1,6 +1,7 @@
 import { extname } from 'node:path'
 import mime from 'mime'
 import { isString, sumBy } from 'lodash-es'
+import anyAscii from 'any-ascii'
 import { prisma } from '../db.js'
 import { generateItemKey, s3Service, tapestryKey } from './s3-service.js'
 import {
@@ -46,6 +47,7 @@ function isMediaItem(i: Item) {
     i.type === 'audio' ||
     i.type === 'book' ||
     i.type === 'image' ||
+    i.type === 'iiif' ||
     i.type === 'pdf' ||
     i.type === 'video' ||
     i.type === 'webpage'
@@ -85,6 +87,35 @@ export function actionMap(
     action,
     actionType,
   }
+}
+
+export async function generateSlug(
+  tx: Prisma.TransactionClient,
+  ownerId: string,
+  title: string,
+  fallback: string,
+) {
+  const baseSlug =
+    anyAscii(title)
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      //Remove leading and trailing "-"
+      .replace(/^-|-$/g, '') || fallback
+
+  const takenSlugs = new Set(
+    (
+      await tx.tapestry.findMany({
+        where: { ownerId, slug: { startsWith: baseSlug } },
+        select: { slug: true },
+      })
+    ).map(({ slug }) => slug),
+  )
+
+  if (!takenSlugs.has(baseSlug)) return baseSlug
+
+  let i = 2
+  while (takenSlugs.has(`${baseSlug}-${i}`)) i++
+  return `${baseSlug}-${i}`
 }
 
 export class TapestryImportService {
@@ -148,10 +179,11 @@ export class TapestryImportService {
       return await prisma.$transaction(
         async (tx) => {
           const tapestryId = crypto.randomUUID()
+          const slug = await generateSlug(tx, userId, tapestry.title, tapestryId)
           await tx.tapestry.create({
             data: {
               id: tapestryId,
-              slug: tapestryId,
+              slug,
               background: tapestry.background,
               theme: tapestry.theme,
               title: tapestry.title,
@@ -245,7 +277,7 @@ export class TapestryImportService {
             data: await Promise.all(
               tapestry.items?.map<Promise<Prisma.ItemCreateManyInput>>(async (i) => {
                 const isMedia = isMediaItem(i)
-                const source = isMedia ? i.source : undefined
+                const isTextOrActionButton = i.type === 'text' || i.type === 'actionButton'
 
                 return {
                   id: itemIdMap[i.id],
@@ -258,15 +290,16 @@ export class TapestryImportService {
                   dropShadow: !!i.dropShadow,
                   groupId: groupIdMap[i.groupId ?? ''],
                   thumbnailId: itemThumbnailsMap[i.id]?.id,
-                  backgroundColor: isMediaItem(i) ? undefined : i.backgroundColor,
-                  text: isMedia ? undefined : i.text,
+                  backgroundColor: isTextOrActionButton ? i.backgroundColor : undefined,
+                  text: isTextOrActionButton ? i.text : undefined,
                   layer: i.layer,
 
                   ...(hasActionType(i)
                     ? actionMap(itemIdMap, groupIdMap, i.action, i.actionType)
                     : {}),
 
-                  source,
+                  source: isMedia ? i.source : undefined,
+                  originalSource: isMedia ? i.originalSource : undefined,
                   title: i.title,
                   type: i.type,
                   webpageType:

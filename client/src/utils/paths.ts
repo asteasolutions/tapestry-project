@@ -18,10 +18,12 @@ export function tapestryPath(
   return path
 }
 
+export const DASHBOARD_ROOT = '/dashboard'
+
 // TODO: Maybe we should have a "default" path, e.g. just `/dashboard`, where we
 // automatically redirect to the last dashboard section the user has visited.
 export function dashboardPath(section: DashboardSection) {
-  return `/dashboard/${section}`
+  return `${DASHBOARD_ROOT}/${section}`
 }
 
 export function userProfilePath(section: UserProfileSection) {

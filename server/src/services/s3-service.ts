@@ -27,6 +27,9 @@ class S3Service {
       region: region || undefined,
       credentials: accessKeyId && secretAccessKey ? { accessKeyId, secretAccessKey } : undefined,
       forcePathStyle: config.aws.s3.forcePathStyle,
+      // By default the SDK adds a checksum of the (empty) request body to presigned PUT URLs,
+      // which S3-compatible stores such as SeaweedFS reject once the client uploads real content.
+      requestChecksumCalculation: 'WHEN_REQUIRED',
     })
   }
 
@@ -52,6 +55,12 @@ class S3Service {
     key: string,
     expiresIn = config.server.assetReadUrlExpiresIn,
   ): Promise<string> {
+    // A presigned URL stops working when the credentials that
+    // signed it expire, regardless of its own expiration time.
+    const { expiration } = await this.s3Client.config.credentials()
+    const validFor = expiration
+      ? Math.min(expiresIn, Math.floor((expiration.getTime() - Date.now()) / 1000))
+      : expiresIn
     return this.cache.memoize(
       key,
       () =>
@@ -60,34 +69,26 @@ class S3Service {
             Bucket,
             Key: key,
           }),
-          expiresIn,
+          validFor,
         ),
-      expiresIn >> 1,
-      async (cachedUrl) => {
-        try {
-          const response = await fetch(cachedUrl, { headers: { Range: 'bytes=0-0' } })
-          return response.ok
-        } catch (error) {
-          console.error('Error while validating cached URL', error)
-          return false
-        }
-      },
-      config.server.assetReadUrlValidationExpiresIn,
+      Math.max(validFor >> 1, 1),
     )
   }
 
   async copyObject(key: string, newObjectKey: string) {
-    return this.s3Client.send(
+    const result = await this.s3Client.send(
       new CopyObjectCommand({
         Bucket,
         CopySource: `/${Bucket}/${key}`,
         Key: newObjectKey,
       }),
     )
+    await this.cache.delete(newObjectKey)
+    return result
   }
 
   async putObject(key: string, body: PutObjectCommandInput['Body'], contentType?: string) {
-    return this.s3Client.send(
+    const result = await this.s3Client.send(
       new PutObjectCommand({
         Bucket,
         Key: key,
@@ -95,16 +96,20 @@ class S3Service {
         ContentType: contentType,
       }),
     )
+    await this.cache.delete(key)
+    return result
   }
 
   async deleteObject(key: string) {
     try {
-      return this.s3Client.send(
+      const result = await this.s3Client.send(
         new DeleteObjectCommand({
           Bucket,
           Key: key,
         }),
       )
+      await this.cache.delete(key)
+      return result
     } catch (e) {
       console.warn(`There was an error deleting ${key} from S3`, e)
       throw e
@@ -119,17 +124,19 @@ class S3Service {
     }
   }
 
-  deleteObjects(keys: string[]) {
+  async deleteObjects(keys: string[]) {
     if (keys.length === 0) {
       return
     }
 
-    return this.s3Client.send(
+    const result = await this.s3Client.send(
       new DeleteObjectsCommand({
         Bucket,
         Delete: { Objects: keys.map((Key) => ({ Key })) },
       }),
     )
+    await this.cache.delete(...keys)
+    return result
   }
 
   async *listBucket() {

@@ -5,7 +5,7 @@ import { useAsync } from 'tapestry-core-client/src/components/lib/hooks/use-asyn
 import { useObservable } from 'tapestry-core-client/src/components/lib/hooks/use-observable'
 import { TapestryConfig, TapestryConfigContext } from 'tapestry-core-client/src/components/tapestry'
 import { createStoreHooks, createUseStoreHook } from 'tapestry-core-client/src/lib/store/provider'
-import { SnackbarData } from 'tapestry-core-client/src/view-model'
+import { ScreenshotModeSchema } from 'tapestry-core/src/data-format/schemas/common'
 import { auth } from '../../auth'
 import { ItemInfoModal } from '../../components/item-info-modal'
 import { LoadingLogo } from '../../components/loading-logo'
@@ -13,6 +13,7 @@ import { ActionButtonItem } from '../../components/tapestry-elements/items/actio
 import { AudioItem } from '../../components/tapestry-elements/items/audio'
 import { BookItem } from '../../components/tapestry-elements/items/book'
 import { ImageItem } from '../../components/tapestry-elements/items/image'
+import { IiifItem } from '../../components/tapestry-elements/items/iiif'
 import { PdfItem } from '../../components/tapestry-elements/items/pdf'
 import { TextItem } from '../../components/tapestry-elements/items/text'
 import { VideoItem } from '../../components/tapestry-elements/items/video'
@@ -35,7 +36,7 @@ import { InteractionMode } from './view-model'
 import { TapestryDataSync } from './view-model/tapestry-data-sync'
 import { ThumbnailContainer } from 'tapestry-core-client/src/stage/renderer/thumbnail-container'
 
-const INITIAL_THUMBNAILS_LOAD_TIMEOUT = 4_500
+const INITIAL_THUMBNAILS_LOAD_TIMEOUT = 3_000
 
 function getErrorMessage(error: unknown) {
   if (error instanceof APIError) {
@@ -83,6 +84,7 @@ export function TapestryLoader({ id, mode }: TapestryLoaderProps) {
         AudioItem,
         BookItem,
         ImageItem,
+        IiifItem,
         PdfItem,
         TextItem,
         VideoItem,
@@ -107,11 +109,7 @@ export function TapestryLoader({ id, mode }: TapestryLoaderProps) {
     }
   }, [id, user])
 
-  const {
-    data: tapestryData,
-    loading,
-    error,
-  } = useAsync(
+  const { data: tapestryData, error } = useAsync(
     async ({ signal }, onCleanup) => {
       if (!id) return
 
@@ -123,14 +121,16 @@ export function TapestryLoader({ id, mode }: TapestryLoaderProps) {
         void navigate(tapestryViewPath)
       }
 
+      const pixiIconsLoader = ThumbnailContainer.loadIconTextures()
+
       const deopt = !!searchParams.get('deopt')
-      const hideControls = !!searchParams.get('hideControls')
+      const screenshotMode = ScreenshotModeSchema.safeParse(searchParams.get('screenshotMode')).data
       const dataSync = new TapestryDataSync(
         id,
         canEdit ? mode : 'view',
         userAccess,
         deopt,
-        hideControls,
+        screenshotMode,
       )
       onCleanup(() => dataSync.dispose())
 
@@ -141,7 +141,7 @@ export function TapestryLoader({ id, mode }: TapestryLoaderProps) {
         INITIAL_THUMBNAILS_LOAD_TIMEOUT,
       )
 
-      await ThumbnailContainer.loadIconTextures()
+      await pixiIconsLoader
 
       return { tapestryDataSync: dataSync, initialThumbnails }
     },
@@ -157,17 +157,13 @@ export function TapestryLoader({ id, mode }: TapestryLoaderProps) {
       <Navigate
         to={dashboardPath('home')}
         replace
-        state={{ text: getErrorMessage(error), variant: 'error' } as SnackbarData}
+        state={{ text: getErrorMessage(error), variant: 'error' }}
       />
     )
   }
 
-  if (!id || loading) {
-    return <LoadingLogo />
-  }
-
   if (!tapestryDataSync) {
-    return 'Tapestry not found'
+    return <LoadingLogo />
   }
 
   return (

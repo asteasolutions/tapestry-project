@@ -69,6 +69,7 @@ export interface Endpoint<
     body: ZodSchemaForIO<Body>
   }
   responseSchema: ZodSchemaForIO<Response>
+  responseHeaders?: Record<string, string>
 }
 
 export type EndpointsMask = `${'c' | ''}${'r' | ''}${'u' | ''}${'d' | ''}${'l' | ''}`
