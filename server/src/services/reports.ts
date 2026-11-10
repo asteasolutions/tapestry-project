@@ -10,6 +10,7 @@ import {
   ReportTableRowDto,
   ReportUnit,
 } from 'tapestry-shared/src/data-transfer/resources/dtos/admin.js'
+import { ListFilterDto } from 'tapestry-shared/src/data-transfer/resources/dtos/common.js'
 import { prisma } from '../db.js'
 
 /**
@@ -59,7 +60,7 @@ function inRange(column: Prisma.Sql, { from, to }: Range) {
     : Prisma.sql`${column} < ${to}`
 }
 
-function rangeFilter({ from, to }: Range, prop = 'createdAt'): Record<string, string> {
+function rangeFilter({ from, to }: Range, prop = 'createdAt'): ListFilterDto {
   return {
     ...(from ? { [`${prop}:gte`]: iso(from) } : {}),
     [`${prop}:lt`]: iso(to),
@@ -711,7 +712,7 @@ const METRICS: Record<ReportMetric, MetricDefinition> = {
         prisma.tapestry.count({ where: { ...base, featured: true } }),
       ])
       const total = owner + invited + link
-      const drill = (filter: Record<string, string>): DrillTargetDto => ({
+      const drill = (filter: ListFilterDto): DrillTargetDto => ({
         kind: 'tapestries',
         filter: { ...NON_ADMIN_OWNER, ...filter },
       })

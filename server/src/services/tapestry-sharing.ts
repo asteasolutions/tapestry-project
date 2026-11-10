@@ -1,8 +1,5 @@
-import { Prisma } from '@prisma/client'
-import { prisma } from '../db.js'
+import { prisma, Tx } from '../db.js'
 import { BadRequestError } from '../errors/index.js'
-
-type Tx = Prisma.TransactionClient
 
 /**
  * Features a tapestry: it is placed at the beginning of the Gallery. Only link-shared tapestries can

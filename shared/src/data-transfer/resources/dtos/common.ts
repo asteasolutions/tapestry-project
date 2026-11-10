@@ -1,3 +1,5 @@
+import type z from 'zod/v4'
+import type { ListFilterSchema } from '../schemas/common.js'
 import { ErrorResponseDto } from './errors.js'
 import { Identifiable } from 'tapestry-core/src/data-format/schemas/common.js'
 
@@ -49,11 +51,14 @@ export const FILTER_OPS = [
 
 export type FilterOp = (typeof FILTER_OPS)[number]
 
+/** A list filter in its query-string form: `{ 'prop:op': value }`. */
+export type ListFilterDto = z.input<typeof ListFilterSchema>
+
 export interface ListParamsInputDto extends ReadParamsDto {
   skip?: number | null
   limit?: number | null
   orderBy?: string | string[] | null
-  filter?: Record<`${string}:${FilterOp}`, string | string[] | undefined> | null
+  filter?: ListFilterDto | null
 }
 
 export type SortDirection = 'asc' | 'desc'

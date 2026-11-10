@@ -16,13 +16,18 @@ import styles from './styles.module.css'
 import { useAsyncAction } from 'tapestry-core-client/src/components/lib/hooks/use-async-action'
 
 function move(ids: string[], id: string, targetId: string) {
-  const next = ids.filter((x) => x !== id)
-  next.splice(next.indexOf(targetId), 0, id)
+  const next = [...ids]
+  next.splice(ids.indexOf(id), 1)
+  next.splice(ids.indexOf(targetId), 0, id)
   return next
 }
 
+function isConflict(e: unknown) {
+  return e instanceof APIError && e.data.name === 'ConflictError'
+}
+
 function parsePublishError(e: unknown) {
-  if (e instanceof APIError && e.data.name === 'ConflictError') {
+  if (isConflict(e)) {
     return 'Another admin changed the Gallery while you were editing it. The current Gallery has been loaded; please make your changes again.'
   }
   return e
@@ -104,11 +109,17 @@ export function AdminGallery() {
     loading: publishing,
     error: publishError,
   } = useAsyncAction(async () => {
-    await resource('adminActivity').create({
-      action: 'reorderGallery',
-      tapestryIds: live,
-      removedTapestryIds: [...removed],
-    })
+    try {
+      await resource('adminActivity').create({
+        action: 'reorderGallery',
+        tapestryIds: live,
+        removedTapestryIds: [...removed],
+      })
+    } catch (e) {
+      // Another admin changed the Gallery: load its current state, which discards the local edits
+      if (isConflict(e)) reload(noop)
+      throw e
+    }
     setPublished(true)
     setAnnouncement('Gallery updated. The changes are live.')
     reload(noop)

@@ -51,7 +51,7 @@ const TAPESTRY_SERIES: Series[] = [
 ]
 
 export function AdminReports() {
-  const [preset, setPreset] = useState<Preset>('90d')
+  const [preset, setPreset] = useState<Preset>('7d')
   const [customFrom, setCustomFrom] = useState('')
   const [customTo, setCustomTo] = useState('')
   const [compare, setCompare] = useState<ReportComparison>('previous')

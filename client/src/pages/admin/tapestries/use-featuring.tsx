@@ -17,7 +17,6 @@ interface Outcome {
  */
 export function useFeaturing(onUpdated: (tapestry: AdminTapestryDto) => unknown) {
   const [outcome, setOutcome] = useState<Outcome | null>(null)
-  // const [error, setError] = useState<unknown>()
 
   const { trigger, perform, error } = useAsyncAction(
     async (_, tapestry: AdminTapestryDto, featured: boolean, isUndo = false) => {

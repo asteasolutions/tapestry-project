@@ -1,5 +1,5 @@
 import { Prisma } from '@prisma/client'
-import { prisma } from '../db.js'
+import { prisma, Tx } from '../db.js'
 
 /**
  * Appends an entry to the admin activity log and returns it. Entries are never updated or deleted.
@@ -10,7 +10,7 @@ export async function logAdminActivity(
     Prisma.AdminActivityCreateInput,
     'action' | 'targetType' | 'targetId' | 'targetLabel' | 'details'
   >,
-  tx: Prisma.TransactionClient = prisma,
+  tx: Tx = prisma,
 ) {
   const admin = await tx.user.findUniqueOrThrow({
     where: { id: adminId },

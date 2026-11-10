@@ -34,7 +34,6 @@ import {
 } from './tapestry-providers'
 import { InteractionMode } from './view-model'
 import { TapestryDataSync } from './view-model/tapestry-data-sync'
-import { UserDto } from 'tapestry-shared/src/data-transfer/resources/dtos/user'
 import { ThumbnailContainer } from 'tapestry-core-client/src/stage/renderer/thumbnail-container'
 
 const INITIAL_THUMBNAILS_LOAD_TIMEOUT = 3_000
@@ -54,7 +53,7 @@ function getErrorMessage(error: unknown) {
 
 async function determineUserAccess(
   tapestryId: string,
-  user: UserDto | null,
+  userId: string | undefined,
   signal: AbortSignal,
 ): Promise<UserAccess> {
   const tapestry = await resource('tapestries').read(
@@ -63,7 +62,7 @@ async function determineUserAccess(
     { signal },
   )
 
-  return userAccess(tapestry, user)
+  return userAccess(tapestry, userId)
 }
 
 export interface TapestryLoaderProps {
@@ -114,7 +113,7 @@ export function TapestryLoader({ id, mode }: TapestryLoaderProps) {
     async ({ signal }, onCleanup) => {
       if (!id) return
 
-      const userAccess = await determineUserAccess(id, user, signal)
+      const userAccess = await determineUserAccess(id, user?.id, signal)
 
       const canEdit = userAccess === 'edit'
 

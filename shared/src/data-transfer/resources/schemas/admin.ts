@@ -1,5 +1,5 @@
 import z from 'zod/v4'
-import { BaseResourceSchema } from './common.js'
+import { BaseResourceSchema, ListFilterSchema } from './common.js'
 import { UserSchema } from './user.js'
 import { USER_ROLES } from '../dtos/user.js'
 import { TAPESTRY_VISIBILITIES } from '../dtos/tapestry.js'
@@ -109,7 +109,7 @@ const ReportUnitSchema = z.enum(['count', 'percent', 'days'])
 
 const DrillTargetSchema = z.object({
   kind: z.enum(['users', 'tapestries']),
-  filter: z.record(z.string(), z.string()),
+  filter: ListFilterSchema,
 })
 
 const ReportDataSchema = z.object({

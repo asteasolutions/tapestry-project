@@ -4,7 +4,7 @@ import {
   DeleteItemsCommandDto,
   ReorderGalleryCommandDto,
 } from 'tapestry-shared/src/data-transfer/resources/dtos/admin.js'
-import { prisma } from '../../db.js'
+import { prisma, Tx } from '../../db.js'
 import { RequestContext, RESTResourceImpl } from '../base-resource.js'
 import { parseListFilter } from '../utils.js'
 import { adminOnly } from '../../auth/roles.js'
@@ -13,8 +13,6 @@ import { BadRequestError, ConflictError, ForbiddenError } from '../../errors/ind
 import { logAdminActivity } from '../../services/admin-activity.js'
 import { destroyItems } from '../items.js'
 import { unfeatureTapestry } from '../../services/tapestry-sharing.js'
-
-type Tx = Prisma.TransactionClient
 
 /**
  * Permanently deletes selected items. Their presentation steps are removed first, since the schema

@@ -1,4 +1,4 @@
-import { BaseResourceDto } from './common.js'
+import { BaseResourceDto, ListFilterDto } from './common.js'
 import { TapestryVisibility } from './tapestry.js'
 import { UserDto, UserRole } from './user.js'
 
@@ -152,7 +152,7 @@ export interface ReportQueryCreateDto {
 /** Describes the admin list (users or tapestries) holding the records behind a figure. */
 export interface DrillTargetDto {
   kind: 'users' | 'tapestries'
-  filter: Record<string, string>
+  filter: ListFilterDto
 }
 
 export type ReportUnit = 'count' | 'percent' | 'days'

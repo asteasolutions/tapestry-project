@@ -6,7 +6,7 @@ import { ListFilter } from './use-admin-list'
 /** Links to an admin list with a fixed filter, e.g. to drill through from a report. */
 export function presetFilterPath(
   section: 'tapestries' | 'users',
-  filter: Record<string, string>,
+  filter: ListFilter,
   label: string,
 ) {
   return adminPath(

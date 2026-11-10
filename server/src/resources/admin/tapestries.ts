@@ -1,6 +1,6 @@
 import { Prisma } from '@prisma/client'
 import { Resources } from 'tapestry-shared/src/data-transfer/resources/index.js'
-import { prisma } from '../../db.js'
+import { prisma, Tx } from '../../db.js'
 import { RESTResourceImpl } from '../base-resource.js'
 import { parseListFilter } from '../utils.js'
 import { adminOnly, isAdmin } from '../../auth/roles.js'
@@ -17,8 +17,6 @@ import {
   unfeatureTapestry,
 } from '../../services/tapestry-sharing.js'
 import { logAdminActivity } from '../../services/admin-activity.js'
-
-type Tx = Prisma.TransactionClient
 
 /**
  * The tapestries an admin may see in the admin panel: those shared with anyone with the link, plus
