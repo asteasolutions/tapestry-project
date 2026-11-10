@@ -1,10 +1,10 @@
 import styles from './styles.module.css'
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Navigate, useLocation, useParams } from 'react-router'
 import { useSession } from '../../layouts/session'
 import { LazyListLoader } from '../../components/lazy-list/lazy-list-loader'
-import { useTapestryImport } from '../../hooks/use-tapestry-import'
-import { ImportTapestryPanel } from './import-tapestry-button/import-tapestry-panel'
+import { backgroundTasks } from '../../services/background-tasks'
+import { BackgroundTasksPanel } from '../../components/background-tasks-panel'
 import { dataTransferToFiles } from '../../stage/data-transfer-handler'
 import { TYPE } from 'tapestry-core/src/data-format/export'
 import { useObservable } from 'tapestry-core-client/src/components/lib/hooks/use-observable'
@@ -113,11 +113,18 @@ export function Dashboard() {
     [section, searchTerm, user?.id],
   )
 
-  const {
-    imports,
-    importTapestries,
-    reset: resetImports,
-  } = useTapestryImport(() => tapestryLoader?.reload())
+  const { imports, exports } = useObservable(backgroundTasks)
+
+  // Reload the list whenever another import completes. Imports which were already complete
+  // when the dashboard was opened are already in the list.
+  const completedImports = imports.filter((i) => i.status === 'complete').length
+  const completedImportsRef = useRef(completedImports)
+  useEffect(() => {
+    if (completedImports > completedImportsRef.current) {
+      void tapestryLoader?.reload()
+    }
+    completedImportsRef.current = completedImports
+  }, [completedImports, tapestryLoader])
 
   const smOrLess = useResponsive() <= Breakpoint.SM
 
@@ -136,7 +143,7 @@ export function Dashboard() {
   const header = (
     <DashboardHeader
       onNewTapestry={() => setCreatingTapestry(true)}
-      onImport={importTapestries}
+      onImport={(files) => backgroundTasks.importTapestries(files)}
       section={section}
     />
   )
@@ -166,7 +173,7 @@ export function Dashboard() {
           if (zips.length === 0) {
             return
           }
-          void importTapestries(zips)
+          void backgroundTasks.importTapestries(zips)
         }}
         title="Import your tapestry file"
         subtitle="Drag and drop to upload"
@@ -189,7 +196,12 @@ export function Dashboard() {
         />
       </DropArea>
       {creatingTapestry && <CreateTapestryDialog onCancel={() => setCreatingTapestry(false)} />}
-      {imports && <ImportTapestryPanel imports={imports} onClose={resetImports} />}
+      <BackgroundTasksPanel
+        imports={imports}
+        exports={exports}
+        onCancelExport={(id) => backgroundTasks.cancelExport(id)}
+        onClose={() => backgroundTasks.clearFinished()}
+      />
       <Snackbar value={initialPrompt} onChange={() => setInitialPrompt(undefined)} />
     </div>
   )

@@ -41,6 +41,7 @@ const ICONS = [
   'dark_mode',
   'dashboard_customize',
   'delete',
+  'download',
   'draft',
   'drag_pan',
   'edit',

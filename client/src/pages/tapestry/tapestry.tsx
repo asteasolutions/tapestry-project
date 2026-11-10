@@ -15,8 +15,6 @@ import { THEMES } from 'tapestry-core-client/src/theme/themes'
 import { CollaboratorCursors } from '../../components/collaborator-cursors'
 import { CollaboratorIndicators } from '../../components/collaborator-indicators'
 import { EditorTitleBar } from '../../components/editor-title-bar'
-import { ExportProgressBar } from '../../components/progress-bar/export-progress-bar'
-import { ItemUploadProgressBar } from '../../components/progress-bar/item-upload-progress-bar'
 import { CollectionImportDialog } from '../../components/collection-import-dialog'
 import { LargeFileUploadDialog } from '../../components/large-file-upload-dialog'
 import { LeaveTapestryDialog } from '../../components/leave-tapestry-dialog'
@@ -29,7 +27,6 @@ import { UndoToolbar } from '../../components/toolbars/undo'
 import { UserToolbar } from '../../components/toolbars/user'
 import { ZoomToolbar } from '../../components/toolbars/zoom'
 import { ViewerTitleBar } from '../../components/viewer-title-bar'
-import { useTapestryExport } from '../../hooks/use-tapestry-export'
 import { useTapestryPathParams } from '../../hooks/use-tapestry-path'
 import { EditorLifecycleController } from '../../stage/controller'
 import { tapestryPath } from '../../utils/paths'
@@ -165,42 +162,25 @@ export function Tapestry({ initialThumbnails }: TapestryProps) {
 }
 
 const MainToolbar = memo(function MainToolbar({ className, style }: PropsWithStyle) {
-  const { id, interactionMode, presentationOrderState, hideEditControls } = useTapestryData([
-    'id',
+  const { interactionMode, presentationOrderState, hideEditControls } = useTapestryData([
     'interactionMode',
     'presentationOrderState',
     'hideEditControls',
   ])
-  const dispatch = useDispatch()
-  const tapestryExport = useTapestryExport({
-    tapestryId: id,
-    onError: () => dispatch(setSnackbar({ text: 'Error during export', variant: 'error' })),
-  })
+
+  if (interactionMode === 'view') {
+    return <ViewerTitleBar className={className} style={style} />
+  }
 
   return (
-    <>
-      {interactionMode === 'view' ? (
-        <ViewerTitleBar className={className} style={style} tapestryExport={tapestryExport} />
-      ) : (
-        <div className={className} style={style}>
-          <EditorTitleBar tapestryExport={tapestryExport} />
-          <div className={styles.leftToolbar}>
-            {!hideEditControls && <ImportToolbar />}
-            {/* The "undo" toolbar is only necessary if we are editing the presentation order or the tapestry itself. */}
-            {(!hideEditControls || presentationOrderState) && <UndoToolbar />}
-          </div>
-        </div>
-      )}
-      <div className={styles.statusIndicators}>
-        <ItemUploadProgressBar />
-        {tapestryExport.progress && (
-          <ExportProgressBar
-            progress={tapestryExport.progress}
-            onCancel={tapestryExport.cancelExport}
-          />
-        )}
+    <div className={className} style={style}>
+      <EditorTitleBar />
+      <div className={styles.leftToolbar}>
+        {!hideEditControls && <ImportToolbar />}
+        {/* The "undo" toolbar is only necessary if we are editing the presentation order or the tapestry itself. */}
+        {(!hideEditControls || presentationOrderState) && <UndoToolbar />}
       </div>
-    </>
+    </div>
   )
 })
 

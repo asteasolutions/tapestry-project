@@ -26,35 +26,3 @@
   max-height: 320px;
   overflow-y: auto;
 }
-
-.row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 36px;
-  padding: 0 12px;
-}
-
-.file-icon {
-  font-size: 20px;
-}
-
-.name {
-  flex-grow: 1;
-  min-width: 0;
-  padding: 6px 0;
-  overflow-wrap: anywhere;
-}
-
-.percent {
-  color: var(--theme-text-secondary);
-  font-variant-numeric: tabular-nums;
-}
-
-.complete {
-  color: var(--theme-text-positive);
-}
-
-.failed {
-  color: var(--theme-text-negative);
-}

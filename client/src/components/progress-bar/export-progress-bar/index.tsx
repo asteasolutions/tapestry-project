@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { ProgressEvent } from '../../../services/tapestry-exporter'
 import { ProgressBar } from '..'
 
-function exportPercent(progress: ProgressEvent) {
+export function exportPercent(progress: ProgressEvent) {
   if (progress === 'pending') {
     return undefined
   }

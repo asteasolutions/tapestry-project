@@ -18,13 +18,10 @@ import { ForkTapestryDialog } from '../fork-tapestry-dialog'
 import { JoinTapestriesModal } from '../join-tapestries-modal'
 import styles from './styles.module.css'
 import { Avatar } from '../avatar'
-import { TapestryExport } from '../../hooks/use-tapestry-export'
+import { useObservable } from 'tapestry-core-client/src/components/lib/hooks/use-observable'
+import { backgroundTasks } from '../../services/background-tasks'
 
-interface ViewerTitleBarProps extends PropsWithStyle {
-  tapestryExport: TapestryExport
-}
-
-export function ViewerTitleBar({ className, style, tapestryExport }: ViewerTitleBarProps) {
+export function ViewerTitleBar({ className, style }: PropsWithStyle) {
   const obstruction = useViewportObstruction({ clear: { top: true, left: true } })
   const {
     id,
@@ -47,7 +44,8 @@ export function ViewerTitleBar({ className, style, tapestryExport }: ViewerTitle
     'updatedAt',
     'owner',
   ])
-  const { progress, triggerExport } = tapestryExport
+  useObservable(backgroundTasks)
+  const progress = backgroundTasks.getActiveExport(id)?.progress
   const { user } = useSession()
   const [joinPopup, setJoinPopup] = useState(false)
   const [forkingTapestry, setForkingTapestry] = useState(false)
@@ -108,7 +106,7 @@ export function ViewerTitleBar({ className, style, tapestryExport }: ViewerTitle
         disabled={!canForkTapestry || !!progress}
         onClick={() => {
           setViewingInfo(false)
-          void triggerExport()
+          void backgroundTasks.triggerExport(id, title)
         }}
         tooltip={
           canForkTapestry

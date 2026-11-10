@@ -1,75 +1,103 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { ZodError } from 'zod/v4'
 import { download } from 'tapestry-core-client/src/lib/file'
+import { useLeaveWarning } from './use-leave-warning'
 import { TapestryExporter, ProgressEvent } from '../services/tapestry-exporter'
 
-export interface UseTapestryExportOptions {
+export type ExportStatus = 'exporting' | 'complete' | 'failed' | 'cancelled'
+
+export interface TapestryExport {
+  id: string
   tapestryId: string
-  onError: () => unknown
-  onSuccess?: () => unknown
+  name: string
+  progress: ProgressEvent
+  status: ExportStatus
+  startedAt: number
 }
 
-export function useTapestryExport({ tapestryId, onError, onSuccess }: UseTapestryExportOptions) {
-  const [progress, setProgress] = useState<ProgressEvent>()
-  const exporterRef = useRef<TapestryExporter>(null)
-  const isExporting = !!progress
+export interface UseTapestryExportOptions {
+  onError: () => unknown
+}
 
-  useEffect(() => {
-    if (!isExporting) {
+export function useTapestryExport({ onError }: UseTapestryExportOptions) {
+  const [exports, setExports] = useState<TapestryExport[]>([])
+  const exportersRef = useRef(new Map<string, { tapestryId: string; exporter: TapestryExporter }>())
+
+  useLeaveWarning(exports.some((e) => e.status === 'exporting'))
+
+  function updateExport(id: string, data: Partial<TapestryExport>) {
+    setExports((current) => current.map((e) => (e.id === id ? { ...e, ...data } : e)))
+  }
+
+  function finish(id: string, status: ExportStatus) {
+    if (!exportersRef.current.has(id)) {
       return
     }
-    const onBeforeUnload = (e: BeforeUnloadEvent) => e.preventDefault()
-    window.addEventListener('beforeunload', onBeforeUnload)
-    return () => window.removeEventListener('beforeunload', onBeforeUnload)
-  }, [isExporting])
+    exportersRef.current.delete(id)
+    updateExport(id, { status })
+  }
 
-  const triggerExport = async () => {
-    if (progress || exporterRef.current) {
+  const getActiveExport = (tapestryId: string) =>
+    exports.find((e) => e.tapestryId === tapestryId && e.status === 'exporting')
+
+  const triggerExport = async (tapestryId: string, title: string) => {
+    if ([...exportersRef.current.values()].some((e) => e.tapestryId === tapestryId)) {
       return
     }
 
-    const exporter = new TapestryExporter(tapestryId, setProgress, (error) => {
-      if (exporterRef.current !== exporter) {
-        // The export was cancelled by the user
-        return
-      }
-      exporterRef.current = null
-      console.warn(
-        'Error during export',
-        error,
-        error instanceof ZodError ? error.issues : undefined,
-      )
-      setProgress(undefined)
-      onError()
-    })
-    exporterRef.current = exporter
+    const id = crypto.randomUUID()
+    const exporter: TapestryExporter = new TapestryExporter(
+      tapestryId,
+      (progress) => updateExport(id, { progress }),
+      (error) => {
+        if (!exportersRef.current.has(id)) {
+          return
+        }
+        console.warn(
+          'Error during export',
+          error,
+          error instanceof ZodError ? error.issues : undefined,
+        )
+        finish(id, 'failed')
+        onError()
+      },
+    )
+    exportersRef.current.set(id, { tapestryId, exporter })
+    setExports((current) => [
+      ...current,
+      {
+        id,
+        tapestryId,
+        name: `${title}.zip`,
+        progress: 'pending',
+        status: 'exporting',
+        startedAt: Date.now(),
+      },
+    ])
 
     try {
-      await exporter.export((url, title) => {
-        exporterRef.current = null
-        setProgress(undefined)
-        download(url, `${title}.zip`)
-        onSuccess?.()
+      await exporter.export((url, exportedTitle) => {
+        finish(id, 'complete')
+        download(url, `${exportedTitle}.zip`)
       })
     } finally {
-      if (exporterRef.current === exporter) {
-        exporterRef.current = null
-        setProgress(undefined)
-      }
+      finish(id, 'failed')
     }
   }
 
-  const cancelExport = () => {
-    exporterRef.current?.cancel()
-    exporterRef.current = null
-    setProgress(undefined)
+  const cancelExport = (id: string) => {
+    exportersRef.current.get(id)?.exporter.cancel()
+    finish(id, 'cancelled')
   }
+
+  const clearFinished = () =>
+    setExports((current) => current.filter((e) => e.status === 'exporting'))
 
   return {
-    progress,
+    exports,
+    getActiveExport,
     triggerExport,
     cancelExport,
+    clearFinished,
   }
 }
-
-export type TapestryExport = ReturnType<typeof useTapestryExport>

@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { uploadAsset } from '../model/data/utils'
 import { resource } from '../services/rest-resources'
 import { parseRootJson, ROOT_FILE } from 'tapestry-core/src/data-format/export'
 import { BlobReader, TextWriter, ZipReader, FileEntry } from '@zip.js/zip.js'
 import { useAsyncPolled } from './use-poll'
+import { useLeaveWarning } from './use-leave-warning'
 import { JobStatus } from 'tapestry-shared/src/data-transfer/resources/dtos/tapestry-create-job'
 import { mapNotNull } from 'tapestry-core/src/lib/array'
 import { usePropRef } from 'tapestry-core-client/src/components/lib/hooks/use-prop-ref'
@@ -19,6 +20,8 @@ export interface TapestryImport {
   progress: number
   status: FileStatus
   jobId?: string
+  tapestryId?: string | null
+  startedAt: number
   killSwitch: AbortController
 }
 
@@ -44,10 +47,8 @@ async function checkZipValidity(file: File) {
 export function useTapestryImport(onComplete: () => unknown) {
   const [imports, setImports] = useState<TapestryImport[]>()
   const onCompleteRef = usePropRef(onComplete)
-  const importsRef = usePropRef(imports)
 
-  // Cancel all ongoing uploads when leaving the page
-  useEffect(() => () => importsRef.current?.forEach((i) => i.killSwitch.abort()), [importsRef])
+  useLeaveWarning(!!imports?.some((i) => i.status === 'uploading'))
 
   function updateFile(idOrJobId: string, data: Partial<TapestryImport>) {
     setImports((current) =>
@@ -70,7 +71,11 @@ export function useTapestryImport(onComplete: () => unknown) {
         if (job.status === 'complete' && currentStatus && currentStatus !== 'complete') {
           onCompleteRef.current()
         }
-        updateFile(job.id, { status: job.status, progress: job.progress })
+        updateFile(job.id, {
+          status: job.status,
+          progress: job.progress,
+          tapestryId: job.tapestryId,
+        })
       }
     },
     interval: 1000,
@@ -84,6 +89,7 @@ export function useTapestryImport(onComplete: () => unknown) {
       name: f.name,
       progress: 0,
       status: 'uploading',
+      startedAt: Date.now(),
       killSwitch: new AbortController(),
     }))
     setImports((current) => [...(current ?? []), ...newImports])

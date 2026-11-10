@@ -30,13 +30,10 @@ import { EditTapestryDialog } from '../edit-tapestry-dialog'
 import { ForkTapestryDialog } from '../fork-tapestry-dialog'
 import { PasteButton } from './paste-button'
 import styles from './styles.module.css'
-import { TapestryExport } from '../../hooks/use-tapestry-export'
+import { useObservable } from 'tapestry-core-client/src/components/lib/hooks/use-observable'
+import { backgroundTasks } from '../../services/background-tasks'
 
-interface EditorTitleBarProps {
-  tapestryExport: TapestryExport
-}
-
-export function EditorTitleBar({ tapestryExport }: EditorTitleBarProps) {
+export function EditorTitleBar() {
   const obstruction = useViewportObstruction({ clear: { left: true, top: true } })
   const {
     title,
@@ -62,7 +59,8 @@ export function EditorTitleBar({ tapestryExport }: EditorTitleBarProps) {
   const [creatingTapestry, setCreatingTapestry] = useState(false)
   const [forkingTapestry, setForkingTapestry] = useState(false)
   const [editingTapestry, setEditingTapestry] = useState(false)
-  const { progress, triggerExport } = tapestryExport
+  useObservable(backgroundTasks)
+  const progress = backgroundTasks.getActiveExport(tapestryId)?.progress
 
   const { user } = useSession()
 
@@ -124,7 +122,7 @@ export function EditorTitleBar({ tapestryExport }: EditorTitleBarProps) {
           disabled={!!progress}
           onClick={() => {
             closeSubmenu()
-            void triggerExport()
+            void backgroundTasks.triggerExport(tapestryId, title)
           }}
         >
           {progress ? 'Exporting…' : 'Export Zip file'}
