@@ -7,16 +7,10 @@ const COMMONS_HOST = 'commons.wikimedia.org'
 const COMMONS_API_URL = 'https://commons.wikimedia.org/w/api.php'
 const COMMONS_PAGE_SIZE = 50
 const COMMONS_GENERIC_ICON_PATH = '/w/resources/assets/file-type-icons/'
-
-// null for a real Commons file whose type isn't one we can turn into a tapestry item (e.g. an
-// OFFICE document that isn't a PDF) -- callers decide what to do with those, not this function.
-export function wikimediaTypeToItemType(mediatype: string, mime: string): MediaItemType | null {
-  if (mediatype === 'BITMAP' || mediatype === 'DRAWING') return 'image'
-  if (mediatype === 'VIDEO') return 'video'
-  if (mediatype === 'AUDIO') return 'audio'
-  if (mediatype === 'OFFICE' && mime === 'application/pdf') return 'pdf'
-  return null
-}
+const ITEM_INFO_PROPS = 'url|mime|mediatype|timestamp|derivatives|size'
+const CATEGORY_THUMBNAIL_WIDTH = 300
+const CATEGORY_FILE_THUMBNAIL_WIDTH = 120
+const WIKIDATA_API_URL = 'https://www.wikidata.org/w/api.php'
 
 export interface WikimediaMedia {
   id: string
@@ -26,7 +20,7 @@ export interface WikimediaMedia {
   uploadedAt: string
   mediatype: string
   mime: string
-  /** Only meaningful for images -- video/audio/pdf files don't report a natural width/height here. */
+  // Only meaningful for images -- video/audio/pdf files don't report a natural width/height here.
   width?: number
   height?: number
 }
@@ -58,6 +52,54 @@ interface CommonsFilePage {
 
 interface CommonsQueryResponse<Page> {
   query?: { pages?: Record<string, Page> }
+}
+
+interface CommonsCategoryPage {
+  thumbnail?: { source: string }
+  extract?: string
+  categoryinfo?: { files: number }
+  pageprops?: { wikibase_item?: string }
+}
+
+interface CommonsCategoryMembersResponse extends CommonsQueryResponse<CommonsFilePage> {
+  continue?: { gcmcontinue?: string }
+}
+
+interface CommonsCategoryResultsPage {
+  results: WikimediaMedia[]
+  nextCursor: string | undefined
+}
+
+interface WikidataClaim {
+  mainsnak: { datavalue?: { value: { id?: string } } }
+}
+
+interface WikidataEntity {
+  claims?: Partial<Record<string, WikidataClaim[]>>
+  descriptions?: Partial<Record<string, { value: string }>>
+}
+
+interface WikidataEntitiesResponse {
+  entities?: Partial<Record<string, WikidataEntity>>
+}
+
+export interface WikimediaCategoryDetails {
+  thumbnail: string | null
+  // `extracts` (Wikipedia's article-summary API) returns real prose for a category page whose own
+  // wikitext has an article-like intro, and blank HTML for one that doesn't -- both are real,
+  // common outcomes, not a sign the API failed.
+  description: string | null
+  total: number | undefined
+}
+
+// null for a real Commons file whose type isn't one we can turn into a tapestry item (e.g. an
+// OFFICE document that isn't a PDF) -- callers decide what to do with those, not this function.
+export function wikimediaTypeToItemType(mediatype: string, mime: string): MediaItemType | null {
+  if (mediatype === 'BITMAP' || mediatype === 'DRAWING') return 'image'
+  if (mediatype === 'VIDEO') return 'video'
+  if (mediatype === 'AUDIO') return 'audio'
+  if (mediatype === 'OFFICE' && mime === 'application/pdf') return 'pdf'
+  return null
 }
 
 function thumbnailFor(itemInfo: CommonsItemInfo): string | null {
@@ -147,8 +189,6 @@ export function parseWikimediaCategoryQuery(url: string): string | null {
   }
 }
 
-const ITEM_INFO_PROPS = 'url|mime|mediatype|timestamp|derivatives|size'
-
 export async function fetchWikimediaMedia(
   title: string,
   signal?: AbortSignal,
@@ -173,69 +213,49 @@ export async function fetchWikimediaMedia(
   }
 }
 
-const CATEGORY_THUMBNAIL_WIDTH = 300
-
-const WIKIDATA_API_URL = 'https://www.wikidata.org/w/api.php'
-
-interface WikidataEntitiesResponse {
-  entities?: Partial<
-    Record<
-      string,
-      {
-        claims?: Partial<Record<string, { mainsnak: { datavalue?: { value: { id?: string } } } }[]>>
-        descriptions?: Partial<Record<string, { value: string }>>
-      }
-    >
-  >
-}
-
 async function fetchWikidataEntity(
   id: string,
   params: Record<string, string>,
   signal?: AbortSignal,
-) {
-  const url = new URL(WIKIDATA_API_URL)
-  url.searchParams.set('action', 'wbgetentities')
-  url.searchParams.set('ids', id)
-  for (const [key, value] of Object.entries(params)) url.searchParams.set(key, value)
-  url.searchParams.set('format', 'json')
-  url.searchParams.set('origin', '*')
-
-  const res = await fetch(url, { signal })
-  if (!res.ok) return undefined
-  return ((await res.json()) as WikidataEntitiesResponse).entities?.[id]
-}
-
-// Most categories have no prose of their own. Their page shows the description of the category's
-// main topic (Wikidata property P301) through the {{Wikidata Infobox}} template instead.
-async function fetchMainTopicDescription(categoryItemId: string, signal?: AbortSignal) {
+): Promise<WikidataEntity | null> {
   try {
-    const category = await fetchWikidataEntity(categoryItemId, { props: 'claims' }, signal)
-    const topicId = category?.claims?.P301?.[0]?.mainsnak.datavalue?.value.id
-    if (!topicId) return null
+    const url = new URL(WIKIDATA_API_URL)
+    url.searchParams.set('action', 'wbgetentities')
+    url.searchParams.set('ids', id)
+    for (const [key, value] of Object.entries(params)) url.searchParams.set(key, value)
+    url.searchParams.set('format', 'json')
+    url.searchParams.set('origin', '*')
 
-    const topic = await fetchWikidataEntity(
-      topicId,
-      { props: 'descriptions', languages: 'en', languagefallback: '1' },
-      signal,
-    )
-    return topic?.descriptions?.en?.value ?? null
+    const res = await fetch(url, { signal })
+    if (!res.ok) return null
+
+    const data = (await res.json()) as WikidataEntitiesResponse
+    return data.entities?.[id] ?? null
   } catch {
     return null
   }
 }
 
-export interface WikimediaCategoryDetails {
-  thumbnail: string | null
-  // `extracts` (Wikipedia's article-summary API) returns real prose for a category page whose own
-  // wikitext has an article-like intro, and blank HTML for one that doesn't -- both are real,
-  // common outcomes, not a sign the API failed.
-  description: string | null
-  total: number | undefined
+// Most categories have no prose of their own. Their page shows the description of the category's
+// main topic (Wikidata property P301) through the {{Wikidata Infobox}} template instead.
+async function fetchMainTopicDescription(
+  categoryItemId: string,
+  signal?: AbortSignal,
+): Promise<string | null> {
+  const category = await fetchWikidataEntity(categoryItemId, { props: 'claims' }, signal)
+  const topicId = category?.claims?.P301?.[0]?.mainsnak.datavalue?.value.id
+  if (!topicId) return null
+
+  const topic = await fetchWikidataEntity(
+    topicId,
+    { props: 'descriptions', languages: 'en', languagefallback: '1' },
+    signal,
+  )
+  return topic?.descriptions?.en?.value ?? null
 }
 
-// thumbnail/description/file count combined into one request -- verified real: MediaWiki's
-// action=query supports multiple props (prop=pageimages|extracts|categoryinfo) in a single call.
+// Thumbnail, description, file count and Wikidata item id are fetched in one request, because
+// MediaWiki's action=query accepts several props at once.
 export async function fetchWikimediaCategoryDetails(
   category: string,
   signal?: AbortSignal,
@@ -257,14 +277,8 @@ export async function fetchWikimediaCategoryDetails(
     const res = await fetch(url, { signal })
     if (!res.ok) return empty
 
-    interface CategoryPage {
-      thumbnail?: { source: string }
-      extract?: string
-      categoryinfo?: { files: number }
-      pageprops?: { wikibase_item?: string }
-    }
-    const data = (await res.json()) as CommonsQueryResponse<CategoryPage>
-    const page = Object.values(data.query?.pages ?? {})[0] ?? {}
+    const data = (await res.json()) as CommonsQueryResponse<CommonsCategoryPage>
+    const page = Object.values(data.query?.pages ?? {}).at(0) ?? {}
     return {
       thumbnail: page.thumbnail?.source ?? null,
       description:
@@ -279,18 +293,16 @@ export async function fetchWikimediaCategoryDetails(
   }
 }
 
-/**
- * Fetch one real page (up to COMMONS_PAGE_SIZE items) of a category's files, starting from an
- * optional cursor. Commons categories paginate with an opaque cursor (`gcmcontinue`), not a page
- * number -- there is no way to jump directly to an arbitrary page. Callers that need an
- * arbitrary skip/limit window (e.g. a lazily-loaded list) walk this themselves, keeping track of
- * each real page's cursor as they go.
- */
+// Fetch one real page (up to COMMONS_PAGE_SIZE items) of a category's files, starting from an
+// optional cursor. Commons categories paginate with an opaque cursor (`gcmcontinue`), not a page
+// number -- there is no way to jump directly to an arbitrary page. Callers that need an
+// arbitrary skip/limit window (e.g. a lazily-loaded list) walk this themselves, keeping track of
+// each real page's cursor as they go.
 export async function fetchWikimediaCategoryResults(
   category: string,
   cursor?: string,
   signal?: AbortSignal,
-): Promise<{ results: WikimediaMedia[]; nextCursor: string | undefined } | undefined> {
+): Promise<CommonsCategoryResultsPage | null> {
   try {
     const url = new URL(COMMONS_API_URL)
     url.searchParams.set('action', 'query')
@@ -300,18 +312,15 @@ export async function fetchWikimediaCategoryResults(
     url.searchParams.set('gcmtype', 'file')
     url.searchParams.set('prop', 'videoinfo')
     url.searchParams.set('viprop', ITEM_INFO_PROPS)
-    url.searchParams.set('viurlwidth', '120')
+    url.searchParams.set('viurlwidth', String(CATEGORY_FILE_THUMBNAIL_WIDTH))
     url.searchParams.set('format', 'json')
     url.searchParams.set('origin', '*')
     if (cursor) url.searchParams.set('gcmcontinue', cursor)
 
     const res = await fetch(url, { signal })
-    if (!res.ok) return undefined
+    if (!res.ok) return null
 
-    interface CategoryMembersResponse extends CommonsQueryResponse<CommonsFilePage> {
-      continue?: { gcmcontinue?: string }
-    }
-    const data = (await res.json()) as CategoryMembersResponse
+    const data = (await res.json()) as CommonsCategoryMembersResponse
     const pages = Object.values(data.query?.pages ?? {})
 
     return {
@@ -321,6 +330,6 @@ export async function fetchWikimediaCategoryResults(
       nextCursor: data.continue?.gcmcontinue,
     }
   } catch {
-    return undefined
+    return null
   }
 }
