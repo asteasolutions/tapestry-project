@@ -49,12 +49,12 @@ export const VideoItemPlayer = memo(
         return
       }
 
-      if (thumbnail && thumbnail === frameThumbnailRef.current) {
-        URL.revokeObjectURL(thumbnail)
-      }
-
       const blob = await captureVideoFrame(video)
       const url = URL.createObjectURL(blob)
+
+      if (frameThumbnailRef.current) {
+        URL.revokeObjectURL(frameThumbnailRef.current)
+      }
       frameThumbnailRef.current = url
       setThumbnail(url)
     }
@@ -78,7 +78,7 @@ export const VideoItemPlayer = memo(
           onPlay={onStart}
           onPause={(e) => {
             onStop()
-            void captureFrame(e.currentTarget)
+            return captureFrame(e.currentTarget)
           }}
           onEnded={onStop}
           onSeeked={(e) => {

@@ -35,7 +35,7 @@ export interface MediaPlayerProps<T extends ComponentType, Component = MediaElem
   stopTime?: number
   style?: CSSProperties
   onPlay?: React.ReactEventHandler<Component>
-  onPause?: React.ReactEventHandler<Component>
+  onPause?: (event: React.SyntheticEvent<Component>) => void | Promise<void>
   onEnded?: React.ReactEventHandler<Component>
   onSeeked?: React.ReactEventHandler<Component>
   onLoadedMetadata?: React.ReactEventHandler<Component>
@@ -118,15 +118,24 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
   }
 
   const [isPlaying, setIsPlaying] = useState<boolean>(false)
+  const [hasPlayed, setHasPlayed] = useState<boolean>(false)
+  const [isPausing, setIsPausing] = useState<boolean>(false)
+  const [loadedThumbnail, setLoadedThumbnail] = useState<string>()
+
+  const isThumbnailReady = !thumbnail || loadedThumbnail === thumbnail
+  const isVideoVisible = isPlaying || isPausing || (hasPlayed && !isThumbnailReady)
 
   const handlePlay = (e: MediaEvent<T>) => {
     setIsPlaying(true)
+    setHasPlayed(true)
     onPlay?.(e)
   }
 
-  const handlePause = (e: MediaEvent<T>) => {
+  const handlePause = async (e: MediaEvent<T>) => {
     setIsPlaying(false)
-    onPause?.(e)
+    setIsPausing(true)
+    await onPause?.(e)
+    setIsPausing(false)
   }
 
   const handleEnded = (e: MediaEvent<T>) => {
@@ -215,7 +224,7 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
     onLoadedMetadata: handleLoadedMetadata,
     onTimeUpdate: onTimeUpdate,
     onPlay: handlePlay,
-    onPause: handlePause,
+    onPause: (e: MediaEvent<T>) => void handlePause(e),
     onEnded: handleEnded,
     onSeeked: onSeeked,
   }
@@ -239,7 +248,7 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
           {...mediaProps}
           controls={false}
           style={{
-            display: isPlaying ? 'block' : 'none',
+            display: isVideoVisible ? 'block' : 'none',
             width: '100%',
             height: '100%',
           }}
@@ -252,12 +261,14 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
       {thumbnail && (
         <img
           src={thumbnail}
+          onLoad={() => setLoadedThumbnail(thumbnail)}
+          onError={() => setLoadedThumbnail(thumbnail)}
           // Images that may be loaded via `fetch` elsewhere must always be loaded with CORS policy "anonymous"
           // in order to prevent cached CORS header errors in Chrome.
           crossOrigin="anonymous"
           alt="Video thumbnail"
           style={{
-            display: isPlaying && !isAudio ? 'none' : 'block',
+            display: isVideoVisible && !isAudio ? 'none' : 'block',
             height: '100%',
             width: '100%',
             objectFit: 'cover',
