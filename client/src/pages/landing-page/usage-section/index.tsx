@@ -18,6 +18,11 @@ export function UsageSection() {
   } = LANDING_PAGE_TEXT
 
   const usagesImages = [ReadingRoom, Archives, BlackCanvas]
+  const usagesImageAlts = [
+    'Black-and-white photo of students working at computers in a classroom',
+    'Black-and-white photo of archival storage boxes stacked floor to ceiling, with a framed drawing propped among them',
+    'Black-and-white photo of a blank canvas on an easel in a sunlit studio',
+  ]
 
   const SMOrLess = useResponsive() <= Breakpoint.SM
 
@@ -81,7 +86,12 @@ export function UsageSection() {
             {subsections.map((subsection, index) => (
               <div className={styles.usageGridColumn} key={index}>
                 <Text className={styles.usageTitle}>{subsection.title}</Text>
-                <img src={usagesImages[index]} draggable={false} className={styles.usageImage} />
+                <img
+                  src={usagesImages[index]}
+                  alt={usagesImageAlts[index]}
+                  draggable={false}
+                  className={styles.usageImage}
+                />
                 <div>
                   <Text component="div" variant="bodySm" className={styles.usageSubtitle}>
                     {subsection.subtitle}

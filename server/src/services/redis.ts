@@ -15,6 +15,10 @@ export class RedisCache {
     return `${this.namespace}:${key}`
   }
 
+  private validationKey(key: string) {
+    return `${this.namespace}:${key}:valid`
+  }
+
   async memoize(
     key: string,
     generate: () => Promise<string>,
@@ -25,7 +29,7 @@ export class RedisCache {
     const namespacedKey = this.namespacedKey(key)
     const cachedValue = await redis.get(namespacedKey)
     if (typeof cachedValue === 'string') {
-      const validationKey = `${namespacedKey}:valid`
+      const validationKey = this.validationKey(key)
       let isValid = !!(await redis.exists(validationKey))
       if (!isValid) {
         isValid = await validateCachedValue(cachedValue)
@@ -44,7 +48,10 @@ export class RedisCache {
     return newValue
   }
 
-  async delete(key: string) {
-    await redis.del(this.namespacedKey(key))
+  async delete(...keys: string[]) {
+    const toDelete = keys.flatMap((key) => [this.namespacedKey(key), this.validationKey(key)])
+    if (toDelete.length > 0) {
+      await redis.del(toDelete)
+    }
   }
 }

@@ -9,6 +9,7 @@ import {
   useState,
 } from 'react'
 import { Document, Page, pdfjs } from 'react-pdf'
+import { useLocation } from 'react-router'
 import 'react-pdf/dist/Page/AnnotationLayer.css'
 import 'react-pdf/dist/Page/TextLayer.css'
 import { DocumentCallback, Options } from 'react-pdf/src/shared/types.js'
@@ -27,6 +28,7 @@ import styles from './styles.module.css'
 import { useStartPage } from '../../hooks/use-start-page'
 import { getPrimaryThumbnail } from '../../../../view-model/utils'
 import { IconOverlay } from '../../video-play-overlay'
+import { InternalNavigationState } from '../../../../stage/controller/item-controller'
 
 const PDF_OPTIONS: Options = {
   disableStream: true,
@@ -95,6 +97,7 @@ export function PdfItemViewer({ id, onDocumentLoaded, onPageChanged, apiRef }: P
   const [scrollTop, setScrollTop] = useState(0)
   const startPage = useStartPage(id)
   const [initialPage] = useState(startPage ?? (dto.defaultPage ?? 1) - 1)
+  const { timestamp } = (useLocation().state as InternalNavigationState | null) ?? {}
 
   const width = useDebounced(dto.size.width, 200)
   const { data: pages } = usePageHeights(pdfDocument, width)
@@ -126,6 +129,12 @@ export function PdfItemViewer({ id, onDocumentLoaded, onPageChanged, apiRef }: P
   useEffect(() => {
     navigateToPage(initialPage, 'instant')
   }, [initialPage, navigateToPage])
+
+  useEffect(() => {
+    if (startPage !== undefined) {
+      navigateToPage(startPage, 'instant')
+    }
+  }, [startPage, navigateToPage, timestamp])
 
   return (
     <>

@@ -17,9 +17,16 @@ export function OpenSourceSection() {
     <div className={styles.root}>
       {!LGOrLess && (
         <>
-          <PositionedImage src={LeftHand} width={400} left={-130} bottom={0} />
-          <PositionedImage src={VerticalString} width={110} left={175} bottom={-30} />
-          <PositionedImage src={RightHand} width={365} right={-100} bottom={-10} rotation={-27.5} />
+          <PositionedImage src={LeftHand} alt="" width={400} left={-130} bottom={0} />
+          <PositionedImage src={VerticalString} alt="" width={110} left={175} bottom={-30} />
+          <PositionedImage
+            src={RightHand}
+            alt=""
+            width={365}
+            right={-100}
+            bottom={-10}
+            rotation={-27.5}
+          />
         </>
       )}
       <div className={styles.textWrapper}>
@@ -60,8 +67,8 @@ export function OpenSourceSection() {
       </div>
       {LGOrLess && (
         <div className={styles.mobileHandsContainer}>
-          <img src={LeftHand} style={{ height: '130px' }} />
-          <img src={RightHand} style={{ height: '130px' }} />
+          <img src={LeftHand} alt="" style={{ height: '130px' }} />
+          <img src={RightHand} alt="" style={{ height: '130px' }} />
         </div>
       )}
     </div>

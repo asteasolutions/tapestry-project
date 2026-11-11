@@ -35,7 +35,7 @@ export function Tapestry({ onBack }: TapestryProps) {
 
   const store = useTapestryStore()
 
-  const hideControls = useTapestryData('hideControls')
+  const screenshotMode = useTapestryData('screenshotMode')
 
   useStageInit(sceneRef, {
     gestureDetectorOptions: { scrollGesture: 'pan', dragToPan: store.get('pointerMode') === 'pan' },
@@ -98,7 +98,7 @@ export function Tapestry({ onBack }: TapestryProps) {
         <TapestryCanvas classes={{ root: 'dom-container' }} />
         <ViewportScrollbars />
       </div>
-      {!hideControls && <TopToolbar onBack={onBack} />}
+      {screenshotMode !== 'dashboard' && <TopToolbar onBack={onBack} />}
       <SidePane />
       <ZoomToolbar className="zoom-toolbar" />
     </>

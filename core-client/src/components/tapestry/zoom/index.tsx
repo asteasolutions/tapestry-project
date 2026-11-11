@@ -13,14 +13,14 @@ export function ZoomToolbar({ className }: ZoomControlsProps) {
   const obstruction = useViewportObstruction({ clear: { bottom: true, right: true } })
 
   const { useStoreData } = useTapestryConfig()
-  const hideControls = useStoreData('hideControls')
+  const screenshotMode = useStoreData('screenshotMode')
 
   const { items, closeSubmenu, selectedSubmenu } = useZoomToolbarItems(
     ['zoom-out', 'zoom-in', 'zoom-to-fit'],
     ['guide', 'shortcuts', 'separator', 'start-presentation', 'fullscreen'],
   )
 
-  if (hideControls) {
+  if (screenshotMode === 'dashboard') {
     return null
   }
 

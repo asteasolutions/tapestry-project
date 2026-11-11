@@ -39,6 +39,7 @@ import { socketServer } from './socket/index.js'
 import { userSecrets } from './resources/user-secrets.js'
 import { tapestryBookmarks } from './resources/tapestry-bookmarks.js'
 import qs from 'qs'
+import { shareRouter } from './resources/share.js'
 
 export const app = express()
 
@@ -87,6 +88,7 @@ app.use(
   bindEndpoints(resources.presentationStepBatchMutations, presentationStepBatchMutations),
   bindEndpoints(resources.userSecrets, userSecrets),
   bindEndpoints(resources.tapestryBookmarks, tapestryBookmarks),
+  shareRouter,
 )
 app.use(express.static(path.join(import.meta.dirname, 'assets')))
 

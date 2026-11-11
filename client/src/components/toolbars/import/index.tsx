@@ -56,7 +56,7 @@ export function ImportToolbar({ className }: GlobalMenuProps) {
     {
       element: (
         <FilePicker
-          accept="image/*,application/pdf,video/*,application/epub+zip,audio/*,text/*,.webloc,.url"
+          accept="image/*,application/pdf,video/*,application/epub+zip,audio/*,text/*,.webloc,.url,.json"
           multiple
           onChange={addToTapestry}
         >

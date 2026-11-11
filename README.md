@@ -81,7 +81,7 @@ If you want to skip the discussions below and just run everything locally, here 
 ```sh
 npm install
 npm run db:start
-npm run localstack:start
+npm run s3:start
 npm run redis:start
 cd server
 # If running for the first time or if schema.prisma has been modified
@@ -112,22 +112,23 @@ npm run db:start
 
 AWS S3 is used for asset storage. If you already have an AWS account, the simplest option would be to create an S3 bucket and configure the `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`, and `AWS_S3_BUCKET_NAME` env variables appropriately when running the server and worker apps.
 
-A simpler option for local development is to use LocalStack. LocalStack is an AWS-compatible cloud emulator which can be run locally from a Docker image. This option is also available as an NPM script in the root `project.json`:
+A simpler option for local development is to use [SeaweedFS](https://github.com/seaweedfs/seaweedfs), an open-source S3-compatible object store. It runs from a Docker image and keeps its data in the `s3data` Docker volume, so assets survive container restarts. This option is also available as an NPM script in the root `package.json`:
 
 ```sh
-npm run localstack:start
+npm run s3:start
 ```
 
-**NB: The free version of LocalStack doesn't support persistence, so restarting this Docker container will wipe all Tapestry assets!**
+This starts SeaweedFS on port 8333 and a one-off `s3-init` container. The init container creates the bucket named by `AWS_S3_BUCKET_NAME` and applies the CORS rules from `deployment/s3/cors-config.json`, which allow the Vite dev server origins. SeaweedFS uses `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` from `server/.env` as its admin credentials, so any values work as long as the server uses the same ones. To wipe all local assets, run `docker compose -f docker-compose.local.yml down -v` (this also removes the database volume) or remove just the `s3data` volume.
 
-Another alternative is to use [Minio](https://www.min.io/), or any other S3-compatible service.
+Any other S3-compatible service, such as [RustFS](https://github.com/rustfs/rustfs), can be used in the same way.
 
 Sometimes you might need to change the way the aws presigned URLs are generated. By default virtual-hosted style is used (i.e. the bucket name is used as a subdomain - `https://<bucket-name>.s3.<region>.amazonaws.com`). By setting `AWS_S3_FORCE_PATH_STYLE` to `true` you can change this to path style - `https://s3.<region>.amazonaws.com/<bucket-name>/`.
 
-When using anything other than the default AWS S3, you also need to configure the env variable `AWS_ENDPOINT_URL`. For example, for LocalStack it could look something like this:
+When using anything other than the default AWS S3, you also need to configure the env variable `AWS_ENDPOINT_URL`. For example, for the local SeaweedFS it looks like this:
 
 ```
-AWS_ENDPOINT_URL=http://s3.localhost.localstack.cloud:4566
+AWS_ENDPOINT_URL=http://localhost:8333
+AWS_S3_FORCE_PATH_STYLE=true
 ```
 
 ### Redis

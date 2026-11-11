@@ -88,6 +88,7 @@ export function createItemViewModel(itemCreate: ItemCreateDto): EditableItemView
   const itemProps = {
     dto: {
       ...itemCreate,
+      thumbnail: undefined,
       id: crypto.randomUUID(),
       createdAt: now,
       updatedAt: now,
