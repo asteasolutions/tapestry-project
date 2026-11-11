@@ -1,0 +1,14 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 140px;
+
+  select {
+    height: 36px;
+  }
+}
+
+.message {
+  margin: 0;
+}

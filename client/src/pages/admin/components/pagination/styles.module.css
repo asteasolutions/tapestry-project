@@ -1,0 +1,84 @@
+.root {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 16px 0;
+  border-top: 1px solid var(--theme-border-subtle);
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--color-neutral-700);
+
+  .page-size {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    select {
+      width: auto;
+      height: 36px;
+    }
+  }
+
+  .pages {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+  }
+
+  button {
+    font: inherit;
+    cursor: pointer;
+
+    &:focus-visible {
+      outline: 2px solid var(--theme-border-focus);
+      outline-offset: 2px;
+    }
+  }
+
+  .step {
+    padding: 6px 12px;
+    border: 1px solid var(--theme-border-primary);
+    border-radius: 8px;
+    background-color: var(--theme-background-primary);
+    color: var(--theme-text-primary);
+    font-weight: 600;
+
+    &:disabled {
+      border-color: var(--theme-border-subtle);
+      color: var(--color-neutral-400);
+      cursor: not-allowed;
+    }
+
+    &:hover:not(:disabled) {
+      border-color: var(--theme-text-link);
+      background-color: var(--theme-background-hover);
+    }
+  }
+
+  .page {
+    min-width: 36px;
+    height: 36px;
+    padding: 0 6px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--theme-text-primary);
+
+    &:hover {
+      background-color: var(--theme-background-hover);
+    }
+
+    &.current {
+      background-color: var(--theme-background-brand);
+      color: var(--theme-text-primary-inverse);
+      font-weight: 600;
+    }
+  }
+
+  .gap {
+    padding: 0 4px;
+  }
+}

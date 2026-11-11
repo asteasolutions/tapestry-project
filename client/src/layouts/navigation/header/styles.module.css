@@ -32,6 +32,21 @@
     align-items: center;
     gap: 25px;
 
+    .active {
+      color: var(--theme-text-brand);
+      position: relative;
+
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background-color: var(--theme-text-brand);
+      }
+    }
+
     @media screen and (width <= 380px) {
       gap: 5px;
     }

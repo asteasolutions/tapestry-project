@@ -26,10 +26,19 @@
       row-gap: 15px;
 
       @media screen and (width <= 900px) {
-        grid-template-columns: 60px 1fr auto;
+        grid-template-columns: 60px 1fr 130px;
         grid-template-areas:
           'index title title'
           'content content icon';
+      }
+
+      @media screen and (width <= 600px) {
+        grid-template-columns: 60px 1fr;
+        grid-template-areas:
+          'index title'
+          'icon icon'
+          'content content';
+        row-gap: 24px;
       }
 
       &:not(:last-child) {
@@ -70,6 +79,10 @@
         grid-area: icon;
         width: 100%;
         align-self: center;
+
+        @media screen and (width <= 600px) {
+          width: 96px;
+        }
       }
     }
   }

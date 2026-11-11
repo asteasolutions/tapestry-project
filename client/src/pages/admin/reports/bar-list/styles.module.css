@@ -1,0 +1,36 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  font-size: 14px;
+  line-height: 20px;
+  list-style: none;
+
+  li {
+    display: grid;
+    grid-template-columns: minmax(90px, 140px) 1fr 64px;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .track {
+    height: 10px;
+    border-radius: 5px;
+    background-color: var(--color-neutral-50);
+    overflow: hidden;
+
+    span {
+      display: block;
+      height: 100%;
+      border-radius: 5px;
+    }
+  }
+
+  .count {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    color: var(--theme-text-secondary);
+  }
+}

@@ -172,7 +172,12 @@ async function createIIIFItem(manifestUrl: string, tapestryId: string, originalS
 }
 
 const iiifItemFactory: ItemFactory = async (source, mediaType, tapestryId) => {
-  if (typeof source !== 'string' || !isHTTPURL(source)) return null
+  if (source instanceof File) {
+    if (!mediaType?.includes('json') || !(await isIIIFManifest(source))) return null
+    return { items: [await createMediaItem('iiif', source, tapestryId)] }
+  }
+
+  if (!isHTTPURL(source)) return null
 
   const manifestUrl =
     extractIIIFContentStateURL(source) ??
