@@ -11,6 +11,7 @@ import { Breakpoint, useResponsive } from '../../../providers/responsive-provide
 import { Toolbar } from 'tapestry-core-client/src/components/lib/toolbar'
 import { useState } from 'react'
 import { useOutsideClick } from 'tapestry-core-client/src/components/lib/hooks/use-outside-click'
+import { clickTracking } from '../../../services/analytics'
 import clsx from 'clsx'
 
 function useButtons() {
@@ -22,6 +23,7 @@ function useButtons() {
       to: dashboardPath('public'),
       label: 'Gallery',
       active: pathname.startsWith(DASHBOARD_ROOT) && !pathname.startsWith(ADMIN_ROOT),
+      tracking: clickTracking('Header Gallery'),
     },
     {
       to: '/about',
@@ -64,7 +66,12 @@ export function Header() {
             className={styles.mobileNavToolbar}
             direction="column"
             items={buttons.map((b) => (
-              <MenuItemButton to={b.to} component={Link} onClick={() => setIsMobileNavOpen(false)}>
+              <MenuItemButton
+                to={b.to}
+                component={Link}
+                {...b.tracking}
+                onClick={() => setIsMobileNavOpen(false)}
+              >
                 {b.label}
               </MenuItemButton>
             ))}
@@ -83,6 +90,7 @@ export function Header() {
                 to={b.to}
                 component={Link}
                 variant="tertiary"
+                {...b.tracking}
                 className={clsx({ [styles.active]: b.active })}
               >
                 {b.label}
