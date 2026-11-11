@@ -13,13 +13,10 @@ function StatusIcon({ status }: { status: RowStatus }) {
   if (status === 'complete') {
     return <Icon icon="check_circle" className={styles.complete} aria-label="Done" />
   }
-  return (
-    <Icon
-      icon={status === 'cancelled' ? 'cancel' : 'error'}
-      className={styles.failed}
-      aria-label={status === 'cancelled' ? 'Cancelled' : 'Failed'}
-    />
-  )
+  if (status === 'cancelled') {
+    return <Icon icon="cancel" className={styles.cancelled} aria-label="Cancelled" />
+  }
+  return <Icon icon="error" className={styles.failed} aria-label="Failed" />
 }
 
 interface RowProps {
@@ -27,16 +24,24 @@ interface RowProps {
   name: string
   status: RowStatus
   percent?: number
+  message?: string
   children?: ReactNode
 }
 
-export function Row({ icon, name, status, percent, children }: RowProps) {
+export function Row({ icon, name, status, percent, message, children }: RowProps) {
   return (
     <div className={styles.root}>
       <Icon icon={icon} className={styles.fileIcon} />
-      <Text variant="bodySm" className={styles.name} title={name}>
-        {name}
-      </Text>
+      <div className={styles.text}>
+        <Text variant="bodySm" className={styles.name} title={name}>
+          {name}
+        </Text>
+        {message && (
+          <Text variant="bodyXs" className={status === 'failed' ? styles.failed : styles.cancelled}>
+            {message}
+          </Text>
+        )}
+      </div>
       {percent !== undefined && (
         <Text variant="bodySm" className={styles.percent}>
           {Math.round(percent)}%

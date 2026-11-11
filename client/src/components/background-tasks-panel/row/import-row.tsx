@@ -5,7 +5,17 @@ import { Row, RowStatus } from '.'
 
 export const IMPORT_IN_PROGRESS: FileStatus[] = ['uploading', 'pending', 'processing']
 
-export function ImportRow({ name, status, progress, tapestryId, killSwitch }: TapestryImport) {
+function importMessage({ status, error }: TapestryImport) {
+  if (status === 'cancelled') {
+    return 'Cancelled'
+  }
+  if (status === 'failed') {
+    return error ?? 'Import failed'
+  }
+}
+
+export function ImportRow(tapestryImport: TapestryImport) {
+  const { name, status, progress, tapestryId, killSwitch } = tapestryImport
   const navigate = useNavigate()
 
   return (
@@ -14,6 +24,7 @@ export function ImportRow({ name, status, progress, tapestryId, killSwitch }: Ta
       name={name}
       status={IMPORT_IN_PROGRESS.includes(status) ? 'inProgress' : (status as RowStatus)}
       percent={status === 'uploading' || status === 'processing' ? progress * 100 : undefined}
+      message={importMessage(tapestryImport)}
     >
       {status === 'uploading' && (
         <Button variant="clear" size="small" onClick={() => killSwitch.abort()}>

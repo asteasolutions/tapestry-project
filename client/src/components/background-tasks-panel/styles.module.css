@@ -1,7 +1,7 @@
 .root {
   position: fixed;
   right: 24px;
-  bottom: 24px;
+  bottom: 56px;
   z-index: 2;
   width: min(400px, calc(100vw - 48px));
   overflow: hidden;

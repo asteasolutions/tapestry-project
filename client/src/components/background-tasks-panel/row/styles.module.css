@@ -10,10 +10,15 @@
   font-size: 20px;
 }
 
-.name {
+.text {
+  display: flex;
+  flex-direction: column;
   flex-grow: 1;
   min-width: 0;
   padding: 6px 0;
+}
+
+.name {
   overflow-wrap: anywhere;
 }
 
@@ -28,4 +33,8 @@
 
 .failed {
   color: var(--theme-text-negative);
+}
+
+.cancelled {
+  color: var(--theme-text-secondary);
 }

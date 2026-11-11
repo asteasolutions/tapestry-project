@@ -19,6 +19,7 @@ export interface TapestryImport {
   name: string
   progress: number
   status: FileStatus
+  error?: string
   jobId?: string
   tapestryId?: string | null
   startedAt: number
@@ -101,7 +102,7 @@ export function useTapestryImport(onComplete: () => unknown) {
         try {
           if (!(await checkZipValidity(f))) {
             console.warn('Invalid zip file')
-            updateFile(importId, { status: 'failed' })
+            updateFile(importId, { status: 'failed', error: 'Invalid zip file' })
             return
           }
           const s3Key = await uploadAsset(
@@ -121,7 +122,12 @@ export function useTapestryImport(onComplete: () => unknown) {
           updateFile(importId, { jobId: id })
         } catch (e) {
           console.warn('Error importing file', f, e)
-          updateFile(importId, { status: e instanceof CanceledError ? 'cancelled' : 'failed' })
+          updateFile(
+            importId,
+            e instanceof CanceledError
+              ? { status: 'cancelled' }
+              : { status: 'failed', error: 'Upload failed' },
+          )
         }
       }),
     )
