@@ -128,6 +128,10 @@ async function cloneTapestry(
       'ownerId',
       'parentId',
       'visibility',
+      // Featuring is an admin decision about the original tapestry, so forks are never featured
+      'featured',
+      'featuredAt',
+      'galleryPosition',
     ),
     id: tapestryId,
     slug: tapestryId,

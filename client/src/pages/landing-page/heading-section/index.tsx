@@ -40,14 +40,16 @@ function PositionedElementsDesktop() {
       <PositionedComponent top={160} right={125} bottom={-110} left={190}>
         <PositionedImage
           src={RightHandWithThread}
+          alt=""
           right={-150}
           width={350}
           bottom={-225}
           rotation={-65.53}
         />
-        <img src={TapestryString} className={styles.tapestryString} draggable={false} />
+        <img src={TapestryString} alt="" className={styles.tapestryString} draggable={false} />
         <PositionedImage
           src={LeftHandWithThread}
+          alt=""
           left={-200}
           width={340}
           top={-110}
@@ -55,6 +57,7 @@ function PositionedElementsDesktop() {
         />
         <PositionedImage
           src={WikipediaScreenshot}
+          alt=""
           width={72}
           top="32%"
           left="11%"
@@ -68,8 +71,8 @@ function PositionedElementsDesktop() {
           style={{ transform: 'translate(-50%, -50%)' }}
         />
       </PositionedComponent>
-      <PositionedImage src={Checker} left={-50} width={100} bottom={160} />
-      <PositionedImage src={Herkulanisher} right={80} top={65} width={100} />
+      <PositionedImage src={Checker} alt="" left={-50} width={100} bottom={160} />
+      <PositionedImage src={Herkulanisher} alt="" right={80} top={65} width={100} />
     </>
   )
 }
@@ -93,7 +96,11 @@ function AWMTCircles() {
         target="_blank"
         {...clickTracking('Landing As We May Think')}
       >
-        <img src={AWMTLogo} style={{ width: '100%', height: '100%' }} />
+        <img
+          src={AWMTLogo}
+          alt="As We May Think (opens in new tab)"
+          style={{ width: '100%', height: '100%' }}
+        />
       </PositionedComponent>
       <PositionedComponent
         component="a"
@@ -105,7 +112,11 @@ function AWMTCircles() {
         target="_blank"
         {...clickTracking('Landing Internet Archive')}
       >
-        <img src={IALogoSmall} style={{ width: '100%', height: '100%' }} />
+        <img
+          src={IALogoSmall}
+          alt="Internet Archive (opens in new tab)"
+          style={{ width: '100%', height: '100%' }}
+        />
       </PositionedComponent>
     </div>
   )
@@ -150,7 +161,7 @@ export function HeadingSection() {
         <Text variant="h6" component="div" className={styles.subheading}>
           {subtitle}
         </Text>
-        {LGOrLess && <img className={styles.mobileHands} src={MobileHands} />}
+        {LGOrLess && <img className={styles.mobileHands} src={MobileHands} alt="" />}
         {tabletLayout ? (
           <div className={styles.tabletContent}>
             <MainContent />

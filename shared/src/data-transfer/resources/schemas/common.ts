@@ -35,6 +35,15 @@ export const FILTER_OPS = [
   'isnull',
 ] as const
 
+/** A list filter in its query-string form: `{ 'prop:op': value }`. */
+export const ListFilterSchema = z.record(
+  z.custom<`${string}:${FilterOp}`>(
+    (val) =>
+      typeof val === 'string' && (FILTER_OPS as readonly string[]).includes(val.split(':')[1]),
+  ),
+  z.string().or(z.string().array()),
+)
+
 export const ListParamsSchema = ReadParamsSchema.extend({
   skip: z.coerce.number<number>().nonnegative().nullish(),
   limit: z.coerce.number<number>().nonnegative().nullish(),
@@ -51,21 +60,12 @@ export const ListParamsSchema = ReadParamsSchema.extend({
       }, {})
     })
     .nullish(),
-  filter: z
-    .record(
-      z.custom<`${string}:${FilterOp}`>(
-        (val) =>
-          typeof val === 'string' && (FILTER_OPS as readonly string[]).includes(val.split(':')[1]),
-      ),
-      z.string().or(z.string().array()),
-    )
-    .transform((val) =>
-      Object.entries(val).map(([key, value]) => {
-        const [prop, op] = key.split(':')
-        return { prop, op: op as FilterOp, value: value }
-      }),
-    )
-    .nullish(),
+  filter: ListFilterSchema.transform((val) =>
+    Object.entries(val).map(([key, value]) => {
+      const [prop, op] = key.split(':')
+      return { prop, op: op as FilterOp, value: value }
+    }),
+  ).nullish(),
 })
 
 export function listResponse<R extends ZodType>(resourceSchema: R) {

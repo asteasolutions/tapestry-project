@@ -1,0 +1,48 @@
+.root {
+  transition: opacity 0.15s;
+
+  &.loading {
+    opacity: 0.6;
+  }
+
+  .placeholder {
+    margin: 0;
+    color: var(--color-neutral-500);
+  }
+}
+
+.note {
+  margin: 0;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--color-neutral-500);
+}
+
+.headline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--color-neutral-50);
+  border-radius: 8px;
+  background-color: color-mix(
+    in srgb,
+    var(--color-primary-50) 25%,
+    var(--theme-background-primary)
+  );
+
+  .value {
+    font-size: 28px;
+    line-height: 36px;
+    font-weight: 600;
+    color: var(--theme-text-brand);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .label {
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--color-neutral-500);
+  }
+}

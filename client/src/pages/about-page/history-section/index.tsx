@@ -7,16 +7,21 @@ import { Breakpoint, useResponsive } from '../../../providers/responsive-provide
 
 function ImageContent() {
   return (
-    <>
+    <figure className={styles.figure}>
       <div className={styles.imageContainer}>
-        <img src={BobArchive} className={styles.imageElement} draggable={false} />
+        <img
+          src={BobArchive}
+          alt="Cardboard archive boxes stacked around a brick-walled studio, beside a desk with an iMac"
+          className={styles.imageElement}
+          draggable={false}
+        />
         <ConcreteWall width="10%" height="66%" top="6%" left="-7%" rotation={2} />
         <ConcreteWall width="50%" height="13%" top="2.5%" right="-15%" rotation={35} />
       </div>
-      <Text component="div" variant="bodySm" className={styles.imageDescription}>
+      <Text component="figcaption" variant="bodySm" className={styles.imageDescription}>
         A portion of Bob Stein's collection.
       </Text>
-    </>
+    </figure>
   )
 }
 

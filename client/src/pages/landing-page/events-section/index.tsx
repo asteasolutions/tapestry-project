@@ -52,6 +52,7 @@ export function EventsSection() {
       </Button>
       <img
         src={XSOrLess ? EventsStringMobile : EventsString}
+        alt=""
         className={styles.eventsString}
         draggable={false}
       />

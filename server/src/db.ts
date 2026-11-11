@@ -19,9 +19,11 @@ export function isNotFoundError(error: unknown): error is Prisma.PrismaClientKno
   return error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025'
 }
 
+export type Tx = Prisma.TransactionClient
+
 export function ensureTransaction<T>(
-  tx: Prisma.TransactionClient | null | undefined,
-  callback: (tx: Prisma.TransactionClient) => Promise<T>,
+  tx: Tx | null | undefined,
+  callback: (tx: Tx) => Promise<T>,
 ): Promise<T> {
   if (tx) return callback(tx)
 

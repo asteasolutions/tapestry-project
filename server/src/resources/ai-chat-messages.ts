@@ -1,5 +1,5 @@
 import { Resources } from 'tapestry-shared/src/data-transfer/resources/index.js'
-import { ensureTransaction, prisma } from '../db.js'
+import { ensureTransaction, prisma, Tx } from '../db.js'
 import { RESTResourceImpl } from './base-resource.js'
 import { parseIncludes, parseListFilter } from './utils.js'
 import { serialize } from '../transformers/index.js'
@@ -13,7 +13,7 @@ import { parseDBItemSource } from '../transformers/item.js'
 
 async function createAIChatMessage<const T extends Prisma.AiChatMessageCreateArgs>(
   args: Prisma.SelectSubset<T, Prisma.AiChatMessageCreateArgs>,
-  tx?: Prisma.TransactionClient,
+  tx?: Tx,
 ) {
   return ensureTransaction(tx, async (tx) => {
     const aiMessage = await tx.aiChatMessage.create<T>(args)

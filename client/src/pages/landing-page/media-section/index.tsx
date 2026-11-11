@@ -61,11 +61,15 @@ export function MediaSection() {
                 </Text>
                 {index === 0 && (
                   <div className={styles.mediaIcons}>
-                    <img src={OpenverseIcon} className={styles.mediaIcon} />
-                    <img src={IALogoCircle} className={styles.mediaIcon} />
-                    <img src={WikipediaIcon} className={styles.mediaIcon} />
-                    <img src={IIIFIcon} className={styles.mediaIcon} />
-                    <img src={YoutubeIcon} className={styles.mediaIcon} />
+                    <img src={OpenverseIcon} alt="Openverse logo" className={styles.mediaIcon} />
+                    <img
+                      src={IALogoCircle}
+                      alt="Internet Archive logo"
+                      className={styles.mediaIcon}
+                    />
+                    <img src={WikipediaIcon} alt="Wikipedia logo" className={styles.mediaIcon} />
+                    <img src={IIIFIcon} alt="IIIF logo" className={styles.mediaIcon} />
+                    <img src={YoutubeIcon} alt="YouTube logo" className={styles.mediaIcon} />
                   </div>
                 )}
               </div>
@@ -73,6 +77,7 @@ export function MediaSection() {
           </div>
           <video
             src={TapestriesPresentation}
+            aria-label="Looping preview of example tapestries, including Muriel Cooper's Lasting Imprint, The History of House Music, and Contributions of the Digital Era Pioneers, muted"
             className={styles.video}
             controls
             autoPlay
