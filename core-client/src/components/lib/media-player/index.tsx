@@ -117,9 +117,9 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
     onLoadedMetadata?.(e)
   }
 
-  const [isPlaying, setIsPlaying] = useState<boolean>(false)
-  const [hasPlayed, setHasPlayed] = useState<boolean>(false)
-  const [isPausing, setIsPausing] = useState<boolean>(false)
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [hasPlayed, setHasPlayed] = useState(false)
+  const [isPausing, setIsPausing] = useState(false)
   const [loadedThumbnail, setLoadedThumbnail] = useState<string>()
 
   const isThumbnailReady = !thumbnail || loadedThumbnail === thumbnail
