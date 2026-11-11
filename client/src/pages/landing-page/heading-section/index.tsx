@@ -17,6 +17,7 @@ import {
   PositionedImage,
 } from '../../../components/positioned-component'
 import { Breakpoint, useResponsive } from '../../../providers/responsive-provider'
+import { clickTracking } from '../../../services/analytics'
 
 function PositionedElementsMobile() {
   return (
@@ -90,6 +91,7 @@ function AWMTCircles() {
         height={100}
         href="https://awmt.org"
         target="_blank"
+        {...clickTracking('Landing As We May Think')}
       >
         <img src={AWMTLogo} style={{ width: '100%', height: '100%' }} />
       </PositionedComponent>
@@ -101,6 +103,7 @@ function AWMTCircles() {
         height={100}
         href="https://archive.org"
         target="_blank"
+        {...clickTracking('Landing Internet Archive')}
       >
         <img src={IALogoSmall} style={{ width: '100%', height: '100%' }} />
       </PositionedComponent>

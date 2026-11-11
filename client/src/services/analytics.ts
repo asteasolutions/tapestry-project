@@ -19,6 +19,8 @@ export type ClickTarget =
   | 'Landing Reach out'
   | 'Landing View GitHub repo'
   | 'Landing Contact'
+  | 'Landing As We May Think'
+  | 'Landing Internet Archive'
 
 export type AnalyticsEvent = `Click: ${ClickTarget}` | 'Sign up cancelled' | 'Sign up completed'
 
