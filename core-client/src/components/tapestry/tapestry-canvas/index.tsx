@@ -10,7 +10,6 @@ import {
 } from '../../../components/tapestry'
 import { ItemViewModel, TapestryViewModel } from '../../../view-model'
 import {
-  computeRestrictedScale,
   getBoundingRectangle,
   getBounds,
   getSelectionItems,
@@ -26,7 +25,6 @@ import { ItemType } from 'tapestry-core/src/data-format/schemas/item'
 import { isMac, isMobile } from '../../../lib/user-agent'
 import { sortByPath } from 'tapestry-core/src/lib/array'
 import { useThemeCss } from '../../lib/hooks/use-theme-css'
-import { getOpaqueColor } from '../../../theme/types'
 
 const ITEMS_WITHOUT_THUMBNAIL_PLACEHOLDER: ItemType[] = ['text', 'actionButton']
 
@@ -137,19 +135,16 @@ function TapestryElementLocator({
   )
 }
 
-// While a group is dragged, its background and broder is rendered in the DOM
-function DraggedGroupBackground() {
+// The background of a single selected group is rendered in the DOM before the items (instead of in
+// PixiJS), so that it stays above the items of other groups, but below its own items.
+function SelectedGroupBackground({ transform }: { transform: LinearTransform }) {
   const { useStoreData } = useTapestryConfig()
-  const { items, selection, viewport } = useStoreData(['items', 'selection', 'viewport'])
+  const { items, selection } = useStoreData(['items', 'selection'])
   const group = useSingleGroupSelection()
 
-  if (!group?.dto.color || !(group.dto.hasBackground || group.dto.hasBorder)) {
+  if (!group?.dto.hasBackground || !group.dto.color) {
     return null
   }
-
-  const { color, hasBackground, hasBorder } = group.dto
-  const borderWidth =
-    (2 * computeRestrictedScale(viewport, idMapToArray(items))) / viewport.transform.scale
 
   const { top, left, width, height } = getBoundingRectangle(
     getSelectionItems({ items, selection }),
@@ -165,10 +160,8 @@ function DraggedGroupBackground() {
         height,
         zIndex: ZOrder.selection,
         pointerEvents: 'none',
-        boxSizing: 'border-box',
-        backgroundColor: hasBackground ? color : undefined,
-        border: `${borderWidth}px solid ${hasBorder ? getOpaqueColor(color) : 'var(--theme-background-brand)'}`,
-        ...cssTransformForLocation({ x: left, y: top }, viewport.transform),
+        backgroundColor: group.dto.color,
+        ...cssTransformForLocation({ x: left, y: top }, transform),
       }}
     />
   )
@@ -238,7 +231,7 @@ export function TapestryCanvas({ classes, style }: TapestryCanvasProps) {
         constrainToLayer && `pointer-action-layer-${constrainToLayer}`,
       )}
     >
-      {pointerAction === 'drag' && <DraggedGroupBackground />}
+      <SelectedGroupBackground transform={transform} />
       {idMapToArray(rels).map((rel) => {
         const bounds = getRelBounds(rel.dto, items)
         return (
