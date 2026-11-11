@@ -28,7 +28,6 @@ export const config = deepFreeze(
       WBM_RESPONSE_CACHE_DURATION: OptionalInt(3600), // one hour in seconds
       WBM_EMPTY_RESPONSE_CACHE_DURATION: OptionalInt(120),
       ASSET_READ_URL_EXPIRES_IN: OptionalInt(604_800), // on week in seconds
-      ASSET_READ_URL_VALIDATION_EXPIRES_IN: OptionalInt(600),
       EXTERNAL_SERVER_URL: z.string(),
       VIEWER_URL: z.string(),
       SECURE_COOKIE: z
@@ -106,7 +105,6 @@ export const config = deepFreeze(
           baseUrl: input.WIKIMEDIA_BASE_URL,
         },
         assetReadUrlExpiresIn: input.ASSET_READ_URL_EXPIRES_IN,
-        assetReadUrlValidationExpiresIn: input.ASSET_READ_URL_VALIDATION_EXPIRES_IN,
         externalUrl: input.EXTERNAL_SERVER_URL,
         viewerUrl: input.VIEWER_URL,
         ia: {

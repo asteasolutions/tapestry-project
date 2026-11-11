@@ -67,7 +67,7 @@ export function PrinciplesSection() {
               <Text component="div" variant="bodySm" className={styles.principleContent}>
                 {subsection.content}
               </Text>
-              {!MDOrLess && <img src={image} className={styles.principleIcon} draggable="false" />}
+              <img src={image} alt="" className={styles.principleIcon} draggable="false" />
             </div>
           )
         })}

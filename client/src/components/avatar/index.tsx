@@ -15,6 +15,7 @@ interface AvatarProps {
   style?: React.CSSProperties
   tooltip?: TooltipProps
   onClick?: () => unknown
+  'aria-label'?: string
 }
 
 function getInitials({ givenName, familyName, username }: PublicUserProfileDto) {
@@ -23,7 +24,15 @@ function getInitials({ givenName, familyName, username }: PublicUserProfileDto) 
   return (initials || username.charAt(0)).toUpperCase()
 }
 
-export function Avatar({ user, className, size, onClick, style, tooltip }: AvatarProps) {
+export function Avatar({
+  user,
+  className,
+  size,
+  onClick,
+  style,
+  tooltip,
+  'aria-label': ariaLabel,
+}: AvatarProps) {
   const [failed, setFailed] = useState(false)
   const showInitials = !user.avatar || failed
 
@@ -52,6 +61,7 @@ export function Avatar({ user, className, size, onClick, style, tooltip }: Avata
         variant="tertiary"
         style={style}
         tooltip={tooltip}
+        aria-label={ariaLabel}
       >
         {children}
       </Button>
