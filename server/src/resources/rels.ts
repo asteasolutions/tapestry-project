@@ -1,5 +1,5 @@
 import { Resources } from 'tapestry-shared/src/data-transfer/resources/index.js'
-import { ensureTransaction, prisma } from '../db.js'
+import { ensureTransaction, prisma, Tx } from '../db.js'
 import { RequestContext, RESTResourceImpl } from './base-resource.js'
 import { relDtoToDb } from '../transformers/rel.js'
 import { canEditTapestry, canListTapestryElements, canViewTapestry } from './tapestries.js'
@@ -49,19 +49,19 @@ export async function createRels(
   rel: RelCreateDto,
   context?: RequestContext<true>,
   query?: ReadParamsDto,
-  tx?: Prisma.TransactionClient,
+  tx?: Tx,
 ): Promise<RelDto>
 export async function createRels(
   rels: RelCreateDto[],
   context?: RequestContext<true>,
   query?: ReadParamsDto,
-  tx?: Prisma.TransactionClient,
+  tx?: Tx,
 ): Promise<RelDto[]>
 export async function createRels(
   rels: OneOrMore<RelCreateDto>,
   context?: RequestContext<true>,
   query?: ReadParamsDto,
-  tx?: Prisma.TransactionClient,
+  tx?: Tx,
 ) {
   // In case the method is called with an array with a single item, we still want to return an array.
   const shouldReturnSingleRecord = !Array.isArray(rels)
@@ -88,7 +88,7 @@ export async function updateRels(
   updates: Record<string, RelUpdateDto>,
   context: RequestContext<true>,
   query?: ReadParamsDto,
-  tx?: Prisma.TransactionClient,
+  tx?: Tx,
 ) {
   const updatedTapestries = new Set<string>()
   const rels = await ensureTransaction(tx, (tx) =>
@@ -115,11 +115,7 @@ export async function updateRels(
   return rels
 }
 
-export function destroyRels(
-  ids: OneOrMore<string>,
-  context: RequestContext<true>,
-  tx?: Prisma.TransactionClient,
-) {
+export function destroyRels(ids: OneOrMore<string>, context: RequestContext<true>, tx?: Tx) {
   return ensureTransaction(tx, async (tx) => {
     ids = ensureArray(ids)
     const rels = await tx.rel.findMany({

@@ -1,5 +1,5 @@
 import { Resources } from 'tapestry-shared/src/data-transfer/resources/index.js'
-import { ensureTransaction, prisma } from '../db.js'
+import { ensureTransaction, prisma, Tx } from '../db.js'
 import { RequestContext, RESTResourceImpl } from './base-resource.js'
 import { canEditTapestry, canListTapestryElements, canViewTapestry } from './tapestries.js'
 import { checkOpSupport, CustomFilters, parseIncludes, parseListFilter } from './utils.js'
@@ -146,7 +146,7 @@ export async function updatePresentationSteps(
 export async function destroyPresentationSteps(
   ids: OneOrMore<string>,
   context: RequestContext<true>,
-  tx?: Prisma.TransactionClient,
+  tx?: Tx,
 ) {
   let stepsByTapestryId: IdMap<PresentationStep[]> = {}
 

@@ -2,7 +2,7 @@ import { extname } from 'node:path'
 import mime from 'mime'
 import { isString, sumBy } from 'lodash-es'
 import anyAscii from 'any-ascii'
-import { prisma } from '../db.js'
+import { prisma, Tx } from '../db.js'
 import { generateItemKey, s3Service, tapestryKey } from './s3-service.js'
 import {
   ZipReader,
@@ -88,12 +88,7 @@ export function actionMap(
   }
 }
 
-export async function generateSlug(
-  tx: Prisma.TransactionClient,
-  ownerId: string,
-  title: string,
-  fallback: string,
-) {
+export async function generateSlug(tx: Tx, ownerId: string, title: string, fallback: string) {
   const baseSlug =
     anyAscii(title)
       .toLowerCase()
