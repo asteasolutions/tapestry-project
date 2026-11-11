@@ -1,0 +1,66 @@
+.stack {
+  display: flex;
+  gap: 2px;
+  height: 16px;
+  border-radius: 8px;
+  background-color: var(--color-neutral-50);
+  overflow: hidden;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  line-height: 20px;
+
+  tr {
+    border-top: 1px solid var(--color-neutral-50);
+  }
+
+  th,
+  td {
+    padding: 8px 0;
+  }
+
+  th {
+    text-align: left;
+    font-weight: 500;
+  }
+
+  .label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+  }
+
+  .number {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .share {
+    width: 56px;
+    padding-left: 16px;
+    text-align: right;
+    color: var(--color-neutral-500);
+  }
+
+  .featured th {
+    padding-left: 18px;
+
+    .label {
+      gap: 6px;
+      color: var(--theme-text-brand);
+    }
+
+    :global(.material-symbols-outlined) {
+      font-size: 14px;
+    }
+  }
+}

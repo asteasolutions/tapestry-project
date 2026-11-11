@@ -1,7 +1,8 @@
 import { extname } from 'node:path'
 import mime from 'mime'
 import { isString, sumBy } from 'lodash-es'
-import { prisma } from '../db.js'
+import anyAscii from 'any-ascii'
+import { prisma, Tx } from '../db.js'
 import { generateItemKey, s3Service, tapestryKey } from './s3-service.js'
 import {
   ZipReader,
@@ -87,6 +88,30 @@ export function actionMap(
   }
 }
 
+export async function generateSlug(tx: Tx, ownerId: string, title: string, fallback: string) {
+  const baseSlug =
+    anyAscii(title)
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      //Remove leading and trailing "-"
+      .replace(/^-|-$/g, '') || fallback
+
+  const takenSlugs = new Set(
+    (
+      await tx.tapestry.findMany({
+        where: { ownerId, slug: { startsWith: baseSlug } },
+        select: { slug: true },
+      })
+    ).map(({ slug }) => slug),
+  )
+
+  if (!takenSlugs.has(baseSlug)) return baseSlug
+
+  let i = 2
+  while (takenSlugs.has(`${baseSlug}-${i}`)) i++
+  return `${baseSlug}-${i}`
+}
+
 export class TapestryImportService {
   private total!: number
   private progress = 0
@@ -148,10 +173,11 @@ export class TapestryImportService {
       return await prisma.$transaction(
         async (tx) => {
           const tapestryId = crypto.randomUUID()
+          const slug = await generateSlug(tx, userId, tapestry.title, tapestryId)
           await tx.tapestry.create({
             data: {
               id: tapestryId,
-              slug: tapestryId,
+              slug,
               background: tapestry.background,
               theme: tapestry.theme,
               title: tapestry.title,

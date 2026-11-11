@@ -42,8 +42,16 @@ const CUSTOM_CRITERIA: Partial<Record<DashboardSection, Partial<Record<SortBy, s
     latest: 'firstSeen',
   },
   public: {
-    latest: 'createdAt',
+    latest: 'galleryPosition',
   },
+}
+
+// Criteria whose natural ("descending" in the UI) order is ascending
+const INVERTED_CRITERIA = new Set(['galleryPosition'])
+
+function listOrder(criterion: string, direction: SortDirection) {
+  const descending = INVERTED_CRITERIA.has(criterion) ? direction === 'asc' : direction === 'desc'
+  return `${descending ? '-' : ''}${criterion}`
 }
 
 function createTapestryFilter(
@@ -53,7 +61,7 @@ function createTapestryFilter(
 ) {
   const listFilter: ListParamsInputDto['filter'] = { 'title:icontains': searchTerm }
   if (section === 'public') {
-    listFilter['visibility:eq'] = 'public'
+    listFilter['featured:eq'] = 'true'
   } else if (userId) {
     if (section === 'home') {
       listFilter['ownerId:eq'] = userId
@@ -181,7 +189,10 @@ export function Dashboard() {
         {!smOrLess && tapestryListControls}
         <TapestryList
           filter={tapestryFilter}
-          orderBy={`${sortDirection === 'desc' ? '-' : ''}${CUSTOM_CRITERIA[section]?.[sortCriterion] ?? sortCriterion}`}
+          orderBy={listOrder(
+            CUSTOM_CRITERIA[section]?.[sortCriterion] ?? sortCriterion,
+            sortDirection,
+          )}
           onLoaderInitialized={setTapestryLoader}
           onNewTapestry={() => setCreatingTapestry(true)}
           showNewTapestryButton={section === 'home' && searchTerm === ''}

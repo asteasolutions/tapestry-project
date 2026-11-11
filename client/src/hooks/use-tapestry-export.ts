@@ -1,8 +1,10 @@
 import { useRef, useState } from 'react'
+import { noop } from 'lodash-es'
 import { ZodError } from 'zod/v4'
 import { download } from 'tapestry-core-client/src/lib/file'
 import { useLeaveWarning } from './use-leave-warning'
 import { TapestryExporter, ProgressEvent } from '../services/tapestry-exporter'
+import { resource } from '../services/rest-resources'
 
 export type ExportStatus = 'exporting' | 'complete' | 'failed' | 'cancelled'
 
@@ -79,6 +81,8 @@ export function useTapestryExport({ onError }: UseTapestryExportOptions) {
       await exporter.export((url, exportedTitle) => {
         finish(id, 'complete')
         download(url, `${exportedTitle}.zip`)
+        // Recorded for the admin reports; a failure must not affect the user
+        void resource('tapestryExports').create({ tapestryId }).catch(noop)
       })
     } finally {
       finish(id, 'failed')

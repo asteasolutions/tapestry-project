@@ -49,6 +49,7 @@
     "@types/lodash-es": "^4.17.12",
     "@zip.js/zip.js": "^2.7.57",
     "ai": "^5.0.14",
+    "any-ascii": "^0.3.3",
     "axios": "^1.12.2",
     "bullmq": "^5.41.2",
     "cookie-parser": "^1.4.7",

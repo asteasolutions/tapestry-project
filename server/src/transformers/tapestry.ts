@@ -21,6 +21,7 @@ export async function tapestryDbToDto(
     theme: dbTapestry.theme,
     thumbnail: dbTapestry.thumbnail && (await s3Service.getReadObjectUrl(dbTapestry.thumbnail)),
     allowForking: dbTapestry.allowForking,
+    featured: dbTapestry.featured,
     startView:
       dbTapestry.startViewX !== null &&
       dbTapestry.startViewY !== null &&
@@ -59,6 +60,9 @@ const DB_TO_DTO_FIELD_MAP: Record<TapestryDBField, string> = {
   startViewHeight: 'startView.size.height',
   thumbnail: 'thumbnail',
   allowForking: 'allowForking',
+  featured: 'featured',
+  featuredAt: 'featuredAt',
+  galleryPosition: 'galleryPosition',
 }
 
 export function tapestryDtoToDb(tapestry: TapestryDto): Prisma.TapestryGetPayload<null>
