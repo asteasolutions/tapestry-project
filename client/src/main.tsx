@@ -20,7 +20,6 @@ import { Dashboard } from './pages/dashboard/index'
 import { TapestryBySlugPage, TapestryPage } from './pages/tapestry/index'
 import { UserProfile } from './pages/user-profile/index'
 import { ResponsiveProvider } from './providers/responsive-provider'
-import { BackgroundTasks } from './components/background-tasks'
 import { dashboardPath } from './utils/paths'
 import { NavigationLayout } from './layouts/navigation'
 import { LandingPage } from './pages/landing-page'
@@ -35,7 +34,6 @@ function Providers() {
   return (
     <ResponsiveProvider>
       <SessionLayout>
-        <BackgroundTasks />
         <Outlet />
       </SessionLayout>
     </ResponsiveProvider>

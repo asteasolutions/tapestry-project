@@ -1,30 +1,39 @@
 import { useNavigate } from 'react-router'
 import { Button } from 'tapestry-core-client/src/components/lib/buttons/index'
-import { FileStatus, TapestryImport } from '../../../hooks/use-tapestry-import'
+import { FileStatus, TapestryImport } from '../../../services/background-tasks'
 import { Row, RowStatus } from '.'
 
-export const IMPORT_IN_PROGRESS: FileStatus[] = ['uploading', 'pending', 'processing']
-
-function importMessage({ status, error }: TapestryImport) {
-  if (status === 'cancelled') {
-    return 'Cancelled'
-  }
-  if (status === 'failed') {
-    return error ?? 'Import failed'
-  }
+export const IMPORT_ROW_STATUS: Record<FileStatus, RowStatus> = {
+  uploading: 'inProgress',
+  pending: 'inProgress',
+  processing: 'inProgress',
+  complete: 'complete',
+  failed: 'failed',
+  cancelled: 'cancelled',
 }
 
-export function ImportRow(tapestryImport: TapestryImport) {
-  const { name, status, progress, tapestryId, killSwitch } = tapestryImport
+const IMPORT_MESSAGES: Partial<Record<FileStatus, string>> = {
+  failed: 'Import failed',
+  cancelled: 'Cancelled',
+}
+
+export function ImportRow({
+  name,
+  status,
+  error,
+  progress,
+  tapestryId,
+  killSwitch,
+}: TapestryImport) {
   const navigate = useNavigate()
 
   return (
     <Row
       icon="upload"
       name={name}
-      status={IMPORT_IN_PROGRESS.includes(status) ? 'inProgress' : (status as RowStatus)}
+      status={IMPORT_ROW_STATUS[status]}
       percent={status === 'uploading' || status === 'processing' ? progress * 100 : undefined}
-      message={importMessage(tapestryImport)}
+      message={error ?? IMPORT_MESSAGES[status]}
     >
       {status === 'uploading' && (
         <Button variant="clear" size="small" onClick={() => killSwitch.abort()}>

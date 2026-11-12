@@ -6,17 +6,11 @@ import styles from './styles.module.css'
 
 export type RowStatus = 'inProgress' | 'complete' | 'failed' | 'cancelled'
 
-function StatusIcon({ status }: { status: RowStatus }) {
-  if (status === 'inProgress') {
-    return <StatusSpinner />
-  }
-  if (status === 'complete') {
-    return <Icon icon="check_circle" className={styles.complete} aria-label="Done" />
-  }
-  if (status === 'cancelled') {
-    return <Icon icon="cancel" className={styles.cancelled} aria-label="Cancelled" />
-  }
-  return <Icon icon="error" className={styles.failed} aria-label="Failed" />
+const STATUS_ICONS: Record<RowStatus, ReactNode> = {
+  inProgress: <StatusSpinner />,
+  complete: <Icon icon="check_circle" className={styles.complete} aria-label="Done" />,
+  failed: <Icon icon="error" className={styles.failed} aria-label="Failed" />,
+  cancelled: <Icon icon="cancel" className={styles.cancelled} aria-label="Cancelled" />,
 }
 
 interface RowProps {
@@ -48,7 +42,7 @@ export function Row({ icon, name, status, percent, message, children }: RowProps
         </Text>
       )}
       {children}
-      <StatusIcon status={status} />
+      {STATUS_ICONS[status]}
     </div>
   )
 }

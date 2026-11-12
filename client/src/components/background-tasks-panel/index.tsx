@@ -2,10 +2,9 @@ import clsx from 'clsx'
 import { useState } from 'react'
 import { IconButton } from 'tapestry-core-client/src/components/lib/buttons/index'
 import { Text } from 'tapestry-core-client/src/components/lib/text/index'
-import { TapestryImport } from '../../hooks/use-tapestry-import'
-import { TapestryExport } from '../../hooks/use-tapestry-export'
+import { TapestryExport, TapestryImport } from '../../services/background-tasks'
 import { ExportRow } from './row/export-row'
-import { IMPORT_IN_PROGRESS, ImportRow } from './row/import-row'
+import { IMPORT_ROW_STATUS, ImportRow } from './row/import-row'
 import styles from './styles.module.css'
 
 export interface BackgroundTasksPanelProps {
@@ -30,7 +29,7 @@ export function BackgroundTasksPanel({
   }
 
   const inProgress =
-    imports.filter((i) => IMPORT_IN_PROGRESS.includes(i.status)).length +
+    imports.filter((i) => IMPORT_ROW_STATUS[i.status] === 'inProgress').length +
     exports.filter((e) => e.status === 'exporting').length
 
   const rows = [
