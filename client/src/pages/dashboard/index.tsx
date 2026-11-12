@@ -1,5 +1,5 @@
 import styles from './styles.module.css'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { Navigate, useLocation, useParams } from 'react-router'
 import { useSession } from '../../layouts/session'
 import { LazyListLoader } from '../../components/lazy-list/lazy-list-loader'
@@ -121,18 +121,16 @@ export function Dashboard() {
     [section, searchTerm, user?.id],
   )
 
-  const { imports, exports } = useObservable(backgroundTasks)
-
-  // Reload the list whenever another import completes. Imports which were already complete
-  // when the dashboard was opened are already in the list.
-  const completedImports = imports.filter((i) => i.status === 'complete').length
-  const completedImportsRef = useRef(completedImports)
-  useEffect(() => {
-    if (completedImports > completedImportsRef.current) {
+  // Reload the list whenever an import completes, so that the new tapestry shows up
+  const { imports, exports } = useObservable(backgroundTasks, (_oldValue, _newValue, patches) => {
+    const importCompleted = patches.some(
+      ({ path, value }) =>
+        path[0] === 'imports' && path.at(-1) === 'status' && value === 'complete',
+    )
+    if (importCompleted) {
       void tapestryLoader?.reload()
     }
-    completedImportsRef.current = completedImports
-  }, [completedImports, tapestryLoader])
+  })
 
   const smOrLess = useResponsive() <= Breakpoint.SM
 
