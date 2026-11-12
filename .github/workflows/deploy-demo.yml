@@ -54,6 +54,7 @@ jobs:
           ORCID_CLIENT_SECRET: ${{ secrets.ORCID_CLIENT_SECRET }}
           REDIS_HOST: ${{ secrets.REDIS_HOST }}
           REDIS_USE_TLS: ${{ secrets.REDIS_USE_TLS }}
+          PLAUSIBLE_DOMAIN: ${{ vars.PLAUSIBLE_DOMAIN }}
           SENTRY_DSN_CLIENT: ${{ secrets.SENTRY_DSN_CLIENT }}
           SENTRY_DSN_SERVER: ${{ secrets.SENTRY_DSN_SERVER }}
           SECRET_KEY: ${{ secrets.SECRET_KEY }}

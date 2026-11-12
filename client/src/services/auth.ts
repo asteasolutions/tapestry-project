@@ -6,6 +6,7 @@ import { APIError } from '../errors'
 import { resource } from '../services/rest-resources'
 import { AUTH_PROVIDERS } from '../auth/providers-registry'
 import { RegistrationSuggestions } from 'tapestry-shared/src/data-transfer/resources/dtos/errors'
+import { trackEvent } from './analytics'
 
 interface Token {
   token: string
@@ -152,8 +153,8 @@ export class AuthService extends Observable<AuthServiceState> {
     })
   }
 
-  register(data: RegisterData, signal?: GenericAbortSignal) {
-    return this.doLogin(
+  async register(data: RegisterData, signal?: GenericAbortSignal) {
+    await this.doLogin(
       {
         authType: 'registerUser',
         ...data,
@@ -161,9 +162,11 @@ export class AuthService extends Observable<AuthServiceState> {
       true,
       signal,
     )
+    trackEvent('Sign up completed')
   }
 
   cancelRegistration() {
+    trackEvent('Sign up cancelled')
     this.update((state) => {
       state.pendingRegistration = undefined
     })
