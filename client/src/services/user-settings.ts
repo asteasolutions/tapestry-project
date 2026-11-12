@@ -5,6 +5,7 @@ import { SortDirection } from 'tapestry-shared/src/data-transfer/resources/dtos/
 import { auth } from '../auth'
 import { SortBy } from '../pages/dashboard'
 import { LocalStorage } from './local-storage'
+import { dashboardPath } from '../utils/paths'
 
 interface TapestrySettings {
   fontSize: number
@@ -23,6 +24,7 @@ interface UserSettingsData {
   tapestriesSettings: Partial<Record<string, Partial<TapestrySettings>>>
   sortBy: SortBy
   sortDirection: SortDirection
+  lastDashboardPath: string
 }
 
 export const DEFAULT_USER_SETTINGS: UserSettingsData = {
@@ -30,6 +32,7 @@ export const DEFAULT_USER_SETTINGS: UserSettingsData = {
   tapestriesSettings: {},
   sortBy: 'latest',
   sortDirection: 'desc',
+  lastDashboardPath: dashboardPath('home'),
 }
 
 const GUEST_ID = 'guest'

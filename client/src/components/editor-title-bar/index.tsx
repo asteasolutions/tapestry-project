@@ -24,6 +24,7 @@ import {
 } from '../../pages/tapestry/view-model/store-commands/tapestry'
 import { focusItems } from '../../pages/tapestry/view-model/store-commands/viewport'
 import { dashboardPath } from '../../utils/paths'
+import { userSettings } from '../../services/user-settings'
 import { CreateTapestryDialog } from '../create-tapestry-dialog'
 import { DeleteTapestryModal } from '../delete-tapestry-modal'
 import { EditTapestryDialog } from '../edit-tapestry-dialog'
@@ -80,7 +81,7 @@ export function EditorTitleBar() {
   const items = [
     {
       element: (
-        <Link to={dashboardPath('home')} className={styles.link}>
+        <Link to={userSettings.currentSettings.lastDashboardPath} className={styles.link}>
           <SvgIcon Icon={Logo} size={28} className={styles.logo} />
         </Link>
       ),

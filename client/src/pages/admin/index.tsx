@@ -1,4 +1,4 @@
-import { Link, Navigate, useParams } from 'react-router'
+import { Link, Navigate, useLocation, useParams } from 'react-router'
 import clsx from 'clsx'
 import { Icon } from 'tapestry-core-client/src/components/lib/icon/index'
 import { useSession } from '../../layouts/session'
@@ -10,6 +10,7 @@ import { AdminUsers } from './users'
 import { AdminReports } from './reports'
 import { AdminActivityLog } from './activity'
 import styles from './styles.module.css'
+import { setLastDashboardPath } from '../dashboard'
 
 export const ADMIN_SECTIONS = ['tapestries', 'gallery', 'users', 'reports', 'activity'] as const
 
@@ -75,6 +76,7 @@ function AdminPanel({ section }: { section: AdminSection }) {
 export function AdminPage() {
   const { user } = useSession()
   const { section } = useParams<{ section?: string }>()
+  const location = useLocation()
 
   if (!user) {
     return <Navigate to={dashboardPath('public')} replace />
@@ -92,6 +94,9 @@ export function AdminPage() {
   if (!ADMIN_SECTIONS.includes(section as AdminSection)) {
     return <Navigate to={adminPath('tapestries')} replace />
   }
+
+  // Return to admin panel with saved filters.
+  setLastDashboardPath(location.pathname + location.search)
 
   return (
     <div className={styles.root}>

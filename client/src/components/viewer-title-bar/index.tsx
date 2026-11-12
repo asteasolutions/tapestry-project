@@ -13,7 +13,7 @@ import { useSession } from '../../layouts/session'
 import { fullName } from '../../model/data/utils'
 import { useDispatch, useTapestryData } from '../../pages/tapestry/tapestry-providers'
 import { setSnackbar } from '../../pages/tapestry/view-model/store-commands/tapestry'
-import { dashboardPath } from '../../utils/paths'
+import { userSettings } from '../../services/user-settings'
 import { ForkTapestryDialog } from '../fork-tapestry-dialog'
 import { JoinTapestriesModal } from '../join-tapestries-modal'
 import styles from './styles.module.css'
@@ -66,7 +66,7 @@ export function ViewerTitleBar({ className, style }: PropsWithStyle) {
   const items = [
     {
       element: (
-        <Link to={dashboardPath('home')} className={styles.link}>
+        <Link to={userSettings.currentSettings.lastDashboardPath} className={styles.link}>
           <SvgIcon Icon={Logo} size={28} className={styles.logo} />
         </Link>
       ),

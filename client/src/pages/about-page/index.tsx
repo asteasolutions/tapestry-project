@@ -6,9 +6,11 @@ import { HistorySection } from './history-section'
 import { SnapshotsSection } from './snapshots-section'
 import { PrinciplesSection } from './principles-section'
 import { TeamSection } from './team-section'
+import { setLastDashboardPath } from '../dashboard'
 
 export function AboutPage() {
   const narrativeDesignClassName = useNarrtiveDesignSystem()
+  setLastDashboardPath('/about')
   return (
     <div className={clsx(styles.root, narrativeDesignClassName)}>
       <AboutSection />
