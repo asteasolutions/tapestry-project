@@ -34,6 +34,7 @@ services:
       DB_USER: ${DB_USER}
       DB_PASS: ${DB_PASS}
       DB_USE_SSL: ${DB_USE_SSL}
+      DB_LOG_LEVEL: ${DB_LOG_LEVEL}
       DATABASE_URL: postgresql://${DB_USER}:${DB_PASS}@db:5432/${DB_NAME}?schema=public
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       ORCID_CLIENT_ID: ${ORCID_CLIENT_ID}
