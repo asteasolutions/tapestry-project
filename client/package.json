@@ -49,6 +49,7 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@types/dom-navigation": "^1.0.7",
     "@vitejs/plugin-react": "^5.0.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "stylelint": "^16.19.1",
