@@ -48,6 +48,10 @@ export class TapestryExporter {
     }
   }
 
+  cancel() {
+    this.killSwitch.abort()
+  }
+
   private async download(filePath: string, source: string) {
     const { data } = await axios.get<Blob>(source, {
       responseType: 'blob',
@@ -64,10 +68,11 @@ export class TapestryExporter {
         'Cache-Control': 'no-cache',
       },
       onDownloadProgress: ({ loaded, total }) => {
-        this.downloadProgress[filePath] = { progress: loaded, total: total! }
+        this.downloadProgress[filePath] = { progress: loaded, total: total ?? 0 }
         const values = Object.values(this.downloadProgress)
         if (this.toDownload) {
-          this.downloaded = sumBy(values, (v) => v.progress / v.total) / this.toDownload
+          this.downloaded =
+            sumBy(values, (v) => (v.total ? v.progress / v.total : 0)) / this.toDownload
         }
         this.notifyProgress()
       },
@@ -231,7 +236,8 @@ export class TapestryExporter {
         this.compressionProgress[path].progress = progress
         const values = Object.values(this.compressionProgress)
         if (this.toCompress) {
-          this.compressed = sumBy(values, (v) => v.progress / v.total) / this.toCompress
+          this.compressed =
+            sumBy(values, (v) => (v.total ? v.progress / v.total : 1)) / this.toCompress
         }
         this.notifyProgress()
         return undefined

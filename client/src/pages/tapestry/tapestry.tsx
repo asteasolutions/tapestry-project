@@ -14,13 +14,13 @@ import { THEMES } from 'tapestry-core-client/src/theme/themes'
 
 import { CollaboratorCursors } from '../../components/collaborator-cursors'
 import { CollaboratorIndicators } from '../../components/collaborator-indicators'
-import { DoingWorkIndicator } from '../../components/doing-work-indicator'
 import { EditorTitleBar } from '../../components/editor-title-bar'
 import { CollectionImportDialog } from '../../components/collection-import-dialog'
 import { LargeFileUploadDialog } from '../../components/large-file-upload-dialog'
 import { LeaveTapestryDialog } from '../../components/leave-tapestry-dialog'
 import { OfflineIndicator } from '../../components/offline-indicator'
 import { QuickTips } from '../../components/quick-tips'
+import { SavingIndicator } from '../../components/saving-indicator'
 import { SidePane } from '../../components/side-pane'
 import { ImportToolbar } from '../../components/toolbars/import'
 import { UndoToolbar } from '../../components/toolbars/undo'
@@ -141,7 +141,7 @@ export function Tapestry({ initialThumbnails }: TapestryProps) {
       {!hideEditControls && (
         <>
           <div className={styles.usersData}>
-            <DoingWorkIndicator />
+            <SavingIndicator />
             <CollaboratorIndicators />
             {screenshotMode !== 'dashboard' && <UserToolbar />}
           </div>

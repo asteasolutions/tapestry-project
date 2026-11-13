@@ -1,0 +1,30 @@
+.root {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: min(480px, calc(100vw - 48px));
+  box-sizing: border-box;
+  padding: 8px 8px 8px 16px;
+  border-radius: 8px;
+  background-color: var(--theme-background-inverse);
+  color: var(--theme-text-primary-inverse);
+  pointer-events: auto;
+}
+
+.label {
+  flex-grow: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.cancel {
+  --text-color: var(--theme-text-primary-inverse);
+  --border-color: var(--theme-text-primary-inverse);
+  --hover-bg-color: var(--theme-background-secondary-inverse);
+}
+
+.root .close {
+  --icon-color: var(--theme-icon-inverse);
+  --hover-icon-color: var(--theme-icon-inverse);
+  --active-icon-color: var(--theme-icon-inverse);
+  --hover-bg-color: var(--theme-background-secondary-inverse);
+}

@@ -1,0 +1,28 @@
+.root {
+  position: fixed;
+  right: 24px;
+  bottom: 56px;
+  z-index: 2;
+  width: min(400px, calc(100vw - 48px));
+  overflow: hidden;
+  border-radius: 8px;
+  background-color: var(--theme-background-primary);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 4px 4px 12px;
+  background-color: var(--theme-background-neutral);
+}
+
+.title {
+  flex-grow: 1;
+}
+
+.list {
+  padding: 4px 0;
+  max-height: 320px;
+  overflow-y: auto;
+}

@@ -18,8 +18,8 @@ import { ForkTapestryDialog } from '../fork-tapestry-dialog'
 import { JoinTapestriesModal } from '../join-tapestries-modal'
 import styles from './styles.module.css'
 import { Avatar } from '../avatar'
-import { useTapestryExport } from '../../hooks/use-tapestry-export'
-import { ExportProgressIndicator } from '../editor-title-bar/export-progress-indicator'
+import { useObservable } from 'tapestry-core-client/src/components/lib/hooks/use-observable'
+import { backgroundTasks, findActiveExport } from '../../services/background-tasks'
 
 export function ViewerTitleBar({ className, style }: PropsWithStyle) {
   const obstruction = useViewportObstruction({ clear: { top: true, left: true } })
@@ -44,11 +44,8 @@ export function ViewerTitleBar({ className, style }: PropsWithStyle) {
     'updatedAt',
     'owner',
   ])
-  const { progress, triggerExport } = useTapestryExport({
-    tapestryId: id,
-    onError: () => dispatch(setSnackbar({ text: 'Error during export', variant: 'error' })),
-    onSuccess: () => setViewingInfo(false),
-  })
+  const { exports } = useObservable(backgroundTasks)
+  const progress = findActiveExport(exports, id)?.progress
   const { user } = useSession()
   const [joinPopup, setJoinPopup] = useState(false)
   const [forkingTapestry, setForkingTapestry] = useState(false)
@@ -107,14 +104,17 @@ export function ViewerTitleBar({ className, style }: PropsWithStyle) {
         className={styles.secondaryButton}
         icon="upload"
         disabled={!canForkTapestry || !!progress}
-        onClick={triggerExport}
+        onClick={() => {
+          setViewingInfo(false)
+          void backgroundTasks.triggerExport(id, title)
+        }}
         tooltip={
           canForkTapestry
             ? undefined
             : { children: "You don't have export permissions", side: 'bottom' }
         }
       >
-        Export Zip file {progress && <ExportProgressIndicator progress={progress} />}
+        {progress ? 'Exporting…' : 'Export Zip file'}
       </Button>
       <Button
         variant="primary"
