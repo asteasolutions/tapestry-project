@@ -121,4 +121,4 @@ if (env !== 'test') {
   })
 }
 
-// void scheduleS3Cleaner()
+void scheduleS3Cleaner()
