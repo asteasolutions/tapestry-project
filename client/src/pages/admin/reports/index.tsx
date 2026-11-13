@@ -216,6 +216,15 @@ export function AdminReports() {
             title="Items by media type"
             tableKey="byType"
             color="var(--color-primary-900)"
+            segments={{
+              tableKey: 'byKind',
+              colors: [
+                'var(--color-primary-900)',
+                'var(--color-secondary-400)',
+                'var(--color-primary-200)',
+                'var(--color-secondary-200)',
+              ],
+            }}
             subtitle={(report) => {
               const figure = (key: string) =>
                 report.current.figures.find((f) => f.key === key)?.value ?? 0

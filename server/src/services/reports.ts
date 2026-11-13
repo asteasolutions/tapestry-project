@@ -12,6 +12,7 @@ import {
 } from 'tapestry-shared/src/data-transfer/resources/dtos/admin.js'
 import { ListFilterDto } from 'tapestry-shared/src/data-transfer/resources/dtos/common.js'
 import { prisma } from '../db.js'
+import { ItemType, WebpageType } from 'tapestry-core/src/data-format/schemas/item.js'
 
 /**
  * Admin reports. Admin activity is excluded from usage figures: records owned by (or created by)
@@ -218,7 +219,7 @@ function classifySource(type: string, host: string | null) {
 
 // ---- Item types (M-05) ----
 
-const ITEM_TYPES = [
+const ITEM_TYPES: [ItemType, string][] = [
   ['text', 'Text'],
   ['image', 'Image'],
   ['audio', 'Audio'],
@@ -230,14 +231,29 @@ const ITEM_TYPES = [
   ['actionButton', 'Action button'],
 ] as const
 
-const WEBPAGE_TYPES = [
-  ['youtube', 'YouTube'],
-  ['vimeo', 'Vimeo'],
-  ['iaWayback', 'Wayback Machine'],
-  ['iaAudio', 'Internet Archive audio'],
-  ['iaVideo', 'Internet Archive video'],
-  ['other', 'Other web page'],
-] as const
+/**
+ * Media types that are broken down by kind. Embedded videos and Internet Archive media are stored as
+ * web pages but are counted towards video and audio. A kind is the item type, or the webpage type
+ * for web pages.
+ */
+const MEDIA_KINDS: Partial<
+  Record<(typeof ITEM_TYPES)[number][0], [ItemType | WebpageType, string][]>
+> = {
+  video: [
+    ['video', 'Uploaded video'],
+    ['youtube', 'YouTube'],
+    ['vimeo', 'Vimeo'],
+    ['iaVideo', 'Internet Archive video'],
+  ],
+  audio: [
+    ['audio', 'Uploaded audio'],
+    ['iaAudio', 'Internet Archive audio'],
+  ],
+  webpage: [
+    ['webpage', 'Web page'],
+    ['iaWayback', 'Wayback Machine'],
+  ],
+}
 
 const NON_MEDIA_TYPES = Prisma.sql`('text', 'actionButton')`
 
@@ -497,31 +513,46 @@ const METRICS: Record<ReportMetric, MetricDefinition> = {
     isCurrentState: true,
     compute: async () => {
       const tapestryCount = await prisma.tapestry.count({ where: { owner: { role: 'user' } } })
+      // Rows with a null kind hold the totals of their media type
       const rows = await prisma.$queryRaw<
-        { type: string; webpageType: string | null; items: number; tapestries: number }[]
+        { type: string; kind: string | null; items: number; tapestries: number }[]
       >`
-        SELECT i."type"::TEXT AS type, i."webpageType"::TEXT AS "webpageType",
-          count(*)::INTEGER AS items, count(DISTINCT i."tapestryId")::INTEGER AS tapestries
-        FROM "Item" i
-        JOIN "Tapestry" t ON t."id" = i."tapestryId"
-        JOIN "User" u ON u."id" = t."ownerId"
-        WHERE u."role" = 'user'
-        GROUP BY 1, 2
+        WITH items AS (
+          SELECT
+            CASE
+              WHEN i."type" = 'webpage' AND i."webpageType" IN ('youtube', 'vimeo', 'iaVideo')
+                THEN 'video'
+              WHEN i."type" = 'webpage' AND i."webpageType" = 'iaAudio' THEN 'audio'
+              ELSE i."type"::TEXT
+            END AS type,
+            CASE
+              WHEN i."type" = 'webpage' THEN coalesce(i."webpageType"::TEXT, 'webpage')
+              ELSE i."type"::TEXT
+            END AS kind,
+            i."tapestryId"
+          FROM "Item" i
+          JOIN "Tapestry" t ON t."id" = i."tapestryId"
+          JOIN "User" u ON u."id" = t."ownerId"
+          WHERE u."role" = 'user'
+        )
+        SELECT type, kind, count(*)::INTEGER AS items,
+          count(DISTINCT "tapestryId")::INTEGER AS tapestries
+        FROM items
+        GROUP BY GROUPING SETS ((type), (type, kind))
       `
-      const totalItems = rows.reduce((acc, r) => acc + r.items, 0)
+      const totals = rows.filter((r) => r.kind === null)
+      const totalItems = totals.reduce((acc, r) => acc + r.items, 0)
       const perTapestry = (items: number) =>
         tapestryCount ? Math.round((items / tapestryCount) * 100) / 100 : null
 
-      const typeRow = (key: string, label: string, matching: typeof rows): ReportTableRowDto => {
-        const items = matching.reduce((acc, r) => acc + r.items, 0)
-        // A tapestry can be counted once per webpage type, so this is an upper bound for web pages
-        const tapestries = matching.reduce((acc, r) => Math.max(acc, r.tapestries), 0)
+      const tableRow = (key: string, label: string, row?: (typeof rows)[number]) => {
+        const items = row?.items ?? 0
         return {
           key,
           label,
-          values: [items, perTapestry(items), percent(items, totalItems), tapestries],
+          values: [items, perTapestry(items), percent(items, totalItems), row?.tapestries ?? 0],
           drill: null,
-        }
+        } satisfies ReportTableRowDto
       }
 
       const columns: ReportTableDto['columns'] = [
@@ -543,32 +574,27 @@ const METRICS: Record<ReportMetric, MetricDefinition> = {
             title: 'Items by media type',
             columns,
             rows: ITEM_TYPES.map(([type, label]) =>
-              typeRow(
+              tableRow(
                 type,
                 label,
-                rows.filter((r) => r.type === type),
+                totals.find((r) => r.type === type),
               ),
             ),
           },
           {
-            key: 'byWebpageType',
-            title: 'Web page items by kind',
-            columns: columns.filter((c) => c.key !== 'tapestries'),
-            rows: WEBPAGE_TYPES.map(([webpageType, label]) => {
-              const items = rows
-                .filter(
-                  (r) =>
-                    r.type === 'webpage' &&
-                    (webpageType === 'other' ? !r.webpageType : r.webpageType === webpageType),
-                )
-                .reduce((acc, r) => acc + r.items, 0)
-              return {
-                key: webpageType,
-                label,
-                values: [items, perTapestry(items), percent(items, totalItems)],
-                drill: null,
-              }
-            }),
+            // Row keys are "<media type>.<kind>"
+            key: 'byKind',
+            title: 'Items by media type and kind',
+            columns,
+            rows: Object.entries(MEDIA_KINDS).flatMap(([type, kinds]) =>
+              kinds.map(([kind, label]) =>
+                tableRow(
+                  `${type}.${kind}`,
+                  label,
+                  rows.find((r) => r.type === type && r.kind === kind),
+                ),
+              ),
+            ),
           },
         ],
       }
