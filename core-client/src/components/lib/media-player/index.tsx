@@ -117,10 +117,16 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
     onLoadedMetadata?.(e)
   }
 
-  const [isPlaying, setIsPlaying] = useState<boolean>(false)
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [hasPlayed, setHasPlayed] = useState(false)
+  const [loadedThumbnail, setLoadedThumbnail] = useState<string>()
+
+  const isThumbnailLoaded = !!thumbnail && loadedThumbnail === thumbnail
+  const shouldDisplayVideo = isPlaying || (hasPlayed && !isThumbnailLoaded)
 
   const handlePlay = (e: MediaEvent<T>) => {
     setIsPlaying(true)
+    setHasPlayed(true)
     onPlay?.(e)
   }
 
@@ -239,7 +245,7 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
           {...mediaProps}
           controls={false}
           style={{
-            display: isPlaying ? 'block' : 'none',
+            display: shouldDisplayVideo ? 'block' : 'none',
             width: '100%',
             height: '100%',
           }}
@@ -252,12 +258,14 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
       {thumbnail && (
         <img
           src={thumbnail}
+          onLoad={() => setLoadedThumbnail(thumbnail)}
+          onError={() => setLoadedThumbnail(thumbnail)}
           // Images that may be loaded via `fetch` elsewhere must always be loaded with CORS policy "anonymous"
           // in order to prevent cached CORS header errors in Chrome.
           crossOrigin="anonymous"
           alt="Video thumbnail"
           style={{
-            display: isPlaying && !isAudio ? 'none' : 'block',
+            display: shouldDisplayVideo && !isAudio ? 'none' : 'block',
             height: '100%',
             width: '100%',
             objectFit: 'cover',
