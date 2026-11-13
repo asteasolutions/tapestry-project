@@ -6,6 +6,7 @@ import {
   computeRestrictedScale,
   getBoundingRectangle,
   getGroupMembers,
+  isSingleGroupSelected,
   MULTISELECT_RECTANGLE_PADDING,
 } from '../../view-model/utils'
 import { idMapToArray } from 'tapestry-core/src/utils'
@@ -55,9 +56,11 @@ export class GroupBackgroundRenderer<G extends GroupViewModel> extends TapestryE
     const isSelected = store.get('selection.groupIds').has(id)
     const groupMembers = getGroupMembers(id, idMapToArray(store.get('items')))
     const bounds = getBoundingRectangle(groupMembers).expand(MULTISELECT_RECTANGLE_PADDING)
-    const backgroundColor = (hasBackground && color) || null
     const borderColor = hasBorder && color ? getOpaqueColor(color) : null
     const borderScale = this.computeBorderScale(store)
+    const selection = store.get('selection')
+    const isOnlySelected = isSingleGroupSelected(selection) && selection.groupIds.has(id)
+    const backgroundColor = (hasBackground && !isOnlySelected && color) || null
 
     return {
       origin: bounds.position,
