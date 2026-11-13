@@ -1,19 +1,16 @@
 import clsx from 'clsx'
 import { useState } from 'react'
-import { Link } from 'react-router'
 import { PropsWithStyle } from 'tapestry-core-client/src/components/lib'
 import { Button, IconButton } from 'tapestry-core-client/src/components/lib/buttons/index'
-import { SvgIcon } from 'tapestry-core-client/src/components/lib/svg-icon/index'
 import { MenuItems, Toolbar } from 'tapestry-core-client/src/components/lib/toolbar/index'
 import { useViewportObstruction } from 'tapestry-core-client/src/components/tapestry/hooks/use-viewport-obstruction'
 import { TapestryInfoDialog } from 'tapestry-core-client/src/components/tapestry/tapestry-info-dialog'
-import Logo from 'tapestry-core-client/src/assets/icons/logo.svg?react'
 import { useTapestryBookmark } from '../../hooks/use-tapestry-bookmark'
 import { useSession } from '../../layouts/session'
 import { fullName } from '../../model/data/utils'
 import { useDispatch, useTapestryData } from '../../pages/tapestry/tapestry-providers'
 import { setSnackbar } from '../../pages/tapestry/view-model/store-commands/tapestry'
-import { userSettings } from '../../services/user-settings'
+import { LogoLink } from '../logo-link'
 import { ForkTapestryDialog } from '../fork-tapestry-dialog'
 import { JoinTapestriesModal } from '../join-tapestries-modal'
 import styles from './styles.module.css'
@@ -65,11 +62,7 @@ export function ViewerTitleBar({ className, style }: PropsWithStyle) {
 
   const items = [
     {
-      element: (
-        <Link to={userSettings.currentSettings.lastDashboardPath} className={styles.link}>
-          <SvgIcon Icon={Logo} size={28} className={styles.logo} />
-        </Link>
-      ),
+      element: <LogoLink className={styles.logo} />,
       tooltip: { side: 'bottom', children: 'Go to tapestries', offset: -8 },
     },
     {

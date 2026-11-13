@@ -31,14 +31,6 @@ export const GUEST_SORT_BY: SortBy[] = ['latest', 'title']
 
 export type DashboardSection = 'home' | 'shared' | 'public' | 'bookmarks'
 
-// Remembers the last dashboard section (or the About page or admin panel) the user has visited,
-// used by the logo link in the tapestry view
-export function setLastDashboardPath(path: string) {
-  if (userSettings.currentSettings.lastDashboardPath !== path) {
-    userSettings.update({ lastDashboardPath: path })
-  }
-}
-
 const CUSTOM_CRITERIA: Partial<Record<DashboardSection, Partial<Record<SortBy, string>>>> = {
   home: {
     latest: 'createdAt',
@@ -148,8 +140,6 @@ export function Dashboard() {
       />
     )
   }
-
-  setLastDashboardPath(dashboardPath(section))
 
   const header = (
     <DashboardHeader
