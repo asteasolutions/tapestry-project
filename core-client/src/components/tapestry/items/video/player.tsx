@@ -26,12 +26,13 @@ export const VideoItemPlayer = memo(
     const mediaParams = useMediaParams(id)
 
     const [isPlaying, setIsPlaying] = useState(false)
-    const [thumbnail, setThumbnail] = useState<string | undefined>()
+    const [frameThumbnail, setFrameThumbnail] = useState<string | null>()
     const frameThumbnailRef = useRef<string>(undefined)
     const primaryThumbnail = getPrimaryThumbnail(dto)
 
     const onStart = () => {
       setIsPlaying(true)
+      setFrameThumbnail(null)
       dispatch(setItemIsPlaying(id, true))
     }
 
@@ -46,6 +47,7 @@ export const VideoItemPlayer = memo(
       )
 
       if (video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA || hasCustomThumbnail) {
+        setFrameThumbnail((current) => current ?? undefined)
         return
       }
 
@@ -56,7 +58,7 @@ export const VideoItemPlayer = memo(
         URL.revokeObjectURL(frameThumbnailRef.current)
       }
       frameThumbnailRef.current = url
-      setThumbnail(url)
+      setFrameThumbnail(url)
     }
 
     const options: MediaOptions = {
@@ -78,7 +80,7 @@ export const VideoItemPlayer = memo(
           onPlay={onStart}
           onPause={(e) => {
             onStop()
-            return captureFrame(e.currentTarget)
+            void captureFrame(e.currentTarget)
           }}
           onEnded={onStop}
           onSeeked={(e) => {
@@ -87,7 +89,7 @@ export const VideoItemPlayer = memo(
             }
           }}
           isInteractive={isInteractive}
-          thumbnail={thumbnail || primaryThumbnail}
+          thumbnail={frameThumbnail === null ? undefined : (frameThumbnail ?? primaryThumbnail)}
           size={dto.size}
           // The video is hidden in order to optimize the Safari layering algorithm
           //MediaPlayer handles display: none of the video

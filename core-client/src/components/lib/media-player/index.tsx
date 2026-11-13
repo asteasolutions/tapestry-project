@@ -35,7 +35,7 @@ export interface MediaPlayerProps<T extends ComponentType, Component = MediaElem
   stopTime?: number
   style?: CSSProperties
   onPlay?: React.ReactEventHandler<Component>
-  onPause?: (event: React.SyntheticEvent<Component>) => void | Promise<void>
+  onPause?: React.ReactEventHandler<Component>
   onEnded?: React.ReactEventHandler<Component>
   onSeeked?: React.ReactEventHandler<Component>
   onLoadedMetadata?: React.ReactEventHandler<Component>
@@ -119,11 +119,10 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
 
   const [isPlaying, setIsPlaying] = useState(false)
   const [hasPlayed, setHasPlayed] = useState(false)
-  const [isPausing, setIsPausing] = useState(false)
   const [loadedThumbnail, setLoadedThumbnail] = useState<string>()
 
-  const isThumbnailReady = !thumbnail || loadedThumbnail === thumbnail
-  const isVideoVisible = isPlaying || isPausing || (hasPlayed && !isThumbnailReady)
+  const isThumbnailLoaded = !!thumbnail && loadedThumbnail === thumbnail
+  const shouldDisplayVideo = isPlaying || (hasPlayed && !isThumbnailLoaded)
 
   const handlePlay = (e: MediaEvent<T>) => {
     setIsPlaying(true)
@@ -131,11 +130,9 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
     onPlay?.(e)
   }
 
-  const handlePause = async (e: MediaEvent<T>) => {
+  const handlePause = (e: MediaEvent<T>) => {
     setIsPlaying(false)
-    setIsPausing(true)
-    await onPause?.(e)
-    setIsPausing(false)
+    onPause?.(e)
   }
 
   const handleEnded = (e: MediaEvent<T>) => {
@@ -224,7 +221,7 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
     onLoadedMetadata: handleLoadedMetadata,
     onTimeUpdate: onTimeUpdate,
     onPlay: handlePlay,
-    onPause: (e: MediaEvent<T>) => void handlePause(e),
+    onPause: handlePause,
     onEnded: handleEnded,
     onSeeked: onSeeked,
   }
@@ -248,7 +245,7 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
           {...mediaProps}
           controls={false}
           style={{
-            display: isVideoVisible ? 'block' : 'none',
+            display: shouldDisplayVideo ? 'block' : 'none',
             width: '100%',
             height: '100%',
           }}
@@ -268,7 +265,7 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
           crossOrigin="anonymous"
           alt="Video thumbnail"
           style={{
-            display: isVideoVisible && !isAudio ? 'none' : 'block',
+            display: shouldDisplayVideo && !isAudio ? 'none' : 'block',
             height: '100%',
             width: '100%',
             objectFit: 'cover',
