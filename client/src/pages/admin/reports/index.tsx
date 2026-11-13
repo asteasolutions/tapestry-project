@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Button } from 'tapestry-core-client/src/components/lib/buttons/index'
+import { Checkbox } from 'tapestry-core-client/src/components/lib/checkbox/index'
 import { Icon } from 'tapestry-core-client/src/components/lib/icon/index'
 import {
   DrillTargetDto,
@@ -55,6 +56,7 @@ export function AdminReports() {
   const [customFrom, setCustomFrom] = useState('')
   const [customTo, setCustomTo] = useState('')
   const [compare, setCompare] = useState<ReportComparison>('previous')
+  const [includeAdmins, setIncludeAdmins] = useState(false)
   const [drill, setDrill] = useState<{ target: DrillTargetDto; title: string } | null>(null)
 
   const range = useMemo(
@@ -63,16 +65,16 @@ export function AdminReports() {
   )
 
   // Reports for the selected period
-  const accounts = useReport('M-01', range, compare)
-  const tapestries = useReport('M-02', range, compare)
-  const gettingStarted = useReport('M-03', range, compare)
-  const invites = useReport('M-08', range, compare)
+  const accounts = useReport('M-01', range, compare, includeAdmins)
+  const tapestries = useReport('M-02', range, compare, includeAdmins)
+  const gettingStarted = useReport('M-03', range, compare, includeAdmins)
+  const invites = useReport('M-08', range, compare, includeAdmins)
   // Current state: today's values, regardless of the selected period
-  const usersByActivity = useReport('M-04', null, 'none')
-  const mediaTypes = useReport('M-05', null, 'none')
-  const sources = useReport('M-06', null, 'none')
-  const editors = useReport('M-07', null, 'none')
-  const sharing = useReport('M-09', null, 'none')
+  const usersByActivity = useReport('M-04', null, 'none', includeAdmins)
+  const mediaTypes = useReport('M-05', null, 'none', includeAdmins)
+  const sources = useReport('M-06', null, 'none', includeAdmins)
+  const editors = useReport('M-07', null, 'none', includeAdmins)
+  const sharing = useReport('M-09', null, 'none', includeAdmins)
 
   const comparison = accounts.report?.comparison
   const compareLabel = comparison ? COMPARISON_LABELS[compare] : ''
@@ -93,7 +95,7 @@ export function AdminReports() {
     if (!range) return
     downloadReportsCsv(
       await Promise.all(
-        REPORT_METRICS.map((metric) => fetchReport(metric, range, compare, signal)),
+        REPORT_METRICS.map((metric) => fetchReport(metric, range, compare, includeAdmins, signal)),
       ),
     )
   })
@@ -104,7 +106,11 @@ export function AdminReports() {
     <>
       <PageHeader
         title="Reports"
-        description="Usage on this instance only. Admin accounts and the content they own are excluded from every figure. Select a headline number to see the users or tapestries behind it."
+        description={`Usage on this instance only. ${
+          includeAdmins
+            ? 'Admin accounts and the content they own are included.'
+            : 'Admin accounts and the content they own are excluded from every figure.'
+        } Select a headline number to see the users or tapestries behind it.`}
         actions={
           <Button
             variant="secondary"
@@ -153,6 +159,12 @@ export function AdminReports() {
               ]}
             />
           </Field>
+          <Checkbox
+            checked={includeAdmins}
+            onChange={() => setIncludeAdmins((value) => !value)}
+            label={{ content: 'Include admins', position: 'after' }}
+            classes={{ label: styles.includeAdmins }}
+          />
           {range ? (
             <p className={styles.period}>
               <strong>{periodText}</strong> <span>{comparisonText}</span>
@@ -216,6 +228,15 @@ export function AdminReports() {
             title="Items by media type"
             tableKey="byType"
             color="var(--color-primary-900)"
+            segments={{
+              tableKey: 'byKind',
+              colors: [
+                'var(--color-primary-900)',
+                'var(--color-secondary-400)',
+                'var(--color-primary-200)',
+                'var(--color-secondary-200)',
+              ],
+            }}
             subtitle={(report) => {
               const figure = (key: string) =>
                 report.current.figures.find((f) => f.key === key)?.value ?? 0

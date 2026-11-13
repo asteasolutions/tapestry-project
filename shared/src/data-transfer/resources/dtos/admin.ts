@@ -147,6 +147,8 @@ export interface ReportQueryCreateDto {
   /** End of the range (exclusive). */
   to: Date
   compare: ReportComparison
+  /** Whether users with the admin role and the content they own are counted. Defaults to false. */
+  includeAdmins?: boolean
 }
 
 /** Describes the admin list (users or tapestries) holding the records behind a figure. */

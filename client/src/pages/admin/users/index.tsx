@@ -17,7 +17,6 @@ import { formatDate, loginProfiles, pluralize } from '../format'
 import { cleanFilter, useAdminList } from '../use-admin-list'
 import { presetFilterPath, usePresetFilter } from '../use-preset-filter'
 import { RoleSelect, ROLE_OPTIONS } from './role-select'
-import { AssignRoleForm } from './assign-role-form'
 import common from '../common.module.css'
 import styles from './styles.module.css'
 import { useAsyncAction } from 'tapestry-core-client/src/components/lib/hooks/use-async-action'
@@ -183,12 +182,6 @@ export function AdminUsers() {
           {presetLabel}
         </Notice>
       )}
-      <AssignRoleForm
-        onAssigned={() => {
-          setUpdates({})
-          list.reload()
-        }}
-      />
 
       <Panel flush aria-labelledby="users-heading">
         <div className={styles.filters}>

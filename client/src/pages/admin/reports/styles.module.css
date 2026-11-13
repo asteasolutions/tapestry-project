@@ -8,6 +8,12 @@
     flex-basis: 200px;
   }
 
+  /* Same height as the neighbouring controls, so that it lines up with them */
+  > .include-admins {
+    flex-basis: auto;
+    height: 40px;
+  }
+
   .period {
     margin: 0 0 10px;
     font-size: 14px;

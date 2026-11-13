@@ -12,10 +12,11 @@ export function fetchReport(
   metric: ReportMetric,
   range: Range,
   compare: ReportComparison,
+  includeAdmins: boolean,
   signal?: AbortSignal,
 ) {
   return resource('adminReportQueries').create(
-    { metric, from: range.from, to: range.to, compare },
+    { metric, from: range.from, to: range.to, compare, includeAdmins },
     {},
     { signal },
   )
@@ -35,6 +36,7 @@ export function useReport(
   metric: ReportMetric,
   range: Range | null,
   compare: ReportComparison,
+  includeAdmins: boolean,
 ): ReportState {
   // All-time reports end "now", fixed when the page opens so that they are loaded only once
   const [now] = useState(() => new Date())
@@ -48,9 +50,10 @@ export function useReport(
         metric,
         { from: fromTime === null ? null : new Date(fromTime), to: new Date(toTime) },
         effectiveCompare,
+        includeAdmins,
         signal,
       ),
-    [metric, fromTime, toTime, effectiveCompare],
+    [metric, fromTime, toTime, effectiveCompare, includeAdmins],
     { clearDataOnReload: false },
   )
 
