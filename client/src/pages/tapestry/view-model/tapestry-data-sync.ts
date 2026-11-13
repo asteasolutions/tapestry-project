@@ -240,6 +240,10 @@ export class TapestryDataSync {
 
   @eventListener('tapestryRepo', 'change')
   protected onTapestryRepoChange({ detail: { patches } }: ChangeEvent<unknown>) {
+    this.applyRepoPatchesToStore(patches)
+  }
+
+  private applyRepoPatchesToStore(patches: Patch[]) {
     this.detachStoreSubscriber()
     const storeCommands = this.convertRepoPatchesToStoreCommands(patches)
     this.store.dispatch(...storeCommands, { source: 'server' })
@@ -332,21 +336,31 @@ export class TapestryDataSync {
 
     if (items.length === 0) return
 
-    const patches = (
-      await Promise.allSettled(items.map((item) => itemUpload.upload(item.source, this.tapestryId)))
-    ).map<Patch>((result, index) =>
-      result.status === 'fulfilled'
-        ? {
-            op: 'replace',
-            path: ['items', items[index].id, 'source'],
-            value: result.value,
-          }
-        : {
-            op: 'remove',
-            path: ['items', items[index].id],
-          },
+    const results = await Promise.allSettled(
+      items.map((item) => itemUpload.upload(item.source, this.tapestryId)),
     )
-    this.tapestryRepo.commitPatches(patches)
+
+    const uploaded: Patch[] = []
+    const failed: Patch[] = []
+    results.forEach((result, index) => {
+      if (result.status === 'fulfilled') {
+        uploaded.push({
+          op: 'replace',
+          path: ['items', items[index].id, 'source'],
+          value: result.value,
+        })
+      } else {
+        failed.push({ op: 'remove', path: ['items', items[index].id] })
+      }
+    })
+
+    this.tapestryRepo.commitPatches(uploaded)
+
+    if (failed.length > 0) {
+      this.tapestryRepo.commitPatches(failed)
+      this.applyRepoPatchesToStore(failed)
+      this.store.dispatch(setSnackbar({ variant: 'error', text: 'Failed to upload media' }))
+    }
   }
 
   private convertStorePatchesToRepo(patches: Patch[]) {
