@@ -56,8 +56,6 @@ export class GroupBackgroundRenderer<G extends GroupViewModel> extends TapestryE
     const isSelected = store.get('selection.groupIds').has(id)
     const groupMembers = getGroupMembers(id, idMapToArray(store.get('items')))
     const bounds = getBoundingRectangle(groupMembers).expand(MULTISELECT_RECTANGLE_PADDING)
-    //const isDragged = isSelected && store.get('pointerInteraction')?.action === 'drag'
-    //const backgroundColor = (hasBackground && !isDragged && color) || null
     const borderColor = hasBorder && color ? getOpaqueColor(color) : null
     const borderScale = this.computeBorderScale(store)
     const selection = store.get('selection')
