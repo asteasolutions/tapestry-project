@@ -26,6 +26,7 @@ export const ALLOWED_ORIGINS = [
   'https://archive.org',
   'https://youtube.com',
   'https://player.vimeo.com',
+  'https://drive.google.com',
 ]
 
 const ALLOWED_DOMAINS = ['.wikipedia.org']

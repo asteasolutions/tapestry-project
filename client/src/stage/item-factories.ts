@@ -90,6 +90,11 @@ function constructEmbeddedTapestryLink(url: URL) {
   return url.toString()
 }
 
+function constructGoogleDriveEmbedLink(url: URL) {
+  url.pathname = url.pathname.replace(/^(\/file\/d\/[^/]+).*$/, '$1/preview')
+  return url.toString()
+}
+
 /**
  * An ItemFactory takes a MediaItemSource (File or URL) and tries to produce one or more tapestry items from it.
  * If a factory doesn't know how to handle a given source, it returns null.
@@ -132,6 +137,8 @@ const webpageItemFactory: ItemFactory = async (source, _mediaType, tapestryId) =
   const url = new URL(source)
   if (url.host === window.location.host) {
     source = constructEmbeddedTapestryLink(url)
+  } else if (url.host === 'drive.google.com') {
+    source = constructGoogleDriveEmbedLink(url)
   }
 
   const parser = await findWebSourceParser(source)
