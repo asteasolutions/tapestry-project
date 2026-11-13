@@ -28,13 +28,17 @@ class ItemUploadObservable extends Observable<ItemUploadState[]> {
     return objectUrl
   }
 
-  async upload(objectUrl: string, tapestryId: string) {
+  private uploads: Record<string, Promise<string>> = {}
+
+  upload(objectUrl: string, tapestryId: string) {
+    this.uploads[objectUrl] ??= this.doUpload(objectUrl, tapestryId)
+    return this.uploads[objectUrl]
+  }
+
+  private async doUpload(objectUrl: string, tapestryId: string) {
     const item = this.value.find((item) => item.objectUrl === objectUrl)
     if (!item) {
       throw new Error(`Item for url ${objectUrl} not found`)
-    }
-    if (item.state !== 'pending') {
-      throw new Error(`Cannot upload item in state "${item.state}"]`)
     }
     try {
       const killSwitch = new AbortController()
