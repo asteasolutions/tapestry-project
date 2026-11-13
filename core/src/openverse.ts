@@ -1,9 +1,10 @@
 // Openverse API docs: https://docs.openverse.org/api/. Endpoint reference for the
 // list/detail routes used below: https://api.openverse.org/v1/#tag/images.
 const OPENVERSE_HOST = 'openverse.org'
-// Openverse's real per-request cap. Callers that need an arbitrary skip/limit window (e.g. a
-// lazily-loaded list) walk forward over real pages of this size themselves.
-export const OPENVERSE_MAX_PAGE_SIZE = 20
+
+// The largest page size Openverse allows for anonymous requests. Anonymous requests are also
+// limited to the first 240 results of a collection; `page_count` in the response accounts for it.
+const OPENVERSE_MAX_PAGE_SIZE = 20
 
 export type OpenverseMediaType = 'image' | 'audio'
 
@@ -24,8 +25,9 @@ export interface OpenverseMedia {
   height?: number
 }
 
-interface OpenverseMediaListResponse {
+export interface OpenverseMediaPage {
   result_count: number
+  page_count: number
   results: OpenverseMedia[]
 }
 
@@ -92,7 +94,13 @@ export async function fetchOpenverseMedia(
   }
 }
 
-function setOpenverseCollectionSearchParams(url: URL, collection: OpenverseCollectionQuery) {
+export async function fetchOpenverseCollectionPage(
+  mediaType: OpenverseMediaType,
+  collection: OpenverseCollectionQuery,
+  page: number,
+  signal?: AbortSignal,
+): Promise<OpenverseMediaPage | null> {
+  const url = new URL(OPENVERSE_API_URL[mediaType])
   if (collection.type === 'tag') {
     url.searchParams.set('unstable__collection', 'tag')
     url.searchParams.set('unstable__tag', collection.tag)
@@ -100,34 +108,15 @@ function setOpenverseCollectionSearchParams(url: URL, collection: OpenverseColle
     url.searchParams.set('unstable__collection', 'source')
     url.searchParams.set('source', collection.source)
   }
-}
+  url.searchParams.set('page', String(page))
+  url.searchParams.set('page_size', String(OPENVERSE_MAX_PAGE_SIZE))
 
-export async function fetchOpenverseCollectionPage(
-  mediaType: OpenverseMediaType,
-  collection: OpenverseCollectionQuery,
-  page: number,
-  pageSize: number,
-  signal?: AbortSignal,
-) {
   try {
-    const url = new URL(OPENVERSE_API_URL[mediaType])
-    setOpenverseCollectionSearchParams(url, collection)
-    url.searchParams.set('page', String(page))
-    url.searchParams.set('page_size', String(pageSize))
-
     const res = await fetch(url, { signal })
     if (!res.ok) return null
 
-    return (await res.json()) as OpenverseMediaListResponse
+    return (await res.json()) as OpenverseMediaPage
   } catch {
     return null
   }
-}
-
-export async function fetchOpenverseCollectionCount(
-  mediaType: OpenverseMediaType,
-  collection: OpenverseCollectionQuery,
-  signal?: AbortSignal,
-): Promise<number | undefined> {
-  return (await fetchOpenverseCollectionPage(mediaType, collection, 1, 1, signal))?.result_count
 }

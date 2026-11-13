@@ -7,6 +7,7 @@ import { Checkbox } from 'tapestry-core-client/src/components/lib/checkbox'
 import { Text } from 'tapestry-core-client/src/components/lib/text/index'
 import { TypographyName } from 'tapestry-core-client/src/theme/types'
 import { useObservable } from 'tapestry-core-client/src/components/lib/hooks/use-observable'
+import { useAsyncAction } from 'tapestry-core-client/src/components/lib/hooks/use-async-action'
 import { ItemCreateDto } from 'tapestry-shared/src/data-transfer/resources/dtos/item'
 import { LazyList, LazyListProps, WithId } from '../../../lazy-list'
 import { LazyListLoader } from '../../../lazy-list/lazy-list-loader'
@@ -176,20 +177,23 @@ export function BaseCollectionList<T extends WithId>({
   }
 
   const selectedCount = selectedIndices.size
-  const maxSelectable = total === undefined ? undefined : Math.min(total, MAX_SELECTION)
-  const allSelected = maxSelectable !== undefined && selectedCount >= maxSelectable
+  const maxSelectable = Math.min(total ?? 0, MAX_SELECTION)
+  const allSelected = maxSelectable > 0 && selectedCount >= maxSelectable
+
+  // The list loads only its first page up front, so selecting all may need to fetch more items.
+  const { trigger: selectAllItems, loading: selectingAll } = useAsyncAction(async ({ signal }) => {
+    if (cacheRef.current.length < maxSelectable) {
+      await cachedRequestItems(0, maxSelectable, signal)
+    }
+    const count = Math.min(cacheRef.current.length, maxSelectable)
+    selectItems(Array.from({ length: count }, (_, i) => i))
+  })
 
   const selectAll = (
     <SelectAll
       checked={allSelected}
-      onChange={() => {
-        if (allSelected) {
-          deselectAllItems()
-          return
-        }
-        const cachedCount = cacheRef.current.length
-        selectItems(Array.from({ length: Math.min(cachedCount, MAX_SELECTION) }, (_, i) => i))
-      }}
+      onChange={() => (allSelected ? deselectAllItems() : selectAllItems())}
+      loading={selectingAll}
       total={total}
       classes={{ root: mdOrLess ? styles.mobileSelectAll : undefined, checkbox: styles.checkbox }}
       textVariant={textVariant}

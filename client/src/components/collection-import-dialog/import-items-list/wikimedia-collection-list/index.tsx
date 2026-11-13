@@ -17,6 +17,7 @@ import {
   CollectionListItem,
 } from '../base-collection-list'
 import { createDerivedSourceMediaItem } from '../../../../model/data/utils'
+import { sequentialPagesRequest } from '../sequential-pages'
 
 // Use this icon when a media item has no real thumbnail (Commons' generic per-extension icon,
 // already mapped to null in wikimedia-commons.ts).
@@ -46,37 +47,26 @@ export function WikimediaCollectionList({
   const [hasNonImage, setHasNonImage] = useState(false)
 
   const requestItems = useMemo(() => {
-    // Commons paginates categories with an opaque cursor, not a page number -- there's no way to
-    // jump directly to an arbitrary skip. Walk forward from wherever this category's walk last
-    // left off, fetching one real page at a time and buffering everything fetched so far, until
-    // the buffer covers the requested window. Cursors (and the buffered items) live for as long
-    // as this component does; they don't go stale.
-    const fetched: WikimediaMedia[] = []
-    let nextCursor: string | undefined
-    let done = false
-
     // fetchWikimediaCategoryResults returns every real file, including ones whose type isn't one
     // we can turn into a tapestry item -- filtered out here on the client, not in core, so this
     // list decides what it can actually show/import.
     const isSupported = (item: WikimediaMedia) =>
       wikimediaTypeToItemType(item.mediatype, item.mime) !== null
 
-    return async (skip: number, limit: number, signal: AbortSignal) => {
-      while (fetched.length < skip + limit && !done) {
-        const page = await fetchWikimediaCategoryResults(collection.category, nextCursor, signal)
-        if (!page) break
-        const supported = page.results.filter(isSupported)
-        if (
-          supported.some((item) => wikimediaTypeToItemType(item.mediatype, item.mime) !== 'image')
-        ) {
-          setHasNonImage(true)
-        }
-        fetched.push(...supported)
-        nextCursor = page.nextCursor
-        done = nextCursor === undefined
+    // Commons paginates categories with an opaque cursor, so pages are walked in order. The
+    // category's file count includes unsupported files, so the total is exact only at the end.
+    return sequentialPagesRequest<WikimediaMedia, string>(async (cursor, signal) => {
+      const page = await fetchWikimediaCategoryResults(collection.category, cursor, signal)
+      if (!page) return null
+
+      const supported = page.results.filter(isSupported)
+      if (
+        supported.some((item) => wikimediaTypeToItemType(item.mediatype, item.mime) !== 'image')
+      ) {
+        setHasNonImage(true)
       }
-      return { skip, total: collection.total, data: fetched.slice(skip, skip + limit) }
-    }
+      return { items: supported, nextCursor: page.nextCursor }
+    }, collection.total)
   }, [collection.category, collection.total])
 
   const columns: CollectionListColumn[] = hasNonImage ? ['published'] : ['published', 'dimensions']
