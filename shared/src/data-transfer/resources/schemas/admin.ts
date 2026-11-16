@@ -103,6 +103,7 @@ export const ReportQueryCreateSchema = z.object({
   from: z.coerce.date<Date>().nullable(),
   to: z.coerce.date<Date>(),
   compare: z.enum(REPORT_COMPARISONS),
+  includeAdmins: z.boolean().default(false),
 })
 
 const ReportUnitSchema = z.enum(['count', 'percent', 'days'])
