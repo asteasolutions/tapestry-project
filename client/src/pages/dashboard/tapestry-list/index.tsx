@@ -117,9 +117,10 @@ export function TapestryList({
         setTapestryLoader(loader)
         onLoaderInitialized?.(loader)
       }}
-      renderItem={(tapestry) => (
+      renderItem={(tapestry, index) => (
         <TapestryCard
           tapestry={tapestry}
+          eagerThumbnail={index < columnCount}
           key={tapestry.id}
           onTapestryDeleted={() => tapestryLoader?.reload()}
           onTapestryModified={() => tapestryLoader?.reload()}

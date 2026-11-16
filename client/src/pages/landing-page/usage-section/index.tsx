@@ -87,6 +87,7 @@ export function UsageSection() {
               <div className={styles.usageGridColumn} key={index}>
                 <Text className={styles.usageTitle}>{subsection.title}</Text>
                 <img
+                  loading="lazy"
                   src={usagesImages[index]}
                   alt={usagesImageAlts[index]}
                   draggable={false}

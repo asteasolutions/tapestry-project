@@ -49,6 +49,7 @@ export function EventsSection() {
         Join a circle
       </Button>
       <img
+        loading="lazy"
         src={XSOrLess ? EventsStringMobile : EventsString}
         alt=""
         className={styles.eventsString}
