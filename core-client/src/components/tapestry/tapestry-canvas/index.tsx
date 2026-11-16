@@ -9,7 +9,15 @@ import {
   useTapestryConfig,
 } from '../../../components/tapestry'
 import { ItemViewModel, TapestryViewModel } from '../../../view-model'
-import { getBounds, isItemInSelection, isMultiselection } from '../../../view-model/utils'
+import {
+  getBoundingRectangle,
+  getBounds,
+  getSelectionItems,
+  isItemInSelection,
+  isMultiselection,
+  MULTISELECT_RECTANGLE_PADDING,
+} from '../../../view-model/utils'
+import { useSingleGroupSelection } from '../../lib/hooks/use-single-group-selection'
 import { PropsWithStyle } from '../../lib'
 import styles from './styles.module.css'
 import { cssTransformForLocation } from '../../../stage/utils'
@@ -127,6 +135,38 @@ function TapestryElementLocator({
   )
 }
 
+// The background of a single selected group is rendered in the DOM before the items (instead of in
+// PixiJS), so that it stays above the items of other groups, but below its own items.
+function SelectedGroupBackground({ transform }: { transform: LinearTransform }) {
+  const { useStoreData } = useTapestryConfig()
+  const { items, selection } = useStoreData(['items', 'selection'])
+  const group = useSingleGroupSelection()
+
+  if (!group?.dto.hasBackground || !group.dto.color) {
+    return null
+  }
+
+  const { top, left, width, height } = getBoundingRectangle(
+    getSelectionItems({ items, selection }),
+  ).expand(MULTISELECT_RECTANGLE_PADDING)
+
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        top,
+        left,
+        width,
+        height,
+        zIndex: ZOrder.selection,
+        pointerEvents: 'none',
+        backgroundColor: group.dto.color,
+        ...cssTransformForLocation({ x: left, y: top }, transform),
+      }}
+    />
+  )
+}
+
 function getRelBounds(rel: Rel, items: IdMap<ItemViewModel>) {
   const fromItem = items[rel.from.itemId]
   const toItem = items[rel.to.itemId]
@@ -191,6 +231,7 @@ export function TapestryCanvas({ classes, style }: TapestryCanvasProps) {
         constrainToLayer && `pointer-action-layer-${constrainToLayer}`,
       )}
     >
+      <SelectedGroupBackground transform={transform} />
       {idMapToArray(rels).map((rel) => {
         const bounds = getRelBounds(rel.dto, items)
         return (
