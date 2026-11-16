@@ -22,6 +22,7 @@ import { DashboardHeader } from './header'
 import { TapestryListControls } from './tapestry-list-controls'
 import { dashboardPath } from '../../utils/paths'
 import { CreateTapestryDialog } from '../../components/create-tapestry-dialog'
+import { useWeavingCircleBanner, WeavingCircleBannerCard } from './weaving-circle-banner-card'
 
 const SORT_BY = ['latest', 'title', 'lastSeen'] as const
 
@@ -129,6 +130,8 @@ export function Dashboard() {
 
   const smOrLess = useResponsive() <= Breakpoint.SM
 
+  const weavingCircleBanner = useWeavingCircleBanner()
+
   if (
     section !== 'public' &&
     !(user && (section === 'home' || section === 'shared' || section === 'bookmarks'))
@@ -189,6 +192,12 @@ export function Dashboard() {
           onLoaderInitialized={setTapestryLoader}
           onNewTapestry={() => setCreatingTapestry(true)}
           showNewTapestryButton={section === 'home' && searchTerm === ''}
+          leadingItem={
+            weavingCircleBanner.visible &&
+            (section === 'home' || section === 'public') && (
+              <WeavingCircleBannerCard onRemindLater={weavingCircleBanner.hide} />
+            )
+          }
           header={
             smOrLess && (
               <>

@@ -54,6 +54,7 @@ interface TapestryListProps {
   orderBy: ListParamsInputDto['orderBy']
   onLoaderInitialized?: (loader: LazyListLoader<TapestryListItem>) => void
   header?: ReactNode
+  leadingItem?: ReactNode
   onNewTapestry: () => unknown
   showNewTapestryButton: boolean
 }
@@ -65,6 +66,7 @@ export function TapestryList({
   onNewTapestry,
   showNewTapestryButton,
   header,
+  leadingItem,
 }: TapestryListProps) {
   const [tapestryLoader, setTapestryLoader] = useState<LazyListLoader<TapestryListItem> | null>(
     null,
@@ -108,6 +110,7 @@ export function TapestryList({
   return (
     <LazyList
       header={header}
+      leadingItem={leadingItem}
       className={styles.root}
       style={{ '--column-count': columnCount } as React.CSSProperties}
       loadingEdgeProximity={10}

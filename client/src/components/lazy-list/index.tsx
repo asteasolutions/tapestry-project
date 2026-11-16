@@ -26,6 +26,7 @@ export interface LazyListProps<T extends WithId> extends Partial<LazyListLoaderC
   style?: React.CSSProperties
   onLoaderInitialized?: (loader: LazyListLoader<T>) => void
   header?: ReactNode
+  leadingItem?: ReactNode
 }
 
 const AUTOSCROLL_EDGE_TOLERANCE = 10
@@ -58,6 +59,7 @@ export function LazyList<T extends WithId>({
   style,
   onLoaderInitialized,
   header,
+  leadingItem,
   ...loaderConfigInit
 }: LazyListProps<T>) {
   const listRef = useRef<HTMLDivElement>(null)
@@ -121,14 +123,16 @@ export function LazyList<T extends WithId>({
 
   const loadingBefore = skip > 0
   const loadingAfter = data.length + skip < total
+  const showEmptyPlaceholder = (state === 'idle' || state === 'reload') && items.length === 0
 
   return (
     <div ref={listRef} onScroll={onScroll} className={clsx('lazy-list', className)} style={style}>
       {header}
       {(reversed ? loadingAfter : loadingBefore) && <LoadingDots />}
       <div className="list-items-container">
+        {leadingItem && !showEmptyPlaceholder && (skip === 0 ? leadingItem : <div />)}
         {state === 'initial-load' && loadingIndicator}
-        {(state === 'idle' || state === 'reload') && items.length === 0 && emptyPlaceholder}
+        {showEmptyPlaceholder && emptyPlaceholder}
         {state !== 'initial-load' &&
           items.map((item, i) => (
             <div key={item.id} data-item-id={item.id} className="lazy-list-item">
