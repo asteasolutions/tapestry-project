@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router'
+import { useNavigate } from 'react-router'
 import {
   Button,
   IconButton,
@@ -7,12 +7,10 @@ import {
 } from 'tapestry-core-client/src/components/lib/buttons/index'
 import { useSingleChoice } from 'tapestry-core-client/src/components/lib/hooks/use-single-choice'
 import { Icon } from 'tapestry-core-client/src/components/lib/icon/index'
-import { SvgIcon } from 'tapestry-core-client/src/components/lib/svg-icon/index'
 import { SubmenuIds } from 'tapestry-core-client/src/components/lib/toolbar'
 import { MenuItems, Toolbar } from 'tapestry-core-client/src/components/lib/toolbar/index'
 import { useViewportObstruction } from 'tapestry-core-client/src/components/tapestry/hooks/use-viewport-obstruction'
 import { isMobile } from 'tapestry-core-client/src/lib/user-agent'
-import Logo from 'tapestry-core-client/src/assets/icons/logo.svg?react'
 import { useTapestryBookmark } from '../../hooks/use-tapestry-bookmark'
 import { useSession } from '../../layouts/session'
 import { useDispatch, useTapestryData } from '../../pages/tapestry/tapestry-providers'
@@ -24,6 +22,7 @@ import {
 } from '../../pages/tapestry/view-model/store-commands/tapestry'
 import { focusItems } from '../../pages/tapestry/view-model/store-commands/viewport'
 import { dashboardPath } from '../../utils/paths'
+import { LogoLink } from '../logo-link'
 import { CreateTapestryDialog } from '../create-tapestry-dialog'
 import { DeleteTapestryModal } from '../delete-tapestry-modal'
 import { EditTapestryDialog } from '../edit-tapestry-dialog'
@@ -79,11 +78,7 @@ export function EditorTitleBar() {
 
   const items = [
     {
-      element: (
-        <Link to={dashboardPath('home')} className={styles.link}>
-          <SvgIcon Icon={Logo} size={28} className={styles.logo} />
-        </Link>
-      ),
+      element: <LogoLink className={styles.logo} />,
       tooltip: { side: 'bottom', children: 'Go to tapestries', offset: -8 },
     },
     !hideEditControls && {

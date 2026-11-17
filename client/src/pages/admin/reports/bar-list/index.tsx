@@ -1,4 +1,7 @@
-import { ReportDto } from 'tapestry-shared/src/data-transfer/resources/dtos/admin'
+import {
+  ReportDto,
+  ReportTableRowDto,
+} from 'tapestry-shared/src/data-transfer/resources/dtos/admin'
 import { ReportCard, CardNote } from '../report-card'
 import { ReportState } from '../use-report'
 import styles from './styles.module.css'
@@ -10,11 +13,82 @@ interface BarListCardProps {
   /** The table to show; its first column holds the counts */
   tableKey: string
   color: string
+  segments?: { tableKey: string; colors: string[] }
   note?: (report: ReportDto) => string | null
 }
 
-/** A ranked list of counts drawn as horizontal bars. */
-export function BarListCard({ state, title, subtitle, tableKey, color, note }: BarListCardProps) {
+interface Segment {
+  key: string
+  label: string
+  count: number
+  color: string
+}
+
+const count = (row: ReportTableRowDto) => row.values[0] ?? 0
+
+function RowLegend({ segments }: { segments: Segment[] }) {
+  if (segments.length === 0) {
+    return null
+  }
+
+  return (
+    <ul className={styles.legend}>
+      {segments.map((s) => (
+        <li key={s.key}>
+          <span aria-hidden className={styles.swatch} style={{ backgroundColor: s.color }} />
+          {s.label} · {s.count.toLocaleString()}
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+interface ReportRowProps {
+  row: ReportTableRowDto
+  segments: Segment[]
+  max: number
+  color: string
+}
+
+function ReportRow({ row, segments, max, color }: ReportRowProps) {
+  return (
+    <li key={row.key}>
+      <span>{row.label}</span>
+      <span aria-hidden className={styles.track}>
+        <span
+          className={styles.bar}
+          style={{
+            width: `${(count(row) / max) * 100}%`,
+            backgroundColor: segments.length ? undefined : color,
+          }}
+        >
+          {segments
+            .filter((s) => s.count > 0)
+            .map((s) => (
+              <span
+                key={s.key}
+                title={`${s.label}: ${s.count.toLocaleString()}`}
+                style={{ flexGrow: s.count, backgroundColor: s.color }}
+              />
+            ))}
+        </span>
+      </span>
+      <span className={styles.count}>{count(row).toLocaleString()}</span>
+      <RowLegend segments={segments} />
+    </li>
+  )
+}
+
+/** A ranked list of counts drawn as horizontal bars, optionally split into colored segments. */
+export function BarListCard({
+  state,
+  title,
+  subtitle,
+  tableKey,
+  color,
+  segments,
+  note,
+}: BarListCardProps) {
   return (
     <ReportCard
       state={state}
@@ -24,27 +98,28 @@ export function BarListCard({ state, title, subtitle, tableKey, color, note }: B
     >
       {(report) => {
         const table = report.current.tables.find((t) => t.key === tableKey)
-        const rows = [...(table?.rows ?? [])].sort(
-          (a, b) => (b.values[0] ?? 0) - (a.values[0] ?? 0),
-        )
-        const max = Math.max(1, ...rows.map((row) => row.values[0] ?? 0))
+        const segmentRows =
+          report.current.tables.find((t) => t.key === segments?.tableKey)?.rows ?? []
+        const colors = segments?.colors ?? []
+        const rows = [...(table?.rows ?? [])].sort((a, b) => count(b) - count(a))
+        const max = Math.max(1, ...rows.map(count))
         const noteText = note?.(report)
+
+        const segmentsOf = (row: ReportTableRowDto): Segment[] =>
+          segmentRows
+            .filter((s) => s.key.startsWith(`${row.key}.`))
+            .map((s, index) => ({
+              key: s.key,
+              label: s.label,
+              count: count(s),
+              color: colors.length ? colors[index % colors.length] : color,
+            }))
+
         return (
           <>
             <ul className={styles.list}>
               {rows.map((row) => (
-                <li key={row.key}>
-                  <span>{row.label}</span>
-                  <span aria-hidden className={styles.track}>
-                    <span
-                      style={{
-                        width: `${((row.values[0] ?? 0) / max) * 100}%`,
-                        backgroundColor: color,
-                      }}
-                    />
-                  </span>
-                  <span className={styles.count}>{(row.values[0] ?? 0).toLocaleString()}</span>
-                </li>
+                <ReportRow row={row} segments={segmentsOf(row)} color={color} max={max} />
               ))}
             </ul>
             {noteText && <CardNote>{noteText}</CardNote>}
