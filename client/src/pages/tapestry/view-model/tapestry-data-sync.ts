@@ -120,7 +120,7 @@ export class TapestryDataSync {
           !!error &&
             setSnackbar({
               variant: 'error',
-              text:
+              content:
                 error instanceof APIError && error.data.name !== 'ServerError'
                   ? error.message
                   : 'Error during save',

@@ -175,7 +175,7 @@ export function setSnackbar(
   snackbarData?: SnackbarData | string,
 ): StoreMutationCommand<TapestryViewModel> {
   return (model) => {
-    model.snackbarData = typeof snackbarData === 'string' ? { text: snackbarData } : snackbarData
+    model.snackbarData = typeof snackbarData === 'string' ? { content: snackbarData } : snackbarData
   }
 }
 

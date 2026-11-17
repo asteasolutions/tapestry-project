@@ -43,7 +43,7 @@ export function ViewerTitleBar({ className, style }: PropsWithStyle) {
   ])
   const { progress, triggerExport } = useTapestryExport({
     tapestryId: id,
-    onError: () => dispatch(setSnackbar({ text: 'Error during export', variant: 'error' })),
+    onError: () => dispatch(setSnackbar({ content: 'Error during export', variant: 'error' })),
     onSuccess: () => setViewingInfo(false),
   })
   const { user } = useSession()
