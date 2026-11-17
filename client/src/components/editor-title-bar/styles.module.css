@@ -4,15 +4,6 @@
   pointer-events: auto;
 }
 
-.link {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: transparent;
-}
-
 :global(.menu-item-wrapper):has(.logo) {
   width: 48px;
   height: 48px;
