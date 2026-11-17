@@ -36,7 +36,7 @@ export function useGridArrangeButton({
   selectSubmenu,
 }: {
   selectedSubmenu: string
-  selectSubmenu: (id: GridSubmenu) => void
+  selectSubmenu: (id: GridSubmenu | '') => void
 }): MenuItem {
   const dispatch = useDispatch()
   const selection = useTapestryData('selection')
@@ -78,7 +78,7 @@ export function useGridArrangeButton({
           dispatch(arrangeItems(grid, true))
         }}
         onSubmit={(grid) => {
-          close()
+          selectSubmenu('')
           dispatch(clearItemPreviews(), arrangeItems(grid, false))
         }}
       />,
