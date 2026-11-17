@@ -54,15 +54,36 @@ export function MediaSection() {
                 </Text>
                 {index === 0 && (
                   <div className={styles.mediaIcons}>
-                    <img src={OpenverseIcon} alt="Openverse logo" className={styles.mediaIcon} />
                     <img
+                      loading="lazy"
+                      src={OpenverseIcon}
+                      alt="Openverse logo"
+                      className={styles.mediaIcon}
+                    />
+                    <img
+                      loading="lazy"
                       src={IALogoCircle}
                       alt="Internet Archive logo"
                       className={styles.mediaIcon}
                     />
-                    <img src={WikipediaIcon} alt="Wikipedia logo" className={styles.mediaIcon} />
-                    <img src={IIIFIcon} alt="IIIF logo" className={styles.mediaIcon} />
-                    <img src={YoutubeIcon} alt="YouTube logo" className={styles.mediaIcon} />
+                    <img
+                      loading="lazy"
+                      src={WikipediaIcon}
+                      alt="Wikipedia logo"
+                      className={styles.mediaIcon}
+                    />
+                    <img
+                      loading="lazy"
+                      src={IIIFIcon}
+                      alt="IIIF logo"
+                      className={styles.mediaIcon}
+                    />
+                    <img
+                      loading="lazy"
+                      src={YoutubeIcon}
+                      alt="YouTube logo"
+                      className={styles.mediaIcon}
+                    />
                   </div>
                 )}
               </div>

@@ -27,6 +27,7 @@ interface TapestryCardProps {
   tapestry: TapestryListItem
   viewURL?: string
   viewOnly?: boolean
+  eagerThumbnail?: boolean
   onTapestryDeleted?: () => unknown
   onTapestryModified?: () => unknown
 }
@@ -37,6 +38,7 @@ export function TapestryCard({
   onTapestryModified,
   viewURL,
   viewOnly,
+  eagerThumbnail,
 }: TapestryCardProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const menuContainerRef = useOutsideClick<HTMLDivElement>(() => setIsMenuOpen(false))
@@ -74,6 +76,7 @@ export function TapestryCard({
         <div className={styles.preview}>
           {tapestry.thumbnail ? (
             <img
+              loading={eagerThumbnail ? 'eager' : 'lazy'}
               src={tapestry.thumbnail}
               alt="Snapshot of the tapestry"
               className={styles.thumbnail}
