@@ -63,7 +63,7 @@ export const ListParamsSchema = ReadParamsSchema.extend({
   filter: ListFilterSchema.transform((val) =>
     Object.entries(val).map(([key, value]) => {
       const [prop, op] = key.split(':')
-      return { prop, op: op as FilterOp, value: value }
+      return { prop, op: op as FilterOp, value }
     }),
   ).nullish(),
 })
