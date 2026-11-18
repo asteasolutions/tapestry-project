@@ -18,7 +18,7 @@ import {
 } from '../../view-model/store-commands/tapestry'
 import { TapestryStageController } from '.'
 import { TapestryStage } from '..'
-import { throttle } from 'lodash'
+import { throttle } from 'lodash-es'
 import { Shortcut } from '../../components/tapestry/help-pane/shortcuts-pane'
 import { shortcutLabel } from '../../lib/keyboard-event'
 import { isMobile } from '../../lib/user-agent'

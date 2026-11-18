@@ -8,7 +8,7 @@ import { SearchPane } from 'tapestry-core-client/src/components/tapestry/search/
 import { SidePane as BaseSidePane } from 'tapestry-core-client/src/components/tapestry/side-pane/index.js'
 import { useTapestryData } from '../../app'
 import { deepFreeze } from 'tapestry-core/src/utils'
-import { thru } from 'lodash'
+import { thru } from 'lodash-es'
 
 const VIEWER_ACTIONS = deepFreeze(
   thru(structuredClone(DEFAULT_ACTIONS), (actions) => {
