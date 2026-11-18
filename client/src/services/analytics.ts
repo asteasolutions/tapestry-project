@@ -21,6 +21,8 @@ export type ClickTarget =
   | 'Landing Contact'
   | 'Landing As We May Think'
   | 'Landing Internet Archive'
+  | 'Banner Join a circle'
+  | 'Banner Remind me in 14 days'
 
 export type AnalyticsEvent = `Click: ${ClickTarget}` | 'Sign up cancelled' | 'Sign up completed'
 

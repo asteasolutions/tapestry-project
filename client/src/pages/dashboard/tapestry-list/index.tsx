@@ -20,6 +20,10 @@ export interface TapestryListItem extends TapestryWithOwner<TapestryDto> {
   isBookmarked: boolean
 }
 
+const BANNER_ITEM = { id: 'banner', isBanner: true } as const
+
+export type TapestryListEntry = TapestryListItem | typeof BANNER_ITEM
+
 // For simplicity this includes the gaps
 const XL_MIN_COLUMN_WIDTH = 380
 
@@ -52,9 +56,9 @@ function useTapestryListColumnCount() {
 interface TapestryListProps {
   filter: ListParamsInputDto['filter']
   orderBy: ListParamsInputDto['orderBy']
-  onLoaderInitialized?: (loader: LazyListLoader<TapestryListItem>) => void
+  onLoaderInitialized?: (loader: LazyListLoader<TapestryListEntry>) => void
   header?: ReactNode
-  leadingItem?: ReactNode
+  banner?: ReactNode
   onNewTapestry: () => unknown
   showNewTapestryButton: boolean
 }
@@ -66,23 +70,27 @@ export function TapestryList({
   onNewTapestry,
   showNewTapestryButton,
   header,
-  leadingItem,
+  banner,
 }: TapestryListProps) {
-  const [tapestryLoader, setTapestryLoader] = useState<LazyListLoader<TapestryListItem> | null>(
+  const [tapestryLoader, setTapestryLoader] = useState<LazyListLoader<TapestryListEntry> | null>(
     null,
   )
   const userId = useSession().user?.id
   const allBookmarked = !!userId && filter?.['bookmarkedBy:eq'] === userId
 
-  const loadTapestries = useCallback<LazyListRequestItems<TapestryListItem>>(
+  const showBanner = !!banner
+
+  const loadTapestries = useCallback<LazyListRequestItems<TapestryListEntry>>(
     async (skip, limit, signal) => {
+      // The banner is the item at index 0, so the tapestries are shifted by one
+      const includeBanner = showBanner && skip === 0
       const tapestries = await resource('tapestries').list(
         {
           filter,
           orderBy,
           include: ['owner', 'userAccess'],
-          skip,
-          limit,
+          skip: showBanner && skip > 0 ? skip - 1 : skip,
+          limit: includeBanner ? limit - 1 : limit,
         },
         { signal },
       )
@@ -94,15 +102,22 @@ export function TapestryList({
             })
           : { data: [] }
 
+      const items = tapestries.data.map((t) => ({
+        ...(t as TapestryWithOwner<TapestryDto>),
+        isBookmarked: allBookmarked ? true : bookmarks.data.some((b) => b.tapestryId === t.id),
+      }))
+
+      if (!showBanner || tapestries.total === 0) {
+        return { ...tapestries, data: items }
+      }
+
       return {
-        ...tapestries,
-        data: tapestries.data.map((t) => ({
-          ...(t as TapestryWithOwner<TapestryDto>),
-          isBookmarked: allBookmarked ? true : bookmarks.data.some((b) => b.tapestryId === t.id),
-        })),
+        data: includeBanner ? [BANNER_ITEM, ...items] : items,
+        total: tapestries.total + 1,
+        skip: includeBanner ? 0 : tapestries.skip + 1,
       }
     },
-    [filter, orderBy, allBookmarked, userId],
+    [filter, orderBy, allBookmarked, userId, showBanner],
   )
 
   const columnCount = useTapestryListColumnCount()
@@ -110,7 +125,6 @@ export function TapestryList({
   return (
     <LazyList
       header={header}
-      leadingItem={leadingItem}
       className={styles.root}
       style={{ '--column-count': columnCount } as React.CSSProperties}
       loadingEdgeProximity={10}
@@ -120,15 +134,19 @@ export function TapestryList({
         setTapestryLoader(loader)
         onLoaderInitialized?.(loader)
       }}
-      renderItem={(tapestry, index) => (
-        <TapestryCard
-          tapestry={tapestry}
-          eagerThumbnail={index < columnCount}
-          key={tapestry.id}
-          onTapestryDeleted={() => tapestryLoader?.reload()}
-          onTapestryModified={() => tapestryLoader?.reload()}
-        />
-      )}
+      renderItem={(item, index) =>
+        'isBanner' in item ? (
+          banner
+        ) : (
+          <TapestryCard
+            tapestry={item}
+            eagerThumbnail={index < columnCount}
+            key={item.id}
+            onTapestryDeleted={() => tapestryLoader?.reload()}
+            onTapestryModified={() => tapestryLoader?.reload()}
+          />
+        )
+      }
       emptyPlaceholder={
         <NoTapestriesPlaceholder
           showNewTapestryButton={showNewTapestryButton}

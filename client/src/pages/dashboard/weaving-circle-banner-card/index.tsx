@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Button } from 'tapestry-core-client/src/components/lib/buttons'
 import { LocalStorage } from '../../../services/local-storage'
+import { clickTracking } from '../../../services/analytics'
 import Thread from '../../../assets/images/weaving-circle-banner/thread.svg'
 import Photo from '../../../assets/images/weaving-circle-banner/photo.webp'
 import Dot from '../../../assets/images/weaving-circle-banner/dot.svg'
@@ -47,7 +48,7 @@ export function WeavingCircleBannerCard({ onRemindLater }: WeavingCircleBannerCa
           href="https://luma.com/tapestries"
           target="_blank"
           className={styles.button}
-          data-analytics-click="Banner Join a circle"
+          {...clickTracking('Banner Join a circle')}
         >
           Join a circle
         </Button>
@@ -55,7 +56,7 @@ export function WeavingCircleBannerCard({ onRemindLater }: WeavingCircleBannerCa
           variant="clear"
           className={styles.button}
           onClick={onRemindLater}
-          data-analytics-click="Banner Remind me in 14 days"
+          {...clickTracking('Banner Remind me in 14 days')}
         >
           Remind me in 14 days
         </Button>
