@@ -3,9 +3,7 @@ import { IconButton, MenuItemButton } from 'tapestry-core-client/src/components/
 import { MenuItemToggle } from 'tapestry-core-client/src/components/lib/buttons/menu-item-toggle'
 import { useKeyboardShortcuts } from 'tapestry-core-client/src/components/lib/hooks/use-keyboard-shortcuts'
 import { Icon } from 'tapestry-core-client/src/components/lib/icon/index'
-import { SimpleModal } from 'tapestry-core-client/src/components/lib/modal/index'
 import { SubmitOnBlurInput } from 'tapestry-core-client/src/components/lib/submit-on-blur-input/index'
-import { Text } from 'tapestry-core-client/src/components/lib/text/index'
 import {
   MaybeMenuItem,
   MenuItem,
@@ -21,11 +19,10 @@ import { hasRangeSelection } from 'tapestry-core-client/src/lib/dom'
 import { arrowShortcuts } from 'tapestry-core-client/src/lib/keyboard-event'
 import {
   getBoundingRectangle,
-  isBlobURL,
   supportsCustomThumbnail,
 } from 'tapestry-core-client/src/view-model/utils'
 import { Rectangle, translate } from 'tapestry-core/src/lib/geometry'
-import { ensureArray, isMediaItem, OneOrMore } from 'tapestry-core/src/utils'
+import { ensureArray, isNewMediaItem, OneOrMore } from 'tapestry-core/src/utils'
 import { ItemDto } from 'tapestry-shared/src/data-transfer/resources/dtos/item'
 import { duplicateItem } from '../../../model/data/utils'
 import { useDispatch, useTapestryData } from '../../../pages/tapestry/tapestry-providers'
@@ -218,7 +215,6 @@ export function useEditMoreMenu({
   const { copiedItemSize } = useTapestryData(['interactionMode', 'copiedItemSize'])
 
   const [displayThumbnailDialog, setDisplayThumbnailDialog] = useState(false)
-  const [displayUploadPendingDialog, setDisplayUploadPendingDialog] = useState(false)
 
   const isMultiselection = Array.isArray(dto)
   const dtoArray = ensureArray(dto)
@@ -228,14 +224,23 @@ export function useEditMoreMenu({
     if (hasRangeSelection()) {
       return true
     }
-    if (dtoArray.some((item) => isMediaItem(item) && isBlobURL(item.source))) {
-      setDisplayUploadPendingDialog(true)
-      onSelectSubmenu('')
-      return
+    const copyableItems = dtoArray.filter((i) => !isNewMediaItem(i))
+
+    if (copyableItems.length > 0) {
+      await dataTransferHandler.serialize(copyableItems)
     }
-    await dataTransferHandler.serialize(dtoArray)
+    const hasPendingItems = copyableItems.length !== dtoArray.length
+
     dispatch(
-      setSnackbar(`${isMultiselection ? `${dto.length} items` : 'Item'} copied to clipboard`),
+      setSnackbar({
+        text:
+          copyableItems.length === 0
+            ? 'Nothing copied. Item(s) still uploading'
+            : hasPendingItems
+              ? 'Some items are still uploading and were not copied to the clipboard'
+              : `${copyableItems.length} item(s) copied to clipboard`,
+        variant: hasPendingItems ? 'warning' : 'normal',
+      }),
     )
   }
   const copySize = () => {
@@ -311,17 +316,6 @@ export function useEditMoreMenu({
           />
           {displayThumbnailDialog && !isMultiselection && (
             <ChangeThumbnailDialog item={dto} onClose={() => setDisplayThumbnailDialog(false)} />
-          )}
-          {displayUploadPendingDialog && (
-            <SimpleModal
-              title="Upload in progress"
-              cancel={{ text: 'OK', onClick: () => setDisplayUploadPendingDialog(false) }}
-            >
-              <Text>
-                {isMultiselection ? 'Some of the selected items are' : 'This item is'} still
-                uploading. Please wait for the upload to finish before copying.
-              </Text>
-            </SimpleModal>
           )}
         </>
       ),

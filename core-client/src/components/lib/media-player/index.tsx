@@ -213,11 +213,11 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
 
   const mediaProps = {
     onLoadedMetadata: handleLoadedMetadata,
-    onTimeUpdate: onTimeUpdate,
+    onTimeUpdate,
     onPlay: handlePlay,
     onPause: handlePause,
     onEnded: handleEnded,
-    onSeeked: onSeeked,
+    onSeeked,
   }
 
   return (

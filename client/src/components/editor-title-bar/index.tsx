@@ -60,7 +60,7 @@ export function EditorTitleBar() {
   const [forkingTapestry, setForkingTapestry] = useState(false)
   const [editingTapestry, setEditingTapestry] = useState(false)
   const { progress, triggerExport } = useTapestryExport({
-    tapestryId: tapestryId,
+    tapestryId,
     onError: () => dispatch(setSnackbar({ text: 'Error during export', variant: 'error' })),
     onSuccess: closeSubmenu,
   })

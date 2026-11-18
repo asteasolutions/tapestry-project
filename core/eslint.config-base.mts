@@ -21,6 +21,7 @@ export default tseslint.config({
     '@typescript-eslint': tseslint.plugin,
   },
   rules: {
+    'object-shorthand': 'warn',
     '@typescript-eslint/no-unnecessary-condition': 'warn',
     '@typescript-eslint/no-unused-vars': [
       'error',

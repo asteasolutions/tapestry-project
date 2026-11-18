@@ -1,12 +1,11 @@
 import clsx from 'clsx'
 import { useMemo } from 'react'
 import { Link } from 'react-router'
-import { isHTTPURL } from 'tapestry-core/src/utils'
+import { isBlobURL, isHTTPURL } from 'tapestry-core/src/utils'
 import { useTapestryConfig } from '../../..'
 import { Icon, IconName } from '../../../../../../src/components/lib/icon/index'
 import { Text } from '../../../../../../src/components/lib/text/index'
 import { toggleOutline } from '../../../../../view-model/store-commands/tapestry'
-import { isBlobURL } from '../../../../../view-model/utils'
 import styles from './styles.module.css'
 import { InternalNavigationState } from '../../../../../stage/controller/item-controller'
 
