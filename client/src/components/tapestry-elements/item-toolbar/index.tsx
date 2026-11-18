@@ -233,7 +233,7 @@ export function useEditMoreMenu({
 
     dispatch(
       setSnackbar({
-        text:
+        content:
           copyableItems.length === 0
             ? 'Nothing copied. Item(s) still uploading'
             : hasPendingItems
