@@ -1,6 +1,5 @@
 import { isHTTPURL } from 'tapestry-core/src/utils'
 import {
-  fetchOpenverseCollectionCount,
   fetchOpenverseMedia,
   parseOpenverseCollectionQuery,
   parseOpenverseMediaId,
@@ -254,20 +253,11 @@ const openverseFactory: ItemFactory = async (source, _mediaType, tapestryId) => 
 
   const parsedOpenverseCollection = parseOpenverseCollectionQuery(source)
   if (parsedOpenverseCollection) {
-    const { mediaType: openverseMediaType, collection } = parsedOpenverseCollection
-    const total = await fetchOpenverseCollectionCount(openverseMediaType, collection)
-    if (total === undefined) return null
-
+    // Opens the import dialog right away. Openverse can take several seconds per request, and
+    // the dialog shows the collection's size once its first page loads.
     return {
       items: [],
-      collectionImports: [
-        {
-          type: 'OpenverseCollection',
-          mediaType: openverseMediaType,
-          collection,
-          total,
-        },
-      ],
+      collectionImports: [{ type: 'OpenverseCollection', ...parsedOpenverseCollection }],
     }
   }
 
