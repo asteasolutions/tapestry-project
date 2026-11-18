@@ -26,6 +26,7 @@ import { useTapestryPath } from '../../hooks/use-tapestry-path'
 import { loadInitialThumbnails, UserAccess, userAccess } from '../../model/data/utils'
 import { resource } from '../../services/rest-resources'
 import { dashboardPath } from '../../utils/paths'
+import { StatusIndicators } from './status-indicators'
 import { Tapestry } from './tapestry'
 import {
   TAPESTRY_DATA_SYNC_COMMANDS,
@@ -162,19 +163,22 @@ export function TapestryLoader({ id, mode }: TapestryLoaderProps) {
     )
   }
 
-  if (!tapestryDataSync) {
-    return <LoadingLogo />
-  }
-
   return (
-    <TapestryDataSyncCommandsProvider
-      commands={pick(tapestryDataSync, TAPESTRY_DATA_SYNC_COMMANDS)}
-    >
-      <TapestryStoreContext value={tapestryDataSync.store}>
-        <TapestryConfigContext value={config}>
-          <Tapestry initialThumbnails={initialThumbnails} />
-        </TapestryConfigContext>
-      </TapestryStoreContext>
-    </TapestryDataSyncCommandsProvider>
+    <>
+      {tapestryDataSync ? (
+        <TapestryDataSyncCommandsProvider
+          commands={pick(tapestryDataSync, TAPESTRY_DATA_SYNC_COMMANDS)}
+        >
+          <TapestryStoreContext value={tapestryDataSync.store}>
+            <TapestryConfigContext value={config}>
+              <Tapestry initialThumbnails={initialThumbnails} />
+            </TapestryConfigContext>
+          </TapestryStoreContext>
+        </TapestryDataSyncCommandsProvider>
+      ) : (
+        <LoadingLogo />
+      )}
+      <StatusIndicators tapestryId={id} />
+    </>
   )
 }

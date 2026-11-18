@@ -3,8 +3,8 @@ import { useMemo, useRef, useState } from 'react'
 import { Navigate, useLocation, useParams } from 'react-router'
 import { useSession } from '../../layouts/session'
 import { LazyListLoader } from '../../components/lazy-list/lazy-list-loader'
-import { useTapestryImport } from '../../hooks/use-tapestry-import'
-import { ImportTapestryDialog } from './import-tapestry-button/import-tapestry-dialog'
+import { backgroundTasks } from '../../services/background-tasks'
+import { BackgroundTasksPanel } from '../../components/background-tasks-panel'
 import { dataTransferToFiles } from '../../stage/data-transfer-handler'
 import { TYPE } from 'tapestry-core/src/data-format/export'
 import { useObservable } from 'tapestry-core-client/src/components/lib/hooks/use-observable'
@@ -121,11 +121,16 @@ export function Dashboard() {
     [section, searchTerm, user?.id],
   )
 
-  const {
-    imports,
-    importTapestries,
-    reset: resetImports,
-  } = useTapestryImport(() => tapestryLoader?.reload())
+  // Reload the list whenever an import completes, so that the new tapestry shows up
+  const { imports, exports } = useObservable(backgroundTasks, (_oldValue, _newValue, patches) => {
+    const importCompleted = patches.some(
+      ({ path, value }) =>
+        path[0] === 'imports' && path.at(-1) === 'status' && value === 'complete',
+    )
+    if (importCompleted) {
+      void tapestryLoader?.reload()
+    }
+  })
 
   const smOrLess = useResponsive() <= Breakpoint.SM
 
@@ -144,7 +149,7 @@ export function Dashboard() {
   const header = (
     <DashboardHeader
       onNewTapestry={() => setCreatingTapestry(true)}
-      onImport={importTapestries}
+      onImport={(files) => backgroundTasks.importTapestries(files)}
       section={section}
     />
   )
@@ -174,7 +179,7 @@ export function Dashboard() {
           if (zips.length === 0) {
             return
           }
-          void importTapestries(zips)
+          void backgroundTasks.importTapestries(zips)
         }}
         title="Import your tapestry file"
         subtitle="Drag and drop to upload"
@@ -200,7 +205,12 @@ export function Dashboard() {
         />
       </DropArea>
       {creatingTapestry && <CreateTapestryDialog onCancel={() => setCreatingTapestry(false)} />}
-      {imports && <ImportTapestryDialog imports={imports} onClose={resetImports} />}
+      <BackgroundTasksPanel
+        imports={imports}
+        exports={exports}
+        onCancelExport={(id) => backgroundTasks.cancelExport(id)}
+        onClose={() => backgroundTasks.clearFinished()}
+      />
       <Snackbar value={initialPrompt} onChange={() => setInitialPrompt(undefined)} />
     </div>
   )
