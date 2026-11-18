@@ -101,7 +101,7 @@ export function ImportToolbar({ className }: GlobalMenuProps) {
               await addToTapestry(val)
             } catch (error) {
               if (error instanceof InvalidSourceError) {
-                dispatch(setSnackbar({ text: 'Invalid url', variant: 'error', duration: 5 }))
+                dispatch(setSnackbar({ content: 'Invalid url', variant: 'error', duration: 5 }))
               } else {
                 throw error
               }
