@@ -22,7 +22,7 @@ import {
   supportsCustomThumbnail,
 } from 'tapestry-core-client/src/view-model/utils'
 import { Rectangle, translate } from 'tapestry-core/src/lib/geometry'
-import { ensureArray, OneOrMore } from 'tapestry-core/src/utils'
+import { ensureArray, isNewMediaItem, OneOrMore } from 'tapestry-core/src/utils'
 import { ItemDto } from 'tapestry-shared/src/data-transfer/resources/dtos/item'
 import { duplicateItem } from '../../../model/data/utils'
 import { useDispatch, useTapestryData } from '../../../pages/tapestry/tapestry-providers'
@@ -224,9 +224,23 @@ export function useEditMoreMenu({
     if (hasRangeSelection()) {
       return true
     }
-    await dataTransferHandler.serialize(dtoArray)
+    const copyableItems = dtoArray.filter((i) => !isNewMediaItem(i))
+
+    if (copyableItems.length > 0) {
+      await dataTransferHandler.serialize(copyableItems)
+    }
+    const hasPendingItems = copyableItems.length !== dtoArray.length
+
     dispatch(
-      setSnackbar(`${isMultiselection ? `${dto.length} items` : 'Item'} copied to clipboard`),
+      setSnackbar({
+        text:
+          copyableItems.length === 0
+            ? 'Nothing copied. Item(s) still uploading'
+            : hasPendingItems
+              ? 'Some items are still uploading and were not copied to the clipboard'
+              : `${copyableItems.length} item(s) copied to clipboard`,
+        variant: hasPendingItems ? 'warning' : 'normal',
+      }),
     )
   }
   const copySize = () => {

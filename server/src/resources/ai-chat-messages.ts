@@ -165,7 +165,7 @@ export const aiChatMessages: RESTResourceImpl<
   handlers: {
     create: async ({ body: { attachments, chatId, ...message }, query }) => {
       const pendingChatMessage = await prisma.aiChatMessage.findFirst({
-        where: { chatId: chatId, state: 'pending' },
+        where: { chatId, state: 'pending' },
       })
       if (pendingChatMessage) throw new ConflictError()
 

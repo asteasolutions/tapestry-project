@@ -1,6 +1,5 @@
 import { compact } from 'lodash-es'
-import { IdMap, idMapToArray, isMediaItem } from 'tapestry-core/src/utils'
-import { MediaItemDto } from 'tapestry-shared/src/data-transfer/resources/dtos/item'
+import { IdMap, idMapToArray, isNewMediaItem } from 'tapestry-core/src/utils'
 import { Store, StoreMutationCommand } from 'tapestry-core-client/src/lib/store/index'
 import { ScreenshotMode } from 'tapestry-core/src/data-format/schemas/common'
 import {
@@ -60,6 +59,7 @@ import { userToPublicProfileDto } from 'tapestry-shared/src/utils'
 import { PublicUserProfileDto } from 'tapestry-shared/src/data-transfer/resources/dtos/user'
 import { TapestryDto } from 'tapestry-shared/src/data-transfer/resources/dtos/tapestry'
 import { APIError } from '../../../errors'
+import { MediaItem } from 'tapestry-core/src/data-format/schemas/item'
 
 type TapestryRTCMessage =
   | {
@@ -323,7 +323,7 @@ export class TapestryDataSync {
   }
 
   private async handleNewMediaItems(repoPatches: Patch[]) {
-    const items = repoPatches.reduce<MediaItemDto[]>((acc, { op, path, value }) => {
+    const items = repoPatches.reduce<MediaItem[]>((acc, { op, path, value }) => {
       if (op === 'add' && path[0] === 'items' && path.length === 2 && isNewMediaItem(value)) {
         acc.push(value)
       }
@@ -425,8 +425,4 @@ const patchCommands: Record<TapestryResourceName, PatchCommand> = {
     replace: (id, value) =>
       updatePresentationStep(id, { dto: PresentationStepSchema.parse(value) }),
   },
-}
-
-function isNewMediaItem(value: unknown): value is MediaItemDto {
-  return isMediaItem(value) && value.source.startsWith('blob:')
 }
