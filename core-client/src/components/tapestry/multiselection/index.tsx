@@ -8,6 +8,7 @@ import { PropsWithChildren, ReactNode } from 'react'
 import { PropsWithStyle } from '../../lib'
 import { useTapestryConfig, ZOrder } from '..'
 import { useSingleGroupSelection } from '../../lib/hooks/use-single-group-selection'
+import { getOpaqueColor } from '../../../theme/types'
 
 export interface MultiselectionProps extends PropsWithStyle<PropsWithChildren> {
   bounds: Rectangle
@@ -26,6 +27,12 @@ export function Multiselection({ bounds, halo, style, className, children }: Mul
 
   const { top, left, width, height } = bounds
 
+  // A single selected group is rendered with its own border. Its background is rendered separately
+  // before the items (see SelectedGroupBackground), so that it doesn't cover them.
+  const groupColor = selectedGroup?.dto.color
+  const groupBorder =
+    selectedGroup?.dto.hasBorder && groupColor ? getOpaqueColor(groupColor) : undefined
+
   const borderScale =
     computeRestrictedScale(viewport, idMapToArray(items)) / viewport.transform.scale
 
@@ -40,6 +47,7 @@ export function Multiselection({ bounds, halo, style, className, children }: Mul
         zIndex: ZOrder.selection,
         ...cssTransformForLocation({ x: left, y: top }, viewport.transform),
         ...{ '--border-scale': borderScale },
+        borderColor: groupBorder,
         ...style,
       }}
       data-component-type="multiselection"

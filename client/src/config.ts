@@ -37,6 +37,7 @@ const parsedConfig = deepFreeze(
       VITE_STUN_SERVER: z.string(),
       VITE_SENTRY_DSN: z.string().default(''),
       VITE_ATPROTO_CLIENT_ID: z.string().default(''),
+      VITE_PLAUSIBLE_DOMAIN: z.string().default(''),
     })
     .transform((input) => ({
       apiUrl: input.VITE_API_URL,
@@ -58,6 +59,7 @@ const parsedConfig = deepFreeze(
       wbmSnapshotPollingPeriod: input.VITE_WBM_SNAPSHOT_POLLING_PERIOD,
       stunServer: input.VITE_STUN_SERVER,
       sentryDsn: input.VITE_SENTRY_DSN,
+      plausibleDomain: input.VITE_PLAUSIBLE_DOMAIN,
     }))
     .safeParse(import.meta.env),
 )
