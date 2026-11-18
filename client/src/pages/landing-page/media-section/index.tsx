@@ -11,6 +11,7 @@ import { Link } from 'react-router'
 import { dashboardPath } from '../../../utils/paths'
 import { ConcreteWall } from '../../../components/positioned-component'
 import { Button } from 'tapestry-core-client/src/components/lib/buttons'
+import { clickTracking } from '../../../services/analytics'
 
 export function MediaSection() {
   const {
@@ -30,13 +31,19 @@ export function MediaSection() {
           </Text>
         </div>
         <div className={styles.buttons}>
-          <Button component={Link} variant="mono" to={dashboardPath('home')}>
+          <Button
+            component={Link}
+            variant="mono"
+            to={dashboardPath('home')}
+            {...clickTracking('Landing Explore the public gallery')}
+          >
             Explore the public gallery
           </Button>
           <Button
             component="a"
             variant="secondary"
             href="https://drive.google.com/file/d/110DthOEk0mQJOVXy_UDjUsFWp-0YafMc/view?usp=drive_link"
+            {...clickTracking('Landing Watch demo')}
             target="_blank"
           >
             Watch demo
