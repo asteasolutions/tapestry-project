@@ -7,7 +7,14 @@ import { useItemFullscreen } from '../../../lib/hooks/use-item-fullscreen'
 import { WebpageItemViewer } from './viewer'
 import styles from './styles.module.css'
 
-export const PLAYABLE_WEBPAGE_TYPES: WebpageType[] = ['iaAudio', 'iaVideo', 'vimeo', 'youtube']
+export const PLAYABLE_WEBPAGE_TYPES: WebpageType[] = [
+  'iaAudio',
+  'iaVideo',
+  'vimeo',
+  'youtube',
+  'googleDriveAudio',
+  'googleDriveVideo',
+]
 
 export const WebpageItem = memo(({ id }: TapestryElementComponentProps) => {
   const { containerRef, isFullscreen, exitFullscreenButton } = useItemFullscreen<HTMLDivElement>({

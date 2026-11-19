@@ -1,3 +1,6 @@
+import { Size } from 'tapestry-core/src/data-format/schemas/common.js'
+import { GoogleDriveWebpageType } from 'tapestry-core/src/data-format/schemas/item.js'
+
 type WBMSnapshotKeys = [
   'urlkey',
   'timestamp',
@@ -58,12 +61,21 @@ export interface FetchContentTypeProxyDto {
   result: string | null
 }
 
+export interface GoogleDriveMetadataProxyDto {
+  type: 'google-drive-metadata'
+  result: {
+    webpageType: GoogleDriveWebpageType
+    size: Size | null
+  }
+}
+
 export type ProxyDto =
   | ListWBMSnapshotsProxyDto
   | CreateWBMSnapshotProxyDto
   | CanFrameProxyDto
   | IAUserListProxyDto
   | FetchContentTypeProxyDto
+  | GoogleDriveMetadataProxyDto
 
 export type ProxyCreateDto =
   | CreateListWBMSnapshotsProxyDto
@@ -73,5 +85,6 @@ export type ProxyCreateDto =
         | CanFrameProxyDto['type']
         | IAUserListProxyDto['type']
         | FetchContentTypeProxyDto['type']
+        | GoogleDriveMetadataProxyDto['type']
       url: string
     }

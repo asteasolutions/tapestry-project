@@ -47,6 +47,7 @@ jobs:
           DEPLOY_FRONTEND_S3_BUCKET: ${{ secrets.DEPLOY_FRONTEND_S3_BUCKET }}
           EXTERNAL_SERVER_URL: ${{ vars.EXTERNAL_SERVER_URL }}
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           OAUTH_REDIRECT_URI: ${{ vars.OAUTH_REDIRECT_URI }}
           JOBS_ADMIN_NAME: ${{ secrets.JOBS_ADMIN_NAME }}
           JOBS_ADMIN_PASSWORD: ${{ secrets.JOBS_ADMIN_PASSWORD }}

@@ -7,6 +7,9 @@ import {
 } from 'tapestry-shared/src/data-transfer/resources/dtos/proxy.js'
 import { parseInternetArchiveURL } from 'tapestry-core/src/internet-archive.js'
 import { zipObject } from 'lodash-es'
+import sharp from 'sharp'
+import { WEB_SOURCE_PARSERS } from 'tapestry-core/src/web-sources/index.js'
+import { googleDriveWebpageType } from 'tapestry-core/src/web-sources/google-drive.js'
 import { RedisCache } from '../services/redis.js'
 import { config } from '../config.js'
 
@@ -56,6 +59,62 @@ function canFrame(url: string, headers: Headers, host: string) {
   const allowedByXFrameOptions = !xFrameOptions || parseXFrameOptions(origin, xFrameOptions, host)
 
   return allowedByXFrameOptions
+}
+
+interface GoogleDriveFile {
+  mimeType?: string
+  videoMediaMetadata?: { width?: number; height?: number }
+  imageMediaMetadata?: { width?: number; height?: number }
+}
+
+// Requires an API key. Works only for files that are shared with anyone with the link.
+async function fetchGoogleDriveFile(fileId: string, resourceKey: string | null) {
+  if (!config.server.googleApiKey) return null
+
+  const url = new URL(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}`)
+  url.searchParams.set(
+    'fields',
+    'mimeType,videoMediaMetadata(width,height),imageMediaMetadata(width,height)',
+  )
+  url.searchParams.set('supportsAllDrives', 'true')
+  url.searchParams.set('key', config.server.googleApiKey)
+  const response = await fetch(url, {
+    headers: resourceKey ? { 'X-Goog-Drive-Resource-Keys': `${fileId}/${resourceKey}` } : {},
+  })
+  if (!response.ok) {
+    console.warn(`Google Drive API responded with ${response.status} for file ${fileId}`)
+    return null
+  }
+  return (await response.json()) as GoogleDriveFile
+}
+
+async function fetchGoogleDriveThumbnailSize(url: string) {
+  const response = await fetch(WEB_SOURCE_PARSERS.googleDrive.getThumbnailUrl(url))
+  // Google responds with a sign-in page instead of a thumbnail for private files
+  if (!response.ok || !response.headers.get('content-type')?.startsWith('image/')) return null
+
+  const { width, height } = await sharp(await response.arrayBuffer()).metadata()
+  return { width, height }
+}
+
+async function getGoogleDriveMetadata(url: string) {
+  const parser = WEB_SOURCE_PARSERS.googleDrive
+  const fileId = parser.getFileId(url)
+  if (!(await parser.matches(url)) || !fileId) {
+    throw new BadRequestError()
+  }
+
+  try {
+    const file = await fetchGoogleDriveFile(fileId, new URL(url).searchParams.get('resourcekey'))
+    const { width, height } = file?.videoMediaMetadata ?? file?.imageMediaMetadata ?? {}
+    return {
+      webpageType: googleDriveWebpageType(file?.mimeType),
+      size: width && height ? { width, height } : await fetchGoogleDriveThumbnailSize(url),
+    }
+  } catch (error) {
+    console.warn(`Failed to read Google Drive file ${fileId}`, error)
+    return { webpageType: googleDriveWebpageType(null), size: null }
+  }
 }
 
 const wbmSearchResultsCache = new RedisCache('wbm-search-results')
@@ -154,6 +213,9 @@ export const proxy: RESTResourceImpl<Resources['proxy'], never> = {
               )
             ).json()) as UserListResponse,
           }
+        }
+        case 'google-drive-metadata': {
+          return { type: 'google-drive-metadata', result: await getGoogleDriveMetadata(body.url) }
         }
         case 'content-type': {
           return {

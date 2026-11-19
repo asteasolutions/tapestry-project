@@ -1,7 +1,26 @@
 import z from 'zod/v4'
 import { HexColorSchema, IdentifiableSchema, PointSchema, SizeSchema } from './common.js'
 
-export const KNOWN_WEBPAGE_TYPES = ['youtube', 'vimeo', 'iaWayback', 'iaAudio', 'iaVideo'] as const
+// The type of a Google Drive file is determined by its MIME type. `googleDrive`
+// is used for all other files and when the type cannot be determined.
+export const GOOGLE_DRIVE_WEBPAGE_TYPES = [
+  'googleDrive',
+  'googleDriveVideo',
+  'googleDriveAudio',
+  'googleDriveImage',
+  'googleDrivePdf',
+  'googleDriveBook',
+] as const
+export type GoogleDriveWebpageType = (typeof GOOGLE_DRIVE_WEBPAGE_TYPES)[number]
+
+export const KNOWN_WEBPAGE_TYPES = [
+  'youtube',
+  'vimeo',
+  'iaWayback',
+  'iaAudio',
+  'iaVideo',
+  ...GOOGLE_DRIVE_WEBPAGE_TYPES,
+] as const
 export type WebpageType = (typeof KNOWN_WEBPAGE_TYPES)[number]
 
 export const ACTION_TYPE = ['internalLink', 'externalLink'] as const

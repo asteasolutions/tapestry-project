@@ -12,7 +12,12 @@ import {
   parseWikimediaFileTitle,
   wikimediaTypeToItemType,
 } from 'tapestry-core/src/wikimedia-commons'
-import { MediaItemSource, mediaSourceToBlob, convertHeicFile } from '../lib/media'
+import {
+  MediaItemSource,
+  mediaSourceToBlob,
+  convertHeicFile,
+  getGoogleDriveMetadata,
+} from '../lib/media'
 import {
   createMediaItem,
   createDerivedSourceMediaItem,
@@ -90,11 +95,6 @@ function constructEmbeddedTapestryLink(url: URL) {
   return url.toString()
 }
 
-function constructGoogleDriveEmbedLink(url: URL) {
-  url.pathname = url.pathname.replace(/^(\/file\/d\/[^/]+).*$/, '$1/preview')
-  return url.toString()
-}
-
 /**
  * An ItemFactory takes a MediaItemSource (File or URL) and tries to produce one or more tapestry items from it.
  * If a factory doesn't know how to handle a given source, it returns null.
@@ -137,14 +137,15 @@ const webpageItemFactory: ItemFactory = async (source, _mediaType, tapestryId) =
   const url = new URL(source)
   if (url.host === window.location.host) {
     source = constructEmbeddedTapestryLink(url)
-  } else if (url.host === 'drive.google.com') {
-    source = constructGoogleDriveEmbedLink(url)
   }
 
   const parser = await findWebSourceParser(source)
   const parsedSource = parser.construct(parser.parse(source))
-  const item = await createMediaItem('webpage', parsedSource, tapestryId, source)
-  item.webpageType = parser.webpageType
+  // The type of a Google Drive file is not part of its link, so we look it up
+  const googleDrive =
+    parser.webpageType === 'googleDrive' ? await getGoogleDriveMetadata(parsedSource) : null
+  const item = await createMediaItem('webpage', parsedSource, tapestryId, source, googleDrive?.size)
+  item.webpageType = googleDrive?.webpageType ?? parser.webpageType
   item.skipSourceResolution = true
 
   return { items: [item] }

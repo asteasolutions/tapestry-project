@@ -52,7 +52,9 @@ export function getPlaybackInterval(params: ReturnType<typeof parseWebSource>) {
       params.webpageType === 'vimeo' ||
       params.webpageType === 'youtube' ||
       params.webpageType === 'iaAudio' ||
-      params.webpageType === 'iaVideo'
+      params.webpageType === 'iaVideo' ||
+      params.webpageType === 'googleDriveAudio' ||
+      params.webpageType === 'googleDriveVideo'
         ? params.startTime
         : null,
     stopTime:

@@ -54,7 +54,10 @@ export function PlayableShareMenu({ item }: PlayableShareMenuProps) {
   const [autoplay, setAutoplay] = useState(false)
 
   const webpageType = item.type === 'webpage' ? parseWebSource(item).webpageType : null
-  const playableType = item.type === 'audio' || webpageType === 'iaAudio' ? 'Audio' : 'Video'
+  const playableType =
+    item.type === 'audio' || webpageType === 'iaAudio' || webpageType === 'googleDriveAudio'
+      ? 'Audio'
+      : 'Video'
   const canSetEndTime =
     webpageType === 'vimeo' ||
     webpageType === 'youtube' ||

@@ -2,6 +2,7 @@ import { KNOWN_WEBPAGE_TYPES, WebpageItem, WebpageType } from '../data-format/sc
 import { VimeoSourceParser, YoutubeSourceParser } from './video.js'
 import { WaybackSourceParser } from './wayback.js'
 import { IAMediaSourceParser } from './ia.js'
+import { GoogleDriveSourceParser } from './google-drive.js'
 
 export interface BaseWebSourceParams {
   source: string
@@ -48,6 +49,12 @@ export const WEB_SOURCE_PARSERS = {
   iaWayback: new WaybackSourceParser(),
   iaAudio: new IAMediaSourceParser('audio', 'iaAudio'),
   iaVideo: new IAMediaSourceParser('movies', 'iaVideo'),
+  googleDrive: new GoogleDriveSourceParser('googleDrive'),
+  googleDriveVideo: new GoogleDriveSourceParser('googleDriveVideo'),
+  googleDriveAudio: new GoogleDriveSourceParser('googleDriveAudio'),
+  googleDriveImage: new GoogleDriveSourceParser('googleDriveImage'),
+  googleDrivePdf: new GoogleDriveSourceParser('googleDrivePdf'),
+  googleDriveBook: new GoogleDriveSourceParser('googleDriveBook'),
   unknown: new UnknownWebSourceParser(),
 } satisfies ParsersMap
 
