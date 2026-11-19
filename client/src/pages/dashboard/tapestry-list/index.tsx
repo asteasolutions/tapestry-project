@@ -78,19 +78,19 @@ export function TapestryList({
   const userId = useSession().user?.id
   const allBookmarked = !!userId && filter?.['bookmarkedBy:eq'] === userId
 
-  const showBanner = !!banner
+  const hasBanner = !!banner
 
   const loadTapestries = useCallback<LazyListRequestItems<TapestryListEntry>>(
     async (skip, limit, signal) => {
       // The banner is the item at index 0, so the tapestries are shifted by one
-      const includeBanner = showBanner && skip === 0
+      const isStart = skip === 0
       const tapestries = await resource('tapestries').list(
         {
           filter,
           orderBy,
           include: ['owner', 'userAccess'],
-          skip: showBanner && skip > 0 ? skip - 1 : skip,
-          limit: includeBanner ? limit - 1 : limit,
+          skip: hasBanner && !isStart ? skip - 1 : skip,
+          limit: hasBanner && isStart ? limit - 1 : limit,
         },
         { signal },
       )
@@ -107,17 +107,17 @@ export function TapestryList({
         isBookmarked: allBookmarked ? true : bookmarks.data.some((b) => b.tapestryId === t.id),
       }))
 
-      if (!showBanner || tapestries.total === 0) {
+      if (!hasBanner || tapestries.total === 0) {
         return { ...tapestries, data: items }
       }
 
       return {
-        data: includeBanner ? [BANNER_ITEM, ...items] : items,
+        data: isStart ? [BANNER_ITEM, ...items] : items,
         total: tapestries.total + 1,
-        skip: includeBanner ? 0 : tapestries.skip + 1,
+        skip: tapestries.skip + (isStart ? 0 : 1),
       }
     },
-    [filter, orderBy, allBookmarked, userId, showBanner],
+    [filter, orderBy, allBookmarked, userId, hasBanner],
   )
 
   const columnCount = useTapestryListColumnCount()
