@@ -85,7 +85,7 @@ function Webpage({ src, onLoad, ...props }: WebFrameSwitchProps) {
 
 type PatchSourceArgument =
   | {
-      webpageType: 'iaAudio' | 'iaVideo'
+      webpageType: 'iaAudio' | 'iaVideo' | 'googleDriveAudio' | 'googleDriveVideo'
       data: Partial<{ startTime: number | null }>
     }
   | {
@@ -212,7 +212,10 @@ export const WebpageItem = memo(({ id }: TapestryItemProps) => {
               min={startTime ?? 0}
             />,
           ]
-        : webpageType === 'iaVideo' || webpageType === 'iaAudio'
+        : webpageType === 'iaVideo' ||
+            webpageType === 'iaAudio' ||
+            webpageType === 'googleDriveAudio' ||
+            webpageType === 'googleDriveVideo'
           ? [
               <TimeInput
                 onChange={(value) => patch({ webpageType, data: { startTime: value } })}

@@ -37,6 +37,8 @@ export const config = deepFreeze(
 
       // Auth
       GOOGLE_CLIENT_ID: z.string().default(''),
+      // Used to read the type of shared Google Drive files. Needs the Google Drive API enabled.
+      GOOGLE_API_KEY: z.string().default(''),
       ORCID_CLIENT_ID: z.string().default(''),
       ORCID_CLIENT_SECRET: z.string().default(''),
       ORCID_BASE_URL: z.string().default('https://orcid.org'),
@@ -94,6 +96,7 @@ export const config = deepFreeze(
         port: input.SERVER_PORT,
         secretKey: input.SECRET_KEY,
         googleClientId: input.GOOGLE_CLIENT_ID,
+        googleApiKey: input.GOOGLE_API_KEY,
         orcid: {
           clientId: input.ORCID_CLIENT_ID,
           clientSecret: input.ORCID_CLIENT_SECRET,

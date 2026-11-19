@@ -26,6 +26,7 @@ export const ALLOWED_ORIGINS = [
   'https://archive.org',
   'https://youtube.com',
   'https://player.vimeo.com',
+  'https://drive.google.com',
 ]
 
 const ALLOWED_DOMAINS = ['.wikipedia.org']
@@ -51,7 +52,9 @@ export function getPlaybackInterval(params: ReturnType<typeof parseWebSource>) {
       params.webpageType === 'vimeo' ||
       params.webpageType === 'youtube' ||
       params.webpageType === 'iaAudio' ||
-      params.webpageType === 'iaVideo'
+      params.webpageType === 'iaVideo' ||
+      params.webpageType === 'googleDriveAudio' ||
+      params.webpageType === 'googleDriveVideo'
         ? params.startTime
         : null,
     stopTime:

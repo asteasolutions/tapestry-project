@@ -1,4 +1,6 @@
 import z from 'zod/v4'
+import { SizeSchema } from 'tapestry-core/src/data-format/schemas/common.js'
+import { GOOGLE_DRIVE_WEBPAGE_TYPES } from 'tapestry-core/src/data-format/schemas/item.js'
 
 export const WBMSnapshotSchema = z.object({
   urlkey: z.string(),
@@ -50,6 +52,13 @@ export const ProxySchema = z.discriminatedUnion('type', [
     type: z.literal('content-type'),
     result: z.string(),
   }),
+  z.object({
+    type: z.literal('google-drive-metadata'),
+    result: z.object({
+      webpageType: z.enum(GOOGLE_DRIVE_WEBPAGE_TYPES),
+      size: SizeSchema.nullable(),
+    }),
+  }),
 ])
 
 const CreateListWBMSnapshotsProxySchema = z.object({
@@ -59,7 +68,13 @@ const CreateListWBMSnapshotsProxySchema = z.object({
 })
 
 const CreateFromUrlProxySchema = z.object({
-  type: z.enum(['create-wbm-snapshot', 'can-frame', 'ia-user-list', 'content-type']),
+  type: z.enum([
+    'create-wbm-snapshot',
+    'can-frame',
+    'ia-user-list',
+    'content-type',
+    'google-drive-metadata',
+  ]),
   url: z.string(),
 })
 
