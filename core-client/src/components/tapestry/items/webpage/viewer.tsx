@@ -17,7 +17,6 @@ const IFRAME_ALLOWED_RESTRICTIONS = [
   'allow-orientation-lock',
   'allow-pointer-lock',
   'allow-popups',
-  'allow-popups-to-escape-sandbox',
   'allow-presentation',
   'allow-scripts',
 ]
@@ -38,12 +37,14 @@ function sameOriginAllowed(url: string) {
   )
 }
 
-function useSandbox(src: string) {
+function useSandbox(src: string, webpageType: WebpageType | null | undefined) {
   return useMemo(() => {
-    return sameOriginAllowed(src)
+    const sandbox = sameOriginAllowed(src)
       ? IFRAME_ALLOWED_RESTRICTIONS.concat(['allow-same-origin'])
       : IFRAME_ALLOWED_RESTRICTIONS
-  }, [src])
+    // Links opened from the YouTube player (e.g. the logo) would otherwise inherit the sandbox and be blocked
+    return webpageType === 'youtube' ? sandbox.concat(['allow-popups-to-escape-sandbox']) : sandbox
+  }, [src, webpageType])
 }
 
 export function getPlaybackInterval(params: ReturnType<typeof parseWebSource>) {
@@ -114,7 +115,7 @@ export function WebpageItemViewer({
     : dto.source
 
   const src = params.autoplay ? addAutoplayQueryParam(source, dto.webpageType) : source
-  const sandbox = useSandbox(src)
+  const sandbox = useSandbox(src, dto.webpageType)
 
   return (
     <WebpageLoader item={dto} displayPage={displayWebpage} pageLoading={!!loading}>
