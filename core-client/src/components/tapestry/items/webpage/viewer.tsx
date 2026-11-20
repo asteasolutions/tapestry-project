@@ -42,7 +42,7 @@ function useSandbox(src: string, webpageType: WebpageType | null | undefined) {
     const sandbox = sameOriginAllowed(src)
       ? IFRAME_ALLOWED_RESTRICTIONS.concat(['allow-same-origin'])
       : IFRAME_ALLOWED_RESTRICTIONS
-    // Links opened from the YouTube player (e.g. the logo) would otherwise inherit the sandbox and be blocked
+    // Links opened from the YouTube player would otherwise inherit the sandbox and be blocked
     return webpageType === 'youtube' ? sandbox.concat(['allow-popups-to-escape-sandbox']) : sandbox
   }, [src, webpageType])
 }
