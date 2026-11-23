@@ -1,9 +1,14 @@
 .snackbar {
   z-index: 2;
   position: fixed;
-  bottom: 50px;
-  left: 50%;
-  transform: translateX(-50%);
+
+  /* The --vv-* variables describe the visual viewport. They are set inline and default to the layout viewport. */
+  left: calc(var(--vv-left, 0px) + var(--vv-width, 100vw) / 2);
+  top: calc(var(--vv-top, 0px) + var(--vv-height, 100vh) - 50px / var(--vv-scale, 1));
+  width: max-content;
+  max-width: calc(var(--vv-width, 100vw) * var(--vv-scale, 1) - 32px);
+  transform: translate(-50%, -100%) scale(calc(1 / var(--vv-scale, 1)));
+  transform-origin: bottom center;
   background-color: var(--theme-background-inverse);
   padding: 10px 16px;
   border-radius: 8px;
@@ -26,7 +31,7 @@
 
   :global(&.warning) {
     background-color: var(--theme-background-warning);
-    color: var(--color-neutral-0);
+    color: var(--theme-text-primary);
   }
 
   :global(&.success) {

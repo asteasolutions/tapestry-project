@@ -30,7 +30,7 @@ export function TapestryPage() {
       <Navigate
         to={dashboardPath('home')}
         replace
-        state={{ text: 'Tapestry not found', variant: 'error' } satisfies SnackbarData}
+        state={{ content: 'Tapestry not found', variant: 'error' } satisfies SnackbarData}
       />
     )
   }
@@ -75,7 +75,7 @@ export function TapestryBySlugPage() {
       <Navigate
         to={dashboardPath('home')}
         replace
-        state={{ text: 'Tapestry not found', variant: 'error' } satisfies SnackbarData}
+        state={{ content: 'Tapestry not found', variant: 'error' } satisfies SnackbarData}
       />
     )
   }

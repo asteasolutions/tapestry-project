@@ -233,7 +233,7 @@ export function useEditMoreMenu({
 
     dispatch(
       setSnackbar({
-        text:
+        content:
           copyableItems.length === 0
             ? 'Nothing copied. Item(s) still uploading'
             : hasPendingItems
@@ -272,7 +272,7 @@ export function useEditMoreMenu({
         to,
       ),
       setSnackbar({
-        text: `Item ${to === 'front' ? 'brought to front' : 'sent to back'} (deselect to see)`,
+        content: `Item ${to === 'front' ? 'brought to front' : 'sent to back'} (deselect to see)`,
         duration: 3,
       }),
     )

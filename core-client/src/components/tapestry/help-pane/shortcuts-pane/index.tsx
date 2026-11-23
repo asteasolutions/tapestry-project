@@ -97,7 +97,7 @@ const customKeysMap: Record<string, ReactNode> = {
   ],
 } satisfies Record<CustomKeys, ReactNode[]>
 
-function Shortcut({ keys }: ShortcutProps) {
+export function Shortcut({ keys }: ShortcutProps) {
   const displayedKeys = keys.flatMap((key) => customKeysMap[key] ?? key)
 
   return (

@@ -180,7 +180,7 @@ export async function insertDataTransfer(
       largeFiles.length !== 0 && setLargeFiles(largeFiles),
     )
   } catch {
-    dispatch(setSnackbar({ text: 'Could not import', variant: 'error' }))
+    dispatch(setSnackbar({ content: 'Could not import', variant: 'error' }))
   } finally {
     dispatch((model) => {
       model.pendingRequests--

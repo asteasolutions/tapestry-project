@@ -20,7 +20,7 @@ import { ItemViewModel, RelViewModel, TapestryViewModel } from '../../view-model
 import { TapestryStage } from '..'
 import { ThemeName } from '../../theme/themes'
 import { log } from 'tapestry-core/src/lib/algebra'
-import { clamp } from 'lodash'
+import { clamp } from 'lodash-es'
 
 const LINE_SMOOTHNESS = 0.7
 
