@@ -5,7 +5,7 @@ import { Checkbox } from 'tapestry-core-client/src/components/lib/checkbox/index
 import { useAsync } from 'tapestry-core-client/src/components/lib/hooks/use-async'
 import { AdminTapestryDto } from 'tapestry-shared/src/data-transfer/resources/dtos/admin'
 import { ItemDto } from 'tapestry-shared/src/data-transfer/resources/dtos/item'
-import { WebpageType } from 'tapestry-core/src/data-format/schemas/item'
+import { WEBPAGE_TYPE_LABELS } from 'tapestry-core/src/web-sources'
 import { listAll, resource } from '../../../../../services/rest-resources'
 import { Panel } from '../../../components/panel'
 import { ErrorText } from '../../../components/error-text'
@@ -25,14 +25,6 @@ const ITEM_TYPE_LABELS: Record<ItemDto['type'], string> = {
   iiif: 'IIIF',
   pdf: 'PDF',
   webpage: 'Web page',
-}
-
-const WEBPAGE_TYPE_LABELS: Record<WebpageType, string> = {
-  youtube: 'YouTube video',
-  vimeo: 'Vimeo',
-  iaVideo: 'Internet Archive video',
-  iaAudio: 'Internet Archive audio',
-  iaWayback: 'Wayback Machine page',
 }
 
 function itemTypeLabel(item: ItemDto) {

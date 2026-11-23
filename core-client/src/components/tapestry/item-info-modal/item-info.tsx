@@ -1,5 +1,6 @@
 import { Item } from 'tapestry-core/src/data-format/schemas/item'
 import { isHTTPURL, isMediaItem } from 'tapestry-core/src/utils'
+import { WEBPAGE_TYPE_LABELS } from 'tapestry-core/src/web-sources'
 import { TextProps } from '../../lib/text'
 import { compact, startCase } from 'lodash-es'
 import { Icon } from '../../lib/icon'
@@ -22,7 +23,15 @@ const ITEM_INFO_FIELD_EXTRACTORS: Record<
   ItemInfoField,
   (item: Item) => [string, TextProps<'span'>] | null
 > = {
-  type: (item) => ['Item Type', { children: startCase(item.type) }],
+  type: (item) => [
+    'Item Type',
+    {
+      children:
+        item.type === 'webpage' && item.webpageType
+          ? WEBPAGE_TYPE_LABELS[item.webpageType]
+          : startCase(item.type),
+    },
+  ],
   source: (item) =>
     isMediaItem(item) ? ['Source', { lineClamp: 3, children: formatLink(item.source) }] : null,
   originalSource: (item) =>
