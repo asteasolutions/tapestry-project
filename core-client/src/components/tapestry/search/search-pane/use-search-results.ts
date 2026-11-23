@@ -1,6 +1,6 @@
 import { startCase } from 'lodash-es'
 import { useMemo } from 'react'
-import { Item, ItemType } from 'tapestry-core/src/data-format/schemas/item'
+import { Item, ItemType, WebpageType } from 'tapestry-core/src/data-format/schemas/item'
 import { nthIndexOf } from 'tapestry-core/src/lib/string'
 import { idMapToArray, isMediaItem } from 'tapestry-core/src/utils'
 import { Tab } from '.'
@@ -31,6 +31,14 @@ const itemTypeSynonyms: Partial<Record<ItemType, string[]>> = {
   webpage: ['html', 'page', 'site'],
 }
 
+const webpageTypeLabels: Record<WebpageType, string> = {
+  youtube: 'YouTube video',
+  vimeo: 'Vimeo',
+  iaVideo: 'Internet Archive video',
+  iaAudio: 'Internet Archive audio',
+  iaWayback: 'Wayback Machine page',
+}
+
 const PARSER = new DOMParser()
 
 function toPlainText(text: string) {
@@ -51,6 +59,9 @@ function getMatchDescription(dto: Item, search: string) {
   const query = search.toLowerCase()
 
   if (query === '') {
+    if (dto.type === 'webpage' && dto.webpageType) {
+      return webpageTypeLabels[dto.webpageType]
+    }
     return startCase(dto.type)
   }
 
