@@ -1,0 +1,64 @@
+.overlay {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  display: flex;
+  background-color: var(--theme-overlay);
+  opacity: 0;
+  transition: opacity 200ms ease;
+
+  &.open {
+    opacity: 1;
+  }
+
+  &.closing {
+    opacity: 0;
+  }
+}
+
+.drawer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-sizing: border-box;
+  width: 80%;
+  max-width: 320px;
+  height: 100%;
+  padding: 16px;
+  overflow-y: auto;
+  background-color: var(--theme-background-primary);
+  box-shadow: 0 16px 32px -4px rgb(12 12 13 / 50%);
+  outline: none;
+  transform: translateX(-100%);
+  transition: transform 200ms ease;
+
+  &.open {
+    transform: translateX(0);
+  }
+
+  &.closing {
+    transform: translateX(-100%);
+  }
+
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+
+    .logo {
+      display: flex;
+    }
+  }
+
+  .links {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    .active {
+      color: var(--theme-text-brand);
+      background-color: var(--theme-background-selected);
+    }
+  }
+}
