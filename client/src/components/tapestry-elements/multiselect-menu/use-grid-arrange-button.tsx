@@ -6,18 +6,8 @@ import {
   arrangeItems,
   clearItemPreviews,
 } from '../../../pages/tapestry/view-model/store-commands/items'
-import { GridState } from '../../../pages/tapestry/view-model/utils'
+import { defaultGrid } from '../../../pages/tapestry/view-model/utils'
 import { GridInput } from './grid-input'
-
-function defaultGrid(nItems: number): GridState {
-  const cols = Math.ceil(Math.sqrt(nItems))
-  return {
-    rows: Math.ceil(nItems / cols),
-    cols,
-    spacing: 100,
-    primary: 'cols',
-  }
-}
 
 function useGridState(elementsCount: number) {
   const [grid, setGrid] = useState(defaultGrid(elementsCount))
