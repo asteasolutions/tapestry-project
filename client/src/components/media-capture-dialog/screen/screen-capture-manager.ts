@@ -8,7 +8,7 @@ export class ScreenCaptureManager extends PreviewCaptureManager {
     super({})
   }
 
-  async start() {
+  async share() {
     if (this.value.state !== 'ready') return false
 
     this.destroy()
@@ -16,10 +16,16 @@ export class ScreenCaptureManager extends PreviewCaptureManager {
     try {
       // @ts-expect-error this is an expiremental option not yet implemented by all browsers.
       // It allows the users to capture the current tab when sharing their screens
-      this.stream = await navigator.mediaDevices.getDisplayMedia({ selfBrowserSurface: 'include' })
-      this.setPreview(this.stream)
-      this.recorder = this.createMediaRecorder(this.stream, 'video/webm')
-      this.recorder.start()
+      const stream = await navigator.mediaDevices.getDisplayMedia({ selfBrowserSurface: 'include' })
+      this.stream = stream
+      // The user may stop sharing through the browser's UI before recording has started.
+      // (While recording, the media recorder stops by itself in this case.)
+      stream.getVideoTracks()[0]?.addEventListener('ended', () => {
+        if (this.stream === stream && this.recorder?.state !== 'recording') {
+          this.destroy()
+        }
+      })
+      this.setPreview(stream)
       return true
     } catch (error) {
       console.error('Failed to start screen recording', error)
@@ -27,6 +33,20 @@ export class ScreenCaptureManager extends PreviewCaptureManager {
       // the camera/microphone permissions we can request display media as much as we want
       return false
     }
+  }
+
+  async start() {
+    if (this.value.state !== 'ready') {
+      return false
+    }
+
+    if (!this.stream?.active && !(await this.share())) {
+      return false
+    }
+
+    this.recorder = this.createMediaRecorder(this.stream!, 'video/webm')
+    this.recorder.start()
+    return true
   }
 
   pause() {
@@ -48,6 +68,8 @@ export class ScreenCaptureManager extends PreviewCaptureManager {
 
     this.stream?.getTracks().forEach((track) => track.stop())
     this.stream = null
+    this.setPreview(null)
+    this.updatePreviewState('none')
   }
 
   private setPreview(stream: MediaStream | null) {

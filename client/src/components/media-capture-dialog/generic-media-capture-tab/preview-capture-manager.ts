@@ -36,7 +36,7 @@ export abstract class PreviewCaptureManager extends BaseMediaCaptureManager<{
     this.updatePreviewState('none')
   }
 
-  private updatePreviewState(state: PreviewState) {
+  protected updatePreviewState(state: PreviewState) {
     this.update((model) => {
       model.previewState = state
     })
