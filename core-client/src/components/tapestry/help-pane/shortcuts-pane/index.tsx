@@ -55,6 +55,10 @@ export const DEFAULT_ACTIONS: ActionsSection[] = deepFreeze([
         shortcut: 'Shift',
       },
       {
+        name: 'Select all items',
+        shortcut: 'meta + A',
+      },
+      {
         name: 'Focus item(s)',
         shortcut: 'F',
       },
@@ -97,7 +101,7 @@ const customKeysMap: Record<string, ReactNode> = {
   ],
 } satisfies Record<CustomKeys, ReactNode[]>
 
-function Shortcut({ keys }: ShortcutProps) {
+export function Shortcut({ keys }: ShortcutProps) {
   const displayedKeys = keys.flatMap((key) => customKeysMap[key] ?? key)
 
   return (

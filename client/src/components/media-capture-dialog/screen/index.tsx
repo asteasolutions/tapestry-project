@@ -7,6 +7,8 @@ import { MediaCaptureTabProps } from '..'
 import { Text } from 'tapestry-core-client/src/components/lib/text/index'
 import { useObservable } from 'tapestry-core-client/src/components/lib/hooks/use-observable'
 import { Icon } from 'tapestry-core-client/src/components/lib/icon/index'
+import { Button } from 'tapestry-core-client/src/components/lib/buttons/index'
+import clsx from 'clsx'
 
 function RecordingPreview({ src }: { src: string }) {
   return <video controls src={src} />
@@ -39,10 +41,12 @@ export function ScreenCaptureTab(props: MediaCaptureTabProps) {
             </div>
           )}
           {previewState === 'none' && (
-            <div className={styles.previewPlaceholder}>
-              <Text variant="bodySm">
-                Click "<Icon icon="radio_button_checked" /> Record" to see a preview
-              </Text>
+            <div className={clsx(styles.previewPlaceholder, styles.share)}>
+              <Icon icon="screen_share" />
+              <Text variant="body">Share your screen</Text>
+              <Button variant="secondary" onClick={() => captureManager.share()}>
+                Preview before you start
+              </Button>
             </div>
           )}
         </>

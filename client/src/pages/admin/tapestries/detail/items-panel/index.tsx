@@ -5,7 +5,7 @@ import { Checkbox } from 'tapestry-core-client/src/components/lib/checkbox/index
 import { useAsync } from 'tapestry-core-client/src/components/lib/hooks/use-async'
 import { AdminTapestryDto } from 'tapestry-shared/src/data-transfer/resources/dtos/admin'
 import { ItemDto } from 'tapestry-shared/src/data-transfer/resources/dtos/item'
-import { WebpageType } from 'tapestry-core/src/data-format/schemas/item'
+import { WEBPAGE_TYPE_LABELS } from 'tapestry-core/src/web-sources'
 import { listAll, resource } from '../../../../../services/rest-resources'
 import { Panel } from '../../../components/panel'
 import { ErrorText } from '../../../components/error-text'
@@ -27,21 +27,6 @@ const ITEM_TYPE_LABELS: Record<ItemDto['type'], string> = {
   webpage: 'Web page',
 }
 
-// Matches how the reports count web pages from known sources
-const WEBPAGE_TYPE_LABELS: Record<WebpageType, string> = {
-  youtube: 'Video (YouTube)',
-  vimeo: 'Video (Vimeo)',
-  iaVideo: 'Video (Internet Archive)',
-  iaAudio: 'Audio (Internet Archive)',
-  iaWayback: 'Web page (Wayback Machine)',
-  googleDrive: 'Web page (Google Drive)',
-  googleDriveVideo: 'Video (Google Drive)',
-  googleDriveAudio: 'Audio (Google Drive)',
-  googleDriveImage: 'Image (Google Drive)',
-  googleDrivePdf: 'PDF (Google Drive)',
-  googleDriveBook: 'Book (Google Drive)',
-}
-
 function itemTypeLabel(item: ItemDto) {
   return item.type === 'webpage' && item.webpageType
     ? WEBPAGE_TYPE_LABELS[item.webpageType]
@@ -54,7 +39,7 @@ function itemLabel(item: ItemDto) {
     const text = new DOMParser().parseFromString(item.text, 'text/html').body.textContent.trim()
     if (text) return text.length > 80 ? `${text.slice(0, 80)}…` : text
   }
-  return `Untitled ${ITEM_TYPE_LABELS[item.type].toLowerCase()}`
+  return `Untitled ${itemTypeLabel(item).toLowerCase()}`
 }
 
 /** Lists the items of a link-shared tapestry, so that admins can delete inappropriate content. */

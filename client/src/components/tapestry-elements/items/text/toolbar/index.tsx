@@ -286,7 +286,7 @@ export function richTextEditorToolbar({
               tooltip: {
                 side: 'bottom',
                 children: (
-                  <ShortcutLabel text="Align left">
+                  <ShortcutLabel text="Align center">
                     {shortcutLabel('meta + shift + E')}
                   </ShortcutLabel>
                 ),
@@ -306,7 +306,7 @@ export function richTextEditorToolbar({
               tooltip: {
                 side: 'bottom',
                 children: (
-                  <ShortcutLabel text="Align left">
+                  <ShortcutLabel text="Align right">
                     {shortcutLabel('meta + shift + R')}
                   </ShortcutLabel>
                 ),

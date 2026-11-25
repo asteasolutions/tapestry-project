@@ -71,7 +71,7 @@ export function MessageInput({
   //so it doesn't make sense to pass an onColorChange at all
   const menuItems = richTextEditorToolbar({
     selection: selectionState,
-    tapestryId: tapestryId,
+    tapestryId,
     editorAPI: editorApiRef,
     itemBackgroundColor: null,
     onBackgroundColorChange: noop,

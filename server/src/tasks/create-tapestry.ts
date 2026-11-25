@@ -136,7 +136,7 @@ async function cloneTapestry(
     id: tapestryId,
     slug: tapestryId,
     title: title ?? getCopyName(tapestry.title),
-    description: description,
+    description,
     owner: { connect: { id: userId } },
     parent: { connect: { id: tapestry.id } },
   }

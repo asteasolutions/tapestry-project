@@ -200,13 +200,13 @@ export const WebpageItem = memo(({ id }: TapestryItemProps) => {
       ...(webpageType === 'youtube' || webpageType === 'vimeo'
         ? [
             <TimeInput
-              onChange={(value) => patch({ webpageType: webpageType, data: { startTime: value } })}
+              onChange={(value) => patch({ webpageType, data: { startTime: value } })}
               text="Video start at"
               value={startTime ?? null}
               max={stopTime ?? Infinity}
             />,
             <TimeInput
-              onChange={(value) => patch({ webpageType: webpageType, data: { stopTime: value } })}
+              onChange={(value) => patch({ webpageType, data: { stopTime: value } })}
               text="Video stop at"
               value={stopTime ?? null}
               min={startTime ?? 0}
@@ -218,9 +218,7 @@ export const WebpageItem = memo(({ id }: TapestryItemProps) => {
             webpageType === 'googleDriveVideo'
           ? [
               <TimeInput
-                onChange={(value) =>
-                  patch({ webpageType: webpageType, data: { startTime: value } })
-                }
+                onChange={(value) => patch({ webpageType, data: { startTime: value } })}
                 text="Playback start at"
                 value={startTime ?? null}
               />,

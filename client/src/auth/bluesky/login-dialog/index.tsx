@@ -80,7 +80,7 @@ export function BlueskyLoginDialog({ onClose }: BlueskyLoginDialogProps) {
         <input type="submit" hidden />
       </form>
       <Snackbar
-        value={snackbarText ? { text: snackbarText, variant: 'error' } : undefined}
+        value={snackbarText ? { content: snackbarText, variant: 'error' } : undefined}
         onChange={() => setSnackbarText(undefined)}
       />
     </SimpleModal>
