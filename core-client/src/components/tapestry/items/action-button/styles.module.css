@@ -1,5 +1,23 @@
 .root {
   border-radius: 4px;
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 15%);
+
+  &.clickable {
+    :global(.content .tiptap) {
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    :global([data-component-type='item']):hover & {
+      background-image: linear-gradient(rgb(255 255 255 / 20%), rgb(255 255 255 / 20%));
+    }
+
+    :global([data-component-type='item']):active & {
+      background-image: linear-gradient(rgb(0 0 0 / 10%), rgb(0 0 0 / 10%));
+      box-shadow: inset 0 0 0 2px var(--theme-border-focus-button);
+    }
+  }
 
   :global(.tiptap) {
     display: flex;
@@ -14,4 +32,12 @@
       }
     }
   }
+}
+
+/* On the item container, since the button itself is clipped by it */
+.item {
+  border-radius: 8px;
+  box-shadow:
+    0 1px 3px rgb(0 0 0 / 15%),
+    0 1px 2px rgb(0 0 0 / 30%);
 }

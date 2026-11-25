@@ -1,3 +1,4 @@
+import clsx from 'clsx'
 import { memo, useEffect, useRef, useState } from 'react'
 import {
   Controls,
@@ -20,6 +21,7 @@ import { buildToolbarMenu } from '../../item-toolbar'
 import { isHtmlEmpty } from 'tapestry-core-client/src/lib/dom'
 import { TRANSPARENT } from 'tapestry-core-client/src/theme'
 import textStyles from '../text/styles.module.css'
+import buttonStyles from 'tapestry-core-client/src/components/tapestry/items/action-button/styles.module.css'
 
 const controls = {
   link: false,
@@ -118,11 +120,16 @@ export const ActionButtonItem = memo(({ id }: TapestryItemProps) => {
   )
 
   return (
-    <TapestryItem id={id} halo={toolbar} className={showEmptyOutline ? textStyles.root : undefined}>
+    <TapestryItem
+      id={id}
+      halo={toolbar}
+      className={clsx(buttonStyles.item, showEmptyOutline && textStyles.root)}
+    >
       <ActionButtonItemViewer
         id={id}
         api={editorAPI}
         controls={controls}
+        clickable={!isEditMode}
         // setting value to unsavedContent prevents re-rendering of the editor with old text before the model updates
         value={!isEditable && unsavedContent !== null ? unsavedContent : dto.text}
         placeholder={isEditable ? 'Add your action name here...' : undefined}
