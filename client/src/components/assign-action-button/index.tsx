@@ -29,9 +29,10 @@ export function extractAction(url: string | null, tapestryPath: string, tapestry
 interface AssignActionProps {
   dto: ActionItemDto
   icon?: IconButtonProps['icon']
+  description?: string
 }
 
-export function AssignActionButton({ dto, icon = 'link' }: AssignActionProps) {
+export function AssignActionButton({ dto, icon = 'link', description }: AssignActionProps) {
   const [showModal, setShowModal] = useState(false)
   const tapestryPath = useTapestryPath('view')
   const tapestryId = useTapestryData('id')
@@ -43,9 +44,14 @@ export function AssignActionButton({ dto, icon = 'link' }: AssignActionProps) {
       {showModal && (
         <AddLinkModal
           title="Assign action"
+          description={description}
           onClose={() => setShowModal(false)}
           initialLink={dto.action ?? undefined}
           excludeItemId={dto.id}
+          onRemove={() => {
+            setShowModal(false)
+            dispatch(updateItem(dto.id, { dto: { action: null, actionType: null } }))
+          }}
           onApply={(url) => {
             setShowModal(false)
             const { action, actionType } = extractAction(url, tapestryPath, tapestryId)

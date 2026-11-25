@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { IconButton } from 'tapestry-core-client/src/components/lib/buttons'
+import { Button, IconButton } from 'tapestry-core-client/src/components/lib/buttons'
 import { Input } from 'tapestry-core-client/src/components/lib/input'
 import { SimpleModal } from 'tapestry-core-client/src/components/lib/modal'
+import { Text } from 'tapestry-core-client/src/components/lib/text'
 import { useItemPicker } from '../item-picker/use-item-picker'
 import { useTapestryData } from '../../pages/tapestry/tapestry-providers'
 import { idMapToArray } from 'tapestry-core/src/utils'
@@ -17,6 +18,8 @@ interface AddLinkModalProps {
   initialText?: string
   excludeItemId?: Id
   title?: string
+  description?: string
+  onRemove?: () => unknown
 }
 
 export function AddLinkModal({
@@ -27,6 +30,8 @@ export function AddLinkModal({
   showTextField = false,
   excludeItemId,
   title = 'Add link',
+  description,
+  onRemove,
 }: AddLinkModalProps) {
   const [link, setLink] = useState(initialLink ?? '')
   const [text, setText] = useState(initialText ?? '')
@@ -53,6 +58,18 @@ export function AddLinkModal({
           title={title}
           classes={{ root: styles.modal }}
           cancel={{ onClick: () => onClose() }}
+          extraButtons={
+            onRemove &&
+            initialLink && (
+              <Button
+                variant="tertiary-negative"
+                style={{ marginRight: 'auto' }}
+                onClick={() => onRemove()}
+              >
+                Remove link
+              </Button>
+            )
+          }
           confirm={{
             text: 'Apply',
             disabled: !canApply,
@@ -60,6 +77,7 @@ export function AddLinkModal({
           }}
         >
           <div className={styles.inputContainer}>
+            {description && <Text variant="bodySm">{description}</Text>}
             <div className={styles.actionContainer}>
               {showTextField && (
                 <Input

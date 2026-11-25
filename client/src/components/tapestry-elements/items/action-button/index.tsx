@@ -107,9 +107,13 @@ export const ActionButtonItem = memo(({ id }: TapestryItemProps) => {
             },
             'separator',
             {
-              element: <AssignActionButton dto={dto} />,
+              element: (
+                <AssignActionButton
+                  dto={dto}
+                  description="Paste a website, or a link to an item, a video moment or a PDF page. Clicking the button takes viewers there."
+                />
+              ),
               tooltip: { side: 'bottom', children: 'Assign action' },
-              badge: !dto.action,
             },
             'separator',
             ...(showFormatToolbar ? formattingControls : editorControls),
