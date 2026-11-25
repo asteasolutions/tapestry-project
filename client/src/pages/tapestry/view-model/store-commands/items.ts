@@ -1,5 +1,5 @@
 import { Draft } from 'immer'
-import { max, merge, partition, sum } from 'lodash-es'
+import { merge, partition } from 'lodash-es'
 import { StoreMutationCommand } from 'tapestry-core-client/src/lib/store/index'
 import { tween } from 'tapestry-core-client/src/view-model/tweening'
 import {
@@ -24,8 +24,8 @@ import { ItemDto } from 'tapestry-shared/src/data-transfer/resources/dtos/item'
 import { EditableItemViewModel, EditableTapestryViewModel, SelectionDragState } from '..'
 import { itemUpload } from '../../../../services/item-upload'
 import {
-  getGridDimensions,
-  getGridIndices,
+  defaultGrid,
+  getGridLayout,
   getMaxLayer,
   getMultiselectRectangle,
   GridState,
@@ -66,9 +66,11 @@ export function addAndPositionItems(
       ({ dto }) => dto.position.x === 0 && dto.position.y === 0,
     )
     if (areAllItemsAtOrigin) {
-      items.forEach((item, index) => {
-        item.dto.position = translate(item.dto.position, mul(index * 20, { dx: 1, dy: 1 }))
-      })
+      const { positions } = getGridLayout(
+        items.map((item) => item.dto.size),
+        defaultGrid(items.length),
+      )
+      items.forEach((item, index) => (item.dto.position = positions[index]))
     }
 
     const boundingRect = getBoundingRectangle(items)
@@ -215,36 +217,26 @@ export function arrangeItems(
       selectionElements,
       grid.primary === 'cols' ? ['position.y', 'position.x'] : ['position.x', 'position.y'],
     )
-    const { cols, rows } = getGridDimensions(sorted, grid)
-
-    const rowHeights = rows.map((elements) => max(elements.map((e) => e?.size.height)))
-    const colWidths = cols.map((elements) => max(elements.map((e) => e?.size.width)))
+    const layout = getGridLayout(
+      sorted.map((e) => e.size),
+      grid,
+    )
     const offsetX =
       rect.left +
       MULTISELECT_RECTANGLE_PADDING +
-      (rect.width -
-        (sum(colWidths) +
-          (colWidths.length - 1) * grid.spacing +
-          MULTISELECT_RECTANGLE_PADDING * 2)) /
-        2
+      (rect.width - (layout.width + MULTISELECT_RECTANGLE_PADDING * 2)) / 2
     const offsetY =
       rect.top +
       MULTISELECT_RECTANGLE_PADDING +
-      (rect.height -
-        (sum(rowHeights) +
-          (rowHeights.length - 1) * grid.spacing +
-          MULTISELECT_RECTANGLE_PADDING * 2)) /
-        2
+      (rect.height - (layout.height + MULTISELECT_RECTANGLE_PADDING * 2)) / 2
 
     selectionItems.forEach(({ dto: { id, size, position, groupId }, previewBounds }) => {
       const startX = preview ? (previewBounds?.left ?? position.x) : position.x
       const startY = preview ? (previewBounds?.top ?? position.y) : position.y
 
       const ind = sorted.findIndex((e) => e.id === (groupId ?? id))
-      const { col, row } = getGridIndices(ind, grid)
-
-      let toX = sum(colWidths.slice(0, col)) + grid.spacing * col + offsetX
-      let toY = sum(rowHeights.slice(0, row)) + grid.spacing * row + offsetY
+      let toX = layout.positions[ind].x + offsetX
+      let toY = layout.positions[ind].y + offsetY
 
       if (groupId) {
         toX += position.x - sorted[ind].position.x
