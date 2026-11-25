@@ -2,26 +2,24 @@ import clsx from 'clsx'
 import { useState } from 'react'
 import { IconButton } from 'tapestry-core-client/src/components/lib/buttons/index'
 import { Text } from 'tapestry-core-client/src/components/lib/text/index'
-import { TapestryExport, TapestryImport } from '../../services/background-tasks'
+import { useObservable } from 'tapestry-core-client/src/components/lib/hooks/use-observable'
+import { backgroundTasks } from '../../services/background-tasks'
 import { ExportRow } from './row/export-row'
 import { IMPORT_ROW_STATUS, ImportRow } from './row/import-row'
 import styles from './styles.module.css'
 
 export interface BackgroundTasksPanelProps {
-  imports: TapestryImport[]
-  exports: TapestryExport[]
   onCancelExport: (id: string) => unknown
   onClose: () => unknown
   className?: string
 }
 
 export function BackgroundTasksPanel({
-  imports,
-  exports,
   onCancelExport,
   onClose,
   className,
 }: BackgroundTasksPanelProps) {
+  const { imports, exports } = useObservable(backgroundTasks)
   const [collapsed, setCollapsed] = useState(false)
 
   if (imports.length === 0 && exports.length === 0) {

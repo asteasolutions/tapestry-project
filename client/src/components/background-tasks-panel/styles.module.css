@@ -1,9 +1,11 @@
 .root {
+  --x-margin: 24px;
+
   position: fixed;
-  right: 24px;
+  right: var(--x-margin);
   bottom: 56px;
   z-index: 2;
-  width: min(400px, calc(100vw - 48px));
+  width: min(400px, calc(100vw - 2 * var(--x-margin)));
   overflow: hidden;
   border-radius: 8px;
   background-color: var(--theme-background-primary);

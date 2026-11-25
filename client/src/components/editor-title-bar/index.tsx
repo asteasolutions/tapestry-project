@@ -30,8 +30,7 @@ import { EditTapestryDialog } from '../edit-tapestry-dialog'
 import { ForkTapestryDialog } from '../fork-tapestry-dialog'
 import { PasteButton } from './paste-button'
 import styles from './styles.module.css'
-import { useObservable } from 'tapestry-core-client/src/components/lib/hooks/use-observable'
-import { backgroundTasks, findActiveExport } from '../../services/background-tasks'
+import { backgroundTasks, useActiveExport } from '../../services/background-tasks'
 
 export function EditorTitleBar() {
   const obstruction = useViewportObstruction({ clear: { left: true, top: true } })
@@ -59,8 +58,7 @@ export function EditorTitleBar() {
   const [creatingTapestry, setCreatingTapestry] = useState(false)
   const [forkingTapestry, setForkingTapestry] = useState(false)
   const [editingTapestry, setEditingTapestry] = useState(false)
-  const { exports } = useObservable(backgroundTasks)
-  const progress = findActiveExport(exports, tapestryId)?.progress
+  const progress = useActiveExport(tapestryId)?.progress
 
   const { user } = useSession()
 

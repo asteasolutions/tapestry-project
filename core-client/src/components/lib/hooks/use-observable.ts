@@ -3,11 +3,7 @@ import { ChangeEvent, Observable } from '../../../lib/events/observable.js'
 import { Objectish, Patch } from 'immer'
 import { usePropRef } from './use-prop-ref.js'
 
-export type ObservableChangeCallback<T> = (
-  oldValue: T | undefined,
-  newValue: T,
-  patches: Patch[],
-) => unknown
+export type ObservableChangeCallback<T> = (oldValue: T, newValue: T, patches: Patch[]) => unknown
 
 export function useObservable<T extends Objectish>(
   observable: Observable<T>,
@@ -25,13 +21,10 @@ export function useObservable<T extends Objectish>(
   const onChangeRef = usePropRef(onChangeCallback)
 
   useEffect(() => {
-    let oldValue = observable?.value
-    setState(oldValue)
-    const onChangeListener = (val: ChangeEvent<T>) => {
-      const { value, patches } = val.detail
+    setState(observable?.value)
+    const onChangeListener = ({ detail: { value, oldValue, patches } }: ChangeEvent<T>) => {
       setState(value)
       onChangeRef.current?.(oldValue, value, patches)
-      oldValue = value
     }
 
     observable?.addEventListener('change', onChangeListener)

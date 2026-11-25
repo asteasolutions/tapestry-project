@@ -18,8 +18,7 @@ import { ForkTapestryDialog } from '../fork-tapestry-dialog'
 import { JoinTapestriesModal } from '../join-tapestries-modal'
 import styles from './styles.module.css'
 import { Avatar } from '../avatar'
-import { useObservable } from 'tapestry-core-client/src/components/lib/hooks/use-observable'
-import { backgroundTasks, findActiveExport } from '../../services/background-tasks'
+import { backgroundTasks, useActiveExport } from '../../services/background-tasks'
 
 export function ViewerTitleBar({ className, style }: PropsWithStyle) {
   const obstruction = useViewportObstruction({ clear: { top: true, left: true } })
@@ -44,8 +43,7 @@ export function ViewerTitleBar({ className, style }: PropsWithStyle) {
     'updatedAt',
     'owner',
   ])
-  const { exports } = useObservable(backgroundTasks)
-  const progress = findActiveExport(exports, id)?.progress
+  const progress = useActiveExport(id)?.progress
   const { user } = useSession()
   const [joinPopup, setJoinPopup] = useState(false)
   const [forkingTapestry, setForkingTapestry] = useState(false)

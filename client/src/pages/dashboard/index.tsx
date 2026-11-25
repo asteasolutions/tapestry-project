@@ -122,7 +122,7 @@ export function Dashboard() {
   )
 
   // Reload the list whenever an import completes, so that the new tapestry shows up
-  const { imports, exports } = useObservable(backgroundTasks, (_oldValue, _newValue, patches) => {
+  useObservable(backgroundTasks, (_oldValue, _newValue, patches) => {
     const importCompleted = patches.some(
       ({ path, value }) =>
         path[0] === 'imports' && path.at(-1) === 'status' && value === 'complete',
@@ -206,8 +206,6 @@ export function Dashboard() {
       </DropArea>
       {creatingTapestry && <CreateTapestryDialog onCancel={() => setCreatingTapestry(false)} />}
       <BackgroundTasksPanel
-        imports={imports}
-        exports={exports}
         onCancelExport={(id) => backgroundTasks.cancelExport(id)}
         onClose={() => backgroundTasks.clearFinished()}
       />

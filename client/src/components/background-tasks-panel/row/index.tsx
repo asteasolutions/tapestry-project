@@ -1,4 +1,4 @@
-import { ReactNode } from 'react'
+import { JSX, ReactNode } from 'react'
 import { Icon, IconName } from 'tapestry-core-client/src/components/lib/icon/index'
 import { Text } from 'tapestry-core-client/src/components/lib/text/index'
 import { StatusSpinner } from '../../status-spinner'
@@ -6,7 +6,7 @@ import styles from './styles.module.css'
 
 export type RowStatus = 'inProgress' | 'complete' | 'failed' | 'cancelled'
 
-const STATUS_ICONS: Record<RowStatus, ReactNode> = {
+const STATUS_ICONS: Record<RowStatus, JSX.Element> = {
   inProgress: <StatusSpinner />,
   complete: <Icon icon="check_circle" className={styles.complete} aria-label="Done" />,
   failed: <Icon icon="error" className={styles.failed} aria-label="Failed" />,

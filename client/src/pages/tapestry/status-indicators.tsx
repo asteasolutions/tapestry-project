@@ -3,7 +3,7 @@ import { useObservable } from 'tapestry-core-client/src/components/lib/hooks/use
 import { Snackbar } from 'tapestry-core-client/src/components/lib/snackbar/index'
 import { ExportProgressBar } from '../../components/progress-bar/export-progress-bar'
 import { ItemUploadProgressBar } from '../../components/progress-bar/item-upload-progress-bar'
-import { backgroundTasks, findActiveExport } from '../../services/background-tasks'
+import { backgroundTasks, useActiveExport } from '../../services/background-tasks'
 import styles from './styles.module.css'
 
 interface StatusIndicatorsProps {
@@ -11,19 +11,21 @@ interface StatusIndicatorsProps {
 }
 
 export function StatusIndicators({ tapestryId }: StatusIndicatorsProps) {
-  const { exports } = useObservable(backgroundTasks)
-  const activeExport = findActiveExport(exports, tapestryId)
-
-  const [shownExportId, setShownExportId] = useState<string>()
+  const activeExport = useActiveExport(tapestryId)
   const [exportFailed, setExportFailed] = useState(false)
-  if (activeExport && activeExport.id !== shownExportId) {
-    setShownExportId(activeExport.id)
-  }
-  const shownExport = exports.find((e) => e.id === shownExportId)
-  if (shownExportId && shownExport?.status !== 'exporting') {
-    setShownExportId(undefined)
-    setExportFailed(shownExport?.status === 'failed')
-  }
+
+  useObservable(backgroundTasks, (_oldValue, { exports }, patches) => {
+    const failed = patches.some(
+      ({ path, value }) =>
+        path[0] === 'exports' &&
+        path.at(-1) === 'status' &&
+        value === 'failed' &&
+        exports[path[1] as number]?.tapestryId === tapestryId,
+    )
+    if (failed) {
+      setExportFailed(true)
+    }
+  })
 
   return (
     <>

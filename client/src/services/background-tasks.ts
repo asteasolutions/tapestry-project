@@ -4,6 +4,7 @@ import { noop } from 'lodash-es'
 import { ZodError } from 'zod/v4'
 import { download } from 'tapestry-core-client/src/lib/file'
 import { Observable } from 'tapestry-core-client/src/lib/events/observable'
+import { useObservable } from 'tapestry-core-client/src/components/lib/hooks/use-observable'
 import { parseRootJson, ROOT_FILE } from 'tapestry-core/src/data-format/export'
 import { JobStatus } from 'tapestry-shared/src/data-transfer/resources/dtos/tapestry-create-job'
 import { uploadAsset } from '../model/data/utils'
@@ -61,10 +62,6 @@ async function checkZipValidity(file: File) {
   }
 }
 
-export function findActiveExport(exports: TapestryExport[], tapestryId: string) {
-  return exports.find((e) => e.tapestryId === tapestryId && e.status === 'exporting')
-}
-
 class BackgroundTasksObservable extends Observable<BackgroundTasksState> {
   private exporters = new Map<string, TapestryExporter>()
   private pollTimeout?: number
@@ -83,8 +80,12 @@ class BackgroundTasksObservable extends Observable<BackgroundTasksState> {
     })
   }
 
+  exportForTapestry(tapestryId: string) {
+    return this.value.exports.find((e) => e.tapestryId === tapestryId && e.status === 'exporting')
+  }
+
   async triggerExport(tapestryId: string, title: string) {
-    if (findActiveExport(this.value.exports, tapestryId)) {
+    if (this.exportForTapestry(tapestryId)) {
       return
     }
 
@@ -116,16 +117,12 @@ class BackgroundTasksObservable extends Observable<BackgroundTasksState> {
       })
     })
 
-    try {
-      await exporter.export((url, exportedTitle) => {
-        this.finishExport(id, 'complete')
-        download(url, `${exportedTitle}.zip`)
-        // Recorded for the admin reports; a failure must not affect the user
-        void resource('tapestryExports').create({ tapestryId }).catch(noop)
-      })
-    } finally {
-      this.finishExport(id, 'failed')
-    }
+    await exporter.export((url, exportedTitle) => {
+      this.finishExport(id, 'complete')
+      download(url, `${exportedTitle}.zip`)
+      // Recorded for the admin reports; a failure must not affect the user
+      void resource('tapestryExports').create({ tapestryId }).catch(noop)
+    })
   }
 
   cancelExport(id: string) {
@@ -228,11 +225,12 @@ class BackgroundTasksObservable extends Observable<BackgroundTasksState> {
   }
 
   private async poll() {
+    const ids = this.pendingJobIds
+    if (ids.length === 0) {
+      this.pollTimeout = undefined
+      return
+    }
     try {
-      const ids = this.pendingJobIds
-      if (ids.length === 0) {
-        return
-      }
       const { data: jobs } = await resource('tapestryCreateJob').list({
         filter: { 'id:in': ids },
       })
@@ -247,11 +245,14 @@ class BackgroundTasksObservable extends Observable<BackgroundTasksState> {
       console.warn('Error polling import jobs', error)
     } finally {
       this.pollTimeout = undefined
-      if (this.pendingJobIds.length > 0) {
-        this.schedulePoll()
-      }
+      this.schedulePoll()
     }
   }
 }
 
 export const backgroundTasks = new BackgroundTasksObservable()
+
+export function useActiveExport(tapestryId: string) {
+  useObservable(backgroundTasks)
+  return backgroundTasks.exportForTapestry(tapestryId)
+}
