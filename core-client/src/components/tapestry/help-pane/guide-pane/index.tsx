@@ -33,7 +33,7 @@ export const DEFAULT_GUIDE: GuideSection[] = deepFreeze([
           },
           {
             icon: 'touch_double',
-            text: `Double-click to zoom in (hold ${metaKey} to zoom out)`,
+            text: `Double-click to zoom in (hold ${metaKey} and double-click to zoom out)`,
           },
           {
             icon: 'drag_pan',
