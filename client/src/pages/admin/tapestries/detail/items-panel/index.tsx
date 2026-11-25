@@ -5,6 +5,7 @@ import { Checkbox } from 'tapestry-core-client/src/components/lib/checkbox/index
 import { useAsync } from 'tapestry-core-client/src/components/lib/hooks/use-async'
 import { AdminTapestryDto } from 'tapestry-shared/src/data-transfer/resources/dtos/admin'
 import { ItemDto } from 'tapestry-shared/src/data-transfer/resources/dtos/item'
+import { WEBPAGE_TYPE_LABELS } from 'tapestry-core/src/web-sources'
 import { listAll, resource } from '../../../../../services/rest-resources'
 import { Panel } from '../../../components/panel'
 import { ErrorText } from '../../../components/error-text'
@@ -26,13 +27,20 @@ const ITEM_TYPE_LABELS: Record<ItemDto['type'], string> = {
   webpage: 'Web page',
 }
 
+function itemTypeLabel(item: ItemDto) {
+  if (item.type === 'webpage' && item.webpageType) {
+    return WEBPAGE_TYPE_LABELS[item.webpageType]
+  }
+  return ITEM_TYPE_LABELS[item.type]
+}
+
 function itemLabel(item: ItemDto) {
   if (item.title) return item.title
   if ('text' in item && item.text) {
     const text = new DOMParser().parseFromString(item.text, 'text/html').body.textContent.trim()
     if (text) return text.length > 80 ? `${text.slice(0, 80)}…` : text
   }
-  return `Untitled ${ITEM_TYPE_LABELS[item.type].toLowerCase()}`
+  return `Untitled ${itemTypeLabel(item).toLowerCase()}`
 }
 
 /** Lists the items of a link-shared tapestry, so that admins can delete inappropriate content. */
@@ -96,7 +104,7 @@ export function ItemsPanel({
       ),
     },
     { key: 'title', label: 'Item', render: itemLabel },
-    { key: 'type', label: 'Type', render: (item) => ITEM_TYPE_LABELS[item.type] },
+    { key: 'type', label: 'Type', render: itemTypeLabel },
     {
       key: 'presentation',
       label: 'Presentation',
@@ -164,7 +172,7 @@ export function ItemsPanel({
           <ul>
             {selectedItems.map((item) => (
               <li key={item.id}>
-                {itemLabel(item)} ({ITEM_TYPE_LABELS[item.type]})
+                {itemLabel(item)} ({itemTypeLabel(item)})
                 {data?.inPresentation.has(item.id) && ' — also removed from the presentation'}
               </li>
             ))}

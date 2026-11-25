@@ -1,6 +1,7 @@
 import { startCase } from 'lodash-es'
 import { useMemo } from 'react'
 import { Item, ItemType } from 'tapestry-core/src/data-format/schemas/item'
+import { WEBPAGE_TYPE_LABELS } from 'tapestry-core/src/web-sources'
 import { nthIndexOf } from 'tapestry-core/src/lib/string'
 import { idMapToArray, isMediaItem } from 'tapestry-core/src/utils'
 import { Tab } from '.'
@@ -51,6 +52,9 @@ function getMatchDescription(dto: Item, search: string) {
   const query = search.toLowerCase()
 
   if (query === '') {
+    if (dto.type === 'webpage' && dto.webpageType) {
+      return WEBPAGE_TYPE_LABELS[dto.webpageType]
+    }
     return startCase(dto.type)
   }
 
