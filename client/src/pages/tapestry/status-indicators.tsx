@@ -40,7 +40,7 @@ export function StatusIndicators({ tapestryId }: StatusIndicatorsProps) {
         )}
       </div>
       <Snackbar
-        value={exportFailed ? { text: 'Error during export', variant: 'error' } : undefined}
+        value={exportFailed ? { content: 'Error during export', variant: 'error' } : undefined}
         onChange={() => setExportFailed(false)}
       />
     </>

@@ -53,7 +53,8 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [
-      react(),
+      // Babel (used for Fast Refresh on .tsx files) must be able to parse decorators; esbuild transforms them
+      react({ babel: { parserOpts: { plugins: ['decorators'] } } }),
       svgr(),
       patchCssModules({ generateSourceTypes: true }),
       viteStaticCopy({

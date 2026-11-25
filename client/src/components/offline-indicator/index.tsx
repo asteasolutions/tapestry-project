@@ -19,8 +19,8 @@ export function OfflineIndicator({ className }: OfflineIndicatorProps) {
       dispatch(
         setSnackbar(
           navigator.onLine
-            ? { text: 'You are back online', variant: 'success' }
-            : { text: 'Connection lost', variant: 'error' },
+            ? { content: 'You are back online', variant: 'success' }
+            : { content: 'Connection lost', variant: 'error' },
         ),
       )
     }

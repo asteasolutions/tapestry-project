@@ -70,7 +70,7 @@ export function ImportDetails({ import: collectionImport }: ImportDetailsProps) 
               ? collectionImport.collection.tag
               : collectionImport.collection.source
           }
-          subtitle={`${collectionImport.total} ${collectionImport.mediaType === 'image' ? 'images' : 'audio items'}`}
+          subtitle={`Openverse ${collectionImport.collection.type}, ${collectionImport.mediaType === 'image' ? 'images' : 'audio'}`}
         />
       )
 

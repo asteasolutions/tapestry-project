@@ -8,6 +8,7 @@ import { NARRATIVE_DESIGN_SYSTEM } from '../../../theme/narrative-design-system'
 import { PositionedImage } from '../../../components/positioned-component'
 import { Button } from 'tapestry-core-client/src/components/lib/buttons'
 import { Breakpoint, useResponsive } from '../../../providers/responsive-provider'
+import { clickTracking } from '../../../services/analytics'
 
 export function OpenSourceSection() {
   const { title, subtitle, content } = LANDING_PAGE_TEXT.openSource
@@ -17,9 +18,24 @@ export function OpenSourceSection() {
     <div className={styles.root}>
       {!LGOrLess && (
         <>
-          <PositionedImage src={LeftHand} alt="" width={400} left={-130} bottom={0} />
-          <PositionedImage src={VerticalString} alt="" width={110} left={175} bottom={-30} />
           <PositionedImage
+            loading="lazy"
+            src={LeftHand}
+            alt=""
+            width={400}
+            left={-130}
+            bottom={0}
+          />
+          <PositionedImage
+            loading="lazy"
+            src={VerticalString}
+            alt=""
+            width={110}
+            left={175}
+            bottom={-30}
+          />
+          <PositionedImage
+            loading="lazy"
             src={RightHand}
             alt=""
             width={365}
@@ -51,6 +67,7 @@ export function OpenSourceSection() {
             variant="secondary"
             component="a"
             href="https://github.com/asteasolutions/tapestry-project"
+            {...clickTracking('Landing View GitHub repo')}
             target="_blank"
           >
             View GitHub Repo
@@ -60,6 +77,7 @@ export function OpenSourceSection() {
             className={styles.outlineButton}
             component="a"
             href="mailto:tapestries@awmt.org"
+            {...clickTracking('Landing Contact')}
           >
             Contact
           </Button>
@@ -67,8 +85,8 @@ export function OpenSourceSection() {
       </div>
       {LGOrLess && (
         <div className={styles.mobileHandsContainer}>
-          <img src={LeftHand} alt="" style={{ height: '130px' }} />
-          <img src={RightHand} alt="" style={{ height: '130px' }} />
+          <img loading="lazy" src={LeftHand} alt="" style={{ height: '130px' }} />
+          <img loading="lazy" src={RightHand} alt="" style={{ height: '130px' }} />
         </div>
       )}
     </div>

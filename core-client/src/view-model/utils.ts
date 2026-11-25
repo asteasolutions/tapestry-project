@@ -413,10 +413,6 @@ export function supportsCustomThumbnail(item: Item) {
   )
 }
 
-export function isBlobURL(str: string) {
-  return str.startsWith('blob:')
-}
-
 export function getPrimaryThumbnail(itemOrThumbnail: Item | ImageAsset | undefined | null) {
   const thumbnail = isItem(itemOrThumbnail) ? itemOrThumbnail.thumbnail : itemOrThumbnail
   return thumbnail?.renditions.find((r) => r.isPrimary)?.source

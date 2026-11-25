@@ -1,4 +1,3 @@
-import { TapestryDto } from 'tapestry-shared/src/data-transfer/resources/dtos/tapestry'
 import { IconButton } from 'tapestry-core-client/src/components/lib/buttons/index'
 import { LazyListLoader } from '../../../components/lazy-list/lazy-list-loader'
 import { SearchInput } from 'tapestry-core-client/src/components/lib/search-input/index'
@@ -11,6 +10,7 @@ import { Select } from '../../../components/select'
 import { ReactNode } from 'react'
 import { Options } from 'react-select'
 import { useSession } from '../../../layouts/session'
+import { TapestryListEntry } from '../tapestry-list'
 
 interface SortOption {
   value: SortBy
@@ -39,7 +39,7 @@ function getSortOptions(section: DashboardSection, isLoggedIn: boolean): Options
 
 interface TapestryListControlsProps {
   section: DashboardSection
-  tapestryListState: LazyListLoader<TapestryDto>['_value'] | undefined
+  tapestryListState: LazyListLoader<TapestryListEntry>['_value'] | undefined
   onSearchChanged: (query: string) => unknown
   sortDirection: SortDirection
   onSortDirectionChanged: (direction: SortDirection) => unknown

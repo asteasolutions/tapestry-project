@@ -36,6 +36,7 @@ import {
 import { InteractionMode } from './view-model'
 import { TapestryDataSync } from './view-model/tapestry-data-sync'
 import { ThumbnailContainer } from 'tapestry-core-client/src/stage/renderer/thumbnail-container'
+import { SnackbarData } from 'tapestry-core-client/src/view-model'
 
 const INITIAL_THUMBNAILS_LOAD_TIMEOUT = 3_000
 
@@ -158,7 +159,7 @@ export function TapestryLoader({ id, mode }: TapestryLoaderProps) {
       <Navigate
         to={dashboardPath('home')}
         replace
-        state={{ text: getErrorMessage(error), variant: 'error' }}
+        state={{ content: getErrorMessage(error), variant: 'error' } as SnackbarData}
       />
     )
   }

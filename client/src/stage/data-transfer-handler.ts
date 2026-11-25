@@ -1,7 +1,7 @@
 import { MediaItemSource } from '../lib/media'
 import { createMediaItem, createTextItem, getMediaType } from '../model/data/utils'
 import { ItemCreateDto, ItemDto } from 'tapestry-shared/src/data-transfer/resources/dtos/item'
-import { ensureArray, isHTTPURL, OneOrMore } from 'tapestry-core/src/utils'
+import { ensureArray, isBlobURL, isHTTPURL, OneOrMore } from 'tapestry-core/src/utils'
 import { mapNotNull } from 'tapestry-core/src/lib/array'
 import { getFile, scan } from 'tapestry-core-client/src/lib/file'
 import { ItemCreateSchema } from 'tapestry-shared/src/data-transfer/resources/schemas/item'
@@ -10,7 +10,6 @@ import { ITEM_FACTORIES, ItemFactoryResult } from './item-factories'
 import { compact, omit, partition, set } from 'lodash-es'
 import z from 'zod/v4'
 import { CollectionImport } from '../pages/tapestry/view-model'
-import { isBlobURL } from 'tapestry-core-client/src/view-model/utils'
 import { MAX_SOURCE_FILE_SIZE } from 'tapestry-shared/src/utils'
 
 function isFileEligible(file: File, maxSize = MAX_SOURCE_FILE_SIZE) {
@@ -86,9 +85,9 @@ function getStringTransferData(data: DataTransfer): string[] | string {
 export async function parseStringTransferData(
   text: string[] | string,
   tapestryId: string,
-): Promise<ItemFactoryResult> {
+): Promise<Required<ItemFactoryResult>> {
   if (!text) {
-    return { items: [] }
+    return { items: [], collectionImports: [] }
   }
 
   if (Array.isArray(text)) {
@@ -97,7 +96,7 @@ export async function parseStringTransferData(
 
   const items = tryParseItems(text, tapestryId)
   if (items) {
-    return { items }
+    return { items, collectionImports: [] }
   }
 
   const lines = compact(text.trim().split(/\s*\n\s*/))
@@ -114,7 +113,7 @@ export async function parseStringTransferData(
       return parseSources([file], tapestryId)
     }
   }
-  return { items: [createTextItem(text, tapestryId)] }
+  return { items: [createTextItem(text, tapestryId)], collectionImports: [] }
 }
 
 function sanitizeForCopy(item: ItemDto): Omit<ItemCreateDto, 'tapestryId'> {
@@ -132,7 +131,7 @@ export async function dataTransferToFiles(transfer: DataTransfer) {
 }
 
 async function parseSources(sources: MediaItemSource[], tapestryId: string) {
-  const result = { items: [] as ItemCreateDto[], collectionImports: [] as CollectionImport[] }
+  const result: Required<ItemFactoryResult> = { items: [], collectionImports: [] }
   for (const src of sources) {
     const { items, collectionImports } = await parseMediaSource(src, tapestryId)
     result.items.push(...items)
@@ -164,13 +163,13 @@ export class DataTransferHandler {
     const files = await dataTransferToFiles(dataTransfer)
 
     const [eligibleFiles, largeFiles] = partition(files, isFileEligible)
-    const fromFiles = await parseSources(eligibleFiles, tapestryId)
-    if (fromFiles.items.length > 0 || fromFiles.collectionImports.length > 0) {
-      return { ...fromFiles, largeFiles }
+    let { items, collectionImports } = await parseSources(eligibleFiles, tapestryId)
+    if (items.length > 0 || collectionImports.length > 0) {
+      return { items, collectionImports, largeFiles }
     }
 
-    const { items, collectionImports } = await parseStringTransferData(stringData, tapestryId)
-    return { items, collectionImports: collectionImports ?? [], largeFiles: [] }
+    ;({ items, collectionImports } = await parseStringTransferData(stringData, tapestryId))
+    return { items, collectionImports, largeFiles }
   }
 
   async serialize(items: ItemDto[]) {
@@ -192,7 +191,7 @@ export class DataTransferHandler {
       } else if ((type = item.types.find((t) => t.startsWith('text/')))) {
         const text = await (await item.getType(type)).text()
         const { items, collectionImports } = await parseStringTransferData(text, tapestryId)
-        result.collectionImports.push(...(collectionImports ?? []))
+        result.collectionImports.push(...collectionImports)
         result.items.push(...items)
       }
     }

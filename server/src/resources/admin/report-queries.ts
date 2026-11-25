@@ -10,11 +10,11 @@ export const adminReportQueries: RESTResourceImpl<Resources['adminReportQueries'
   },
 
   handlers: {
-    create: async ({ body: { metric, from, to, compare } }) => {
+    create: async ({ body: { metric, from, to, compare, includeAdmins = false } }) => {
       if (from && from >= to) {
         throw new BadRequestError('The start of the range must be before its end')
       }
-      return runReport(metric, { from, to }, compare)
+      return runReport(metric, { from, to }, compare, includeAdmins)
     },
   },
 }

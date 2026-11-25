@@ -8,19 +8,8 @@
   padding: 0 var(--padding-navigation-x);
   background-color: var(--theme-background-primary);
 
-  .mobile-nav {
-    position: relative;
-
-    .mobile-nav-button {
-      --bg-color: white;
-    }
-
-    .mobile-nav-toolbar {
-      position: absolute;
-      top: calc(100% + 8px);
-      left: 0;
-      z-index: 2;
-    }
+  .mobile-nav-button {
+    --bg-color: white;
   }
 
   .icon-link {

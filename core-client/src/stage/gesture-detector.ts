@@ -32,6 +32,8 @@ export type PanEndEvent = TypedEvent<'panend'>
 type ClickData = { hoverTarget: HoverTarget | null; originalEvent: PointerEvent | TouchEvent }
 export type ClickEvent = TypedEvent<'click' | 'double-click', ClickData>
 
+export type ViewportResizeEvent = TypedEvent<'viewport-resize', Event>
+
 type PanMethod = 'scroll' | 'drag'
 
 interface PanState {
@@ -66,6 +68,7 @@ type EventTypesMap = {
   dragHandler: EventTypes<DomDragHandler>
   window: keyof HTMLElementEventMap
   scene: keyof HTMLElementEventMap
+  viewport: keyof VisualViewportEventMap
 }
 
 const { eventListener, attachListeners, detachListeners } = createEventRegistry<
@@ -74,7 +77,7 @@ const { eventListener, attachListeners, detachListeners } = createEventRegistry<
 >()
 
 export class GestureDetector extends TypedEventTarget<
-  ZoomEvent | ZoomEndEvent | PanEvent | PanEndEvent | ClickEvent
+  ZoomEvent | ZoomEndEvent | PanEvent | PanEndEvent | ClickEvent | ViewportResizeEvent
 > {
   private maybeClick: MaybeClick | null = null
   private panState: PanState | null = null
@@ -121,6 +124,9 @@ export class GestureDetector extends TypedEventTarget<
     )
     attachListeners(this, 'window', window)
     attachListeners(this, 'scene', this.stage.root, isMobile ? 'mobile' : 'desktop')
+    if (window.visualViewport) {
+      attachListeners(this, 'viewport', window.visualViewport)
+    }
     this.dragHandler.activate()
   }
 
@@ -131,6 +137,9 @@ export class GestureDetector extends TypedEventTarget<
     detachListeners(this, 'stage', this.stage.pixi.tapestry.app.stage)
     detachListeners(this, 'window', window)
     detachListeners(this, 'scene', this.stage.root)
+    if (window.visualViewport) {
+      detachListeners(this, 'viewport', window.visualViewport)
+    }
     this.dragHandler.deactivate()
     this.maybeClick = null
     this.panState = null
@@ -330,5 +339,10 @@ export class GestureDetector extends TypedEventTarget<
   @eventListener('dragHandler', 'dragend')
   protected onDragEnd() {
     this.onPanEnd('drag')
+  }
+
+  @eventListener('viewport', 'resize')
+  protected onViewportResize(e: Event) {
+    this.dispatchEvent('viewport-resize', e)
   }
 }

@@ -42,6 +42,14 @@ type ParsersMap = {
   [N in ParserName]: WebSourceParser<MapParserNameToWebpageType<N>>
 }
 
+export const WEBPAGE_TYPE_LABELS: Record<WebpageType, string> = {
+  youtube: 'YouTube video',
+  vimeo: 'Vimeo',
+  iaVideo: 'Internet Archive video',
+  iaAudio: 'Internet Archive audio',
+  iaWayback: 'Wayback Machine page',
+}
+
 export const WEB_SOURCE_PARSERS = {
   youtube: new YoutubeSourceParser(),
   vimeo: new VimeoSourceParser(),
