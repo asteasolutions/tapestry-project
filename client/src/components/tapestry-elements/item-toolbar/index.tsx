@@ -351,7 +351,7 @@ export function useEditMoreMenu({
         {...(isMultiselection ? { disabled: true } : { onClick: () => copySize() })}
         className={styles.menuItemButton}
       >
-        Copy Size
+        Copy size
       </MenuItemButton>,
       <MenuItemButton
         shortcut="meta + alt + V"
@@ -359,7 +359,7 @@ export function useEditMoreMenu({
         className={styles.menuItemButton}
         disabled={!copiedItemSize}
       >
-        Paste Size
+        Paste size
       </MenuItemButton>,
       <MenuItemButton shortcut="meta + D" onClick={addDuplicate} className={styles.menuItemButton}>
         Make a copy
