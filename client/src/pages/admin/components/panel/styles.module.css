@@ -1,0 +1,54 @@
+.root {
+  --panel-padding: 20px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  padding: var(--panel-padding);
+  border-radius: 12px;
+  background-color: var(--theme-background-primary);
+
+  .header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .titles {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+
+    h2,
+    h3 {
+      margin: 0;
+      font-size: 15px;
+      line-height: 22px;
+      font-weight: 600;
+    }
+
+    span {
+      font-size: 12px;
+      line-height: 16px;
+      color: var(--color-neutral-500);
+    }
+  }
+
+  .actions {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &.flush {
+    padding: 16px 0 8px;
+
+    .header {
+      padding: 0 16px;
+    }
+  }
+}

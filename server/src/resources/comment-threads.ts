@@ -74,7 +74,7 @@ export const commentThreads: RESTResourceImpl<Resources['commentThreads'], never
 
       return {
         id,
-        createdAt: createdAt,
+        createdAt,
         updatedAt: max(threads.map((t) => t.updatedAt)) ?? createdAt,
         threads,
       }

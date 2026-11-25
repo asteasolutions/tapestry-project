@@ -1,47 +1,44 @@
-import { ReactNode, useEffect, useState } from 'react'
+import { ReactNode, useEffect, useRef } from 'react'
 import styles from './styles.module.css'
 import clsx from 'clsx'
 import { useThemeCss } from 'tapestry-core-client/src/components/lib/hooks/use-theme-css'
 import { Header } from './header'
 import { Footer } from './footer'
 import { useSession } from '../session'
-import { useLocation, useNavigate } from 'react-router'
-import { dashboardPath } from '../../utils/paths'
-import { UserDto } from 'tapestry-shared/src/data-transfer/resources/dtos/user'
+import { useNavigate } from 'react-router'
+import { DASHBOARD_ROOT, dashboardPath } from '../../utils/paths'
 import { LoadingLogo } from '../../components/loading-logo'
 import { AcceptInvitationDialog } from '../../components/accept-invitation-dialog'
 
-function useNavigateOnLogin() {
-  const { user } = useSession()
-  const navigate = useNavigate()
-  const location = useLocation()
-  const [prevUser, setPrevUser] = useState<UserDto | null>(null)
-
-  const navigatingOnLogin = !!user && !prevUser
-
-  useEffect(() => {
-    if (navigatingOnLogin) {
-      void navigate({ pathname: dashboardPath('home'), search: location.search }, { replace: true })
-    }
-    if (user !== prevUser) {
-      setPrevUser(user)
-    }
-  }, [navigate, user, prevUser, navigatingOnLogin, location.search])
-
-  return { navigatingOnLogin }
-}
 export interface NavigationLayoutProps {
   children: ReactNode
 }
 
+let isInitialLoad = true
+
 export function NavigationLayout({ children }: NavigationLayoutProps) {
   useThemeCss('light')
-  const { navigatingOnLogin } = useNavigateOnLogin()
+  const { user } = useSession()
+  const prevUserRef = useRef(user)
+  const navigate = useNavigate()
+
+  const willNavigate =
+    (isInitialLoad && user && !location.pathname.startsWith(DASHBOARD_ROOT)) ||
+    (!prevUserRef.current && user)
+
+  prevUserRef.current = user
+
+  useEffect(() => {
+    if (willNavigate) {
+      void navigate({ pathname: dashboardPath('home'), search: location.search }, { replace: true })
+    }
+    isInitialLoad = false
+  }, [willNavigate, navigate])
 
   return (
     <div className={clsx(styles.root, 'navigation-layout')}>
       <Header />
-      {navigatingOnLogin ? <LoadingLogo /> : children}
+      {willNavigate ? <LoadingLogo /> : children}
       <Footer />
       <AcceptInvitationDialog />
     </div>

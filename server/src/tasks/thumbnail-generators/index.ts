@@ -5,6 +5,7 @@ import { generatePDFThumbnail } from './pdf.js'
 import { generateImageThumbnail } from './image.js'
 import { generateWebpageThumbnail, generateYoutubeThumbnail } from './webpage.js'
 import { Item, ItemType } from '../../../prisma/generated/prisma/client.js'
+import { isBlobURL } from 'tapestry-core/src/utils.js'
 
 export interface ThumbnailRenditionOutput {
   data: Buffer<ArrayBufferLike>
@@ -31,7 +32,7 @@ export async function generatePrimaryThumbnail(
     const source = (await parseDBItemSource(item.source!)).source
     // We cannot make thumbnails for blob URLs. The thumbnail creation job should be re-triggered
     // when the source is changed.
-    if (source.startsWith('blob:')) return
+    if (isBlobURL(source)) return
 
     const thumbWidth = Math.max(MIN_THUMBNAIL_SIZE, item.width)
     if (item.type === 'pdf') {

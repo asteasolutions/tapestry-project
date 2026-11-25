@@ -1,10 +1,13 @@
 import { isEqual } from 'lodash-es'
-import { useRef, useState, CSSProperties, useMemo } from 'react'
+import { useRef, useState, CSSProperties, useMemo, useEffect } from 'react'
 import { usePropRef } from '../hooks/use-prop-ref'
 import styles from './styles.module.css'
-import { ControlBar } from './control-bar'
+import { CONTROL_BAR_WIDTH, ControlBar } from './control-bar'
 import clsx from 'clsx'
 import { Id } from 'tapestry-core/src/data-format/schemas/common'
+import { Icon } from '../icon'
+import { Size } from 'tapestry-core/src/lib/geometry'
+import { getItemOverlayScale } from '../../../view-model/utils'
 
 type ComponentType = 'video' | 'audio'
 type MediaElement<T extends ComponentType> = T extends 'video' ? HTMLVideoElement : HTMLAudioElement
@@ -38,6 +41,7 @@ export interface MediaPlayerProps<T extends ComponentType, Component = MediaElem
   onLoadedMetadata?: React.ReactEventHandler<Component>
   isInteractive: boolean
   thumbnail?: string
+  size?: Size
 }
 
 export function MediaPlayer<T extends 'video' | 'audio'>({
@@ -54,11 +58,13 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
   onLoadedMetadata,
   isInteractive,
   thumbnail,
+  size,
 }: MediaPlayerProps<T>) {
   const mediaRef = useRef<MediaElement<T> | null>(null)
   const [volume, setVolume] = useState<number>(1)
   const [playbackRate, setPlaybackRate] = useState<number>(1)
   const isAudio = component === 'audio' || options.audioOnlyMode
+  const controlBarScale = !isAudio && size ? Math.max(size.width / CONTROL_BAR_WIDTH, 1) : undefined
 
   const autoStop = useRef(!!stopTime)
   const [currentPlaybackInterval, setCurrentPlaybackInterval] = useState({ startTime, stopTime })
@@ -111,10 +117,16 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
     onLoadedMetadata?.(e)
   }
 
-  const [isPlaying, setIsPlaying] = useState<boolean>(false)
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [hasPlayed, setHasPlayed] = useState(false)
+  const [loadedThumbnail, setLoadedThumbnail] = useState<string>()
+
+  const isThumbnailLoaded = !!thumbnail && loadedThumbnail === thumbnail
+  const shouldDisplayVideo = isPlaying || (hasPlayed && !isThumbnailLoaded)
 
   const handlePlay = (e: MediaEvent<T>) => {
     setIsPlaying(true)
+    setHasPlayed(true)
     onPlay?.(e)
   }
 
@@ -174,14 +186,24 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
     }
   }
 
+  const [isFullscreen, setIsFullscreen] = useState(false)
+  useEffect(() => {
+    const onFullscreenChange = () => {
+      const fullscreenContainer = mediaRef.current?.parentElement
+      setIsFullscreen(!!fullscreenContainer && document.fullscreenElement === fullscreenContainer)
+    }
+    document.addEventListener('fullscreenchange', onFullscreenChange)
+    return () => document.removeEventListener('fullscreenchange', onFullscreenChange)
+  }, [mediaRef])
+
   const toggleFullscreen = async () => {
-    if (document.fullscreenElement) {
+    const fullscreenContainer = mediaRef.current?.parentElement
+    if (!fullscreenContainer) return
+
+    if (document.fullscreenElement === fullscreenContainer) {
       await document.exitFullscreen()
     } else {
-      const fullscreenContainer = mediaRef.current?.parentElement
-      if (fullscreenContainer) {
-        await fullscreenContainer.requestFullscreen()
-      }
+      await fullscreenContainer.requestFullscreen()
     }
   }
 
@@ -197,11 +219,11 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
 
   const mediaProps = {
     onLoadedMetadata: handleLoadedMetadata,
-    onTimeUpdate: onTimeUpdate,
+    onTimeUpdate,
     onPlay: handlePlay,
     onPause: handlePause,
     onEnded: handleEnded,
-    onSeeked: onSeeked,
+    onSeeked,
   }
 
   return (
@@ -223,11 +245,11 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
           {...mediaProps}
           controls={false}
           style={{
-            display: isPlaying ? 'block' : 'none',
+            display: shouldDisplayVideo ? 'block' : 'none',
             width: '100%',
             height: '100%',
-            objectFit: 'contain',
           }}
+          className={styles.video}
           crossOrigin="anonymous"
         >
           <source src={options.src} type={options.mediaType || 'video/mp4'} />
@@ -236,12 +258,14 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
       {thumbnail && (
         <img
           src={thumbnail}
+          onLoad={() => setLoadedThumbnail(thumbnail)}
+          onError={() => setLoadedThumbnail(thumbnail)}
           // Images that may be loaded via `fetch` elsewhere must always be loaded with CORS policy "anonymous"
           // in order to prevent cached CORS header errors in Chrome.
           crossOrigin="anonymous"
           alt="Video thumbnail"
           style={{
-            display: isPlaying && !isAudio ? 'none' : 'block',
+            display: shouldDisplayVideo && !isAudio ? 'none' : 'block',
             height: '100%',
             width: '100%',
             objectFit: 'cover',
@@ -249,8 +273,28 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
           }}
         />
       )}
+      {!isAudio && isInteractive && (
+        <div className={styles.playArea} onClick={() => void togglePlay()}>
+          {!isPlaying && (
+            <div
+              className={styles.playButton}
+              style={{ transform: size ? `scale(${getItemOverlayScale(size)})` : undefined }}
+            >
+              <Icon icon="play_arrow" filled />
+            </div>
+          )}
+        </div>
+      )}
       <div
         className={styles.controlBar}
+        style={
+          controlBarScale !== undefined
+            ? ({
+                '--control-bar-scale': controlBarScale,
+                '--control-bar-width': `${CONTROL_BAR_WIDTH}px`,
+              } as CSSProperties)
+            : undefined
+        }
         onMouseEnter={() => setIsHovering(true)}
         onMouseLeave={() => setIsHovering(false)}
       >
@@ -268,7 +312,9 @@ export function MediaPlayer<T extends 'video' | 'audio'>({
           playbackRate={playbackRate}
           onPlaybackRateChange={onPlaybackRateChange}
           toggleFullScreen={toggleFullscreen}
+          isFullscreen={isFullscreen}
           mediaId={id}
+          scale={controlBarScale}
         />
       </div>
     </div>

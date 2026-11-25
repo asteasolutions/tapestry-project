@@ -80,7 +80,7 @@ export function ShareDialog({ tapestryId, onClose }: ShareDialogProps) {
         )}
       </div>
       <Snackbar
-        value={snackbarText ? { text: snackbarText } : undefined}
+        value={snackbarText ? { content: snackbarText } : undefined}
         onChange={() => setSnackbarText(undefined)}
       />
     </Modal>

@@ -6,6 +6,7 @@ import { PublicUserProfileSchema } from './user.js'
 import { baseResourcePropsMask } from '../types.js'
 import { TapestryAccessSchema } from './tapestry-access.js'
 import { GroupSchema } from './group.js'
+import { TAPESTRY_VISIBILITIES } from '../dtos/tapestry.js'
 import { TapestrySchema as BaseTapestrySchema } from 'tapestry-core/src/data-format/schemas/tapestry.js'
 
 export const slugRegex = /^[a-zA-Z0-9_-]*$/g
@@ -24,12 +25,17 @@ export const TapestrySchema = z
       .describe('The list of rels, i.e. relations between items in the tapestry.'),
     groups: GroupSchema.array().nullish().describe('The list of item groups in the tapestry.'),
     visibility: z
-      .enum(['private', 'link', 'public'])
+      .enum(TAPESTRY_VISIBILITIES)
       .describe(
         'The visibility of this tapestry. "private" means that only the owner and personally invited collaborators ' +
-          'can see the tapestry. "link" means that anyone with the link can view it. "public" means that the tapestry ' +
-          'will be publicly listed, searchable, and viewable by anyone. None of these visibility levels provides edit ' +
-          'access to tapestry on its own. Edit access can be granted only via an invitation.',
+          'can see the tapestry. "link" means that anyone with the link can view it. Neither visibility level ' +
+          'provides edit access to tapestry on its own. Edit access can be granted only via an invitation.',
+      ),
+    featured: z
+      .boolean()
+      .describe(
+        'Whether the tapestry is featured in the public Gallery. Featured tapestries are always shared with ' +
+          'anyone with the link. Only admins can feature a tapestry.',
       ),
     slug: z
       .preprocess(trimString, z.string().regex(slugRegex))
@@ -65,6 +71,7 @@ export const TapestryCreateSchema = TapestrySchema.omit({
   owner: true,
   userAccess: true,
   allowForking: true,
+  featured: true,
 })
   .extend({
     items: ItemCreateInTapestrySchema.array(),
@@ -85,6 +92,7 @@ export const TapestryUpdateSchema = TapestrySchema.omit({
   items: true,
   groups: true,
   userAccess: true,
+  featured: true,
 })
   .partial()
   .describe('Parameters used to modify an existing tapestry.')

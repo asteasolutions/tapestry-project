@@ -173,7 +173,6 @@ export type CollectionImport =
       type: 'OpenverseCollection'
       mediaType: OpenverseMediaType
       collection: OpenverseCollectionQuery
-      total: number
     }
   | {
       type: 'WikimediaCommonsCategory'

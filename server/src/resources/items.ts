@@ -1,5 +1,5 @@
 import { Resources } from 'tapestry-shared/src/data-transfer/resources/index.js'
-import { ensureTransaction, prisma } from '../db.js'
+import { ensureTransaction, prisma, Tx } from '../db.js'
 import { RequestContext, RESTResourceImpl } from './base-resource.js'
 import { itemDtoToDb } from '../transformers/item.js'
 import { canEditTapestry, canListTapestryElements, canViewTapestry } from './tapestries.js'
@@ -118,7 +118,7 @@ async function scheduleConvertToPdf(item: ItemWithAssets) {
 async function processCustomThumbnailUpdate(
   item: Item,
   thumbnailUpdate: ThumbnailUpdate | null | undefined,
-  tx?: Prisma.TransactionClient,
+  tx?: Tx,
   include?: Prisma.ItemInclude | null,
 ) {
   if (thumbnailUpdate === undefined) return
@@ -163,19 +163,19 @@ export async function createItems(
   item: ItemCreateDto,
   context?: RequestContext<true>,
   query?: ReadParamsDto,
-  tx?: Prisma.TransactionClient,
+  tx?: Tx,
 ): Promise<ItemDto>
 export async function createItems(
   items: ItemCreateDto[],
   context?: RequestContext<true>,
   query?: ReadParamsDto,
-  tx?: Prisma.TransactionClient,
+  tx?: Tx,
 ): Promise<ItemDto[]>
 export async function createItems(
   items: OneOrMore<ItemCreateDto>,
   context?: RequestContext<true>,
   query?: ReadParamsDto,
-  tx?: Prisma.TransactionClient,
+  tx?: Tx,
 ) {
   // In case the method is called with an array with a single item, we still want to return an array.
   const shouldReturnSingleRecord = !Array.isArray(items)
@@ -221,7 +221,7 @@ export async function updateItems(
   updates: Record<string, ItemUpdateDto>,
   context: RequestContext<true>,
   query?: ReadParamsDto,
-  tx?: Prisma.TransactionClient,
+  tx?: Tx,
 ) {
   const updatedTapestries = new Set<string>()
   const items = await ensureTransaction(tx, (tx) =>
@@ -278,17 +278,14 @@ export async function updateItems(
   return items
 }
 
-export async function destroyItems(
-  ids: OneOrMore<string>,
-  context: RequestContext<true>,
-  tx?: Prisma.TransactionClient,
-) {
+export async function destroyItems(ids: OneOrMore<string>, context: RequestContext<true>, tx?: Tx) {
   return ensureTransaction(tx, async (tx) => {
     ids = ensureArray(ids)
     const presentationSteps = await tx.presentationStep.findMany({ where: { itemId: { in: ids } } })
     await destroyPresentationSteps(
-      presentationSteps.map((step) => step.id, tx),
+      presentationSteps.map((step) => step.id),
       context,
+      tx,
     )
 
     const items = await tx.item.findMany({

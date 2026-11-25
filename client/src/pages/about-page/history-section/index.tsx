@@ -10,6 +10,7 @@ function ImageContent() {
     <figure className={styles.figure}>
       <div className={styles.imageContainer}>
         <img
+          loading="lazy"
           src={BobArchive}
           alt="Cardboard archive boxes stacked around a brick-walled studio, beside a desk with an iMac"
           className={styles.imageElement}

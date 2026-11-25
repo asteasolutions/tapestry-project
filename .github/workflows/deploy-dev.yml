@@ -24,6 +24,7 @@ jobs:
           AWS_S3_BUCKET_NAME: ${{ secrets.AWS_S3_BUCKET_NAME }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           BUG_REPORT_FORM_URL: ${{ vars.BUG_REPORT_FORM_URL }}
+          DB_LOG_LEVEL: ${{ vars.DB_LOG_LEVEL }}
           DB_NAME: ${{ secrets.DB_NAME }}
           DB_PASS: ${{ secrets.DB_PASS }}
           DB_USER: ${{ secrets.DB_USER }}

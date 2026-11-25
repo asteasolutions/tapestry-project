@@ -1,5 +1,5 @@
 import { Resources } from 'tapestry-shared/src/data-transfer/resources/index.js'
-import { ensureTransaction, prisma } from '../db.js'
+import { ensureTransaction, prisma, Tx } from '../db.js'
 import { RequestContext, RESTResourceImpl } from './base-resource.js'
 import { canEditTapestry, canListTapestryElements, canViewTapestry } from './tapestries.js'
 import { scheduleTapestryThumbnailGeneration } from '../tasks/utils.js'
@@ -124,11 +124,7 @@ export async function updateGroups(
   return groups
 }
 
-export function destroyGroups(
-  ids: OneOrMore<string>,
-  context: RequestContext<true>,
-  tx?: Prisma.TransactionClient,
-) {
+export function destroyGroups(ids: OneOrMore<string>, context: RequestContext<true>, tx?: Tx) {
   return ensureTransaction(tx, async (tx) => {
     ids = ensureArray(ids)
     const presentationSteps = await tx.presentationStep.findMany({

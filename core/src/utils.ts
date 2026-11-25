@@ -24,6 +24,10 @@ export function isHTTPURL(str: string | null | undefined): str is `http${string}
   }
 }
 
+export function isBlobURL(str: string) {
+  return str.startsWith('blob:')
+}
+
 export function isObject(obj: unknown): obj is Record<string, unknown> {
   return !!obj && typeof obj === 'object'
 }
@@ -45,6 +49,10 @@ export function isRel(obj: unknown): obj is Rel {
 
 export function isMediaItem(item: unknown): item is MediaItem {
   return isItem(item) && MEDIA_ITEM_TYPES.includes(item.type)
+}
+
+export function isNewMediaItem(item: unknown): item is MediaItem {
+  return isMediaItem(item) && isBlobURL(item.source)
 }
 
 export function hasActionType<T extends { type: string }>(

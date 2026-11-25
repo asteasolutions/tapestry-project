@@ -1,0 +1,23 @@
+.root {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  color: var(--color-neutral-700);
+
+  &.up {
+    color: var(--theme-text-positive);
+  }
+
+  &.down {
+    color: var(--theme-text-negative);
+  }
+
+  .direction {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}

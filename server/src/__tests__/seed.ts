@@ -92,6 +92,11 @@ export async function seedDb() {
 }
 
 export async function truncateDb() {
+  await prisma.adminActivity.deleteMany()
+  await prisma.tapestryDeletion.deleteMany()
+  await prisma.tapestryExport.deleteMany()
+  await prisma.tapestryInteraction.deleteMany()
+  await prisma.presentationStep.deleteMany()
   await prisma.tapestryAccess.deleteMany()
   await prisma.tapestryInvitation.deleteMany()
   await prisma.rel.deleteMany()

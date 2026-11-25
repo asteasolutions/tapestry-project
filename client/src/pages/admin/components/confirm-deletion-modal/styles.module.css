@@ -1,0 +1,34 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 520px;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--theme-text-secondary);
+
+  p {
+    margin: 0;
+  }
+
+  ul {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-height: 200px;
+    margin: 0;
+    padding-left: 20px;
+    overflow-y: auto;
+  }
+
+  .warning {
+    font-weight: 600;
+    color: var(--theme-text-negative);
+  }
+
+  .note {
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--color-neutral-500);
+  }
+}

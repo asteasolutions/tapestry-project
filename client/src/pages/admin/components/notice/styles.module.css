@@ -1,0 +1,85 @@
+.root {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px;
+  border: 1px solid var(--notice-border);
+  border-radius: 8px;
+  background-color: var(--notice-bg);
+  color: var(--notice-text);
+  font-size: 14px;
+  line-height: 20px;
+
+  &.info {
+    --notice-bg: var(--color-primary-50);
+    --notice-border: var(--color-primary-500);
+    --notice-text: var(--color-primary-900);
+  }
+
+  &.success {
+    --notice-bg: var(--color-success-50);
+    --notice-border: var(--color-success-500);
+    --notice-text: var(--color-success-800);
+  }
+
+  &.warning {
+    --notice-bg: var(--color-warning-100);
+    --notice-border: var(--color-warning-600);
+    --notice-text: var(--color-warning-900);
+  }
+
+  &.error {
+    --notice-bg: var(--color-error-50);
+    --notice-border: var(--color-error-400);
+    --notice-text: var(--color-error-700);
+  }
+
+  .message {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+
+    > :global(.material-symbols-outlined) {
+      flex: none;
+      font-size: 20px;
+    }
+
+    strong {
+      font-weight: 600;
+    }
+  }
+
+  .actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .dismiss {
+    color: inherit;
+    margin: 4px;
+  }
+
+  .button {
+    padding: 5px 12px;
+    border: 1px solid var(--notice-border);
+    border-radius: 8px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:hover {
+      background-color: var(--theme-background-primary);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--theme-border-focus);
+      outline-offset: 2px;
+    }
+  }
+}

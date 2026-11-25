@@ -90,6 +90,29 @@ import {
 import { AnnotationCreateSchema, AnnotationSchema } from './schemas/annotation.js'
 import { AnnotationCreateDto, AnnotationDto } from './dtos/annotation.js'
 
+import { TapestryExportCreateDto, TapestryExportDto } from './dtos/tapestry-export.js'
+import { TapestryExportCreateSchema, TapestryExportSchema } from './schemas/tapestry-export.js'
+import {
+  AdminActivityCreateDto,
+  AdminActivityDto,
+  AdminTapestryDto,
+  AdminTapestryUpdateDto,
+  AdminUserDto,
+  AdminUserUpdateDto,
+  ReportDto,
+  ReportQueryCreateDto,
+} from './dtos/admin.js'
+import {
+  AdminActivityCreateSchema,
+  AdminActivitySchema,
+  AdminTapestrySchema,
+  AdminTapestryUpdateSchema,
+  AdminUserSchema,
+  AdminUserUpdateSchema,
+  ReportQueryCreateSchema,
+  ReportSchema,
+} from './schemas/admin.js'
+
 const tapestryIncludes = [
   'owner',
   'items.thumbnail.renditions',
@@ -323,6 +346,48 @@ export const resources = {
     endpoints: 'crdl',
     requireAuth: 'cd',
     createParamsSchema: AnnotationCreateSchema,
+  }),
+  tapestryExports: createRESTEndpoints<IO<TapestryExportDto>, IO<TapestryExportCreateDto>>()({
+    name: 'tapestry-exports',
+    schema: TapestryExportSchema,
+    endpoints: 'c',
+    requireAuth: 'c',
+    createParamsSchema: TapestryExportCreateSchema,
+  }),
+
+  // ---- Admin-only resources ----
+  adminTapestries: createRESTEndpoints<
+    IO<AdminTapestryDto>,
+    IO<never>,
+    IO<AdminTapestryUpdateDto>
+  >()({
+    name: 'admin/tapestries',
+    schema: AdminTapestrySchema,
+    endpoints: 'rudl',
+    requireAuth: 'rudl',
+    updateParamsSchema: AdminTapestryUpdateSchema,
+  }),
+  adminUsers: createRESTEndpoints<IO<AdminUserDto>, IO<never>, IO<AdminUserUpdateDto>>()({
+    name: 'admin/users',
+    schema: AdminUserSchema,
+    endpoints: 'ul',
+    requireAuth: 'ul',
+    updateParamsSchema: AdminUserUpdateSchema,
+  }),
+  // Creating an entry performs the admin action it describes (see AdminActivityCreateDto)
+  adminActivity: createRESTEndpoints<IO<AdminActivityDto>, IO<AdminActivityCreateDto>>()({
+    name: 'admin/activity',
+    schema: AdminActivitySchema,
+    endpoints: 'cl',
+    requireAuth: 'cl',
+    createParamsSchema: AdminActivityCreateSchema,
+  }),
+  adminReportQueries: createRESTEndpoints<IO<ReportDto>, IO<ReportQueryCreateDto>>()({
+    name: 'admin/report-queries',
+    schema: ReportSchema,
+    endpoints: 'c',
+    requireAuth: 'c',
+    createParamsSchema: ReportQueryCreateSchema,
   }),
 }
 

@@ -1,6 +1,7 @@
 import { DashboardSection } from '../pages/dashboard'
 import { InteractionMode } from '../pages/tapestry/view-model'
 import { UserProfileSection } from '../pages/user-profile'
+import { AdminSection } from '../pages/admin'
 
 export function tapestryPath(
   username: string,
@@ -24,6 +25,16 @@ export const DASHBOARD_ROOT = '/dashboard'
 // automatically redirect to the last dashboard section the user has visited.
 export function dashboardPath(section: DashboardSection) {
   return `${DASHBOARD_ROOT}/${section}`
+}
+
+export const ADMIN_ROOT = `${DASHBOARD_ROOT}/admin`
+
+export function adminPath(section: AdminSection, id?: string, search?: URLSearchParams) {
+  let path = `${ADMIN_ROOT}/${section}`
+  if (id) {
+    path += `/${encodeURIComponent(id)}`
+  }
+  return search ? `${path}?${search.toString()}` : path
 }
 
 export function userProfilePath(section: UserProfileSection) {

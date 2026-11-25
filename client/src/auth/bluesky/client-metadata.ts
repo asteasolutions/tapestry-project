@@ -12,7 +12,7 @@ export function blueskyClientMetadata(
 ): OAuthClientMetadataInput {
   const origin = new URL(client_id).origin
   return {
-    client_id: client_id,
+    client_id,
     client_name: 'Tapestries',
     client_uri: origin,
     redirect_uris: [redirectUri],

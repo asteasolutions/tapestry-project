@@ -1,0 +1,23 @@
+.root {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 180px;
+
+  .text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+
+    strong {
+      font-weight: 600;
+    }
+  }
+
+  .secondary {
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--color-neutral-500);
+    overflow-wrap: anywhere;
+  }
+}

@@ -37,13 +37,13 @@ const EDITOR_GUIDE: GuideSection[] = [
     title: 'Add text and files',
     tips: [
       { icon: 'image', text: 'Drag and drop media and files from your computer' },
-      { icon: 'file_copy', text: 'Paste links and files on the canvas ' },
+      { icon: 'file_copy', text: 'Paste links and files on the canvas' },
       { icon: 'view_sidebar', text: 'Click to add files or text from the sidebar' },
     ],
   },
   ...thru(structuredClone(DEFAULT_GUIDE), (defaultGuide) => {
     const nav = defaultGuide.find((s) => s.title === 'Navigate')
-    nav?.tipGroups?.[0].tips.push({ icon: 'pan_tool', text: 'Click and drag  to move objects' })
+    nav?.tipGroups?.[0].tips.push({ icon: 'pan_tool', text: 'Click and drag to move objects' })
     return defaultGuide
   }),
 ]
@@ -72,6 +72,7 @@ const EDITOR_ACTIONS: ActionsSection[] = thru(structuredClone(DEFAULT_ACTIONS), 
     { name: 'Add text', shortcut: 'T' },
     { name: 'Import files', shortcut: 'I' },
     { name: 'Import from link', shortcut: 'meta + K' },
+    { name: 'Record audio or video', shortcut: 'R' },
     { name: 'Set viewport', shortcut: 'meta + shift + S' },
   )
 

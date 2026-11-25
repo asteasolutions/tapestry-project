@@ -1,0 +1,26 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.level,
+.featured {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+
+  > :global(.material-symbols-outlined) {
+    font-size: 16px;
+  }
+}
+
+.level {
+  color: var(--theme-text-secondary);
+}
+
+.featured {
+  font-weight: 600;
+  color: var(--theme-text-brand);
+}

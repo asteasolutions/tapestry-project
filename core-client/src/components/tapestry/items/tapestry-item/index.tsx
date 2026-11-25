@@ -6,6 +6,7 @@ import { DOM_CONTAINER_CLASS } from '../../../../stage/utils'
 import { useTapestryConfig } from '../..'
 import { setInteractiveElement } from '../../../../view-model/store-commands/tapestry'
 import { PropsWithStyle } from '../../../lib'
+import { WEBPAGE_TYPE_LABELS } from 'tapestry-core/src/web-sources'
 
 export const ACTIVE_ITEM_BORDER_WIDTH = 3
 
@@ -60,7 +61,7 @@ export function TapestryItem({
       data-component-type="item"
       data-model-id={id}
       tabIndex={0}
-      aria-label={`${dto.type} item`}
+      aria-label={`${dto.type === 'webpage' && dto.webpageType ? WEBPAGE_TYPE_LABELS[dto.webpageType] : dto.type} item`}
       role="document"
       onKeyDown={(e) => {
         if (e.code === 'Enter') {

@@ -1,0 +1,52 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+  border-radius: 12px;
+  background-color: var(--theme-background-primary);
+
+  .title-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .text {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-width: 680px;
+    min-width: 0;
+
+    h1 {
+      margin: 0;
+      font-size: 24px;
+      line-height: 32px;
+      font-weight: 600;
+      color: var(--theme-text-primary);
+      overflow-wrap: anywhere;
+    }
+
+    p {
+      margin: 0;
+      font-size: 14px;
+      line-height: 20px;
+      color: var(--color-neutral-700);
+    }
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .extra {
+    padding-top: 16px;
+    border-top: 1px solid var(--color-neutral-50);
+  }
+}

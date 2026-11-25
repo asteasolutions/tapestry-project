@@ -8,7 +8,7 @@ import { ImportTapestryDialog } from './import-tapestry-button/import-tapestry-d
 import { dataTransferToFiles } from '../../stage/data-transfer-handler'
 import { TYPE } from 'tapestry-core/src/data-format/export'
 import { useObservable } from 'tapestry-core-client/src/components/lib/hooks/use-observable'
-import { TapestryList, TapestryListItem } from './tapestry-list'
+import { TapestryList, TapestryListEntry } from './tapestry-list'
 import { SnackbarData } from 'tapestry-core-client/src/view-model'
 import { Snackbar } from 'tapestry-core-client/src/components/lib/snackbar/index'
 import {
@@ -22,6 +22,7 @@ import { DashboardHeader } from './header'
 import { TapestryListControls } from './tapestry-list-controls'
 import { dashboardPath } from '../../utils/paths'
 import { CreateTapestryDialog } from '../../components/create-tapestry-dialog'
+import { useWeavingCircleBanner, WeavingCircleBannerCard } from './weaving-circle-banner-card'
 
 const SORT_BY = ['latest', 'title', 'lastSeen'] as const
 
@@ -42,8 +43,16 @@ const CUSTOM_CRITERIA: Partial<Record<DashboardSection, Partial<Record<SortBy, s
     latest: 'firstSeen',
   },
   public: {
-    latest: 'createdAt',
+    latest: 'galleryPosition',
   },
+}
+
+// Criteria whose natural ("descending" in the UI) order is ascending
+const INVERTED_CRITERIA = new Set(['galleryPosition'])
+
+function listOrder(criterion: string, direction: SortDirection) {
+  const descending = INVERTED_CRITERIA.has(criterion) ? direction === 'asc' : direction === 'desc'
+  return `${descending ? '-' : ''}${criterion}`
 }
 
 function createTapestryFilter(
@@ -53,7 +62,7 @@ function createTapestryFilter(
 ) {
   const listFilter: ListParamsInputDto['filter'] = { 'title:icontains': searchTerm }
   if (section === 'public') {
-    listFilter['visibility:eq'] = 'public'
+    listFilter['featured:eq'] = 'true'
   } else if (userId) {
     if (section === 'home') {
       listFilter['ownerId:eq'] = userId
@@ -104,7 +113,7 @@ export function Dashboard() {
     setSearchTerm('')
   }
 
-  const [tapestryLoader, setTapestryLoader] = useState<LazyListLoader<TapestryListItem> | null>(
+  const [tapestryLoader, setTapestryLoader] = useState<LazyListLoader<TapestryListEntry> | null>(
     null,
   )
   const tapestryListState = useObservable(tapestryLoader)
@@ -120,6 +129,9 @@ export function Dashboard() {
   } = useTapestryImport(() => tapestryLoader?.reload())
 
   const smOrLess = useResponsive() <= Breakpoint.SM
+
+  const weavingCircleBanner = useWeavingCircleBanner()
+  const showBanner = weavingCircleBanner.visible && (section === 'home' || section === 'public')
 
   if (
     section !== 'public' &&
@@ -144,7 +156,13 @@ export function Dashboard() {
   const tapestryListControls = (
     <TapestryListControls
       section={section}
-      tapestryListState={tapestryListState}
+      tapestryListState={
+        tapestryListState && {
+          ...tapestryListState,
+          // The banner is counted as an item of the list
+          total: tapestryListState.total - (showBanner && tapestryListState.total > 0 ? 1 : 0),
+        }
+      }
       onSearchChanged={setSearchTerm}
       sortCriterion={sortCriterion}
       onSortCriterionChanged={setSortCriterion}
@@ -174,10 +192,16 @@ export function Dashboard() {
         {!smOrLess && tapestryListControls}
         <TapestryList
           filter={tapestryFilter}
-          orderBy={`${sortDirection === 'desc' ? '-' : ''}${CUSTOM_CRITERIA[section]?.[sortCriterion] ?? sortCriterion}`}
+          orderBy={listOrder(
+            CUSTOM_CRITERIA[section]?.[sortCriterion] ?? sortCriterion,
+            sortDirection,
+          )}
           onLoaderInitialized={setTapestryLoader}
           onNewTapestry={() => setCreatingTapestry(true)}
           showNewTapestryButton={section === 'home' && searchTerm === ''}
+          banner={
+            showBanner && <WeavingCircleBannerCard onRemindLater={weavingCircleBanner.hide} />
+          }
           header={
             smOrLess && (
               <>

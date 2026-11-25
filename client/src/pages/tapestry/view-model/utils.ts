@@ -1,10 +1,11 @@
 import { WritableDraft } from 'immer'
-import { chunk, maxBy, zip } from 'lodash-es'
+import { chunk, max, maxBy, sum, zip } from 'lodash-es'
 import {
   getBoundingRectangle,
   MULTISELECT_RECTANGLE_PADDING,
 } from 'tapestry-core-client/src/view-model/utils'
 import { Point } from 'tapestry-core/src/data-format/schemas/common'
+import { Size } from 'tapestry-core/src/lib/geometry'
 import { GroupCreateDto } from 'tapestry-shared/src/data-transfer/resources/dtos/group'
 import {
   ActionButtonItemDto,
@@ -64,6 +65,16 @@ export interface GridState {
   primary: 'cols' | 'rows'
 }
 
+export function defaultGrid(nItems: number): GridState {
+  const cols = Math.ceil(Math.sqrt(nItems))
+  return {
+    rows: Math.ceil(nItems / cols),
+    cols,
+    spacing: 100,
+    primary: 'cols',
+  }
+}
+
 export function getGridDimensions<T>(
   items: T[],
   { primary, rows: rowsCount, cols: colsCount }: GridState,
@@ -81,6 +92,26 @@ export function getGridIndices(ind: number, { primary, cols, rows }: GridState) 
     return { col: ind % cols, row: Math.floor(ind / cols) }
   }
   return { row: ind % rows, col: Math.floor(ind / rows) }
+}
+
+export function getGridLayout(sizes: Size[], grid: GridState) {
+  const { rows, cols } = getGridDimensions(sizes, grid)
+  const rowHeights = rows.map((row) => max(row.map((size) => size?.height)) ?? 0)
+  const colWidths = cols.map((col) => max(col.map((size) => size?.width)) ?? 0)
+
+  const positions: Point[] = sizes.map((_, index) => {
+    const { row, col } = getGridIndices(index, grid)
+    return {
+      x: sum(colWidths.slice(0, col)) + col * grid.spacing,
+      y: sum(rowHeights.slice(0, row)) + row * grid.spacing,
+    }
+  })
+
+  return {
+    positions,
+    width: sum(colWidths) + (colWidths.length - 1) * grid.spacing,
+    height: sum(rowHeights) + (rowHeights.length - 1) * grid.spacing,
+  }
 }
 
 export function createItemViewModel(itemCreate: ItemCreateDto): EditableItemViewModel {
@@ -180,7 +211,7 @@ export async function insertDataTransfer(
       largeFiles.length !== 0 && setLargeFiles(largeFiles),
     )
   } catch {
-    dispatch(setSnackbar({ text: 'Could not import', variant: 'error' }))
+    dispatch(setSnackbar({ content: 'Could not import', variant: 'error' }))
   } finally {
     dispatch((model) => {
       model.pendingRequests--

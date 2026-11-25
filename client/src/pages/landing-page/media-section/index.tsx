@@ -11,6 +11,7 @@ import { Link } from 'react-router'
 import { dashboardPath } from '../../../utils/paths'
 import { ConcreteWall } from '../../../components/positioned-component'
 import { Button } from 'tapestry-core-client/src/components/lib/buttons'
+import { clickTracking } from '../../../services/analytics'
 
 export function MediaSection() {
   const {
@@ -30,13 +31,19 @@ export function MediaSection() {
           </Text>
         </div>
         <div className={styles.buttons}>
-          <Button component={Link} variant="mono" to={dashboardPath('home')}>
+          <Button
+            component={Link}
+            variant="mono"
+            to={dashboardPath('home')}
+            {...clickTracking('Landing Explore the public gallery')}
+          >
             Explore the public gallery
           </Button>
           <Button
             component="a"
             variant="secondary"
             href="https://drive.google.com/file/d/110DthOEk0mQJOVXy_UDjUsFWp-0YafMc/view?usp=drive_link"
+            {...clickTracking('Landing Watch demo')}
             target="_blank"
           >
             Watch demo
@@ -54,15 +61,36 @@ export function MediaSection() {
                 </Text>
                 {index === 0 && (
                   <div className={styles.mediaIcons}>
-                    <img src={OpenverseIcon} alt="Openverse logo" className={styles.mediaIcon} />
                     <img
+                      loading="lazy"
+                      src={OpenverseIcon}
+                      alt="Openverse logo"
+                      className={styles.mediaIcon}
+                    />
+                    <img
+                      loading="lazy"
                       src={IALogoCircle}
                       alt="Internet Archive logo"
                       className={styles.mediaIcon}
                     />
-                    <img src={WikipediaIcon} alt="Wikipedia logo" className={styles.mediaIcon} />
-                    <img src={IIIFIcon} alt="IIIF logo" className={styles.mediaIcon} />
-                    <img src={YoutubeIcon} alt="YouTube logo" className={styles.mediaIcon} />
+                    <img
+                      loading="lazy"
+                      src={WikipediaIcon}
+                      alt="Wikipedia logo"
+                      className={styles.mediaIcon}
+                    />
+                    <img
+                      loading="lazy"
+                      src={IIIFIcon}
+                      alt="IIIF logo"
+                      className={styles.mediaIcon}
+                    />
+                    <img
+                      loading="lazy"
+                      src={YoutubeIcon}
+                      alt="YouTube logo"
+                      className={styles.mediaIcon}
+                    />
                   </div>
                 )}
               </div>

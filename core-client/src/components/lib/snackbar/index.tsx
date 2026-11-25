@@ -1,18 +1,13 @@
-import { useEffect, useRef, useState } from 'react'
+import { CSSProperties, useEffect, useRef, useState } from 'react'
 import styles from './styles.module.css'
 import { Text } from '../text/index.js'
 import clsx from 'clsx'
 import { usePropRef } from '../../lib/hooks/use-prop-ref.js'
 import { createPortal } from 'react-dom'
+import { useVisualViewport } from '../hooks/use-visual-viewport.js'
+import { SnackbarData } from '../../../view-model'
 
 const DEFAULT_DISPLAY_SECONDS = 2
-
-// TODO: Share this type with the view model. It is copied from there.
-interface SnackbarData {
-  readonly text: string
-  readonly duration?: number
-  readonly variant?: 'normal' | 'warning' | 'error' | 'success'
-}
 
 interface SnackbarProps {
   value?: SnackbarData
@@ -25,6 +20,7 @@ export function Snackbar({ value, onChange }: SnackbarProps) {
   const timeoutRef = useRef<number>(undefined)
 
   const onChangeRef = usePropRef(onChange)
+  const visualViewport = useVisualViewport()
 
   useEffect(() => {
     if (value) {
@@ -46,8 +42,19 @@ export function Snackbar({ value, onChange }: SnackbarProps) {
       <Text
         component="div"
         className={clsx(styles.snackbar, { [styles.hidden]: !visible }, data.variant)}
+        // Keep the snackbar inside the visible area and at its normal size even if the page is pinch-zoomed.
+        style={
+          visualViewport &&
+          ({
+            '--vv-left': `${visualViewport.offsetLeft}px`,
+            '--vv-top': `${visualViewport.offsetTop}px`,
+            '--vv-width': `${visualViewport.width}px`,
+            '--vv-height': `${visualViewport.height}px`,
+            '--vv-scale': visualViewport.scale,
+          } as CSSProperties)
+        }
       >
-        {data.text}
+        {data.content}
       </Text>,
       document.body,
     )

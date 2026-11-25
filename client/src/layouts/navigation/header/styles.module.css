@@ -8,19 +8,8 @@
   padding: 0 var(--padding-navigation-x);
   background-color: var(--theme-background-primary);
 
-  .mobile-nav {
-    position: relative;
-
-    .mobile-nav-button {
-      --bg-color: white;
-    }
-
-    .mobile-nav-toolbar {
-      position: absolute;
-      top: calc(100% + 8px);
-      left: 0;
-      z-index: 2;
-    }
+  .mobile-nav-button {
+    --bg-color: white;
   }
 
   .icon-link {
@@ -31,6 +20,21 @@
     display: flex;
     align-items: center;
     gap: 25px;
+
+    .active {
+      color: var(--theme-text-brand);
+      position: relative;
+
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background-color: var(--theme-text-brand);
+      }
+    }
 
     @media screen and (width <= 380px) {
       gap: 5px;

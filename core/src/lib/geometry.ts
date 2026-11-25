@@ -351,7 +351,7 @@ export function clampCoords(vector: Vector, min: Vector, max: Vector): Vector {
 
 export function resizeToWidth(size: Size, width: number): Size {
   return {
-    width: width,
+    width,
     height: width / (size.width / size.height),
   }
 }

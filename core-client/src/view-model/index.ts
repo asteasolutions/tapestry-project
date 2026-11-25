@@ -11,6 +11,7 @@ import { Rel } from 'tapestry-core/src/data-format/schemas/rel.js'
 import { Tapestry } from 'tapestry-core/src/data-format/schemas/tapestry.js'
 import { IdMap } from 'tapestry-core/src/utils.js'
 import { Id, ScreenshotMode } from 'tapestry-core/src/data-format/schemas/common'
+import { ReactNode } from 'react'
 
 export const MAX_SCALE = 4
 export const MIN_RESTRICTED_SCALE = 0.5
@@ -111,7 +112,7 @@ export interface Selection {
 }
 
 export interface SnackbarData {
-  readonly text: string
+  readonly content: ReactNode
   readonly duration?: number
   readonly variant?: 'normal' | 'warning' | 'error' | 'success'
 }

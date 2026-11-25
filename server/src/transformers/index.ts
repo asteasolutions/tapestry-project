@@ -38,6 +38,10 @@ import { getPrismaDatamodel } from '../db.js'
 import { AnnotationDto } from 'tapestry-shared/src/data-transfer/resources/dtos/annotation.js'
 import { itemAnnotationDbToDto } from './item-annotation.js'
 
+import { TapestryExportDto } from 'tapestry-shared/src/data-transfer/resources/dtos/tapestry-export.js'
+import { AdminActivityDto } from 'tapestry-shared/src/data-transfer/resources/dtos/admin.js'
+import { adminActivityDbToDto } from './admin.js'
+
 interface DtoMap {
   Tapestry: { default: TapestryDto }
   Item: { default: ItemDto }
@@ -61,6 +65,9 @@ interface DtoMap {
   ImageAsset: { default: ImageAssetDto }
   ImageAssetRendition: { default: ImageAssetRenditionDto }
   ItemAnnotation: { default: AnnotationDto }
+  AdminActivity: { default: AdminActivityDto }
+  TapestryDeletion: { default: Prisma.TapestryDeletionGetPayload<null> }
+  TapestryExport: { default: TapestryExportDto }
 }
 
 type ModelSerializer<M extends Prisma.ModelName, V extends keyof DtoMap[M]> = (
@@ -100,6 +107,9 @@ const MODEL_SERIALIZERS: ModelSerializersMap = {
   ImageAsset: { default: identity },
   ImageAssetRendition: { default: imageAssetRenditionDbToDto },
   ItemAnnotation: { default: itemAnnotationDbToDto },
+  AdminActivity: { default: (activity) => Promise.resolve(adminActivityDbToDto(activity)) },
+  TapestryDeletion: { default: identity },
+  TapestryExport: { default: identity },
 }
 
 type RelationViews = {

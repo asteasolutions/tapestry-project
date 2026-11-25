@@ -12,5 +12,6 @@ export async function userDbToDto(dbUser: Prisma.UserGetPayload<null>): Promise<
     familyName: dbUser.familyName,
     username: dbUser.username,
     avatar: dbUser.avatar,
+    role: dbUser.role,
   }
 }

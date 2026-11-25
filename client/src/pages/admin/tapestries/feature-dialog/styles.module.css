@@ -1,0 +1,20 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 480px;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--theme-text-secondary);
+
+  p {
+    margin: 0;
+  }
+
+  .note {
+    margin-top: 8px;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--color-neutral-500);
+  }
+}

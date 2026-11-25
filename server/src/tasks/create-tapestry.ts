@@ -127,11 +127,15 @@ async function cloneTapestry(
       'ownerId',
       'parentId',
       'visibility',
+      // Featuring is an admin decision about the original tapestry, so forks are never featured
+      'featured',
+      'featuredAt',
+      'galleryPosition',
     ),
     id: tapestryId,
     slug: tapestryId,
     title: title ?? getCopyName(tapestry.title),
-    description: description,
+    description,
     owner: { connect: { id: userId } },
     parent: { connect: { id: tapestry.id } },
   }

@@ -38,6 +38,7 @@ jobs:
           AWS_S3_BUCKET_NAME: ${{ secrets.AWS_S3_BUCKET_NAME }}
           DATABASE_URL: postgresql://${{ secrets.DB_USER }}:${{ secrets.DB_PASS }}@${{ secrets.DB_HOST }}/${{ secrets.DB_NAME }}?schema=public
           DB_HOST: ${{ secrets.DB_HOST }}
+          DB_LOG_LEVEL: ${{ vars.DB_LOG_LEVEL }}
           DB_NAME: ${{ secrets.DB_NAME }}
           DB_PASS: ${{ secrets.DB_PASS }}
           DB_USER: ${{ secrets.DB_USER }}
@@ -53,6 +54,7 @@ jobs:
           ORCID_CLIENT_SECRET: ${{ secrets.ORCID_CLIENT_SECRET }}
           REDIS_HOST: ${{ secrets.REDIS_HOST }}
           REDIS_USE_TLS: ${{ secrets.REDIS_USE_TLS }}
+          PLAUSIBLE_DOMAIN: ${{ vars.PLAUSIBLE_DOMAIN }}
           SENTRY_DSN_CLIENT: ${{ secrets.SENTRY_DSN_CLIENT }}
           SENTRY_DSN_SERVER: ${{ secrets.SENTRY_DSN_SERVER }}
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
