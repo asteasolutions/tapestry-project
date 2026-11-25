@@ -68,7 +68,9 @@ export function ItemCommentsPane({ commentsPaneType, annotationId }: ItemComment
             focusElement(interactiveItem.dto.id, { annotationId: newAnnotationId })
           }}
           onError={() =>
-            dispatch(setSnackbar({ text: 'Error while creating inline comment', variant: 'error' }))
+            dispatch(
+              setSnackbar({ content: 'Error while creating inline comment', variant: 'error' }),
+            )
           }
         />
       ) : (
