@@ -286,34 +286,35 @@ enum CommentContextType {
   item
   rel
   comment
-  annotation
+  itemAnnotation
 }
 
 model Comment {
-  id              String             @id @default(uuid())
-  createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
-  text            String
-  author          User               @relation(fields: [authorId], references: [id], onDelete: Restrict)
-  authorId        String
-  contextType     CommentContextType
-  tapestry        Tapestry           @relation(fields: [tapestryId], references: [id], onDelete: Cascade)
-  tapestryId      String
-  item            Item?              @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  itemId          String?
-  rel             Rel?               @relation(fields: [relId], references: [id], onDelete: Cascade)
-  relId           String?
-  parentComment   Comment?           @relation("reply", fields: [parentCommentId], references: [id], onDelete: Cascade)
-  parentCommentId String?
-  replies         Comment[]          @relation("reply")
-  annotation      ItemAnnotation?    @relation(fields: [annotationId], references: [id], onDelete: Cascade)
-  annotationId    String?
-  deletedAt       DateTime?
+  id               String             @id @default(uuid())
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  text             String
+  author           User               @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  authorId         String
+  contextType      CommentContextType
+  tapestry         Tapestry           @relation(fields: [tapestryId], references: [id], onDelete: Cascade)
+  tapestryId       String
+  item             Item?              @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  itemId           String?
+  rel              Rel?               @relation(fields: [relId], references: [id], onDelete: Cascade)
+  relId            String?
+  parentComment    Comment?           @relation("reply", fields: [parentCommentId], references: [id], onDelete: Cascade)
+  parentCommentId  String?
+  replies          Comment[]          @relation("reply")
+  itemAnnotation   ItemAnnotation?    @relation(fields: [itemAnnotationId], references: [id], onDelete: Cascade)
+  itemAnnotationId String?
+  deletedAt        DateTime?
 
   @@index([tapestryId])
   @@index([itemId])
   @@index([relId])
   @@index([parentCommentId])
+  @@index([itemAnnotationId])
 }
 
 enum JobStatus {
@@ -441,13 +442,16 @@ model UserSecret {
 }
 
 model ItemAnnotation {
-  id        String    @id @default(uuid())
-  createdAt DateTime  @default(now())
-  updateAt  DateTime  @updatedAt
-  elementId String?
-  item      Item?     @relation(fields: [itemId], references: [id], onDelete: NoAction)
-  itemId    String?
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    String
-  comments  Comment[]
+  id          String    @id @default(uuid())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  item        Item      @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  itemId      String
+  author      User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId    String
+  isHighlight Boolean   @default(false)
+  comments    Comment[]
+
+  @@index(itemId)
+  @@index(authorId)
 }

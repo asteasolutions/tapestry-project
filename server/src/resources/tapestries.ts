@@ -187,8 +187,10 @@ async function canUpdateTapestry(userId: string, tapestryId: string, update: Tap
   return canEditTapestry(userId, tapestry)
 }
 
-async function ownsTapestry(userId: string, tapestryId: string) {
-  return !!(await prisma.tapestry.findUnique({ where: { id: tapestryId, ownerId: userId } }))
+export async function ownsTapestry(userId: string | null, tapestryId: string) {
+  return (
+    !!userId && !!(await prisma.tapestry.findUnique({ where: { id: tapestryId, ownerId: userId } }))
+  )
 }
 
 function createTapestriesListFilter(userId: string | null): Prisma.TapestryWhereInput {

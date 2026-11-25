@@ -87,12 +87,8 @@ import {
   TapestryBookmarkCreateSchema,
   TapestryBookmarkSchema,
 } from './schemas/tapestry-bookmark.js'
-import {
-  AnnotationCreateDto,
-  AnnotationCreateSchema,
-  AnnotationDto,
-  AnnotationSchema,
-} from './schemas/annotation.js'
+import { AnnotationCreateSchema, AnnotationSchema } from './schemas/annotation.js'
+import { AnnotationCreateDto, AnnotationDto } from './dtos/annotation.js'
 
 const tapestryIncludes = [
   'owner',
@@ -323,8 +319,9 @@ export const resources = {
   annotations: createRESTEndpoints<IO<AnnotationDto>, IO<AnnotationCreateDto>>()({
     name: 'annotations',
     schema: AnnotationSchema,
-    endpoints: 'crd',
-    requireAuth: 'crd',
+    allowedIncludes: ['author', 'commentThread'],
+    endpoints: 'crdl',
+    requireAuth: 'cd',
     createParamsSchema: AnnotationCreateSchema,
   }),
 }

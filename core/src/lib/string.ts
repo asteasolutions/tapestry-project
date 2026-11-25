@@ -1,3 +1,5 @@
+export type LiteralColor = `#${string}`
+
 export function nthIndexOf(str: string, char: string, count: number, from = 0, backwards = false) {
   let i
   if (backwards) {

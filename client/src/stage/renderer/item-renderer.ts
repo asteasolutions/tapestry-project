@@ -11,20 +11,26 @@ import {
 } from './comments-indicator-container'
 import { Point } from 'tapestry-core/src/lib/geometry'
 import { THEMES } from 'tapestry-core-client/src/theme/themes'
+import { TapestryViewModel } from 'tapestry-core-client/src/view-model'
+import { clamp } from 'lodash'
 
 const DEFAULT_ITEM_Z_INDEX = 1
 
 export const ITEM_BORDER_RADIUS = 8
 
 const COMMENTS_INDICATOR_OFFSET = 4
+const MIN_COMMENT_INDICATOR_SCALE = 1
+const MAX_COMMENT_INDICATOR_SCALE = 3
 
 export class EditorItemRenderer<T extends EditableItemViewModel> extends ItemRenderer<T> {
   private preview = new Graphics({ label: 'preview', zIndex: 0 })
   private commentsIndicator?: CommentsIndicatorContainer
+  private screenshotMode?: TapestryViewModel['screenshotMode']
 
   constructor(store: TapestryEditorStore, stage: TapestryStage, viewModel: T) {
     super(store.as('base'), stage, viewModel)
 
+    this.screenshotMode = store.get('screenshotMode')
     this.pixiContainer.zIndex = DEFAULT_ITEM_Z_INDEX
   }
 
@@ -57,7 +63,7 @@ export class EditorItemRenderer<T extends EditableItemViewModel> extends ItemRen
       dto: { size, position },
     } = state.viewModel
 
-    const bgColor = THEMES[state.theme].color('background.disabled')
+    const bgColor = THEMES[state.theme].color('background.primary')
 
     return {
       position: {
@@ -73,7 +79,7 @@ export class EditorItemRenderer<T extends EditableItemViewModel> extends ItemRen
   private updateCommentIndicator(state: ItemRenderState<T>) {
     const indicatorState = this.obtainCommentIndicatorContainerState(state)
 
-    if (indicatorState.commentsCount === 0) {
+    if (indicatorState.commentsCount === 0 || this.screenshotMode) {
       if (!this.commentsIndicator) {
         return
       }
@@ -87,6 +93,13 @@ export class EditorItemRenderer<T extends EditableItemViewModel> extends ItemRen
         this.commentsIndicator.update(indicatorState)
       }
       this.commentsIndicator.position = indicatorState.position
+      this.commentsIndicator.scale.set(
+        clamp(
+          1 / (state.viewportScale ?? 1),
+          MIN_COMMENT_INDICATOR_SCALE,
+          MAX_COMMENT_INDICATOR_SCALE,
+        ),
+      )
     }
   }
 

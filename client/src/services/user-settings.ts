@@ -1,10 +1,11 @@
 import { defaults, merge, pick } from 'lodash-es'
-import { DEFAULT_FONT_SIZE } from 'tapestry-core-client/src/components/lib/rich-text-editor/font-size-extension'
-import { LiteralColor } from 'tapestry-core-client/src/theme/types'
+import { DEFAULT_FONT_SIZE } from 'tapestry-core/src/tiptap/font-size-extension'
+//import { LiteralColor } from 'tapestry-core/src/lib/string'
 import { SortDirection } from 'tapestry-shared/src/data-transfer/resources/dtos/common'
 import { auth } from '../auth'
 import { SortBy } from '../pages/dashboard'
 import { LocalStorage } from './local-storage'
+import { LiteralColor } from 'tapestry-core/src/lib/string'
 
 interface TapestrySettings {
   fontSize: number

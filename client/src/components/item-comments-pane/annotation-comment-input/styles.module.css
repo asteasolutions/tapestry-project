@@ -1,0 +1,25 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  justify-content: end;
+
+  .meta {
+    border-top: 1px solid var(--theme-border-subtle);
+    padding: 5px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    :global(.typography) {
+      color: var(--theme-text-disabled);
+    }
+
+    .cancel-button {
+      padding-right: 0;
+    }
+  }
+
+  .comment-input {
+    margin-top: 5px;
+  }
+}

@@ -1,5 +1,6 @@
 import { get } from 'lodash-es'
-import { Color, DesignSystem, isLiteralColor, LiteralColor } from './types.js'
+import { Color, DesignSystem, isLiteralColor } from './types.js'
+import { LiteralColor } from 'tapestry-core/src/lib/string.js'
 
 export const DESIGN_SYSTEM: DesignSystem = {
   typography: {

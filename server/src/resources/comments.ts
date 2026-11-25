@@ -1,7 +1,7 @@
 import { Resources } from 'tapestry-shared/src/data-transfer/resources/index.js'
 import { prisma } from '../db.js'
 import { RESTResourceImpl } from './base-resource.js'
-import { canEditTapestry, canListTapestryElements, canViewTapestry } from './tapestries.js'
+import { canListTapestryElements, canViewTapestry, ownsTapestry } from './tapestries.js'
 import { parseIncludes, parseListFilter } from './utils.js'
 import { serialize } from '../transformers/index.js'
 import { commentDtoToDb } from '../transformers/comment.js'
@@ -24,7 +24,7 @@ async function canDeleteComment(userId: string | null, commentId: string) {
   const comment = await prisma.comment.findUniqueOrThrow({ where: { id: commentId } })
   return (
     !comment.deletedAt &&
-    (userId === comment.authorId || (await canEditTapestry(userId, comment.tapestryId)))
+    (userId === comment.authorId || (await ownsTapestry(userId, comment.tapestryId)))
   )
 }
 
@@ -43,11 +43,21 @@ export const comments: RESTResourceImpl<Resources['comments'], never> = {
         throw new BadRequestError()
       }
 
+      const createData = {
+        ...commentDtoToDb(body, ['id', 'createdAt', 'updatedAt', 'authorId']),
+        authorId: userId,
+      }
+
+      if (body.contextType === 'itemAnnotation') {
+        const annotation = await prisma.itemAnnotation.findUniqueOrThrow({
+          where: { id: body.contextId },
+          select: { itemId: true },
+        })
+        createData.itemId = annotation.itemId
+      }
+
       const dbComment = await prisma.comment.create({
-        data: {
-          ...commentDtoToDb(body, ['id', 'createdAt', 'updatedAt', 'authorId']),
-          authorId: userId,
-        },
+        data: createData,
         include: parseIncludes('Comment', query.include),
       })
 

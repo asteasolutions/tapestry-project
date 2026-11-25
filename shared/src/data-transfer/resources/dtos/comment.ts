@@ -1,4 +1,4 @@
-import { AnnotationDto } from '../schemas/annotation.js'
+import { AnnotationDto } from './annotation.js'
 import { BaseResourceDto } from './common.js'
 import { ItemDto } from './item.js'
 import { RelDto } from './rel.js'
@@ -35,8 +35,8 @@ export interface ReplyDto extends BaseCommentDto {
 }
 
 export interface ItemAnnotationCommentDto extends BaseCommentDto {
-  contextType: 'annotation'
-  annotation?: AnnotationDto | null
+  contextType: 'itemAnnotation'
+  itemAnnotation?: AnnotationDto | null
 }
 
 export type CommentDto =
@@ -53,7 +53,7 @@ export type CommentCreateDto =
   | Omit<ItemCommentDto, CommentCreateOmitProps | 'item'>
   | Omit<RelCommentDto, CommentCreateOmitProps | 'rel'>
   | Omit<ReplyDto, CommentCreateOmitProps | 'parentComment'>
-  | Omit<ItemAnnotationCommentDto, CommentCreateOmitProps | 'annotataion'>
+  | Omit<ItemAnnotationCommentDto, CommentCreateOmitProps | 'itemAnnotation'>
 
 export interface CommentUpdateDto {
   text: BaseCommentDto['text']

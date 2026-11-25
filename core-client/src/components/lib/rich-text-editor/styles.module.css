@@ -23,9 +23,7 @@
       }
 
       :global(span[data-annotation-id]) {
-        text-decoration: underline dotted;
-        text-decoration-color: var(--theme-icon-primary);
-        text-underline-offset: 3px;
+        background-color: color-mix(in hsl, var(--color-warning-200), transparent 40%);
         cursor: default;
       }
 

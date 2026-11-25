@@ -57,10 +57,10 @@ const { eventListener, attachListeners, detachListeners } = createEventRegistry<
   'desktop' | 'mobile'
 >()
 
-export interface InternalNavigationState {
+export type InternalNavigationState = {
   timestamp: number
   animate?: FocusOptions['animate']
-}
+} | null
 
 export abstract class ItemController implements TapestryStageController {
   private selectionHandler!: DomDragHandler

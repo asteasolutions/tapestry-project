@@ -1,5 +1,5 @@
 import clsx from 'clsx'
-import { RefObject, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import { RefObject, useEffect, useRef, useState } from 'react'
 import { Icon } from 'tapestry-core-client/src/components/lib/icon/index'
 import { useFocusElement } from 'tapestry-core-client/src/components/tapestry/hooks/use-focus-element'
 import { matchHighlight, MatchRanges } from 'tapestry-core-client/src/lib/dom'
@@ -13,9 +13,9 @@ import {
   RichTextEditor,
   RichTextEditorApi,
   RichTextEditorProps,
-  SelectionState,
 } from '../../../lib/rich-text-editor'
 import styles from './styles.module.css'
+import { SelectionState } from 'tapestry-core/src/tiptap'
 
 export function elementIdFromLink(
   link: string,
@@ -71,11 +71,8 @@ export function TextItemViewer({
   api,
   ...rteProps
 }: TextItemViewerProps) {
-  const editorAPI = useRef<RichTextEditorApi>(undefined)
-
-  // We want to have a local ref to the editor API, but also pass it to the `api` property.
-  // Not sure if this is the best solution.
-  useImperativeHandle(api, () => editorAPI.current)
+  const ownEditorAPIRef = useRef<RichTextEditorApi>(undefined)
+  const editorAPI = api ?? ownEditorAPIRef
 
   const { useStoreData } = useTapestryConfig()
   const dto = useStoreData(`items.${id}.dto`) as TextItem
@@ -120,9 +117,11 @@ export function TextItemViewer({
       setWasInteractiveElement(isInteractiveElement)
       if (isInteractiveElement) {
         matchRanges.current?.scrollFirstRangeIntoView()
+      } else {
+        editorAPI.current?.editor().commands.setTextSelection(0)
       }
     }
-  }, [isInteractiveElement, wasInteractiveElement])
+  }, [isInteractiveElement, wasInteractiveElement, editorAPI])
 
   const { hasScroll, check } = useHasScroll(editorAPI)
   const indicatorSize = getScrollIndicatorSize(dto.size.height, dto.size.width)

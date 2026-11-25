@@ -1,9 +1,9 @@
 import { ComponentProps } from 'react'
 import styles from './color-button-styles.module.css'
 import clsx from 'clsx'
-import { LiteralColor } from '../../../theme/types.js'
 import { useClickableContext } from './clickable-context.js'
 import { Tooltip, TooltipProps } from '../tooltip/index.js'
+import { LiteralColor } from 'tapestry-core/src/lib/string'
 
 export type ColorButtonProps = Omit<ComponentProps<'button'>, 'color'> & {
   color?: LiteralColor

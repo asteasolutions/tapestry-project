@@ -7,6 +7,8 @@ import {
   CollectionImport,
   convertCommand,
   EDIT_VIEWPORT_LIMITS,
+  EditorSidePaneType,
+  EditorSidePaneDisplay,
 } from '..'
 import { StoreMutationCommand } from 'tapestry-core-client/src/lib/store/index'
 import { EditableTapestryProps } from '../../../../model/data/utils'
@@ -35,7 +37,6 @@ export const setSnackbar = convertCommand(baseCommands.setSnackbar)
 export const toggleGroupSelection = convertCommand(baseCommands.toggleGroupSelection)
 export const toggleItemSelection = convertCommand(baseCommands.toggleItemSelection)
 export const toggleOutline = convertCommand(baseCommands.toggleOutline)
-export const setSidePane = convertCommand(baseCommands.setSidePane)
 
 export function updateTapestry(
   data: Partial<Pick<TapestryDto, EditableTapestryProps>>,
@@ -142,5 +143,38 @@ export function updateCollaboratorCursor(
 export function removeCollaborator(id: string): StoreMutationCommand<EditableTapestryViewModel> {
   return (model) => {
     delete model.collaborators[id]
+  }
+}
+
+export function setPendingAnnotation(
+  annotation: EditableTapestryViewModel['pendingAnnotation'],
+): StoreMutationCommand<EditableTapestryViewModel> {
+  return (model) => {
+    model.pendingAnnotation = annotation
+  }
+}
+
+export function setSidePane(
+  sidePaneDisplay: EditorSidePaneDisplay,
+  options?: baseCommands.SidePaneOptions,
+): StoreMutationCommand<EditableTapestryViewModel>
+export function setSidePane(
+  sidePaneType: EditorSidePaneType | null,
+  options?: baseCommands.SidePaneOptions,
+): StoreMutationCommand<EditableTapestryViewModel>
+export function setSidePane(
+  sidePaneTypeOrDisplay: EditorSidePaneType | EditorSidePaneDisplay,
+  { toggle = false }: baseCommands.SidePaneOptions = {},
+): StoreMutationCommand<EditableTapestryViewModel> {
+  const newSidePane =
+    typeof sidePaneTypeOrDisplay === 'string'
+      ? { type: sidePaneTypeOrDisplay }
+      : sidePaneTypeOrDisplay
+
+  return (model) => {
+    model.displaySidePane =
+      !newSidePane || (toggle && newSidePane.type === model.displaySidePane?.type)
+        ? null
+        : newSidePane
   }
 }

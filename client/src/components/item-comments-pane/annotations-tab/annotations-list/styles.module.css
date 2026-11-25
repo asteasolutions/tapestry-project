@@ -1,0 +1,61 @@
+.root {
+  border-radius: 0 0 var(--side-pane-border-radius) var(--side-pane-border-radius);
+
+  .empty-placeholder {
+    text-align: center;
+    padding: 48px;
+    color: var(--theme-text-disabled);
+  }
+
+  .annotation-card {
+    display: flex;
+    border-bottom: 1px solid var(--theme-border-subtle);
+    text-decoration: none;
+    color: var(--theme-text-primary);
+
+    &:hover {
+      background-color: var(--theme-background-neutral);
+    }
+
+    &.active {
+      background-color: var(--theme-background-warning-subtle);
+    }
+
+    .annotation-preview {
+      padding: 10px 20px 15px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+
+      :global(.tiptap) {
+        padding: 0;
+      }
+
+      .comment-thread-preview {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+
+        .comments-count {
+          margin-left: 5px;
+          padding: 0;
+
+          --text-color: var(--theme-text-link);
+        }
+      }
+    }
+
+    .comments-arrow-button {
+      padding: 0 20px;
+      border: none;
+      border-radius: 0;
+      transition: none;
+
+      --hover-bg-color: var(--color-neutral-150);
+
+      .active & {
+        --hover-bg-color: var(--color-warning-200);
+      }
+    }
+  }
+}

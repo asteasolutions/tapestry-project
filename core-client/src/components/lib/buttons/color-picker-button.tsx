@@ -1,4 +1,4 @@
-import { LiteralColor } from '../../../theme/types.js'
+import { LiteralColor } from 'tapestry-core/src/lib/string'
 import { ColorPicker } from '../color-picker/index.js'
 import { ColorButton, ColorButtonProps } from './color-button.js'
 

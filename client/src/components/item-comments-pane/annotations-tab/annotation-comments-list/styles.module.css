@@ -1,0 +1,18 @@
+.root {
+  display: flex;
+  flex-direction: column;
+
+  .controls {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    border-bottom: 1px solid var(--theme-border-subtle);
+
+    :global(.tapestry-button) {
+      color: var(--theme-background-brand);
+    }
+  }
+
+  .comments-list {
+    flex: 1;
+  }
+}

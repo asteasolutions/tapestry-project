@@ -7,6 +7,7 @@ import { useClickableContext } from './clickable-context.js'
 import { Tooltip, TooltipProps } from '../tooltip/index.js'
 import { Icon, IconName } from '../icon/index.js'
 import { LoadingSpinner } from '../loading-spinner'
+import { TypographyName } from '../../../theme/types'
 
 function useRepeatClicks(callback?: () => void) {
   const [isHolding, setIsHolding] = useState(false)
@@ -79,6 +80,7 @@ export type ButtonProps<T extends ButtonComponent = 'button'> = Omit<
     | 'mono'
     | 'clear'
     | 'link'
+  typography?: TypographyName
   isActive?: boolean
   onClick?: (event: MouseEvent) => void
   onRepeatClick?: () => void
@@ -90,6 +92,7 @@ export type ButtonProps<T extends ButtonComponent = 'button'> = Omit<
 export function Button<T extends ButtonComponent = 'button'>({
   component,
   variant = 'primary',
+  typography = 'bodySm',
   size,
   className,
   icon,
@@ -112,7 +115,8 @@ export function Button<T extends ButtonComponent = 'button'>({
     {
       className: clsx(
         styles.button,
-        typographyClassName('bodySm'),
+        'tapestry-button',
+        typographyClassName(typography),
         `button-${variant}`,
         `button-${size ?? 'medium'}`,
         {

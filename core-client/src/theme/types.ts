@@ -1,10 +1,9 @@
+import { LiteralColor } from 'tapestry-core/src/lib/string'
 import { LeafPath } from 'tapestry-core/src/type-utils'
 
 export const TYPOGRAPHY_PROPERTIES = ['fontFamily', 'fontSize', 'lineHeight', 'fontWeight'] as const
 
 export type Typography = Pick<CSSStyleDeclaration, (typeof TYPOGRAPHY_PROPERTIES)[number]>
-
-export type LiteralColor = `#${string}`
 
 export interface ColorShades {
   readonly '50': LiteralColor

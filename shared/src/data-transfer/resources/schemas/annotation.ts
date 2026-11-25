@@ -2,25 +2,39 @@ import z from 'zod/v4'
 import { BaseResourceSchema } from './common'
 import { ItemSchema } from './item'
 import { baseResourcePropsMask } from '../types'
-import { CommentSchema } from './comment'
-import { UserSchema } from './user'
+import { PublicUserProfileSchema } from './user'
+import { ItemAnnotationCommentThreadSchema } from './comment-threads'
 
 export const AnnotationSchema = z.object({
   ...BaseResourceSchema.shape,
+  isHighlight: z.boolean(),
   itemId: z.string(),
-  userId: z.string(),
-  elementId: z.string().nullish(),
-  user: UserSchema.nullish(),
+  authorId: z.string(),
   item: ItemSchema.nullish(),
-  comments: CommentSchema.array().nullish(),
+  author: PublicUserProfileSchema.nullish(),
+  commentThread: ItemAnnotationCommentThreadSchema.omit({
+    id: true,
+    contextId: true,
+    contextType: true,
+    createdAt: true,
+    updatedAt: true,
+  }).nullish(),
 })
-export type AnnotationDto = z.infer<typeof AnnotationSchema>
 
-export const AnnotationCreateSchema = AnnotationSchema.omit({
+const BaseAnnotationCreateSchema = AnnotationSchema.omit({
   ...baseResourcePropsMask,
-  userId: true,
-  user: true,
+  authorId: true,
+  author: true,
   item: true,
-  comments: true,
+  commentThread: true,
 })
-export type AnnotationCreateDto = z.infer<typeof AnnotationCreateSchema>
+
+export const AnnotationCreateInTextSchema = BaseAnnotationCreateSchema.extend({
+  annotationType: z.literal('text'),
+  from: z.number(),
+  to: z.number(),
+})
+
+export const AnnotationCreateSchema = z.discriminatedUnion('annotationType', [
+  AnnotationCreateInTextSchema,
+])

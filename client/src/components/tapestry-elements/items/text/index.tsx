@@ -1,13 +1,9 @@
-import { omit } from 'lodash-es'
-import { memo, useEffect, useRef, useState } from 'react'
-import {
-  createSelectionState,
-  RichTextEditorApi,
-  SelectionState,
-} from 'tapestry-core-client/src/components/lib/rich-text-editor'
+import { defaults, omit } from 'lodash-es'
+import { memo, RefObject, useEffect, useRef, useState } from 'react'
+import { RichTextEditorApi } from 'tapestry-core-client/src/components/lib/rich-text-editor'
 import { TextItemViewer } from 'tapestry-core-client/src/components/tapestry/items/text/viewer'
 import { COLOR_PRESETS, TRANSPARENT } from 'tapestry-core-client/src/theme'
-import { LiteralColor } from 'tapestry-core-client/src/theme/types'
+import { LiteralColor } from 'tapestry-core/src/lib/string'
 import { TextItemDto } from 'tapestry-shared/src/data-transfer/resources/dtos/item'
 import { TapestryItemProps } from '..'
 import { useDispatch, useTapestryData } from '../../../../pages/tapestry/tapestry-providers'
@@ -20,8 +16,78 @@ import { TapestryItem } from '../tapestry-item'
 import { ToggleFormatButton, tooltip } from './toggle-format-button'
 import { richTextEditorToolbar } from './toolbar'
 import { useTextboxLink } from '../../../../hooks/use-textbox-link'
+import { TEXT_ITEM_EXTENSIONS_MASK } from 'tapestry-shared/src/utils'
+import { createSelectionState, SelectionState } from 'tapestry-core/src/tiptap'
+import { AnnotationBubbleMenu, PENDING_ANNOTATION_DECORATION_KEY } from './annotation-bubble-menu'
+import { useSession } from '../../../../layouts/session'
+import {
+  setPendingAnnotation,
+  setSidePane,
+} from '../../../../pages/tapestry/view-model/store-commands/tapestry'
+import { EditorSidePaneType, TapestrySearchParams } from '../../../../pages/tapestry/view-model'
+import { useNavigationState } from 'tapestry-core-client/src/components/tapestry/hooks/use-navigation-state'
+import { ANNOTATION_EXTENSION_ID_ATTR } from 'tapestry-core/src/tiptap/annotation-extension'
+import styles from './styles.module.css'
+import { usePropRef } from 'tapestry-core-client/src/components/lib/hooks/use-prop-ref'
 
 const BACKGROUND_COLORS: Record<LiteralColor, string> = COLOR_PRESETS
+
+const FOCUSED_ANNOTATION_DECORATION_KEY = 'focused-annotation'
+
+function useFocusedAnnotation(itemId: string, editorAPI: RefObject<RichTextEditorApi | undefined>) {
+  const { locationState, params, setNavigationState } = useNavigationState<TapestrySearchParams>()
+  const timestamp = locationState?.timestamp
+
+  const { focus, annotationId } = params
+
+  useEffect(() => {
+    try {
+      const editor = editorAPI.current?.editor()
+      if (editor && annotationId) {
+        const annotationElements = editor.view.dom.querySelectorAll<HTMLElement>(
+          `[${ANNOTATION_EXTENSION_ID_ATTR}="${annotationId}"]`,
+        )
+
+        if (annotationElements.length > 0) {
+          const first = annotationElements[0]
+          first.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+
+          const last = annotationElements[annotationElements.length - 1]
+
+          const from = editor.view.posAtDOM(first, 0)
+          const to = editor.view.posAtDOM(last, last.childNodes.length)
+          editor.commands.addDecorationToMap(FOCUSED_ANNOTATION_DECORATION_KEY, {
+            from,
+            to,
+            props: { class: styles.focusedAnnotation },
+          })
+        }
+      }
+    } catch (e) {
+      console.error(e)
+    }
+    return () => {
+      // we need to alwayst get the most recent value of the api
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      const editor = editorAPI.current?.editor()
+      if (
+        editor &&
+        (editor.storage.decorationsMap.ranges[FOCUSED_ANNOTATION_DECORATION_KEY]?.length ?? 0) > 0
+      ) {
+        editor.commands.removeDecorationsFromMap(FOCUSED_ANNOTATION_DECORATION_KEY)
+      }
+    }
+  }, [editorAPI, timestamp, annotationId, focus])
+
+  return {
+    focusAnnotation: (annotationId: string) => setNavigationState({ focus: itemId, annotationId }),
+    unfocusAnnotation: async () => {
+      if (params.annotationId) {
+        await setNavigationState(omit(params, 'annotationId'), { state: locationState })
+      }
+    },
+  }
+}
 
 function removeBlankLinesAtEnd(text: string) {
   return text.replace(/(?:<p>(?:\s|&nbsp;|<br\s*\/?>)*<\/p>)+$/gi, '')
@@ -35,7 +101,23 @@ export const TextItem = memo(({ id }: TapestryItemProps) => {
     id: tapestryId,
     interactionMode,
     interactiveElement,
-  } = useTapestryData(['id', 'interactionMode', 'interactiveElement'])
+    pendingAnnotation,
+    screenshotMode,
+  } = useTapestryData([
+    'id',
+    'interactionMode',
+    'interactiveElement',
+    'pendingAnnotation',
+    'screenshotMode',
+  ])
+
+  const { focusAnnotation, unfocusAnnotation } = useFocusedAnnotation(id, editorAPI)
+
+  const hasPendingAnnotation =
+    pendingAnnotation?.itemId === dto.id ? !!pendingAnnotation : undefined
+
+  const { user } = useSession()
+
   const dispatch = useDispatch()
   const tapestryPath = useTapestryPath('view')
 
@@ -63,24 +145,36 @@ export const TextItem = memo(({ id }: TapestryItemProps) => {
     closeLinkModal()
   }
 
+  const saveUnsavedContentRef = usePropRef(() => {
+    if (unsavedContent !== null) {
+      dispatch(updateItem(id, { dto: { text: removeBlankLinesAtEnd(unsavedContent) } }))
+      setUnsavedContent(null)
+    }
+  })
+
   useEffect(() => {
     if (isEditable) {
       return
     }
     setShowFormatToolbar(false)
 
-    if (unsavedContent !== null) {
-      dispatch(updateItem(id, { dto: { text: removeBlankLinesAtEnd(unsavedContent) } }))
-      setUnsavedContent(null)
-    }
-  }, [isEditable, dispatch, id, unsavedContent])
+    saveUnsavedContentRef.current()
+  }, [interactiveElement, isEditable, dispatch, id, saveUnsavedContentRef])
 
   const [showFormatToolbar, setShowFormatToolbar] = useState(false)
+
+  const extensionsMask = defaults(
+    {},
+    omit(TEXT_ITEM_EXTENSIONS_MASK, 'annotation'),
+    // removes the annotation from the mask
+    screenshotMode ? {} : { annotation: TEXT_ITEM_EXTENSIONS_MASK.annotation },
+  )
 
   const formattingControls = richTextEditorToolbar({
     editorAPI,
     selection,
     tapestryId,
+    controls: extensionsMask,
     onLinkClick: () => {
       if (addingLink) {
         closeLinkModal()
@@ -142,6 +236,7 @@ export const TextItem = memo(({ id }: TapestryItemProps) => {
         placeholder={isEditable ? 'Add your text here...' : undefined}
         isEditable={isEditable}
         preventInternalLinkHandling={isEditMode}
+        controls={extensionsMask}
         events={{
           onChange: (value) => {
             setUnsavedContent(value)
@@ -159,6 +254,15 @@ export const TextItem = memo(({ id }: TapestryItemProps) => {
                 editor.chain().setColor(fontColor).setFontSize(fontSize).run()
               }
               setSelection(createSelectionState(editor))
+              /* This is for the case when a user edits the text box -> creates pending annotation ->
+                 the text gets saved and the editor gets recreated*/
+              if (hasPendingAnnotation && pendingAnnotation) {
+                editor.commands.addDecorationToMap(PENDING_ANNOTATION_DECORATION_KEY, {
+                  from: pendingAnnotation.from,
+                  to: pendingAnnotation.to,
+                  props: { class: styles.pendingAnnotation },
+                })
+              }
             }
           },
           onSelectionChanged: (state) => {
@@ -172,6 +276,25 @@ export const TextItem = memo(({ id }: TapestryItemProps) => {
               // onSelectionChanged should be synchronous and called before addLink
               addLink()
             }
+
+            if (hasPendingAnnotation) {
+              dispatch(setPendingAnnotation(null))
+            }
+
+            const clickedAnnotationId = (e.target as HTMLElement)
+              .closest(`[${ANNOTATION_EXTENSION_ID_ATTR}]`)
+              ?.getAttribute(ANNOTATION_EXTENSION_ID_ATTR)
+            if (clickedAnnotationId) {
+              void focusAnnotation(clickedAnnotationId)
+              dispatch(
+                setSidePane({
+                  type: EditorSidePaneType.ItemAnnotations,
+                  data: { annotationId: clickedAnnotationId },
+                }),
+              )
+            } else {
+              void unfocusAnnotation()
+            }
           },
           onCreateLink: () => {
             addLink()
@@ -184,6 +307,13 @@ export const TextItem = memo(({ id }: TapestryItemProps) => {
           },
         }}
       />
+      {extensionsMask.annotation && user && (
+        <AnnotationBubbleMenu
+          editorAPI={editorAPI}
+          itemId={id}
+          onPendingAnnotation={() => saveUnsavedContentRef.current()}
+        />
+      )}
       {linkModalUi}
     </TapestryItem>
   )

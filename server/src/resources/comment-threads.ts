@@ -16,7 +16,9 @@ async function loadCommentThreads<T extends 'tapestry' | 'item' | 'rel'>(
     deletedAt: null,
     ...(contextType === 'tapestry'
       ? { tapestryId, contextType }
-      : { [contextType]: { tapestryId }, contextType }),
+      : contextType === 'item'
+        ? { item: { tapestryId }, contextType: { in: ['item', 'itemAnnotation'] } }
+        : { [contextType]: { tapestryId }, contextType }),
   }
 
   const initialComments = await prisma.comment.findMany({

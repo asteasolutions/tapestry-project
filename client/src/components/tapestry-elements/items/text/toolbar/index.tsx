@@ -1,22 +1,19 @@
 import { thru, toPairs } from 'lodash-es'
 import { ColorPickerButton } from 'tapestry-core-client/src/components/lib/buttons/color-picker-button'
 import { ColorButton, IconButton } from 'tapestry-core-client/src/components/lib/buttons/index'
-import {
-  Controls,
-  RichTextEditorApi,
-  SelectionState,
-} from 'tapestry-core-client/src/components/lib/rich-text-editor'
-import { DEFAULT_FONT_SIZE } from 'tapestry-core-client/src/components/lib/rich-text-editor/font-size-extension'
+import { RichTextEditorApi } from 'tapestry-core-client/src/components/lib/rich-text-editor'
 import { ShortcutLabel } from 'tapestry-core-client/src/components/lib/shortcut-label'
 import { MaybeMenuItem } from 'tapestry-core-client/src/components/lib/toolbar/index'
 import { shortcutLabel } from 'tapestry-core-client/src/lib/keyboard-event'
 import { COLOR_PRESETS, OPAQUE_COLOR_PRESETS, TRANSPARENT } from 'tapestry-core-client/src/theme'
-import { LiteralColor } from 'tapestry-core-client/src/theme/types'
+import { LiteralColor } from 'tapestry-core/src/lib/string'
 import { splitInRows } from 'tapestry-core/src/lib/array'
 import { userSettings } from '../../../../../services/user-settings'
 import { DEFAULT_FONT, FontFamilySelector } from '../font-family-selector'
 import { FontSizeInput } from '../font-size-input'
 import styles from './styles.module.css'
+import { Controls, SelectionState } from 'tapestry-core/src/tiptap'
+import { DEFAULT_FONT_SIZE } from 'tapestry-core/src/tiptap/font-size-extension'
 
 const BACKGROUND_COLORS = COLOR_PRESETS
 const FOREGROUND_COLORS = OPAQUE_COLOR_PRESETS
@@ -33,7 +30,7 @@ interface RichTextEditorToolbarOptions {
   onBackgroundColorChange: (color: LiteralColor, shouldClose: boolean) => unknown
   onColorChange: (color: LiteralColor, shouldClose: boolean) => unknown
   onToggleMenu: (id: '' | FormattingSubmenu) => unknown
-  controls?: { [K in keyof Controls]: boolean }
+  controls: { [K in keyof Controls]: boolean }
 }
 
 export function richTextEditorToolbar({
@@ -58,19 +55,18 @@ export function richTextEditorToolbar({
 
   return thru(
     [
-      ...(controls?.fontFamily === false
-        ? []
-        : ([
+      ...(controls.fontFamily
+        ? ([
             <FontFamilySelector
               value={selection?.fontFamily || DEFAULT_FONT.value}
               onChange={(font) => editorAPI.current?.fontFamily(font)}
               onMenuOpen={() => onToggleMenu('')}
             />,
             'separator',
-          ] as const)),
-      ...(controls?.fontSize === false
-        ? []
-        : ([
+          ] as const)
+        : []),
+      ...(controls.fontSize
+        ? ([
             <FontSizeInput
               value={selection?.fontSize ?? DEFAULT_FONT_SIZE}
               onChange={(fontSize) => {
@@ -80,10 +76,10 @@ export function richTextEditorToolbar({
               onMenuOpen={() => onToggleMenu('')}
             />,
             'separator',
-          ] as const)),
-      ...(controls?.format === false
-        ? []
-        : ([
+          ] as const)
+        : []),
+      ...(controls.format
+        ? ([
             {
               element: (
                 <IconButton
@@ -147,10 +143,10 @@ export function richTextEditorToolbar({
               },
             },
             'separator',
-          ] as const)),
-      ...(controls?.link === false
-        ? []
-        : ([
+          ] as const)
+        : []),
+      ...(controls.link
+        ? ([
             {
               element: (
                 <IconButton
@@ -168,10 +164,10 @@ export function richTextEditorToolbar({
               },
             },
             'separator',
-          ] as const)),
-      ...(controls?.color === false
-        ? []
-        : ([
+          ] as const)
+        : []),
+      ...(controls.color
+        ? ([
             {
               id: 'text-color',
               ui: {
@@ -248,10 +244,10 @@ export function richTextEditorToolbar({
               ),
             },
             'separator',
-          ] as const)),
-      ...(controls?.justification === false
-        ? []
-        : ([
+          ] as const)
+        : []),
+      ...(controls.justification
+        ? ([
             {
               element: (
                 <IconButton
@@ -313,10 +309,10 @@ export function richTextEditorToolbar({
               },
             },
             'separator',
-          ] as const)),
-      ...(controls?.list === false
-        ? []
-        : ([
+          ] as const)
+        : []),
+      ...(controls.list
+        ? ([
             {
               element: (
                 <IconButton
@@ -357,7 +353,8 @@ export function richTextEditorToolbar({
                 ),
               },
             },
-          ] as const)),
+          ] as const)
+        : []),
     ],
     (controls) => {
       if (controls.at(-1) === 'separator') {

@@ -35,7 +35,8 @@ import {
 import { GetResult } from '@prisma/client/runtime/client'
 import { Prisma } from '../../prisma/generated/prisma/client.js'
 import { getPrismaDatamodel } from '../db.js'
-import { AnnotationDto } from 'tapestry-shared/src/data-transfer/resources/schemas/annotation.js'
+import { AnnotationDto } from 'tapestry-shared/src/data-transfer/resources/dtos/annotation.js'
+import { itemAnnotationDbToDto } from './item-annotation.js'
 
 interface DtoMap {
   Tapestry: { default: TapestryDto }
@@ -98,7 +99,7 @@ const MODEL_SERIALIZERS: ModelSerializersMap = {
   TapestryBookmark: { default: identity },
   ImageAsset: { default: identity },
   ImageAssetRendition: { default: imageAssetRenditionDbToDto },
-  ItemAnnotation: { default: identity },
+  ItemAnnotation: { default: itemAnnotationDbToDto },
 }
 
 type RelationViews = {
@@ -111,6 +112,7 @@ const RELATION_VIEWS: RelationViews = {
     TapestryToUser: 'publicProfile',
     TapestryAccessToUser: 'publicProfile',
     AiChatToUser: 'publicProfile',
+    ItemAnnotationToUser: 'publicProfile',
   },
 }
 

@@ -49,6 +49,8 @@
     "@prisma/client": "^7.9.1",
     "@prisma/get-dmmf": "^7.9.1",
     "@sentry/node": "^10.33.0",
+    "@tiptap/html": "^3.28.0",
+    "@tiptap/pm": "^3.28.0",
     "@types/lodash-es": "^4.17.12",
     "@zip.js/zip.js": "^2.7.57",
     "ai": "^5.0.14",

@@ -47,6 +47,7 @@ import { CopyLinkButton } from '../copy-link-button'
 import { EditorElementToolbar, EditorElementToolbarProps } from '../editor-element-toolbar'
 import { ChangeThumbnailButton, ChangeThumbnailDialog } from './change-thumbnail-button'
 import styles from './styles.module.css'
+import { EditorSidePaneType } from '../../../pages/tapestry/view-model'
 
 const TITLE_SUBMENU_ID = 'title_submenu'
 export type TitleSubmenu = typeof TITLE_SUBMENU_ID
@@ -101,7 +102,9 @@ export function ItemToolbar({
   const { items: finalItems, ui } = useItemMenu(id, items, (m) => {
     if (m === 'comment') {
       return {
-        element: <CommentButton count={commentThread?.size} type="inline-comments" />,
+        element: (
+          <CommentButton count={commentThread?.size} type={EditorSidePaneType.ItemComments} />
+        ),
         tooltip: { side: 'bottom', children: 'Comments' },
       }
     }

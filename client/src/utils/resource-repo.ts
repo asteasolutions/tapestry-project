@@ -145,61 +145,69 @@ export abstract class ResourceRepo<
    * resources that are no longer present on the server. Otherwise, if one or more IDs are given, only they
    * will be reloaded.
    */
-  pull<K extends R = R>(ids?: Record<K, string[] | true> | null, signal?: AbortSignal) {
+  pull<K extends R = R>(
+    ids?: Record<K, string[] | true> | null,
+    signal?: AbortSignal,
+    onAfterPull?: () => void,
+  ) {
     return this.enqueueRequest(async () => {
-      this.requestState = 'pulling'
+      try {
+        this.requestState = 'pulling'
 
-      const resourceLists = await this.fetch(ids, signal)
-      const response = mapValues(resourceLists, arrayToIdMap) as ResourceIdMaps<K, TypeMap>
+        const resourceLists = await this.fetch(ids, signal)
+        const response = mapValues(resourceLists, arrayToIdMap) as ResourceIdMaps<K, TypeMap>
 
-      for (const resourceName of Object.keys(response) as K[]) {
-        const requestedIds = Array.isArray(ids?.[resourceName])
-          ? new Set(ids[resourceName])
-          : undefined
+        for (const resourceName of Object.keys(response) as K[]) {
+          const requestedIds = Array.isArray(ids?.[resourceName])
+            ? new Set(ids[resourceName])
+            : undefined
 
-        const { created, updated, destroyed } = this.diffRemoteData(
-          resourceName,
-          response[resourceName],
-          requestedIds,
-        )
+          const { created, updated, destroyed } = this.diffRemoteData(
+            resourceName,
+            response[resourceName],
+            requestedIds,
+          )
 
-        // Update the remote version of the data
-        ;[...created, ...updated].forEach((resource) =>
-          set(this.remote, [resourceName, resource.id], resource),
-        )
-        destroyed.forEach((id) => delete this.remote[resourceName][id])
+          // Update the remote version of the data
+          ;[...created, ...updated].forEach((resource) =>
+            set(this.remote, [resourceName, resource.id], resource),
+          )
+          destroyed.forEach((id) => delete this.remote[resourceName][id])
 
-        // Update the local version of the data and notify observers
-        this.update((workingCopy) => {
-          created.forEach((resource) => {
-            const resourcePath = [resourceName, resource.id]
-            // eslint-disable-next-line @typescript-eslint/no-floating-promises
-            set(workingCopy, resourcePath, resource)
-            set(this.resourceVersions, resourcePath, this.head - 1)
-          })
-          updated.forEach((resource) => {
-            const resourcePath = [resourceName, resource.id]
-
-            // Don't override local changes. Update the resource in the working copy
-            // only if it hasn't been deleted or modified locally
-            if (
-              get(workingCopy, resourcePath) &&
-              get(this.resourceVersions, resourcePath, 0) < this.head
-            ) {
+          // Update the local version of the data and notify observers
+          this.update((workingCopy) => {
+            created.forEach((resource) => {
+              const resourcePath = [resourceName, resource.id]
               // eslint-disable-next-line @typescript-eslint/no-floating-promises
               set(workingCopy, resourcePath, resource)
-            }
-          })
-          destroyed.forEach((id) => {
-            // @ts-expect-error The fact that workingCopy is Draft confuses TypeScript here
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-            delete workingCopy[resourceName][id]
-            delete this.resourceVersions[resourceName][id]
-          })
-        })
-      }
+              set(this.resourceVersions, resourcePath, this.head - 1)
+            })
+            updated.forEach((resource) => {
+              const resourcePath = [resourceName, resource.id]
 
-      this.requestState = 'idle'
+              // Don't override local changes. Update the resource in the working copy
+              // only if it hasn't been deleted or modified locally
+              if (
+                get(workingCopy, resourcePath) &&
+                get(this.resourceVersions, resourcePath, 0) < this.head
+              ) {
+                // eslint-disable-next-line @typescript-eslint/no-floating-promises
+                set(workingCopy, resourcePath, resource)
+              }
+            })
+            destroyed.forEach((id) => {
+              // @ts-expect-error The fact that workingCopy is Draft confuses TypeScript here
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+              delete workingCopy[resourceName][id]
+              delete this.resourceVersions[resourceName][id]
+            })
+          })
+        }
+
+        this.requestState = 'idle'
+      } finally {
+        onAfterPull?.()
+      }
     })
   }
 
