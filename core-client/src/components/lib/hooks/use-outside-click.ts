@@ -1,7 +1,5 @@
 import { useEffect, useRef } from 'react'
 import { usePropRef } from './use-prop-ref.js'
-import { distance, Point } from 'tapestry-core/src/lib/geometry.js'
-import { toPoint } from '../../../lib/dom.js'
 
 export function useOutsideClick<T extends HTMLElement = HTMLElement>(
   callback?: (source: HTMLElement, target: HTMLElement) => unknown,
@@ -10,30 +8,29 @@ export function useOutsideClick<T extends HTMLElement = HTMLElement>(
   const callbackRef = usePropRef(callback)
 
   useEffect(() => {
-    let state: { point: Point; timestamp: number } | null = null
-
-    const onDown = (event: PointerEvent) => {
-      state = { point: toPoint(event), timestamp: performance.now() }
-    }
-    const onUp = (event: PointerEvent) => {
-      if (!state) return
-
+    // dragenter covers drags coming from outside the page, which have no pointerdown
+    const onDown = (event: PointerEvent | DragEvent) => {
       const source = containerRef.current
-      if (performance.now() - state.timestamp < 200 && distance(state.point, toPoint(event)) < 3) {
-        const target = event.target as HTMLElement | null
-        if (source && !source.contains(target)) {
-          callbackRef.current?.(source, target!)
-        }
+      const target = event.target as HTMLElement
+      if (source && !source.contains(target)) {
+        callbackRef.current?.(source, target)
       }
-      state = null
+    }
+    const onKeyDown = (event: KeyboardEvent) => {
+      const source = containerRef.current
+      if (source && event.key === 'Escape') {
+        callbackRef.current?.(source, event.target as HTMLElement)
+      }
     }
 
     document.addEventListener('pointerdown', onDown, true)
-    document.addEventListener('pointerup', onUp, true)
+    document.addEventListener('dragenter', onDown, true)
+    document.addEventListener('keydown', onKeyDown, true)
 
     return () => {
       document.removeEventListener('pointerdown', onDown, true)
-      document.removeEventListener('pointerup', onUp, true)
+      document.removeEventListener('dragenter', onDown, true)
+      document.removeEventListener('keydown', onKeyDown, true)
     }
   }, [callbackRef])
 

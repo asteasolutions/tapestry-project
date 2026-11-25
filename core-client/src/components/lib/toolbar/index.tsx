@@ -139,7 +139,18 @@ export function Toolbar({
     typeof selectedSubmenu === 'string' ? selectedSubmenu.split('.') : selectedSubmenu
 
   return (
-    <div className={clsx(styles.root, className)} style={style} ref={ref}>
+    <div
+      className={clsx(styles.root, className)}
+      style={style}
+      ref={ref}
+      onPointerDownCapture={(event) => {
+        // Close the open submenu when another button of the same toolbar is pressed
+        const target = event.target as HTMLElement
+        if (openSubmenu?.[0] && !target.closest('.submenu-item')) {
+          onFocusOut?.(event.currentTarget, target)
+        }
+      }}
+    >
       <div
         className={clsx(styles.wrapper, { [styles.column]: direction === 'column' }, 'wrapper')}
         data-captures-pointer-events

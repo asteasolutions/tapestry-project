@@ -87,6 +87,7 @@ export function ItemToolbar({
   const dto = useTapestryData(`items.${id}.dto`)!
   const commentThread = useTapestryData(`items.${id}.commentThread`)
   const isEdit = useTapestryData('interactionMode') === 'edit'
+  const dispatch = useDispatch()
 
   const moreMenu = useEditMoreMenu({
     dto,
@@ -128,7 +129,19 @@ export function ItemToolbar({
       <EditorElementToolbar
         isOpen
         items={finalItems}
-        onFocusOut={() => onSelectSubmenu('')}
+        onFocusOut={(_source, target) => {
+          onSelectSubmenu('')
+          // Deactivate the item when the user moves to another menu outside the canvas
+          if (
+            target.closest('.toolbar-row') &&
+            !target.closest('.dom-container') &&
+            !target.closest(
+              '[aria-label="Zoom in"], [aria-label="Zoom out"], [aria-label="Focus all"]',
+            )
+          ) {
+            dispatch(setInteractiveElement(null))
+          }
+        }}
         selectedSubmenu={selectedSubmenu}
         style={{ cursor: 'auto' }}
         elementBounds={new Rectangle(dto).expand(ACTIVE_ITEM_BORDER_WIDTH)}
