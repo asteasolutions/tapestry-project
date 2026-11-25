@@ -9,13 +9,12 @@ import { LocalStorage } from './local-storage'
 interface TapestrySettings {
   fontSize: number
   fontColor: string
-  textItemColor: LiteralColor
+  textItemColor?: LiteralColor
 }
 
 const DEFAULT_TAPESTRY_SETTINGS: TapestrySettings = {
   fontSize: DEFAULT_FONT_SIZE,
   fontColor: '#000000',
-  textItemColor: '#ffffff00',
 }
 
 interface UserSettingsData {

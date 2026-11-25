@@ -1,0 +1,4 @@
+.root {
+  outline: 1px solid var(--theme-border-primary);
+  border-radius: 8px;
+}

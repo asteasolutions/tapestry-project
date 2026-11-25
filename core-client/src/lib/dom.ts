@@ -158,3 +158,7 @@ export class MatchRanges {
 export const matchHighlight = new Highlight()
 
 CSS.highlights.set(MATCH_HIGHLIGHT_ID, matchHighlight)
+
+export function isHtmlEmpty(html: string) {
+  return !html.replace(/<[^>]*>|&nbsp;/g, '').trim()
+}

@@ -2,7 +2,6 @@ import clsx from 'clsx'
 import { Id } from 'tapestry-core/src/data-format/schemas/common'
 import { ActionButtonItem as ActionButtonItemDto } from 'tapestry-core/src/data-format/schemas/item'
 import { useTapestryConfig } from '../..'
-import { TRANSPARENT } from '../../../../theme'
 import { RichTextEditor, RichTextEditorProps } from '../../../lib/rich-text-editor'
 import textItemEditorStyles from '../text/styles.module.css'
 import styles from './styles.module.css'
@@ -23,7 +22,7 @@ export function ActionButtonItemViewer({
 
   const isInteractiveElement = id === interactiveElement?.modelId
 
-  const backgroundColor = dto.backgroundColor ?? TRANSPARENT
+  const backgroundColor = dto.backgroundColor ?? 'var(--theme-background-brand-secondary)'
 
   return (
     <RichTextEditor

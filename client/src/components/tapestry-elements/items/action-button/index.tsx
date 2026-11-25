@@ -17,6 +17,9 @@ import { ToggleFormatButton, tooltip } from '../text/toggle-format-button'
 import { richTextEditorToolbar } from '../text/toolbar'
 import { AssignActionButton } from '../../../assign-action-button'
 import { buildToolbarMenu } from '../../item-toolbar'
+import { isHtmlEmpty } from 'tapestry-core-client/src/lib/dom'
+import { TRANSPARENT } from 'tapestry-core-client/src/theme'
+import textStyles from '../text/styles.module.css'
 
 const controls = {
   link: false,
@@ -40,6 +43,8 @@ export const ActionButtonItem = memo(({ id }: TapestryItemProps) => {
   const isEditMode = interactionMode === 'edit'
   const isInteractiveElement = id === interactiveElement?.modelId
   const isEditable = isEditMode && isInteractiveElement
+  const showEmptyOutline =
+    isEditMode && dto.backgroundColor === TRANSPARENT && isHtmlEmpty(unsavedContent ?? dto.text)
 
   useEffect(() => {
     if (isEditable) {
@@ -113,14 +118,14 @@ export const ActionButtonItem = memo(({ id }: TapestryItemProps) => {
   )
 
   return (
-    <TapestryItem id={id} halo={toolbar}>
+    <TapestryItem id={id} halo={toolbar} className={showEmptyOutline ? textStyles.root : undefined}>
       <ActionButtonItemViewer
         id={id}
         api={editorAPI}
         controls={controls}
         // setting value to unsavedContent prevents re-rendering of the editor with old text before the model updates
         value={!isEditable && unsavedContent !== null ? unsavedContent : dto.text}
-        placeholder={isEditable ? 'Add your text here...' : undefined}
+        placeholder={isEditable ? 'Add your action name here...' : undefined}
         isEditable={isEditable}
         events={{
           onChange: (value) => {

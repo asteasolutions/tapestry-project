@@ -15,9 +15,10 @@ export interface TapestryItemProps {
   id: string
   children: ReactNode
   halo: ReactNode
+  className?: string
 }
 
-export function TapestryItem({ id, children, halo }: TapestryItemProps) {
+export function TapestryItem({ id, children, halo, className }: TapestryItemProps) {
   const dto = useTapestryData(`items.${id}.dto`)!
   const resizeState = useTapestryData(`items.${id}.resizeState`)
   const { interactiveElement, interactionMode } = useTapestryData([
@@ -37,7 +38,7 @@ export function TapestryItem({ id, children, halo }: TapestryItemProps) {
       id={id}
       halo={halo}
       classes={{
-        root: styles.root,
+        root: clsx(styles.root, className),
         hitArea: styles.hitArea,
       }}
       title={<span>{dto.title}</span>}
