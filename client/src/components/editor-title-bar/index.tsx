@@ -29,8 +29,7 @@ import { EditTapestryDialog } from '../edit-tapestry-dialog'
 import { ForkTapestryDialog } from '../fork-tapestry-dialog'
 import { PasteButton } from './paste-button'
 import styles from './styles.module.css'
-import { useTapestryExport } from '../../hooks/use-tapestry-export'
-import { ExportProgressIndicator } from './export-progress-indicator'
+import { backgroundTasks, useActiveExport } from '../../services/background-tasks'
 
 export function EditorTitleBar() {
   const obstruction = useViewportObstruction({ clear: { left: true, top: true } })
@@ -58,11 +57,7 @@ export function EditorTitleBar() {
   const [creatingTapestry, setCreatingTapestry] = useState(false)
   const [forkingTapestry, setForkingTapestry] = useState(false)
   const [editingTapestry, setEditingTapestry] = useState(false)
-  const { progress, triggerExport } = useTapestryExport({
-    tapestryId,
-    onError: () => dispatch(setSnackbar({ content: 'Error during export', variant: 'error' })),
-    onSuccess: closeSubmenu,
-  })
+  const progress = useActiveExport(tapestryId)?.progress
 
   const { user } = useSession()
 
@@ -115,8 +110,15 @@ export function EditorTitleBar() {
         >
           Make a copy
         </MenuItemButton>,
-        <MenuItemButton onClick={triggerExport} icon="upload" disabled={!!progress}>
-          Export Zip file {progress && <ExportProgressIndicator progress={progress} />}
+        <MenuItemButton
+          icon="upload"
+          disabled={!!progress}
+          onClick={() => {
+            closeSubmenu()
+            void backgroundTasks.triggerExport(tapestryId, title)
+          }}
+        >
+          {progress ? 'Exporting…' : 'Export Zip file'}
         </MenuItemButton>,
         isOwner && (
           <MenuItemButton
