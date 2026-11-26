@@ -1,6 +1,6 @@
 import { startCase } from 'lodash-es'
 import { useMemo } from 'react'
-import { Item, ItemType } from 'tapestry-core/src/data-format/schemas/item'
+import { Item, ItemType, WebpageType } from 'tapestry-core/src/data-format/schemas/item'
 import { WEBPAGE_TYPE_LABELS } from 'tapestry-core/src/web-sources'
 import { nthIndexOf } from 'tapestry-core/src/lib/string'
 import { idMapToArray, isMediaItem } from 'tapestry-core/src/utils'
@@ -30,6 +30,22 @@ const itemTypeSynonyms: Partial<Record<ItemType, string[]>> = {
   video: ['clip', 'movie', 'film'],
   image: ['photo', 'picture', 'jpeg', 'png'],
   webpage: ['html', 'page', 'site'],
+}
+
+const WEBPAGE_MEDIA_TYPES: Partial<Record<WebpageType, ItemType>> = {
+  youtube: 'video',
+  vimeo: 'video',
+  iaVideo: 'video',
+  iaAudio: 'audio',
+  googleDriveVideo: 'video',
+  googleDriveAudio: 'audio',
+  googleDriveImage: 'image',
+  googleDrivePdf: 'pdf',
+  googleDriveBook: 'book',
+}
+
+function mediaType(dto: Item) {
+  return (dto.type === 'webpage' && dto.webpageType && WEBPAGE_MEDIA_TYPES[dto.webpageType]) || null
 }
 
 const PARSER = new DOMParser()
@@ -70,10 +86,20 @@ function getMatchDescription(dto: Item, search: string) {
   if (dto.title?.toLowerCase().includes(query)) {
     return `Shown because "${search}" matches the item title.`
   }
-  if (
-    dto.type.startsWith(query) ||
-    itemTypeSynonyms[dto.type]?.some((synonym) => synonym.startsWith(query))
-  ) {
+
+  const matchesType = [dto.type, mediaType(dto)].some(
+    (type) =>
+      type &&
+      (type.startsWith(query) ||
+        itemTypeSynonyms[type]?.some((synonym) => synonym.startsWith(query))),
+  )
+
+  const matchesWebpageLabel =
+    dto.type === 'webpage' &&
+    !!dto.webpageType &&
+    WEBPAGE_TYPE_LABELS[dto.webpageType].toLowerCase().includes(query)
+
+  if (matchesType || matchesWebpageLabel) {
     return `Shown because "${search}" matches the item type.`
   }
   if (dto.notes?.toLowerCase().includes(query)) {
@@ -98,7 +124,8 @@ export function useSearchResults(
         const type: Exclude<Tab, 'all'> = isMediaItem(dto) ? 'items' : 'text'
         const id = dto.id
         const thumbnail =
-          getPrimaryThumbnail(dto) ?? (dto.type === 'image' ? dto.source : itemIcons[dto.type])
+          getPrimaryThumbnail(dto) ??
+          (dto.type === 'image' ? dto.source : itemIcons[mediaType(dto) ?? dto.type])
 
         const description = getMatchDescription(dto, search)
 

@@ -94,13 +94,17 @@ export async function canEditItem(
   return canEditTapestry(userId, item.tapestry)
 }
 
-async function resolveWebSource(item: ItemCreateDto | ItemUpdateDto) {
+async function resolveWebSource(item: ItemCreateDto | ItemUpdateDto, current?: Item) {
   if (item.type !== 'webpage' || !item.source || item.skipSourceResolution) return
 
   const webSourceParser = await findWebSourceParser(item.source)
 
   item.source = webSourceParser.construct(webSourceParser.parse(item.source))
-  item.webpageType = webSourceParser.webpageType
+  const knownType = item.webpageType ?? current?.webpageType
+  item.webpageType =
+    webSourceParser.webpageType === 'googleDrive' && knownType?.startsWith('googleDrive')
+      ? knownType
+      : webSourceParser.webpageType
 }
 
 async function scheduleConvertToPdf(item: ItemWithAssets) {
@@ -181,7 +185,7 @@ export async function createItems(
   const shouldReturnSingleRecord = !Array.isArray(items)
 
   items = ensureArray(items)
-  await Promise.all(items.map(resolveWebSource))
+  await Promise.all(items.map((item) => resolveWebSource(item)))
   const itemData = items.map((item) =>
     itemDtoToDb(omit(item, 'thumbnail'), ['createdAt', 'updatedAt']),
   )
@@ -238,7 +242,7 @@ export async function updateItems(
         }
 
         if (isMediaItemUpdate(update) && update.source && dbItem.source !== update.source) {
-          await resolveWebSource(update)
+          await resolveWebSource(update, dbItem)
         }
 
         await processCustomThumbnailUpdate(dbItem, { thumbnail: update.thumbnail }, tx)

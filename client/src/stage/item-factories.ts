@@ -11,7 +11,12 @@ import {
   parseWikimediaFileTitle,
   wikimediaTypeToItemType,
 } from 'tapestry-core/src/wikimedia-commons'
-import { MediaItemSource, mediaSourceToBlob, convertHeicFile } from '../lib/media'
+import {
+  MediaItemSource,
+  mediaSourceToBlob,
+  convertHeicFile,
+  getGoogleDriveMetadata,
+} from '../lib/media'
 import {
   createMediaItem,
   createDerivedSourceMediaItem,
@@ -135,8 +140,11 @@ const webpageItemFactory: ItemFactory = async (source, _mediaType, tapestryId) =
 
   const parser = await findWebSourceParser(source)
   const parsedSource = parser.construct(parser.parse(source))
-  const item = await createMediaItem('webpage', parsedSource, tapestryId, source)
-  item.webpageType = parser.webpageType
+  // The type of a Google Drive file is not part of its link, so we look it up
+  const googleDrive =
+    parser.webpageType === 'googleDrive' ? await getGoogleDriveMetadata(parsedSource) : null
+  const item = await createMediaItem('webpage', parsedSource, tapestryId, source, googleDrive?.size)
+  item.webpageType = googleDrive?.webpageType ?? parser.webpageType
   item.skipSourceResolution = true
 
   return { items: [item] }

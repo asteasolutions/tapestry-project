@@ -64,3 +64,14 @@ export async function generateYoutubeThumbnail(embedUrl: string) {
 
   return generateThumbnail(Buffer.from(blob))
 }
+
+// Drive's own thumbnail shows the file itself, without the Drive viewer around it.
+// Private files have no thumbnail, so we return nothing and the page is screenshotted instead.
+export async function generateGoogleDriveThumbnail(source: string) {
+  try {
+    const url = WEB_SOURCE_PARSERS.googleDrive.getThumbnailUrl(source)
+    return generateThumbnail(await downloadImageToArrayBuffer(url))
+  } catch (error) {
+    console.warn(`Failed to fetch Google Drive thumbnail for ${source}:`, error)
+  }
+}
