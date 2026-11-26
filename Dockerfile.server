@@ -22,7 +22,7 @@ CMD ["start:api"]
 FROM node:24-alpine3.24 AS worker
 
 RUN apk add --no-cache \
-  'chromium>=156.0.8078.79' \
+  'chromium>=158.0.8127.36' \
   nss \
   freetype \
   harfbuzz \
@@ -33,7 +33,7 @@ RUN apk add --no-cache \
   mesa-gl \
   mesa-dev \
   vulkan-loader \
-  'chromium-swiftshader>=156.0.8078.79' \
+  'chromium-swiftshader>=158.0.8127.36' \
   yarn \
   ffmpeg \
   imagemagick \
