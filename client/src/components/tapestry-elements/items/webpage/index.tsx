@@ -33,6 +33,7 @@ import {
 import { useConvertToPDF } from '../../../../hooks/use-convert-to-pdf'
 import { useItemFullscreen } from 'tapestry-core-client/src/components/lib/hooks/use-item-fullscreen'
 import { PLAYABLE_WEBPAGE_TYPES } from 'tapestry-core-client/src/components/tapestry/items/webpage'
+import { GOOGLE_DRIVE_WEBPAGE_TYPES } from 'tapestry-core/src/data-format/schemas/item'
 
 const checkedSources = new Map<string, boolean>()
 
@@ -99,6 +100,8 @@ export const WebpageItem = memo(({ id }: TapestryItemProps) => {
   const isEditMode = useTapestryData('interactionMode') === 'edit'
   const webSourceParams = parseWebSource(dto)
   const { webpageType } = webSourceParams
+  const isGoogleDrive =
+    !!webpageType && (GOOGLE_DRIVE_WEBPAGE_TYPES as readonly string[]).includes(webpageType)
 
   const { conversionStarted, convertToPDFMenuItem } = useConvertToPDF(id)
   const { containerRef, isFullscreen, exitFullscreenButton } = useItemFullscreen<HTMLDivElement>({
@@ -176,20 +179,25 @@ export const WebpageItem = memo(({ id }: TapestryItemProps) => {
 
       return isEditMode
         ? [
-            {
-              element: isLoadingWBMSnapshots ? (
-                <LoadingSpinner style={{ alignSelf: 'center' }} size="16px" />
-              ) : (
-                <IconButton
-                  icon="account_balance"
-                  aria-label="Switch to Wayback Machine version"
-                  onClick={trySwitchToWBM}
-                  disabled={conversionStarted}
-                />
-              ),
-              tooltip: { side: 'bottom', children: 'Switch to Wayback Machine version' },
-            },
-            'separator',
+            // Drive pages can't be archived meaningfully, so there's no Wayback Machine version of them
+            ...(isGoogleDrive
+              ? []
+              : [
+                  {
+                    element: isLoadingWBMSnapshots ? (
+                      <LoadingSpinner style={{ alignSelf: 'center' }} size="16px" />
+                    ) : (
+                      <IconButton
+                        icon="account_balance"
+                        aria-label="Switch to Wayback Machine version"
+                        onClick={trySwitchToWBM}
+                        disabled={conversionStarted}
+                      />
+                    ),
+                    tooltip: { side: 'bottom', children: 'Switch to Wayback Machine version' },
+                  } satisfies SimpleMenuItem,
+                  'separator' as const,
+                ]),
             refreshButton,
             'separator',
             ...controls,
@@ -224,7 +232,8 @@ export const WebpageItem = memo(({ id }: TapestryItemProps) => {
               />,
             ]
           : []),
-      ...(!(webpageType && PLAYABLE_WEBPAGE_TYPES.includes(webpageType))
+      // A PDF made of a Drive page would show Drive's viewer, not the file
+      ...(!(webpageType && PLAYABLE_WEBPAGE_TYPES.includes(webpageType)) && !isGoogleDrive
         ? [convertToPDFMenuItem]
         : []),
     ],
