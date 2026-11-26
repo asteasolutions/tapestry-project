@@ -62,6 +62,9 @@ async function checkZipValidity(file: File) {
   }
 }
 
+const isActiveExport = (tapestryId: string) => (e: TapestryExport) =>
+  e.tapestryId === tapestryId && e.status === 'exporting'
+
 class BackgroundTasksObservable extends Observable<BackgroundTasksState> {
   private exporters = new Map<string, TapestryExporter>()
   private pollTimeout?: number
@@ -80,12 +83,8 @@ class BackgroundTasksObservable extends Observable<BackgroundTasksState> {
     })
   }
 
-  exportForTapestry(tapestryId: string) {
-    return this.value.exports.find((e) => e.tapestryId === tapestryId && e.status === 'exporting')
-  }
-
   async triggerExport(tapestryId: string, title: string) {
-    if (this.exportForTapestry(tapestryId)) {
+    if (this.value.exports.find(isActiveExport(tapestryId))) {
       return
     }
 
@@ -253,6 +252,5 @@ class BackgroundTasksObservable extends Observable<BackgroundTasksState> {
 export const backgroundTasks = new BackgroundTasksObservable()
 
 export function useActiveExport(tapestryId: string) {
-  useObservable(backgroundTasks)
-  return backgroundTasks.exportForTapestry(tapestryId)
+  return useObservable(backgroundTasks).exports.find(isActiveExport(tapestryId))
 }
