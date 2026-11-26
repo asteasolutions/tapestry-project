@@ -86,17 +86,20 @@ function getMatchDescription(dto: Item, search: string) {
   if (dto.title?.toLowerCase().includes(query)) {
     return `Shown because "${search}" matches the item title.`
   }
-  if (
-    [dto.type, mediaType(dto)].some(
-      (type) =>
-        type &&
-        (type.startsWith(query) ||
-          itemTypeSynonyms[type]?.some((synonym) => synonym.startsWith(query))),
-    ) ||
-    (dto.type === 'webpage' &&
-      dto.webpageType &&
-      WEBPAGE_TYPE_LABELS[dto.webpageType].toLowerCase().includes(query))
-  ) {
+
+  const matchesType = [dto.type, mediaType(dto)].some(
+    (type) =>
+      type &&
+      (type.startsWith(query) ||
+        itemTypeSynonyms[type]?.some((synonym) => synonym.startsWith(query))),
+  )
+
+  const matchesWebpageLabel =
+    dto.type === 'webpage' &&
+    !!dto.webpageType &&
+    WEBPAGE_TYPE_LABELS[dto.webpageType].toLowerCase().includes(query)
+
+  if (matchesType || matchesWebpageLabel) {
     return `Shown because "${search}" matches the item type.`
   }
   if (dto.notes?.toLowerCase().includes(query)) {
