@@ -89,20 +89,8 @@ class BackgroundTasksObservable extends Observable<BackgroundTasksState> {
     }
 
     const id = crypto.randomUUID()
-    const exporter = new TapestryExporter(
-      tapestryId,
-      (progress) => this.updateExport(id, { progress }),
-      (error) => {
-        if (!this.exporters.has(id)) {
-          return
-        }
-        console.warn(
-          'Error during export',
-          error,
-          error instanceof ZodError ? error.issues : undefined,
-        )
-        this.finishExport(id, 'failed')
-      },
+    const exporter = new TapestryExporter(tapestryId, (progress) =>
+      this.updateExport(id, { progress }),
     )
     this.exporters.set(id, exporter)
     this.update((value) => {
@@ -116,12 +104,27 @@ class BackgroundTasksObservable extends Observable<BackgroundTasksState> {
       })
     })
 
-    await exporter.export((url, exportedTitle) => {
-      this.finishExport(id, 'complete')
-      download(url, `${exportedTitle}.zip`)
-      // Recorded for the admin reports; a failure must not affect the user
-      void resource('tapestryExports').create({ tapestryId }).catch(noop)
-    })
+    let file: File
+    try {
+      file = await exporter.export()
+    } catch (error) {
+      if (this.exporters.has(id)) {
+        console.warn(
+          'Error during export',
+          error,
+          error instanceof ZodError ? error.issues : undefined,
+        )
+        this.finishExport(id, 'failed')
+      }
+      return
+    }
+
+    this.finishExport(id, 'complete')
+    const url = URL.createObjectURL(file)
+    download(url, file.name)
+    URL.revokeObjectURL(url)
+    // Recorded for the admin reports; a failure must not affect the user
+    void resource('tapestryExports').create({ tapestryId }).catch(noop)
   }
 
   cancelExport(id: string) {

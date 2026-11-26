@@ -9,7 +9,9 @@ import { BlobWriter, TextReader, ZipWriter, BlobReader, Reader } from '@zip.js/z
 import { createDraft, finishDraft } from 'immer'
 import { fileExtension, isMediaItem } from 'tapestry-core/src/utils'
 import axios, { AxiosError } from 'axios'
-import { sumBy, uniqBy } from 'lodash-es'
+import { noop, sumBy, uniqBy } from 'lodash-es'
+import { TapestryDto } from 'tapestry-shared/src/data-transfer/resources/dtos/tapestry'
+import { PresentationStepDto } from 'tapestry-shared/src/data-transfer/resources/dtos/presentation-step'
 import { listAll, resource } from './rest-resources'
 import { generateItemThumbnailRenditionName } from 'tapestry-shared/src/utils'
 
@@ -31,28 +33,117 @@ export class TapestryExporter {
   private downloaded = 0
   private compressed = 0
 
-  private blobWriter!: BlobWriter
-  private zipWriter!: ZipWriter<Blob>
-
   private killSwitch = new AbortController()
 
   constructor(
     private tapestryId: string,
-    private progressCallback: (progress: ProgressEvent) => unknown,
-    private errorCallback: (error: unknown) => unknown,
+    private onProgress: (progress: ProgressEvent) => unknown,
   ) {
-    this.progressCallback = (progress: ProgressEvent) => {
-      if (!this.killSwitch.signal.aborted) {
-        progressCallback(progress)
-      }
-    }
+    this.killSwitch.signal.addEventListener('abort', () => (this.onProgress = noop), { once: true })
   }
 
   cancel() {
     this.killSwitch.abort()
   }
 
-  private async download(filePath: string, source: string) {
+  async export(): Promise<File> {
+    this.onProgress('pending')
+
+    try {
+      const signal = this.killSwitch.signal
+      const tapestry = await resource('tapestries').read(
+        { id: this.tapestryId },
+        { include: ['items.thumbnail.renditions', 'rels', 'groups'] },
+        { signal },
+      )
+      const presentation = await listAll(
+        resource('presentationSteps'),
+        { filter: { 'tapestryId:eq': this.tapestryId } },
+        signal,
+      )
+
+      const { rootJson, downloads } = this.prepareExport(tapestry, presentation)
+
+      this.toDownload = downloads.length
+      const buffers = await this.parseDownloads(downloads, rootJson)
+
+      const blobWriter = new BlobWriter()
+      const zipWriter = new ZipWriter(blobWriter)
+      const compressionPromises = [
+        ...buffers.map(({ path, blob }) => this.addToWriter(zipWriter, path, new BlobReader(blob))),
+        this.addToWriter(zipWriter, ROOT_FILE, new TextReader(JSON.stringify(rootJson))),
+      ]
+
+      this.toCompress = compressionPromises.length
+      await Promise.all(compressionPromises)
+
+      await zipWriter.close()
+
+      return new File([await blobWriter.getData()], `${tapestry.title}.zip`, { type: TYPE })
+    } catch (error) {
+      this.killSwitch.abort()
+      throw error
+    }
+  }
+
+  private prepareExport(tapestry: TapestryDto, presentation: PresentationStepDto[]) {
+    const draft = createDraft(tapestry)
+    const downloads: Promise<Download>[] = []
+
+    const addToDownloads = (source: string, id: string, prefix = '') => {
+      const { pathname } = new URL(source)
+      const [filename, extension] = fileExtension(pathname.split('/').at(-1)!)
+      const filePath = `${prefix}${id} (${filename})${extension ? `.${extension}` : ''}`
+      downloads.push(this.download(filePath, source))
+      return `${FILE_PREFIX}${filePath}`
+    }
+
+    if (draft.thumbnail) {
+      draft.thumbnail = addToDownloads(draft.thumbnail, 'thumbnail')
+    }
+
+    for (const item of draft.items ?? []) {
+      if (isMediaItem(item) && item.internallyHosted) {
+        item.source = addToDownloads(item.source, item.id, 'items/')
+      }
+      if (item.thumbnail) {
+        // Make sure export is fault tolerant and doesn't fail in case of duplicate renditions
+        item.thumbnail.renditions = uniqBy(item.thumbnail.renditions, (r) =>
+          generateItemThumbnailRenditionName(item.id, r),
+        )
+        item.thumbnail.renditions.forEach((rendition) => {
+          rendition.source = addToDownloads(
+            rendition.source,
+            generateItemThumbnailRenditionName(item.id, rendition),
+            'items/',
+          )
+        })
+      }
+      // This needs to be done after the call to isMediaItem, since otherwise the zod parsing will fail
+      // @ts-expect-error removing to comply with export schema
+      delete item.tapestryId
+    }
+
+    for (const rel of draft.rels ?? []) {
+      // @ts-expect-error removing to comply with export schema
+      delete rel.tapestryId
+    }
+
+    for (const group of draft.groups ?? []) {
+      // @ts-expect-error removing to comply with export schema
+      delete group.tapestryId
+    }
+
+    const rootJson = CurrentExportSchema.parse({
+      version: CurrentExportSchema.shape.version.value,
+      ...finishDraft(draft),
+      presentation,
+    })
+
+    return { rootJson, downloads }
+  }
+
+  private async download(filePath: string, source: string): Promise<Download> {
     const { data } = await axios.get<Blob>(source, {
       responseType: 'blob',
       headers: {
@@ -79,108 +170,6 @@ export class TapestryExporter {
       signal: this.killSwitch.signal,
     })
     return { path: filePath, blob: data }
-  }
-
-  async export(callback: (url: string, title: string) => unknown) {
-    this.blobWriter = new BlobWriter()
-    this.zipWriter = new ZipWriter(this.blobWriter)
-    this.progressCallback('pending')
-
-    try {
-      const tapestry = await resource('tapestries').read(
-        { id: this.tapestryId },
-        { include: ['items.thumbnail.renditions', 'rels', 'groups'] },
-        { signal: this.killSwitch.signal },
-      )
-      const presentation = await listAll(
-        resource('presentationSteps'),
-        { filter: { 'tapestryId:eq': this.tapestryId } },
-        this.killSwitch.signal,
-      )
-
-      const draft = createDraft(tapestry)
-
-      const downloads: Promise<Download>[] = []
-
-      const addToDownloads = (source: string, id: string, prefix = '') => {
-        const { pathname } = new URL(source)
-        const [filename, extension] = fileExtension(pathname.split('/').at(-1)!)
-        const filePath = `${prefix}${id} (${filename})${extension ? `.${extension}` : ''}`
-        downloads.push(this.download(filePath, source))
-        return filePath
-      }
-
-      if (draft.thumbnail) {
-        const filePath = addToDownloads(draft.thumbnail, 'thumbnail')
-        draft.thumbnail = `${FILE_PREFIX}${filePath}`
-      }
-
-      for (const item of draft.items ?? []) {
-        if (isMediaItem(item) && item.internallyHosted) {
-          const filePath = addToDownloads(item.source, item.id, 'items/')
-          item.source = `${FILE_PREFIX}${filePath}`
-        }
-        if (item.thumbnail) {
-          // Make sure export is fault tolerant and doesn't fail in case of duplicate renditions
-          item.thumbnail.renditions = uniqBy(item.thumbnail.renditions, (r) =>
-            generateItemThumbnailRenditionName(item.id, r),
-          )
-          item.thumbnail.renditions.forEach((rendition) => {
-            const filePath = addToDownloads(
-              rendition.source,
-              generateItemThumbnailRenditionName(item.id, rendition),
-              'items/',
-            )
-            rendition.source = `${FILE_PREFIX}${filePath}`
-          })
-        }
-        // This needs to be done after the call to isMediaItem, since otherwise the zod parsing will fail
-        // @ts-expect-error removing to comply with export schema
-        delete item.tapestryId
-      }
-
-      for (const rel of draft.rels ?? []) {
-        // @ts-expect-error removing to comply with export schema
-        delete rel.tapestryId
-      }
-
-      for (const group of draft.groups ?? []) {
-        // @ts-expect-error removing to comply with export schema
-        delete group.tapestryId
-      }
-
-      const rootJson = CurrentExportSchema.parse({
-        version: CurrentExportSchema.shape.version.value,
-        ...finishDraft(draft),
-        presentation,
-      })
-
-      this.toDownload = downloads.length
-      const buffers = await this.parseDownloads(downloads, rootJson)
-      const compressionPromises = []
-      for (const { path, blob } of buffers) {
-        compressionPromises.push(this.addToWriter(path, new BlobReader(blob)))
-      }
-      compressionPromises.push(
-        this.addToWriter(ROOT_FILE, new TextReader(JSON.stringify(rootJson))),
-      )
-
-      this.toCompress = compressionPromises.length
-      await Promise.all(compressionPromises)
-
-      await this.zipWriter.close()
-
-      const file = new File([await this.blobWriter.getData()], `tapestry ${tapestry.title}.zip`, {
-        type: TYPE,
-      })
-
-      const url = URL.createObjectURL(file)
-      callback(url, tapestry.title)
-      URL.revokeObjectURL(url)
-    } catch (error) {
-      this.killSwitch.abort()
-      this.errorCallback(error)
-    }
   }
 
   private async parseDownloads(downloads: Promise<Download>[], rootJson: CurrentExport) {
@@ -230,8 +219,8 @@ export class TapestryExporter {
     return buffers
   }
 
-  private addToWriter<T>(path: string, reader: Reader<T>) {
-    return this.zipWriter.add(path, reader, {
+  private addToWriter<T>(zipWriter: ZipWriter<Blob>, path: string, reader: Reader<T>) {
+    return zipWriter.add(path, reader, {
       onprogress: (progress) => {
         this.compressionProgress[path].progress = progress
         const values = Object.values(this.compressionProgress)
@@ -256,12 +245,9 @@ export class TapestryExporter {
       this.downloaded !== 0 &&
       !(this.toDownload === 1 && this.compressed === 0)
     ) {
-      this.progressCallback({
-        download: this.downloaded,
-        compression: this.compressed,
-      })
+      this.onProgress({ download: this.downloaded, compression: this.compressed })
     } else {
-      this.progressCallback('pending')
+      this.onProgress('pending')
     }
   }
 }
