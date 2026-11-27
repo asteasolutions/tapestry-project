@@ -12,7 +12,10 @@ export function WebpagePlaceholder({
   item: { thumbnail, size, webpageType },
 }: WebpagePlaceholderProps) {
   const showVideoPlayOverlay =
-    webpageType === 'youtube' || webpageType === 'vimeo' || webpageType === 'iaVideo'
+    webpageType === 'youtube' ||
+    webpageType === 'vimeo' ||
+    webpageType === 'iaVideo' ||
+    webpageType === 'googleDriveVideo'
 
   return (
     <div className={styles.placeholder}>

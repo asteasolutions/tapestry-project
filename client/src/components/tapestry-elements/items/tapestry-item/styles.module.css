@@ -1,19 +1,4 @@
 .root {
-  .upload-indicator {
-    position: absolute;
-    left: 8px;
-    right: 8px;
-    top: calc(100% + var(--active-border-width));
-  }
-
-  &:global(.tapestry-item-active) {
-    .upload-indicator {
-      top: 100%;
-      left: calc(8px + var(--active-border-width));
-      right: calc(8px + var(--active-border-width));
-    }
-  }
-
   :global(.pointer-action-drag.pointer-action-layer-pixi) & {
     pointer-events: none;
 

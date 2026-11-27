@@ -226,6 +226,7 @@ export const ITEM_SOURCE_DOMAINS: Record<string, string[]> = {
     'wikinews.org',
   ],
   YouTube: ['youtube.com', 'youtu.be', 'youtube-nocookie.com'],
+  'Google Drive': ['drive.google.com', 'docs.google.com'],
 }
 
 function classifySource(type: string, host: string | null) {
@@ -261,24 +262,48 @@ const ITEM_TYPES: [ItemType, string][] = [
 const MEDIA_KINDS: Partial<
   Record<(typeof ITEM_TYPES)[number][0], [ItemType | WebpageType, string][]>
 > = {
+  image: [
+    ['image', 'Uploaded image'],
+    ['googleDriveImage', 'Google Drive image'],
+  ],
   video: [
     ['video', 'Uploaded video'],
     ['youtube', 'YouTube'],
     ['vimeo', 'Vimeo'],
     ['iaVideo', 'Internet Archive video'],
+    ['googleDriveVideo', 'Google Drive video'],
   ],
   audio: [
     ['audio', 'Uploaded audio'],
     ['iaAudio', 'Internet Archive audio'],
+    ['googleDriveAudio', 'Google Drive audio'],
+  ],
+  book: [
+    ['book', 'Uploaded book'],
+    ['googleDriveBook', 'Google Drive book'],
+  ],
+  pdf: [
+    ['pdf', 'Uploaded PDF'],
+    ['googleDrivePdf', 'Google Drive PDF'],
   ],
   webpage: [
     ['webpage', 'Web page'],
     ['iaWayback', 'Wayback Machine'],
+    ['googleDrive', 'Google Drive (documents and other files)'],
   ],
 }
 
 const NON_MEDIA_TYPES = Prisma.sql`('text', 'actionButton')`
 
+// Google Drive files are web page items, but those of a known media type are reported under that type
+const ITEM_MEDIA_TYPE = Prisma.sql`CASE i."webpageType"::TEXT
+  WHEN 'googleDriveVideo' THEN 'video'
+  WHEN 'googleDriveAudio' THEN 'audio'
+  WHEN 'googleDriveImage' THEN 'image'
+  WHEN 'googleDrivePdf' THEN 'pdf'
+  WHEN 'googleDriveBook' THEN 'book'
+  ELSE i."type"::TEXT
+END`
 // ---- Metric definitions ----
 
 const METRICS: Record<ReportMetric, MetricDefinition> = {
@@ -460,7 +485,7 @@ const METRICS: Record<ReportMetric, MetricDefinition> = {
           (SELECT count(*) FROM "Tapestry" t WHERE t."ownerId" = u."id")::INTEGER AS tapestries,
           (SELECT count(*) FROM "Item" i JOIN "Tapestry" t ON t."id" = i."tapestryId"
             WHERE t."ownerId" = u."id")::INTEGER AS items,
-          (SELECT count(DISTINCT i."type") FROM "Item" i JOIN "Tapestry" t ON t."id" = i."tapestryId"
+          (SELECT count(DISTINCT ${ITEM_MEDIA_TYPE}) FROM "Item" i JOIN "Tapestry" t ON t."id" = i."tapestryId"
             WHERE t."ownerId" = u."id" AND i."type"::TEXT NOT IN ${NON_MEDIA_TYPES})::INTEGER AS "mediaTypes"
         FROM "User" u
         WHERE ${scope.role(Prisma.sql`u."role"`)}
@@ -531,7 +556,8 @@ const METRICS: Record<ReportMetric, MetricDefinition> = {
   'M-05': {
     title: 'Items per tapestry by media type',
     dataStatus: 'available',
-    limitations: null,
+    limitations:
+      'Google Drive videos, audio, images, PDFs and books are counted under their media type, not as web pages.',
     isCurrentState: true,
     compute: async (_range, scope) => {
       const tapestryCount = await prisma.tapestry.count({ where: scope.tapestryWhere })
@@ -542,9 +568,14 @@ const METRICS: Record<ReportMetric, MetricDefinition> = {
         WITH items AS (
           SELECT
             CASE
-              WHEN i."type" = 'webpage' AND i."webpageType" IN ('youtube', 'vimeo', 'iaVideo')
+              WHEN i."type" = 'webpage'
+                AND i."webpageType" IN ('youtube', 'vimeo', 'iaVideo', 'googleDriveVideo')
                 THEN 'video'
-              WHEN i."type" = 'webpage' AND i."webpageType" = 'iaAudio' THEN 'audio'
+              WHEN i."type" = 'webpage' AND i."webpageType" IN ('iaAudio', 'googleDriveAudio')
+                THEN 'audio'
+              WHEN i."type" = 'webpage' AND i."webpageType" = 'googleDriveImage' THEN 'image'
+              WHEN i."type" = 'webpage' AND i."webpageType" = 'googleDrivePdf' THEN 'pdf'
+              WHEN i."type" = 'webpage' AND i."webpageType" = 'googleDriveBook' THEN 'book'
               ELSE i."type"::TEXT
             END AS type,
             CASE
@@ -645,7 +676,7 @@ const METRICS: Record<ReportMetric, MetricDefinition> = {
           AND ${inRange(Prisma.sql`i."createdAt"`, range)}
         GROUP BY 1, 2
       `
-      const sources = ['Internet Archive', 'Wikimedia', 'YouTube', 'IIIF', 'Other']
+      const sources = ['Internet Archive', 'Wikimedia', 'YouTube', 'Google Drive', 'IIIF', 'Other']
       const counts = new Map(sources.map((s) => [s, 0]))
       for (const row of rows) {
         const source = classifySource(row.type, row.host)

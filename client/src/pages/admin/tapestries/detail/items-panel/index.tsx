@@ -28,10 +28,9 @@ const ITEM_TYPE_LABELS: Record<ItemDto['type'], string> = {
 }
 
 function itemTypeLabel(item: ItemDto) {
-  if (item.type === 'webpage' && item.webpageType) {
-    return WEBPAGE_TYPE_LABELS[item.webpageType]
-  }
-  return ITEM_TYPE_LABELS[item.type]
+  return item.type === 'webpage' && item.webpageType
+    ? WEBPAGE_TYPE_LABELS[item.webpageType]
+    : ITEM_TYPE_LABELS[item.type]
 }
 
 function itemLabel(item: ItemDto) {

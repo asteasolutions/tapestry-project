@@ -222,7 +222,7 @@ export class ItemRenderer<I extends ItemViewModel> extends TapestryElementRender
     const { type, size } = viewModel.dto
     const isVideoWebpage =
       type === 'webpage' &&
-      ['iaVideo', 'youtube', 'vimeo'].includes(viewModel.dto.webpageType ?? '')
+      ['iaVideo', 'youtube', 'vimeo', 'googleDriveVideo'].includes(viewModel.dto.webpageType ?? '')
 
     const iconKey: keyof Icons | undefined = isVideoWebpage
       ? 'videoWebpage'
