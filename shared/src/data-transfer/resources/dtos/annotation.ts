@@ -18,7 +18,9 @@ export interface AnnotationDto extends BaseResourceDto {
 type BaseAnnotationCreateDto = Omit<
   AnnotationDto,
   keyof BaseResourceDto | 'authorId' | 'author' | 'item' | 'commentThread'
->
+> & {
+  commentText?: string | null
+}
 
 export interface AnnotationCreateInTextDto extends BaseAnnotationCreateDto {
   annotationType: 'text'

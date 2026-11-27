@@ -113,31 +113,45 @@ export const annotations: RESTResourceImpl<Resources['annotations'], never> = {
     create: async ({ body }, { userId }) => {
       const item = await prisma.item.findUniqueOrThrow({
         where: { id: body.itemId },
-        select: { type: true, text: true, id: true },
+        select: { type: true, text: true, id: true, tapestryId: true },
       })
-      if (item.type === 'text') {
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-        if (body.annotationType !== 'text') {
-          throw new BadRequestError('Invalid annotation type')
-        }
-        const newAnnotationId = crypto.randomUUID()
+      return prisma.$transaction(async (tx) => {
+        let newAnnotation: AnnotationDto | null = null
+        if (item.type === 'text') {
+          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+          if (body.annotationType !== 'text') {
+            throw new BadRequestError('Invalid annotation type')
+          }
+          const newAnnotationId = crypto.randomUUID()
 
-        const newHTML = new TiptapEditorService(item.text!, TEXT_ITEM_EXTENSIONS_MASK)
-          .setMark(AnnotationExtension.name, body.from, body.to, {
-            id: newAnnotationId,
-          })
-          .toHTML()
-
-        return prisma.$transaction(async (tx) => {
+          const newHTML = new TiptapEditorService(item.text!, TEXT_ITEM_EXTENSIONS_MASK)
+            .setMark(AnnotationExtension.name, body.from, body.to, {
+              id: newAnnotationId,
+            })
+            .toHTML()
           await tx.item.update({ where: { id: item.id }, data: { text: newHTML } })
-          const newAnnotation = await tx.itemAnnotation.create({
+
+          newAnnotation = await tx.itemAnnotation.create({
             data: { itemId: body.itemId, authorId: userId, id: newAnnotationId },
           })
-          return serialize('ItemAnnotation', newAnnotation)
-        })
-      } else {
-        throw new BadRequestError('Annotations not implemented for this item type')
-      }
+        } else {
+          throw new BadRequestError('Annotations not implemented for this item type')
+        }
+
+        if (body.commentText) {
+          await tx.comment.create({
+            data: {
+              tapestryId: item.tapestryId,
+              itemId: item.id,
+              authorId: userId,
+              itemAnnotationId: newAnnotation.id,
+              contextType: 'itemAnnotation',
+              text: body.commentText,
+            },
+          })
+        }
+        return serialize('ItemAnnotation', newAnnotation)
+      })
     },
 
     destroy: async ({ pathParams: { id } }) => {

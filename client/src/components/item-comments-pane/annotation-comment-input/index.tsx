@@ -4,7 +4,6 @@ import { useAsyncAction } from 'tapestry-core-client/src/components/lib/hooks/us
 import { resource } from '../../../services/rest-resources'
 import {
   useDispatch,
-  useTapestryData,
   useTapestryDataSyncCommands,
 } from '../../../pages/tapestry/tapestry-providers'
 import { AnnotationCreateDto } from 'tapestry-shared/src/data-transfer/resources/dtos/annotation'
@@ -24,22 +23,19 @@ export function AnnotationCommentInput({
   onError,
 }: AnnotationCommentInputProps) {
   const dispatch = useDispatch()
-  const tapestryId = useTapestryData('id')
   const { reload } = useTapestryDataSyncCommands()
 
   const { trigger: createAnnotation, loading } = useAsyncAction(
     async ({ signal }, commentText: string) => {
       try {
-        const newAnnotation = await resource('annotations').create(pendingAnnotation, undefined, {
-          signal,
-        })
+        const newAnnotation = await resource('annotations').create(
+          { ...pendingAnnotation, commentText },
+          undefined,
+          {
+            signal,
+          },
+        )
 
-        await resource('comments').create({
-          tapestryId,
-          contextType: 'itemAnnotation',
-          contextId: newAnnotation.id,
-          text: commentText,
-        })
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         if (pendingAnnotation.annotationType === 'text') {
           await new Promise((res) =>

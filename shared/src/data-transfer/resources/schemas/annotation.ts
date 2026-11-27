@@ -27,6 +27,8 @@ const BaseAnnotationCreateSchema = AnnotationSchema.omit({
   author: true,
   item: true,
   commentThread: true,
+}).extend({
+  commentText: z.string().nullish(),
 })
 
 export const AnnotationCreateInTextSchema = BaseAnnotationCreateSchema.extend({

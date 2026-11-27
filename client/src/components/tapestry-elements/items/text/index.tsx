@@ -40,10 +40,12 @@ function useFocusedAnnotation(itemId: string, editorAPI: RefObject<RichTextEdito
 
   const { focus, annotationId } = params
 
+  const isItemFocused = itemId === focus
+
   useEffect(() => {
     try {
       const editor = editorAPI.current?.editor()
-      if (editor && annotationId) {
+      if (editor && annotationId && isItemFocused) {
         const annotationElements = editor.view.dom.querySelectorAll<HTMLElement>(
           `[${ANNOTATION_EXTENSION_ID_ATTR}="${annotationId}"]`,
         )
@@ -77,7 +79,7 @@ function useFocusedAnnotation(itemId: string, editorAPI: RefObject<RichTextEdito
         editor.commands.removeDecorationsFromMap(FOCUSED_ANNOTATION_DECORATION_KEY)
       }
     }
-  }, [editorAPI, timestamp, annotationId, focus])
+  }, [editorAPI, timestamp, annotationId, isItemFocused])
 
   return {
     focusAnnotation: (annotationId: string) => setNavigationState({ focus: itemId, annotationId }),
