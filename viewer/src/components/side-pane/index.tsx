@@ -9,6 +9,7 @@ import { SidePane as BaseSidePane } from 'tapestry-core-client/src/components/ta
 import { useTapestryData } from '../../app'
 import { deepFreeze } from 'tapestry-core/src/utils'
 import { thru } from 'lodash-es'
+import { SidePaneType } from 'tapestry-core-client/src/view-model'
 
 const VIEWER_ACTIONS = deepFreeze(
   thru(structuredClone(DEFAULT_ACTIONS), (actions) => {
@@ -21,10 +22,15 @@ const VIEWER_ACTIONS = deepFreeze(
 export function SidePane() {
   const displaySidePane = useTapestryData('displaySidePane')
 
-  const isHelpPanel = displaySidePane === 'guide' || displaySidePane === 'shortcuts'
+  const isHelpPanel =
+    displaySidePane?.type === SidePaneType.Guide || displaySidePane?.type === SidePaneType.Shortcuts
   const content = isHelpPanel ? (
-    <HelpPane sidePaneType={displaySidePane} guide={DEFAULT_GUIDE} shortcuts={VIEWER_ACTIONS} />
-  ) : displaySidePane === 'search' ? (
+    <HelpPane
+      sidePaneType={displaySidePane.type}
+      guide={DEFAULT_GUIDE}
+      shortcuts={VIEWER_ACTIONS}
+    />
+  ) : displaySidePane?.type === SidePaneType.Search ? (
     <SearchPane />
   ) : undefined
 

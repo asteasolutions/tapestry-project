@@ -1,0 +1,14 @@
+.root {
+  z-index: 2;
+  width: max-content;
+  background-color: var(--theme-background-primary);
+  box-shadow: var(--box-shadow);
+  border-radius: 8px;
+  padding: 4px;
+
+  .add-comment-button {
+    gap: 5px;
+
+    --text-color: var(--theme-text-brand);
+  }
+}

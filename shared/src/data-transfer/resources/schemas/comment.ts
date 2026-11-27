@@ -34,11 +34,16 @@ export const ReplySchema = BaseCommentSchema.extend({
   contextType: z.literal('comment'),
 })
 
+export const ItemAnnotationCommentSchema = BaseCommentSchema.extend({
+  contextType: z.literal('itemAnnotation'),
+})
+
 export const CommentSchema = z.discriminatedUnion('contextType', [
   TapestryCommentSchema,
   ItemCommentSchema,
   RelCommentSchema,
   ReplySchema,
+  ItemAnnotationCommentSchema,
 ])
 
 const commentCreateOmitPropsMask = {
@@ -52,6 +57,7 @@ export const CommentCreateSchema = z.discriminatedUnion('contextType', [
   ItemCommentSchema.omit({ ...commentCreateOmitPropsMask, item: true }),
   RelCommentSchema.omit({ ...commentCreateOmitPropsMask, rel: true }),
   ReplySchema.omit(commentCreateOmitPropsMask),
+  ItemAnnotationCommentSchema.omit(commentCreateOmitPropsMask),
 ])
 
 export const CommentUpdateSchema = z.object({

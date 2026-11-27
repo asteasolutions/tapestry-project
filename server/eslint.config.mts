@@ -13,23 +13,9 @@ export default tseslint.config(
       parserOptions: {
         tsconfigRootDir: import.meta.dirname,
         projectService: {
-          allowDefaultProject: [...allowDefaultProject, 'prisma/scripts/*.ts'],
+          allowDefaultProject: [...allowDefaultProject, 'prisma/scripts/*.ts', 'prisma.config.ts'],
         },
       },
-    },
-    rules: {
-      'no-restricted-imports': [
-        'error',
-        {
-          patterns: [
-            {
-              group: ['@prisma/client/*'],
-              allowImportNames: ['ITXClientDenyList', 'GetResult'],
-              message: 'Please use only ITXClientDenyList and GetResult from @prisma/client/*',
-            },
-          ],
-        },
-      ],
     },
   },
 )

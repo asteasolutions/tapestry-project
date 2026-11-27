@@ -1,0 +1,9 @@
+.focused-annotation {
+  background-color: var(--color-warning-400);
+  text-decoration: underline solid 2px var(--theme-background-brand);
+  text-underline-offset: 4px;
+}
+
+.pending-annotation {
+  background-color: var(--color-primary-100);
+}

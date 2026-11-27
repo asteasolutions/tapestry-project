@@ -222,6 +222,7 @@ export function fromTapestryDto(
     largeFiles: [],
     collectionImports: [],
     collaborators: {},
+    displaySidePane: null,
   }
 
   return produce(editableTapestryViewModel, (model) => {

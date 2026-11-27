@@ -16,6 +16,7 @@ import { JoinTapestriesModal } from '../../join-tapestries-modal'
 import { ShareDialog } from '../../share-dialog'
 import { UserMenu } from '../../user-menu'
 import styles from './styles.module.css'
+import { EditorSidePaneType } from '../../../pages/tapestry/view-model'
 
 interface UserToolbarProps {
   className?: string
@@ -71,7 +72,9 @@ export function UserToolbar({ className }: UserToolbarProps) {
           //   tooltip: { side: 'bottom', children: 'Ask Gemini' },
           // },
           {
-            element: <CommentButton count={commentThread?.size} type="general-comments" />,
+            element: (
+              <CommentButton count={commentThread?.size} type={EditorSidePaneType.Discussion} />
+            ),
             tooltip: { side: 'bottom', children: 'Comments' },
           },
           (visibility !== 'private' || userAccess === 'edit') && {

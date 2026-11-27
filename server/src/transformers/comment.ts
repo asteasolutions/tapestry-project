@@ -1,6 +1,6 @@
-import { Comment } from '@prisma/client'
 import { get, set } from 'lodash-es'
 import { CommentDto } from 'tapestry-shared/src/data-transfer/resources/dtos/comment.js'
+import { Comment } from '../../prisma/generated/prisma/client'
 
 //eslint-disable-next-line @typescript-eslint/require-await
 export async function commentDbToDto(dbComment: Comment): Promise<CommentDto> {
@@ -16,6 +16,7 @@ export async function commentDbToDto(dbComment: Comment): Promise<CommentDto> {
       item: dbComment.itemId,
       rel: dbComment.relId,
       comment: dbComment.parentCommentId,
+      itemAnnotation: dbComment.itemAnnotationId,
     }[dbComment.contextType]!,
     tapestryId: dbComment.tapestryId,
     deletedAt: dbComment.deletedAt,
@@ -34,6 +35,7 @@ const DB_TO_DTO_FIELD_MAP: Record<CommentDBField, string> = {
   itemId: 'contextId',
   relId: 'contextId',
   parentCommentId: 'contextId',
+  itemAnnotationId: 'contextId',
   deletedAt: 'deletedAt',
 }
 
@@ -47,7 +49,7 @@ export function commentDtoToDb<O extends CommentDBField>(
   omit?: O[],
 ): Omit<Comment, O> {
   const exclude: CommentDBField[] = [...(omit ?? [])]
-  if (comment.contextType !== 'item') {
+  if (comment.contextType !== 'item' && comment.contextType !== 'itemAnnotation') {
     exclude.push('itemId')
   }
   if (comment.contextType !== 'rel') {
@@ -55,6 +57,9 @@ export function commentDtoToDb<O extends CommentDBField>(
   }
   if (comment.contextType !== 'comment') {
     exclude.push('parentCommentId')
+  }
+  if (comment.contextType !== 'itemAnnotation') {
+    exclude.push('itemAnnotationId')
   }
 
   const fieldsToAssign = (Object.keys(DB_TO_DTO_FIELD_MAP) as CommentDBField[]).filter(

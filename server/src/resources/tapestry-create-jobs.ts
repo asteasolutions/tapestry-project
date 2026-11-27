@@ -1,12 +1,12 @@
 import { Resources } from 'tapestry-shared/src/data-transfer/resources/index.js'
 import { prisma } from '../db.js'
-import { Prisma, TapestryCreateJob } from '@prisma/client'
 import { RESTResourceImpl } from './base-resource.js'
 import { parseListFilter } from './utils.js'
 import { serialize } from '../transformers/index.js'
 import { queue } from '../tasks/index.js'
 import { TapestryCreateJobCreateDto } from 'tapestry-shared/src/data-transfer/resources/dtos/tapestry-create-job.js'
 import { canEditTapestry, canViewTapestry } from './tapestries.js'
+import { Prisma, TapestryCreateJob } from '../../prisma/generated/prisma/client.js'
 
 async function canCreateTapestryCreateJob(userId: string, body: TapestryCreateJobCreateDto) {
   if (body.type === 'import') {

@@ -1,4 +1,4 @@
-import { Prisma } from '@prisma/client'
+import { Prisma } from '../../../prisma/generated/prisma/client.js'
 import { Resources } from 'tapestry-shared/src/data-transfer/resources/index.js'
 import { prisma, Tx } from '../../db.js'
 import { RESTResourceImpl } from '../base-resource.js'

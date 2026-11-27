@@ -1,6 +1,5 @@
 import { Resources } from 'tapestry-shared/src/data-transfer/resources/index.js'
 import { prisma } from '../db.js'
-import { Prisma, Tapestry } from '@prisma/client'
 import { RequestContext, RESTResourceImpl } from './base-resource.js'
 import { tapestryDtoToDb } from '../transformers/tapestry.js'
 import { checkOpSupport, CustomFilters, parseIncludes, parseListFilter } from './utils.js'
@@ -17,6 +16,7 @@ import { ListParamsOutputDto } from 'tapestry-shared/src/data-transfer/resources
 import { createItems } from './items.js'
 import { createRels } from './rels.js'
 import { socketIdFromRequest, socketServer } from '../socket/index.js'
+import { Prisma, Tapestry } from '../../prisma/generated/prisma/client.js'
 import { isAdmin } from '../auth/roles.js'
 import { logAdminOpenedTapestry } from '../services/admin-activity.js'
 import { deleteTapestryPermanently, unfeatureTapestry } from '../services/tapestry-sharing.js'
@@ -213,8 +213,10 @@ async function canUpdateTapestry(userId: string, tapestryId: string, update: Tap
   return canEditTapestry(userId, tapestry)
 }
 
-export async function ownsTapestry(userId: string, tapestryId: string) {
-  return !!(await prisma.tapestry.findUnique({ where: { id: tapestryId, ownerId: userId } }))
+export async function ownsTapestry(userId: string | null, tapestryId: string) {
+  return (
+    !!userId && !!(await prisma.tapestry.findUnique({ where: { id: tapestryId, ownerId: userId } }))
+  )
 }
 
 function createTapestriesListFilter(userId: string | null): Prisma.TapestryWhereInput {

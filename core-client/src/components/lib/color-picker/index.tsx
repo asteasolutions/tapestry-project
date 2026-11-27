@@ -1,7 +1,7 @@
 import { ReactNode, useCallback, useRef } from 'react'
 import { ClickableContext } from '../buttons/clickable-context.js'
 import styles from './styles.module.css'
-import { LiteralColor } from '../../../theme/types.js'
+import { LiteralColor } from 'tapestry-core/src/lib/string'
 
 export interface ColorPickerProps {
   onChange: (color: LiteralColor) => unknown

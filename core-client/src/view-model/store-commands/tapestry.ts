@@ -210,12 +210,18 @@ export function toggleOutline(id: string | null): StoreMutationCommand<TapestryV
   }
 }
 
+export interface SidePaneOptions {
+  toggle?: boolean
+}
+
 export function setSidePane(
-  displaySidePane: string | null,
-  toggle = false,
+  sidePaneType: string | null,
+  { toggle = false }: SidePaneOptions = {},
 ): StoreMutationCommand<TapestryViewModel> {
   return (model) => {
     model.displaySidePane =
-      toggle && displaySidePane === model.displaySidePane ? null : displaySidePane
+      !sidePaneType || (toggle && sidePaneType === model.displaySidePane?.type)
+        ? null
+        : { type: sidePaneType }
   }
 }

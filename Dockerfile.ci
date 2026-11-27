@@ -15,9 +15,10 @@ ADD core/ /app/core
 ADD core-client/ /app/core-client
 ADD shared/ /app/shared
 ADD client/ /app/client
-ADD server/ /app/server
 ADD viewer/ /app/viewer
 
+ADD server/prisma /app/server/prisma
 RUN cd /app/server && npm run prisma:generate
+ADD server/ /app/server
 
 CMD ["npm", "run", "lint"]

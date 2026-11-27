@@ -1,5 +1,3 @@
-import { Prisma } from '@prisma/client'
-import { GetResult } from '@prisma/client/runtime/library'
 import { TapestryDto } from 'tapestry-shared/src/data-transfer/resources/dtos/tapestry.js'
 import {
   UserDto,
@@ -34,6 +32,11 @@ import {
   ImageAssetDto,
   ImageAssetRenditionDto,
 } from 'tapestry-shared/src/data-transfer/resources/dtos/image-assets.js'
+import { GetResult } from '@prisma/client/runtime/client'
+import { Prisma } from '../../prisma/generated/prisma/client.js'
+import { getPrismaDatamodel } from '../db.js'
+import { AnnotationDto } from 'tapestry-shared/src/data-transfer/resources/dtos/annotation.js'
+import { itemAnnotationDbToDto } from './item-annotation.js'
 
 import { TapestryExportDto } from 'tapestry-shared/src/data-transfer/resources/dtos/tapestry-export.js'
 import { AdminActivityDto } from 'tapestry-shared/src/data-transfer/resources/dtos/admin.js'
@@ -61,6 +64,7 @@ interface DtoMap {
   TapestryBookmark: { default: TapestryBookmarkDto }
   ImageAsset: { default: ImageAssetDto }
   ImageAssetRendition: { default: ImageAssetRenditionDto }
+  ItemAnnotation: { default: AnnotationDto }
   AdminActivity: { default: AdminActivityDto }
   TapestryDeletion: { default: Prisma.TapestryDeletionGetPayload<null> }
   TapestryExport: { default: TapestryExportDto }
@@ -102,6 +106,7 @@ const MODEL_SERIALIZERS: ModelSerializersMap = {
   TapestryBookmark: { default: identity },
   ImageAsset: { default: identity },
   ImageAssetRendition: { default: imageAssetRenditionDbToDto },
+  ItemAnnotation: { default: itemAnnotationDbToDto },
   AdminActivity: { default: (activity) => Promise.resolve(adminActivityDbToDto(activity)) },
   TapestryDeletion: { default: identity },
   TapestryExport: { default: identity },
@@ -117,6 +122,7 @@ const RELATION_VIEWS: RelationViews = {
     TapestryToUser: 'publicProfile',
     TapestryAccessToUser: 'publicProfile',
     AiChatToUser: 'publicProfile',
+    ItemAnnotationToUser: 'publicProfile',
   },
 }
 
@@ -141,7 +147,7 @@ export async function serialize<M extends Prisma.ModelName, V extends keyof DtoM
   const serializer = MODEL_SERIALIZERS[modelName][view ?? 'default']
   const dto = (await serializer(instance)) as DtoMap[M][V]
 
-  const model = Prisma.dmmf.datamodel.models.find((m) => m.name === modelName)!
+  const model = getPrismaDatamodel().datamodel.models.find((m) => m.name === modelName)!
   const relations = model.fields.filter((f) => f.kind === 'object' && f.type in MODEL_SERIALIZERS)
   // We operate under the assumption that relations in the database have the same
   // names as relations in DTOs. If this were not true, we would have to implement

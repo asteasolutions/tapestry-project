@@ -6,7 +6,6 @@ import { obtainShadowNineSlice, ShadowNineSlice } from './shadow-texture-cache'
 import { TapestryElementRenderer } from './tapestry-element-renderer'
 import { ThumbnailContainer, ThumbnailContainerState } from './thumbnail-container'
 import { ThemeName, THEMES } from '../../theme/themes'
-import { LiteralColor } from '../../theme/types'
 import { getItemOverlayScale } from '../../view-model/utils'
 import { roundToPrecision } from 'tapestry-core/src/lib/algebra'
 import {
@@ -15,6 +14,8 @@ import {
   shouldDisplayDom,
 } from '../../components/tapestry/tapestry-canvas'
 import { snapshotRegistry } from '../controller/item-thumbnail-controller'
+import { LiteralColor } from 'tapestry-core/src/lib/string'
+import { debounce } from 'lodash'
 
 export interface ItemRenderState<I extends ItemViewModel> {
   viewModel: I
@@ -23,6 +24,7 @@ export interface ItemRenderState<I extends ItemViewModel> {
   theme: ThemeName
   dropShadow?: ShadowNineSlice
   thumbnailsInitialized?: boolean
+  viewportScale?: number
 }
 
 type Icons = Record<
@@ -137,6 +139,10 @@ export class ItemRenderer<I extends ItemViewModel> extends TapestryElementRender
   // Maybe we should generalize this concept in some way as Tapestry viewer applications
   // would not have a "drag" area.
   private dragArea: Container
+  private computeViewportScale = debounce(
+    (store: Store<TapestryViewModel>) => store.get('viewport.transform.scale'),
+    100,
+  )
 
   constructor(store: Store<TapestryViewModel>, stage: TapestryStage, viewModel: I) {
     super(store, stage, viewModel)
@@ -168,6 +174,7 @@ export class ItemRenderer<I extends ItemViewModel> extends TapestryElementRender
         ? obtainShadowNineSlice(stage.pixi.tapestry.app.renderer, 8)
         : undefined,
       thumbnailsInitialized: store.get('thumbnailsInitialized'),
+      viewportScale: this.computeViewportScale(store),
     }
   }
 

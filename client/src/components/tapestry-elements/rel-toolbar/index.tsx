@@ -7,7 +7,7 @@ import { useSingleChoice } from 'tapestry-core-client/src/components/lib/hooks/u
 import { splitInRows } from 'tapestry-core/src/lib/array'
 import { shortcutLabel } from 'tapestry-core-client/src/lib/keyboard-event'
 import { userSettings } from '../../../services/user-settings'
-import { LiteralColor } from 'tapestry-core-client/src/theme/types'
+import { LiteralColor } from 'tapestry-core/src/lib/string'
 import {
   IconButton,
   ColorButton,
@@ -16,7 +16,7 @@ import {
 import { ShortcutLabel } from 'tapestry-core-client/src/components/lib/shortcut-label'
 import { MenuItems } from 'tapestry-core-client/src/components/lib/toolbar/index'
 import { EditorElementToolbar } from '../editor-element-toolbar'
-import { EditableRelViewModel } from '../../../pages/tapestry/view-model'
+import { EditableRelViewModel, EditorSidePaneType } from '../../../pages/tapestry/view-model'
 import styles from './styles.module.css'
 import { useDispatch, useTapestryData } from '../../../pages/tapestry/tapestry-providers'
 import { deleteRels, updateRel } from '../../../pages/tapestry/view-model/store-commands/rels'
@@ -90,7 +90,7 @@ export function RelToolbar({ rel, relBounds }: RelToolbarProps) {
   const menuItems: MenuItems = [
     <CommentButton
       count={commentThread?.size}
-      type="inline-comments"
+      type={EditorSidePaneType.RelComments}
       tooltip={{ side: 'bottom', children: 'Comments' }}
     />,
   ]

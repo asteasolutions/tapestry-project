@@ -1,7 +1,7 @@
-import { Prisma } from '@prisma/client'
 import { get, set } from 'lodash-es'
 import { HexColor } from 'tapestry-core/src/data-format/schemas/common.js'
 import { RelDto } from 'tapestry-shared/src/data-transfer/resources/dtos/rel.js'
+import { Prisma } from '../../prisma/generated/prisma/client'
 
 //eslint-disable-next-line @typescript-eslint/require-await
 export async function relDbToDto(dbRel: Prisma.RelGetPayload<null>): Promise<RelDto> {

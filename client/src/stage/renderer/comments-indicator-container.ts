@@ -1,5 +1,5 @@
 import { Container, ContainerOptions, Graphics, Rectangle, Text } from 'pixi.js'
-import { LiteralColor } from 'tapestry-core-client/src/theme/types'
+import { LiteralColor } from 'tapestry-core/src/lib/string'
 import { DESIGN_SYSTEM } from 'tapestry-core-client/src/theme/design-system'
 import { Theme } from 'tapestry-core-client/src/theme/themes'
 import Color from 'color'
@@ -121,7 +121,7 @@ export class CommentsIndicatorContainer extends Container {
   }
 
   private updateCommentsCountText(count: number) {
-    this.commentsCountText.text = count
+    this.commentsCountText.text = ` ${count} Comment${count === 1 ? '' : 's'}`
     this.updateCommentsIndicatorBackground()
   }
 
@@ -135,6 +135,7 @@ export class CommentsIndicatorContainer extends Container {
     this.commentsIndicatorBackground
       .roundRect(0, 0, calculatedWidth, HEIGHT, BORDER_RADIUS)
       .fill({ color: 'white' })
+      .stroke({ width: 1, color: '#b6bcc3' })
 
     const { x, y } = this.commentsIndicatorBackground.position
     this.hitArea = new Rectangle(x, y, calculatedWidth, HEIGHT)

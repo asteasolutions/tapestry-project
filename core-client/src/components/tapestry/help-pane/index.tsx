@@ -1,6 +1,7 @@
 import { useTapestryConfig } from '..'
 import { Icon } from '../../../../src/components/lib/icon/index'
 import { TabPanel } from '../../../../src/components/lib/tab-panel/index'
+import { SidePaneType } from '../../../view-model'
 import { setSidePane } from '../../../view-model/store-commands/tapestry'
 import { GuidePane, GuideSection } from './guide-pane'
 import { ActionsSection, ShortcutsPane } from './shortcuts-pane'
@@ -39,8 +40,8 @@ export function HelpPane({ sidePaneType, shortcuts, guide }: HelpPaneProps) {
         }}
         className={styles.tabPanel}
       />
-      {sidePaneType === 'shortcuts' && <ShortcutsPane actions={shortcuts} />}
-      {sidePaneType === 'guide' && <GuidePane guide={guide} />}
+      {sidePaneType === String(SidePaneType.Shortcuts) && <ShortcutsPane actions={shortcuts} />}
+      {sidePaneType === String(SidePaneType.Guide) && <GuidePane guide={guide} />}
     </div>
   )
 }

@@ -10,7 +10,7 @@ import {
 import { s3Service, tapestryKey } from '../services/s3-service'
 import { DBSubscriber } from '../socket'
 import { pick } from 'lodash-es'
-import { Item } from '@prisma/client'
+import { Item } from '../../prisma/generated/prisma/client'
 
 const MIN_PDF_PAGE = {
   width: 600,

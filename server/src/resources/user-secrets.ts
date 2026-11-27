@@ -3,9 +3,9 @@ import { prisma } from '../db.js'
 import { RESTResourceImpl } from './base-resource.js'
 import { parseIncludes, parseListFilter } from './utils.js'
 import { serialize } from '../transformers/index.js'
-import { Prisma } from '@prisma/client'
 import { ConflictError } from '../errors/index.js'
 import { UserSecretService } from '../services/user-secret-service.js'
+import { Prisma } from '../../prisma/generated/prisma/client.js'
 
 async function ownsSecret(userId: string, secretId: string) {
   const secret = await prisma.userSecret.findUniqueOrThrow({ where: { id: secretId } })

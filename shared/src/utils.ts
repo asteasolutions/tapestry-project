@@ -1,7 +1,22 @@
+import { Controls } from 'tapestry-core/src/tiptap'
 import { PublicUserProfileDto, UserDto } from './data-transfer/resources/dtos/user'
 import { Size } from 'tapestry-core/src/data-format/schemas/common'
 
 export const MAX_SOURCE_FILE_SIZE = 500 * 1000 * 1000 // 500 MB
+
+export type TiptapExtensionsMask = { [K in keyof Controls]?: true } & { format: true }
+
+export const TEXT_ITEM_EXTENSIONS_MASK: TiptapExtensionsMask = {
+  format: true,
+  list: true,
+  link: true,
+  color: true,
+  justification: true,
+  fontSize: true,
+  fontFamily: true,
+  annotation: true,
+  decorationsMap: true,
+}
 
 export function userToPublicProfileDto(user: UserDto): PublicUserProfileDto {
   return {

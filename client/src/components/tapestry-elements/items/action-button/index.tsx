@@ -1,10 +1,5 @@
 import { memo, useEffect, useRef, useState } from 'react'
-import {
-  Controls,
-  createSelectionState,
-  RichTextEditorApi,
-  SelectionState,
-} from 'tapestry-core-client/src/components/lib/rich-text-editor'
+import { RichTextEditorApi } from 'tapestry-core-client/src/components/lib/rich-text-editor'
 import { ActionButtonItemViewer } from 'tapestry-core-client/src/components/tapestry/items/action-button/viewer'
 import { ActionButtonItemDto } from 'tapestry-shared/src/data-transfer/resources/dtos/item'
 import { TapestryItemProps } from '..'
@@ -17,11 +12,13 @@ import { ToggleFormatButton, tooltip } from '../text/toggle-format-button'
 import { richTextEditorToolbar } from '../text/toolbar'
 import { AssignActionButton } from '../../../assign-action-button'
 import { buildToolbarMenu } from '../../item-toolbar'
+import { Controls, createSelectionState, SelectionState } from 'tapestry-core/src/tiptap'
 
 const controls = {
-  link: false,
-  justification: false,
-  list: false,
+  format: true,
+  color: true,
+  fontSize: true,
+  fontFamily: true,
 } satisfies Controls
 
 export const ActionButtonItem = memo(({ id }: TapestryItemProps) => {

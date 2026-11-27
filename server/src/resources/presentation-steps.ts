@@ -4,7 +4,6 @@ import { RequestContext, RESTResourceImpl } from './base-resource.js'
 import { canEditTapestry, canListTapestryElements, canViewTapestry } from './tapestries.js'
 import { checkOpSupport, CustomFilters, parseIncludes, parseListFilter } from './utils.js'
 import { serialize } from '../transformers/index.js'
-import { PresentationStep, Prisma } from '@prisma/client'
 import { canEditItem } from './items.js'
 import { ensureArray, IdMap, OneOrMore } from 'tapestry-core/src/utils.js'
 import {
@@ -18,6 +17,7 @@ import { canEditGroup } from './groups.js'
 import { presentationStepDtoToDb } from '../transformers/presentation-steps.js'
 import { socketIdFromRequest, socketServer } from '../socket/index.js'
 import { groupBy } from 'lodash-es'
+import { PresentationStep, Prisma } from '../../prisma/generated/prisma/client.js'
 
 type CustomFilterProp = 'tapestryId'
 

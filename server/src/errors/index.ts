@@ -1,4 +1,3 @@
-import { Prisma } from '@prisma/client'
 import { ErrorRequestHandler } from 'express'
 import { HttpError } from 'http-errors'
 import { mapValues } from 'lodash-es'
@@ -18,6 +17,13 @@ import {
 } from 'tapestry-shared/src/data-transfer/resources/schemas/errors.js'
 import { flattenError } from 'zod/v4'
 import { isNotFoundError, isUniqueConstraintViolation } from '../db.js'
+import {
+  PrismaClientInitializationError,
+  PrismaClientKnownRequestError,
+  PrismaClientRustPanicError,
+  PrismaClientUnknownRequestError,
+  PrismaClientValidationError,
+} from '@prisma/client/runtime/client'
 
 abstract class APIError<T extends ErrorName = ErrorName> extends Error {
   constructor(
@@ -161,16 +167,13 @@ export function toAPIError(err: unknown) {
   }
 
   if (
-    err instanceof Prisma.PrismaClientKnownRequestError ||
-    err instanceof Prisma.PrismaClientUnknownRequestError ||
-    err instanceof Prisma.PrismaClientValidationError
+    err instanceof PrismaClientKnownRequestError ||
+    err instanceof PrismaClientUnknownRequestError ||
+    err instanceof PrismaClientValidationError
   ) {
     return new BadRequestError()
   }
-  if (
-    err instanceof Prisma.PrismaClientRustPanicError ||
-    err instanceof Prisma.PrismaClientInitializationError
-  ) {
+  if (err instanceof PrismaClientRustPanicError || err instanceof PrismaClientInitializationError) {
     return new ServerError()
   }
   if (err instanceof APIError) {

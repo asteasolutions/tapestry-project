@@ -13,13 +13,13 @@ import {
 } from 'ai'
 import { config } from '../config.js'
 import { prisma } from '../db.js'
-import { Item, UserSecretType } from '@prisma/client'
 import { capitalize, compact, sum } from 'lodash-es'
 import z from 'zod/v4'
 import { createTapestry } from '../resources/tapestries.js'
 import { ItemCreateInTapestryDto } from 'tapestry-shared/src/data-transfer/resources/dtos/item.js'
 import { UserSecretService } from '../services/user-secret-service.js'
 import { LanguageModelV2, LanguageModelV2Usage } from '@ai-sdk/provider'
+import { Item, UserSecretType } from '../../prisma/generated/prisma/client.js'
 
 export interface AIChatContext {
   userId: string

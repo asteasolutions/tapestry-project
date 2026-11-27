@@ -1,14 +1,15 @@
-import { useLocation, useSearchParams } from 'react-router'
+import { useSearchParams } from 'react-router'
 import { useEffect, useRef } from 'react'
 import { focusGroup, focusItems } from '../../../view-model/store-commands/viewport'
 import { setInteractiveElement } from '../../../view-model/store-commands/tapestry'
 import { useTapestryConfig } from '..'
 import { InternalNavigationState } from '../../../stage/controller/item-controller'
+import { useNavigationState } from './use-navigation-state'
 
-export function useFocusElement() {
+export function useFocusElement<T extends Record<string, string>>() {
   const [searchParams, setSearchParams] = useSearchParams()
 
-  return (id: string, params?: Record<string, string>) => {
+  return (id: string, params?: T) => {
     setSearchParams(
       { focus: id, ...params },
       {
@@ -21,10 +22,8 @@ export function useFocusElement() {
 
 export function useFocusedElement() {
   const { useStoreData, useDispatch } = useTapestryConfig()
-  const [params] = useSearchParams()
-  const modelId = params.get('focus')
-
-  const locationState = useLocation().state as InternalNavigationState | null
+  const { params, locationState } = useNavigationState()
+  const modelId = params.focus
 
   const { timestamp, animate } = locationState ?? {}
 

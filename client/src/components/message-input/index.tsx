@@ -8,7 +8,6 @@ import clsx from 'clsx'
 import {
   RichTextEditor,
   RichTextEditorApi,
-  SelectionState,
 } from 'tapestry-core-client/src/components/lib/rich-text-editor'
 import { richTextEditorToolbar } from '../tapestry-elements/items/text/toolbar'
 import { Toolbar } from 'tapestry-core-client/src/components/lib/toolbar'
@@ -17,6 +16,13 @@ import { useTapestryData } from '../../pages/tapestry/tapestry-providers'
 import { noop } from 'lodash-es'
 import { isMeta } from 'tapestry-core-client/src/lib/keyboard-event'
 import { useTextboxLink } from '../../hooks/use-textbox-link'
+import { Controls, SelectionState } from 'tapestry-core/src/tiptap'
+
+export const MESSAGE_CONTROLS_MASK = {
+  format: true,
+  list: true,
+  link: true,
+} satisfies Controls
 
 export interface MessageInputProps {
   onSubmit: (text: string) => unknown
@@ -85,12 +91,7 @@ export function MessageInput({
       }
     },
     addingLink,
-    controls: {
-      fontFamily: false,
-      fontSize: false,
-      color: false,
-      justification: false,
-    },
+    controls: MESSAGE_CONTROLS_MASK,
   })
 
   const { perform: submitMessage, loading: isSubmitting } = useAsyncAction(async () => {
@@ -146,12 +147,7 @@ export function MessageInput({
               isEditable={true}
               api={editorApiRef}
               placeholder={placeholder}
-              controls={{
-                color: false,
-                justification: false,
-                fontFamily: false,
-                fontSize: false,
-              }}
+              controls={MESSAGE_CONTROLS_MASK}
               events={{
                 onCreate: () => setIsEditorReady(true),
                 onChange: setInput,

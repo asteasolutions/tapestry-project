@@ -1,9 +1,9 @@
 import { Size } from 'tapestry-core/src/data-format/schemas/common'
-import { Item, ItemType } from '@prisma/client'
 import { parseDBItemSource } from '../../transformers/item.js'
 import { generateVideoThumbnail } from './video.js'
 import { generatePDFThumbnail } from './pdf.js'
 import { generateImageThumbnail } from './image.js'
+import { Item, ItemType } from '../../../prisma/generated/prisma/client.js'
 import {
   generateGoogleDriveThumbnail,
   generateWebpageThumbnail,

@@ -12,12 +12,50 @@ import { useState } from 'react'
 import { SimpleModal } from 'tapestry-core-client/src/components/lib/modal/index'
 import { useAsyncAction } from 'tapestry-core-client/src/components/lib/hooks/use-async-action'
 import { resource } from '../../../services/rest-resources'
-import { MessageInput } from '../../message-input'
+import { MESSAGE_CONTROLS_MASK, MessageInput } from '../../message-input'
 import { useTapestryData } from '../../../pages/tapestry/tapestry-providers'
 import { Tooltip } from 'tapestry-core-client/src/components/lib/tooltip/index'
 import { RichTextEditor } from 'tapestry-core-client/src/components/lib/rich-text-editor'
 import { useNavigate } from 'react-router'
 import { useTapestryPath } from '../../../hooks/use-tapestry-path'
+
+interface CommentContentProps {
+  text: string
+}
+
+export function CommentTextContent({ text }: CommentContentProps) {
+  const navigate = useNavigate()
+  const interactionMode = useTapestryData('interactionMode')
+  const tapestryPath = useTapestryPath(interactionMode)
+
+  return (
+    <RichTextEditor
+      controls={MESSAGE_CONTROLS_MASK}
+      events={{
+        onClick: async (e: React.MouseEvent<HTMLDivElement>) => {
+          const anchor = (e.target as HTMLElement).closest('a')
+          if (!anchor) return
+
+          const href = anchor.getAttribute('href')
+          if (!href) return
+
+          const isInternal = href.startsWith('?')
+
+          if (isInternal) {
+            e.preventDefault()
+
+            await navigate(`${tapestryPath}${href}`, {
+              replace: false,
+              state: { timestamp: Date.now() },
+            })
+          }
+        },
+      }}
+      value={text}
+      isEditable={false}
+    />
+  )
+}
 
 interface CommentProps {
   comment: CommentDto
@@ -30,9 +68,6 @@ interface CommentProps {
 
 function CommentContent({ createdAt, updatedAt, deletedAt, text }: CommentDto) {
   const lastUpdate = isEqual(updatedAt, createdAt) ? undefined : updatedAt
-  const navigate = useNavigate()
-  const interactionMode = useTapestryData('interactionMode')
-  const tapestryPath = useTapestryPath(interactionMode)
 
   if (deletedAt) {
     return (
@@ -44,30 +79,7 @@ function CommentContent({ createdAt, updatedAt, deletedAt, text }: CommentDto) {
 
   return (
     <div className={styles.commentText}>
-      <RichTextEditor
-        events={{
-          onClick: async (e: React.MouseEvent<HTMLDivElement>) => {
-            const anchor = (e.target as HTMLElement).closest('a')
-            if (!anchor) return
-
-            const href = anchor.getAttribute('href')
-            if (!href) return
-
-            const isInternal = href.startsWith('?')
-
-            if (isInternal) {
-              e.preventDefault()
-
-              await navigate(`${tapestryPath}${href}`, {
-                replace: false,
-                state: { timestamp: Date.now() },
-              })
-            }
-          },
-        }}
-        value={text}
-        isEditable={false}
-      />
+      <CommentTextContent text={text} />
       {lastUpdate && (
         <Text variant="bodyXs" className={styles.editLabel}>
           (edited)

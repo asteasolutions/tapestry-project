@@ -1,16 +1,17 @@
 import { useTapestryConfig } from '../..'
 import { IconButton } from '../../../../../src/components/lib/buttons/index'
 import { useKeyboardShortcuts } from '../../../../../src/components/lib/hooks/use-keyboard-shortcuts'
+import { SidePaneType } from '../../../../view-model'
 import { deselectAll, setSidePane } from '../../../../view-model/store-commands/tapestry'
 import { focusItems } from '../../../../view-model/store-commands/viewport'
 
 export function SearchButton() {
   const { useDispatch, useStoreData } = useTapestryConfig()
   const dispatch = useDispatch()
-  const showing = useStoreData('displaySidePane') === 'search'
+  const showing = useStoreData('displaySidePane')?.type === SidePaneType.Search
 
   function toggleDialog() {
-    dispatch(setSidePane('search', true))
+    dispatch(setSidePane(SidePaneType.Search, { toggle: true }))
     if (!showing) {
       // TODO: The timeout is here so the SearchPane can render and call useViewportObstruction,
       // so that focusing the items will take into account the new panel that has just appeared.

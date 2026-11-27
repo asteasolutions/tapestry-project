@@ -11,12 +11,13 @@ import {
 } from '../../view-model/utils'
 import { idMapToArray } from 'tapestry-core/src/utils'
 import { drawDashedPolyline, roundedRectPolyline } from '../../lib/pixi'
-import { getOpaqueColor, LiteralColor } from '../../theme/types'
+import { getOpaqueColor } from '../../theme/types'
 import { Point, Rectangle, Size } from 'tapestry-core/src/lib/geometry'
 import { clamp, throttle } from 'lodash-es'
 import { ThemeName, THEMES } from '../../theme/themes'
 import { TapestryElementRenderer } from './tapestry-element-renderer'
 import { roundToPrecision } from 'tapestry-core/src/lib/algebra'
+import { LiteralColor } from 'tapestry-core/src/lib/string'
 
 export interface GroupBackgroundRenderState {
   origin: Point

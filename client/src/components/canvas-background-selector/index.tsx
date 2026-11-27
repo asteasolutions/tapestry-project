@@ -1,6 +1,6 @@
 import { toPairs } from 'lodash-es'
 import { getPaletteColor } from 'tapestry-core-client/src/theme/design-system'
-import { LiteralColor } from 'tapestry-core-client/src/theme/types'
+import { LiteralColor } from 'tapestry-core/src/lib/string'
 import { ColorButton } from 'tapestry-core-client/src/components/lib/buttons/index'
 import { Text } from 'tapestry-core-client/src/components/lib/text/index'
 import styles from './styles.module.css'

@@ -1,4 +1,5 @@
-import { DesignSystem, LiteralColor } from 'tapestry-core-client/src/theme/types'
+import { DesignSystem } from 'tapestry-core-client/src/theme/types'
+import { LiteralColor } from 'tapestry-core/src/lib/string'
 
 export interface NarrativeDesignSystem {
   typography: DesignSystem['typography']

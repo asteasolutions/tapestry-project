@@ -117,6 +117,12 @@ export interface SnackbarData {
   readonly variant?: 'normal' | 'warning' | 'error' | 'success'
 }
 
+export enum SidePaneType {
+  Guide = 'guide',
+  Shortcuts = 'shortcuts',
+  Search = 'search',
+}
+
 export interface TapestryViewModel<
   I extends ItemViewModel = ItemViewModel,
   R extends RelViewModel = RelViewModel,
@@ -151,5 +157,5 @@ export interface TapestryViewModel<
   readonly groups: Readonly<IdMap<G>>
   readonly presentationSteps: Readonly<IdMap<P>>
   // TODO: try to figure out a way to put stricter types here
-  readonly displaySidePane: string | null
+  readonly displaySidePane: { type: string; data?: Record<string, unknown> } | null
 }

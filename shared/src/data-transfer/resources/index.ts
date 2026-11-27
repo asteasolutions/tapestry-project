@@ -87,6 +87,8 @@ import {
   TapestryBookmarkCreateSchema,
   TapestryBookmarkSchema,
 } from './schemas/tapestry-bookmark.js'
+import { AnnotationCreateSchema, AnnotationSchema } from './schemas/annotation.js'
+import { AnnotationCreateDto, AnnotationDto } from './dtos/annotation.js'
 
 import { TapestryExportCreateDto, TapestryExportDto } from './dtos/tapestry-export.js'
 import { TapestryExportCreateSchema, TapestryExportSchema } from './schemas/tapestry-export.js'
@@ -336,6 +338,14 @@ export const resources = {
     requireAuth: 'crudl',
     createParamsSchema: UserSecretCreateSchema,
     updateParamsSchema: UserSecretUpdateSchema,
+  }),
+  annotations: createRESTEndpoints<IO<AnnotationDto>, IO<AnnotationCreateDto>>()({
+    name: 'annotations',
+    schema: AnnotationSchema,
+    allowedIncludes: ['author', 'commentThread'],
+    endpoints: 'crdl',
+    requireAuth: 'cd',
+    createParamsSchema: AnnotationCreateSchema,
   }),
   tapestryExports: createRESTEndpoints<IO<TapestryExportDto>, IO<TapestryExportCreateDto>>()({
     name: 'tapestry-exports',

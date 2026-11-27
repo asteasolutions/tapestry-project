@@ -28,7 +28,11 @@ import { getSelectionItems, isItemInSelection } from 'tapestry-core-client/src/v
 import { Id } from 'tapestry-core/src/data-format/schemas/common'
 import { translate, vector } from 'tapestry-core/src/lib/geometry'
 import { router } from '../../main'
-import { InteractionMode, TapestryEditorStore } from '../../pages/tapestry/view-model'
+import {
+  EditorSidePaneType,
+  InteractionMode,
+  TapestryEditorStore,
+} from '../../pages/tapestry/view-model'
 import {
   updateSelectionDragState,
   updateSelectionItems,
@@ -164,7 +168,11 @@ export class EditorItemController extends ItemController {
     if (isHoveredElement(hoverTarget) && hoverTarget.uiComponent === 'commentsIndicator') {
       this.editorStore.dispatch(
         setInteractiveElement({ modelType: hoverTarget.type, modelId: hoverTarget.modelId }),
-        setSidePane('inline-comments'),
+        setSidePane(
+          hoverTarget.type === 'item'
+            ? EditorSidePaneType.ItemComments
+            : EditorSidePaneType.RelComments,
+        ),
       )
     } else {
       super.onClickItem(event)

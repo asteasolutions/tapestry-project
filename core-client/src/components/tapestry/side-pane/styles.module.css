@@ -1,6 +1,7 @@
 .root {
   --right-offset: 16px;
   --width: min(400px, calc(100vw - var(--right-offset) * 2));
+  --side-pane-border-radius: 16px;
 
   display: grid;
   grid-template-rows: auto 1fr;
@@ -9,7 +10,7 @@
   bottom: var(--bottom);
   right: var(--right-offset);
   width: var(--width);
-  border-radius: 16px;
+  border-radius: var(--side-pane-border-radius);
   box-shadow: var(--box-shadow);
   background-color: var(--theme-background-primary);
   color: var(--theme-text-primary);

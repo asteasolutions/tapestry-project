@@ -1,13 +1,13 @@
 // Prisma schema docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider        = "prisma-client-js"
+  provider        = "prisma-client"
   previewFeatures = ["postgresqlExtensions"]
+  output          = "./generated/prisma"
 }
 
 datasource db {
   provider   = "postgresql"
-  url        = env("DATABASE_URL")
   extensions = [citext]
 }
 
@@ -32,6 +32,7 @@ model User {
   aiChats              AiChat[]
   secrets              UserSecret[]
   tapestryBookmarks    TapestryBookmark[]
+  itemAnnotations      ItemAnnotation[]
   role                 UserRole              @default(user)
   adminActivities      AdminActivity[]
   ownedDeletions       TapestryDeletion[]    @relation("deletedTapestryOwner")
@@ -244,6 +245,7 @@ model Item {
   comments                     Comment[]
   presentationSteps            PresentationStep[]
   referencingAttachments       AiChatMessageAttachment[]
+  itemAnnotations              ItemAnnotation[]
 
   @@index([tapestryId])
   @@index([thumbnailId])
@@ -308,31 +310,35 @@ enum CommentContextType {
   item
   rel
   comment
+  itemAnnotation
 }
 
 model Comment {
-  id              String             @id @default(uuid())
-  createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
-  text            String
-  author          User               @relation(fields: [authorId], references: [id], onDelete: Restrict)
-  authorId        String
-  contextType     CommentContextType
-  tapestry        Tapestry           @relation(fields: [tapestryId], references: [id], onDelete: Cascade)
-  tapestryId      String
-  item            Item?              @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  itemId          String?
-  rel             Rel?               @relation(fields: [relId], references: [id], onDelete: Cascade)
-  relId           String?
-  parentComment   Comment?           @relation("reply", fields: [parentCommentId], references: [id], onDelete: Cascade)
-  parentCommentId String?
-  replies         Comment[]          @relation("reply")
-  deletedAt       DateTime?
+  id               String             @id @default(uuid())
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  text             String
+  author           User               @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  authorId         String
+  contextType      CommentContextType
+  tapestry         Tapestry           @relation(fields: [tapestryId], references: [id], onDelete: Cascade)
+  tapestryId       String
+  item             Item?              @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  itemId           String?
+  rel              Rel?               @relation(fields: [relId], references: [id], onDelete: Cascade)
+  relId            String?
+  parentComment    Comment?           @relation("reply", fields: [parentCommentId], references: [id], onDelete: Cascade)
+  parentCommentId  String?
+  replies          Comment[]          @relation("reply")
+  itemAnnotation   ItemAnnotation?    @relation(fields: [itemAnnotationId], references: [id], onDelete: Cascade)
+  itemAnnotationId String?
+  deletedAt        DateTime?
 
   @@index([tapestryId])
   @@index([itemId])
   @@index([relId])
   @@index([parentCommentId])
+  @@index([itemAnnotationId])
 }
 
 enum JobStatus {
@@ -457,6 +463,21 @@ model UserSecret {
   ownerId     String
 
   @@index([ownerId])
+}
+
+model ItemAnnotation {
+  id          String    @id @default(uuid())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  item        Item      @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  itemId      String
+  author      User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId    String
+  isHighlight Boolean   @default(false)
+  comments    Comment[]
+
+  @@index(itemId)
+  @@index(authorId)
 }
 
 enum AdminAction {

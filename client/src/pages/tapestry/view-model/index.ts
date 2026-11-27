@@ -20,11 +20,17 @@ import { Store } from 'tapestry-core-client/src/lib/store'
 import { RelDto } from 'tapestry-shared/src/data-transfer/resources/dtos/rel'
 import { GroupDto } from 'tapestry-shared/src/data-transfer/resources/dtos/group'
 import { cast } from 'tapestry-core-client/src/lib/store/ugly-cast'
-import { LiteralColor } from 'tapestry-core-client/src/theme/types'
+import { LiteralColor } from 'tapestry-core/src/lib/string'
 import { PublicUserProfileDto } from 'tapestry-shared/src/data-transfer/resources/dtos/user'
 import { IdMap } from 'tapestry-core/src/utils'
 import { RequiredFields } from 'tapestry-core/src/type-utils'
 import { ViewportLimits } from 'tapestry-core-client/src/view-model/utils'
+import { AnnotationCreateDto } from 'tapestry-shared/src/data-transfer/resources/dtos/annotation'
+
+export type TapestrySearchParams = {
+  focus?: string
+  annotationId?: string
+}
 
 export const EDIT_VIEWPORT_LIMITS: ViewportLimits = {
   minZoomContentRatio: 0.5,
@@ -191,6 +197,27 @@ export type ActiveCollaborator = RequiredFields<Collaborator, 'cursorPosition'>
 
 export type TapestryWithOwner<T extends Partial<TapestryDto>> = RequiredFields<T, 'owner'>
 
+export enum EditorSidePaneType {
+  Guide = 'guide',
+  Shortcuts = 'shortcuts',
+  Search = 'search',
+  Discussion = 'discussion',
+  ItemComments = 'item-comments',
+  RelComments = 'rel-comments',
+  ItemAnnotations = 'item-annotations',
+  AIChat = 'ai-chat',
+}
+
+export type EditorSidePaneDisplay =
+  | { type: Exclude<EditorSidePaneType, EditorSidePaneType.ItemAnnotations> }
+  | {
+      type: EditorSidePaneType.ItemAnnotations
+      data?: {
+        annotationId: string
+      }
+    }
+  | null
+
 export interface EditableTapestryViewModel
   extends
     TapestryViewModel<
@@ -219,6 +246,8 @@ export interface EditableTapestryViewModel
   readonly newRelPreview?: EditableRelViewModel | null
   readonly hideEditControls?: boolean
   readonly collaborators: Readonly<IdMap<Collaborator>>
+  readonly displaySidePane: EditorSidePaneDisplay
+  readonly pendingAnnotation?: AnnotationCreateDto | null
 }
 
 export type TapestryEditorStore = Store<EditableTapestryViewModel, { base: TapestryViewModel }>

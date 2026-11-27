@@ -11,7 +11,7 @@ interface DeleteTapestryModalProps {
 }
 
 export function DeleteTapestryModal({ id, title, onCancel, onConfirm }: DeleteTapestryModalProps) {
-  const { perform: deleteTapestry } = useAsyncAction(
+  const { perform: deleteTapestry, loading } = useAsyncAction(
     async ({ signal }) => await resource('tapestries').destroy({ id }, { signal }),
     { onAfterAction: () => onConfirm?.() },
   )
@@ -24,6 +24,7 @@ export function DeleteTapestryModal({ id, title, onCancel, onConfirm }: DeleteTa
         text: 'Delete',
         variant: 'primary-negative',
         onClick: deleteTapestry,
+        loading,
       }}
     >
       <Text>Are you sure you want to delete “{title}”?</Text>

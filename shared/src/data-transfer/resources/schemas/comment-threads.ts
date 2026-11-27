@@ -1,6 +1,12 @@
 import z from 'zod/v4'
-import { ItemCommentSchema, RelCommentSchema, TapestryCommentSchema } from './comment.js'
+import {
+  ItemAnnotationCommentSchema,
+  ItemCommentSchema,
+  RelCommentSchema,
+  TapestryCommentSchema,
+} from './comment.js'
 import { BaseResourceSchema } from './common.js'
+import { PublicUserProfileSchema } from './user.js'
 
 const BaseCommentThreadSchema = BaseResourceSchema.extend({
   contextId: z.string(),
@@ -14,12 +20,21 @@ export const TapestryCommentThreadSchema = BaseCommentThreadSchema.extend({
 
 export const ItemCommentThreadSchema = BaseCommentThreadSchema.extend({
   contextType: ItemCommentSchema.shape.contextType,
-  firstComment: ItemCommentSchema,
+  firstComment: z.discriminatedUnion('contextType', [
+    ItemCommentSchema,
+    ItemAnnotationCommentSchema,
+  ]),
 })
 
 export const RelCommentThreadSchema = BaseCommentThreadSchema.extend({
   contextType: RelCommentSchema.shape.contextType,
   firstComment: RelCommentSchema,
+})
+
+export const ItemAnnotationCommentThreadSchema = BaseCommentThreadSchema.extend({
+  contextType: ItemAnnotationCommentSchema.shape.contextType,
+  firstComment: ItemAnnotationCommentSchema,
+  authors: PublicUserProfileSchema.array(),
 })
 
 export const CommentThreadSchema = z.discriminatedUnion('contextType', [

@@ -1,7 +1,8 @@
 import { compact, entries, mapKeys, omit } from 'lodash-es'
 import { Theme } from './themes.js'
-import { Color, DesignSystem, isLiteralColor, LiteralColor, TypographyName } from './types.js'
+import { Color, DesignSystem, isLiteralColor, TypographyName } from './types.js'
 import Colorjs from 'color'
+import { LiteralColor } from 'tapestry-core/src/lib/string.js'
 
 function kebabCase(str: string) {
   return str

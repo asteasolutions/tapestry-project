@@ -1,13 +1,15 @@
-import { ReactNode, useState } from 'react'
+import { ReactNode, useEffect, useRef, useState } from 'react'
 import { Text } from 'tapestry-core-client/src/components/lib/text/index'
 import Gemini from '../../assets/icons/gemini.svg?react'
 import { SvgIcon } from 'tapestry-core-client/src/components/lib/svg-icon/index'
 import { AIChat } from '../ai-chat'
-import { CommentsPane } from '../comments-pane'
+import { ItemCommentsPane } from '../item-comments-pane'
 import { HelpPane } from 'tapestry-core-client/src/components/tapestry/help-pane'
 import { useDispatch, useTapestryData } from '../../pages/tapestry/tapestry-providers'
 import {
   hideEditControls,
+  setPendingAnnotation,
+  setSidePane,
   setSnackbar,
 } from '../../pages/tapestry/view-model/store-commands/tapestry'
 import { SidePane as BaseSidePane } from 'tapestry-core-client/src/components/tapestry/side-pane/index.js'
@@ -16,7 +18,7 @@ import {
   DEFAULT_GUIDE,
   GuideSection,
 } from 'tapestry-core-client/src/components/tapestry/help-pane/guide-pane'
-import { thru } from 'lodash-es'
+import { omit, thru } from 'lodash-es'
 import {
   Action,
   ActionsSection,
@@ -24,6 +26,11 @@ import {
   DEFAULT_ACTIONS,
 } from 'tapestry-core-client/src/components/tapestry/help-pane/shortcuts-pane'
 import { deepFreeze } from 'tapestry-core/src/utils'
+import { EditorSidePaneType, TapestrySearchParams } from '../../pages/tapestry/view-model'
+import { DiscussionPane } from '../discussion-pane'
+import { RelCommentsPane } from '../rel-comments-pane'
+import { useNavigationState } from 'tapestry-core-client/src/components/tapestry/hooks/use-navigation-state'
+import { usePropRef } from 'tapestry-core-client/src/components/lib/hooks/use-prop-ref'
 
 const EDITOR_GUIDE: GuideSection[] = [
   {
@@ -105,10 +112,77 @@ const EDITOR_ACTIONS: ActionsSection[] = thru(structuredClone(DEFAULT_ACTIONS), 
   return actions
 })
 
-// TODO: Try to make the key strongly typed
-const headerText: Record<string, ReactNode> = {
-  'general-comments': 'Comments',
-  'inline-comments': 'Comments',
+function useSidePaneControl(sidePaneType: EditorSidePaneType | null) {
+  const { interactiveElement, pendingAnnotation } = useTapestryData([
+    'interactiveElement',
+    'pendingAnnotation',
+  ])
+
+  const dispatch = useDispatch()
+
+  // annotation search param controls
+  const navigationControls = useNavigationState<TapestrySearchParams>()
+  const navigationControlsRef = usePropRef(navigationControls)
+
+  const params = navigationControls.params
+  const timestamp = navigationControls.locationState?.timestamp
+  const oldTimestampRef = useRef(timestamp)
+
+  useEffect(() => {
+    const isOwnItemAnnotationPaneOpen =
+      sidePaneType === EditorSidePaneType.ItemAnnotations &&
+      params.focus &&
+      params.focus === interactiveElement?.modelId
+
+    if (params.annotationId && !isOwnItemAnnotationPaneOpen) {
+      if (timestamp && oldTimestampRef.current === timestamp) {
+        void navigationControlsRef.current.setNavigationState(omit(params, 'annotationId'), {
+          state: navigationControlsRef.current.locationState,
+        })
+      } else {
+        dispatch(
+          setSidePane({
+            type: EditorSidePaneType.ItemAnnotations,
+            data: { annotationId: params.annotationId },
+          }),
+        )
+      }
+    }
+    oldTimestampRef.current = timestamp
+  }, [
+    sidePaneType,
+    interactiveElement,
+    timestamp,
+    params,
+    oldTimestampRef,
+    navigationControlsRef,
+    dispatch,
+  ])
+
+  useEffect(() => {
+    const isItemCommentsPane =
+      sidePaneType === EditorSidePaneType.ItemComments ||
+      sidePaneType === EditorSidePaneType.ItemAnnotations
+    if (
+      (interactiveElement?.modelType !== 'item' && isItemCommentsPane) ||
+      (interactiveElement?.modelType !== 'rel' && sidePaneType === EditorSidePaneType.RelComments)
+    ) {
+      dispatch(setSidePane(null))
+    }
+    if (
+      pendingAnnotation &&
+      (pendingAnnotation.itemId !== interactiveElement?.modelId || !isItemCommentsPane)
+    ) {
+      dispatch(setPendingAnnotation(null))
+    }
+  }, [sidePaneType, pendingAnnotation, interactiveElement, dispatch])
+}
+
+const headerText: Partial<Record<EditorSidePaneType, ReactNode>> = {
+  discussion: 'Discussion',
+  'item-comments': 'Comments',
+  'rel-comments': 'Comments',
+  'item-annotations': 'Comments',
   shortcuts: 'Help',
   guide: 'Help',
   'ai-chat': (
@@ -128,10 +202,25 @@ export function SidePane() {
   const [isMinimized, setIsMinimized] = useState(false)
   const dispatch = useDispatch()
 
+  const type = displaySidePane?.type
+
+  useSidePaneControl(type ?? null)
+
   const content =
-    displaySidePane === 'inline-comments' || displaySidePane === 'general-comments' ? (
-      <CommentsPane commentsPaneType={displaySidePane} />
-    ) : displaySidePane === 'ai-chat' ? (
+    type === EditorSidePaneType.ItemComments || type === EditorSidePaneType.ItemAnnotations ? (
+      <ItemCommentsPane
+        commentsPaneType={type}
+        annotationId={
+          displaySidePane?.type === EditorSidePaneType.ItemAnnotations
+            ? displaySidePane.data?.annotationId
+            : undefined
+        }
+      />
+    ) : type === EditorSidePaneType.RelComments ? (
+      <RelCommentsPane />
+    ) : type === EditorSidePaneType.Discussion ? (
+      <DiscussionPane />
+    ) : type === EditorSidePaneType.AIChat ? (
       <AIChat
         tapestryId={tapestryId}
         canAttachItems
@@ -144,19 +233,19 @@ export function SidePane() {
           )
         }}
       />
-    ) : displaySidePane === 'guide' || displaySidePane === 'shortcuts' ? (
+    ) : type === EditorSidePaneType.Guide || type === EditorSidePaneType.Shortcuts ? (
       <HelpPane
-        sidePaneType={displaySidePane}
+        sidePaneType={type}
         guide={interactionMode === 'edit' ? EDITOR_GUIDE : DEFAULT_GUIDE}
         shortcuts={interactionMode === 'edit' ? EDITOR_ACTIONS : VIEWER_ACTIONS}
       />
-    ) : displaySidePane === 'search' ? (
+    ) : type === EditorSidePaneType.Search ? (
       <SearchPane />
     ) : undefined
 
   return (
     <BaseSidePane
-      heading={displaySidePane && headerText[displaySidePane]}
+      heading={type && headerText[type]}
       isMinimized={isMinimized}
       isShown={!!displaySidePane}
     >

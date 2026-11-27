@@ -10,9 +10,9 @@ import {
 import { ORIGIN, Rectangle, Size } from 'tapestry-core/src/lib/geometry'
 import { ShadowNineSlice } from './shadow-texture-cache'
 import { isEqual } from 'lodash-es'
-import { LiteralColor } from '../../theme/types'
 import { drawRoundedRect } from '../../lib/pixi'
 import { getItemOverlayScale } from '../../view-model/utils'
+import { LiteralColor } from 'tapestry-core/src/lib/string'
 
 export type IconName = 'pdf' | 'videoCam' | 'playArrow' | 'volumeUp' | 'book' | 'webpage'
 

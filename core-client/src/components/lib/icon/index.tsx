@@ -7,6 +7,7 @@ const ICONS = [
   'abc',
   'account_balance',
   'add',
+  'add_comment',
   'add_link',
   'admin_panel_settings',
   'animated_images',
@@ -63,6 +64,7 @@ const ICONS = [
   'format_align_right',
   'format_bold',
   'format_color_text',
+  'format_ink_highlighter',
   'format_italic',
   'format_list_bulleted',
   'format_list_numbered',
@@ -171,19 +173,26 @@ type IconProps<T extends IconComponent = 'span'> = Omit<ComponentProps<T>, 'comp
   icon: IconName
   filled?: boolean
   component?: T
+  size?: number
 }
 
 export function Icon<T extends IconComponent = 'span'>({
   icon,
   filled = false,
   component,
+  size,
   className,
+  style,
   ...rest
 }: IconProps<T>) {
   return createElement(
     component ?? 'span',
     {
       className: clsx('material-symbols-outlined', className, { [styles.filled]: filled }),
+      style: {
+        fontSize: size ? `${size}px` : undefined,
+        ...style,
+      },
       ...rest,
     },
     icon,

@@ -3,8 +3,8 @@ import { resources } from 'tapestry-shared/src/data-transfer/resources/index.js'
 import { isUniqueConstraintViolation, prisma } from '../db.js'
 import { serialize } from '../transformers/index.js'
 import { BadRequestError, ForbiddenError } from '../errors/index.js'
-import { Prisma } from '@prisma/client'
 import { parseIncludes, parseListFilter } from './utils.js'
+import { Prisma } from '../../prisma/generated/prisma/client.js'
 
 async function tapestryOwner(id: string, userId: string) {
   return !!(await prisma.tapestryAccess.findUnique({
