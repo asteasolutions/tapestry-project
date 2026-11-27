@@ -38,11 +38,7 @@ import {
   useTapestryDataSyncCommands,
   useTapestryStore,
 } from './tapestry-providers'
-import {
-  setInteractionMode,
-  setInteractiveElement,
-  setSnackbar,
-} from './view-model/store-commands/tapestry'
+import { setInteractionMode, deselectAll, setSnackbar } from './view-model/store-commands/tapestry'
 import { ViewportDebugData } from './viewport-debug-data'
 import { createPixiApp } from 'tapestry-core-client/src/stage'
 import { PropsWithStyle } from 'tapestry-core-client/src/components/lib'
@@ -144,10 +140,7 @@ export function Tapestry({ initialThumbnails }: TapestryProps) {
       <TapestrySnackbar />
       {!hideEditControls && (
         <>
-          <div
-            className={styles.usersData}
-            onPointerDownCapture={() => dispatch(setInteractiveElement(null))}
-          >
+          <div className={styles.usersData} onPointerDownCapture={() => dispatch(deselectAll())}>
             <DoingWorkIndicator />
             <CollaboratorIndicators />
             {screenshotMode !== 'dashboard' && <UserToolbar />}
@@ -181,11 +174,7 @@ const MainToolbar = memo(function MainToolbar({ className, style }: PropsWithSty
   }
 
   return (
-    <div
-      className={className}
-      style={style}
-      onPointerDownCapture={() => dispatch(setInteractiveElement(null))}
-    >
+    <div className={className} style={style} onPointerDownCapture={() => dispatch(deselectAll())}>
       <EditorTitleBar />
       <div className={styles.leftToolbar}>
         {!hideEditControls && <ImportToolbar />}
