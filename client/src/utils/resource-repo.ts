@@ -280,6 +280,12 @@ export abstract class ResourceRepo<
     const errors: ErrorResponseDto[] = []
     const toSetInWorkingCopy: TypeMap[K]['resource'][] = []
     const toRemoveFromWorkingCopy: string[] = []
+    // Resources this client already knew about before this response. A known resource without a
+    // version has been deleted locally, while an unknown one has been created by someone else.
+    const knownIds = new Set([
+      ...Object.keys(this.remote[resourceName]),
+      ...(request.create ?? []).map(({ id }) => id),
+    ])
 
     const updateRemoteCopy = (resource: TypeMap[K]['resource']) => {
       set(this.remote, [resourceName, resource.id], resource)
@@ -326,12 +332,16 @@ export abstract class ResourceRepo<
     this.update((workingCopy) => {
       toSetInWorkingCopy.forEach((resource) => {
         const resourcePath = [resourceName, resource.id]
-
-        // Don't override local changes that may have happened since the push operation started
-        if (
-          get(this.resourceVersions, resourcePath) !== undefined &&
-          get(this.resourceVersions, resourcePath) <= commitVersion
-        ) {
+        const version = get(this.resourceVersions, resourcePath) as number | undefined
+        if (version === undefined) {
+          // Add resources created remotely, but don't bring back ones deleted locally
+          if (!knownIds.has(resource.id)) {
+            // eslint-disable-next-line @typescript-eslint/no-floating-promises
+            set(workingCopy, resourcePath, resource)
+            set(this.resourceVersions, resourcePath, this.head - 1)
+          }
+        } else if (version <= commitVersion) {
+          // Don't override local changes that may have happened since the push operation started
           // eslint-disable-next-line @typescript-eslint/no-floating-promises
           set(workingCopy, resourcePath, resource)
         }
