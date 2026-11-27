@@ -1,4 +1,4 @@
-import { Container, Rectangle } from 'pixi.js'
+import { Container, Graphics, Rectangle } from 'pixi.js'
 import { TapestryStage } from '..'
 import { Store } from '../../lib/store'
 import { ItemViewModel, TapestryViewModel } from '../../view-model'
@@ -7,6 +7,7 @@ import { TapestryElementRenderer } from './tapestry-element-renderer'
 import { ThumbnailContainer, ThumbnailContainerState } from './thumbnail-container'
 import { ThemeName, THEMES } from '../../theme/themes'
 import { LiteralColor } from '../../theme/types'
+import { getPaletteColor } from '../../theme/design-system'
 import { getItemOverlayScale } from '../../view-model/utils'
 import { roundToPrecision } from 'tapestry-core/src/lib/algebra'
 import {
@@ -15,6 +16,7 @@ import {
   shouldDisplayDom,
 } from '../../components/tapestry/tapestry-canvas'
 import { snapshotRegistry } from '../controller/item-thumbnail-controller'
+import { isHoveredItem } from '../utils'
 
 export interface ItemRenderState<I extends ItemViewModel> {
   viewModel: I
@@ -23,6 +25,18 @@ export interface ItemRenderState<I extends ItemViewModel> {
   theme: ThemeName
   dropShadow?: ShadowNineSlice
   thumbnailsInitialized?: boolean
+  buttonState: ButtonState
+}
+
+// Hover/press feedback for action buttons, drawn over their thumbnail, and only there
+type ButtonState = 'idle' | 'hover' | 'pressed'
+
+const BUTTON_STATE_OVERLAY: Record<
+  Exclude<ButtonState, 'idle'>,
+  { color: LiteralColor; alpha: number }
+> = {
+  hover: { color: getPaletteColor('neutral.0'), alpha: 0.2 },
+  pressed: { color: getPaletteColor('neutral.1000'), alpha: 0.1 },
 }
 
 type Icons = Record<
@@ -137,21 +151,89 @@ export class ItemRenderer<I extends ItemViewModel> extends TapestryElementRender
   // Maybe we should generalize this concept in some way as Tapestry viewer applications
   // would not have a "drag" area.
   private dragArea: Container
+  private buttonOverlay = new Graphics({ eventMode: 'none' })
+  private isPressed = false
 
-  constructor(store: Store<TapestryViewModel>, stage: TapestryStage, viewModel: I) {
-    super(store, stage, viewModel)
+  constructor(
+    private itemStore: Store<TapestryViewModel>,
+    private itemStage: TapestryStage,
+    viewModel: I,
+  ) {
+    super(itemStore, itemStage, viewModel)
     this.thumbnail = new ThumbnailContainer(null, {
       borderRadius: 8,
       thumbnailPlacement: viewModel.dto.type === 'image' ? 'stretch' : 'cover',
     })
     this.dragArea = new Container({ label: 'dragArea', eventMode: 'static' })
     this.pixiContainer.addChild(this.thumbnail)
+    this.pixiContainer.addChild(this.buttonOverlay)
     this.pixiContainer.addChild(this.dragArea)
+
+    if (viewModel.dto.type === 'actionButton') {
+      itemStage.root.addEventListener('pointerdown', this.onPointerDown)
+      document.addEventListener('pointerup', this.onPointerUp)
+      document.addEventListener('pointercancel', this.onPointerUp)
+    }
   }
+
+  dispose(): void {
+    this.itemStage.root.removeEventListener('pointerdown', this.onPointerDown)
+    document.removeEventListener('pointerup', this.onPointerUp)
+    document.removeEventListener('pointercancel', this.onPointerUp)
+    super.dispose()
+  }
+
+  /** Whether action buttons show hover/press feedback. The editor turns it off in edit mode. */
+  protected hasButtonFeedback() {
+    return true
+  }
+
+  private isHovered(id: string) {
+    const pointerInteraction = this.itemStore.get('pointerInteraction')
+    return (
+      pointerInteraction?.action === 'hover' &&
+      isHoveredItem(pointerInteraction.target) &&
+      pointerInteraction.target.modelId === id
+    )
+  }
+
+  private obtainButtonState(viewModel: I): ButtonState {
+    const { id, type } = viewModel.dto
+    if (type !== 'actionButton' || !this.hasButtonFeedback()) return 'idle'
+    if (this.isPressed) return 'pressed'
+    return this.isHovered(id) ? 'hover' : 'idle'
+  }
+
+  private setPressed(isPressed: boolean) {
+    if (this.isPressed === isPressed) return
+    this.isPressed = isPressed
+    const viewModel = this.itemStore.get(`items.${this.pixiContainer.modelRef.modelId}`)
+    if (viewModel) {
+      this.render(viewModel as I)
+      this.itemStage.pixi.tapestry.scheduleRedraw()
+    }
+  }
+
+  private onPointerDown = () => {
+    if (this.isHovered(this.pixiContainer.modelRef.modelId)) this.setPressed(true)
+  }
+
+  private onPointerUp = () => this.setPressed(false)
 
   protected doRender(state: ItemRenderState<I>): void {
     this.updateHitArea(state)
     this.updateThumbnail(state)
+    this.updateButtonOverlay(state)
+  }
+
+  private updateButtonOverlay({ viewModel, buttonState }: ItemRenderState<I>) {
+    this.buttonOverlay.clear()
+    if (buttonState === 'idle' || !this.thumbnail.visible) return
+
+    const { position, size } = viewModel.dto
+    this.buttonOverlay
+      .roundRect(position.x, position.y, size.width, size.height, 8)
+      .fill(BUTTON_STATE_OVERLAY[buttonState])
   }
 
   protected obtainRenderState(
@@ -168,6 +250,7 @@ export class ItemRenderer<I extends ItemViewModel> extends TapestryElementRender
         ? obtainShadowNineSlice(stage.pixi.tapestry.app.renderer, 8)
         : undefined,
       thumbnailsInitialized: store.get('thumbnailsInitialized'),
+      buttonState: this.obtainButtonState(viewModel),
     }
   }
 

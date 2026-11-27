@@ -8,12 +8,10 @@ import styles from './styles.module.css'
 
 export interface ActionButtonItemViewerProps extends Partial<RichTextEditorProps> {
   id: Id
-  clickable?: boolean
 }
 
 export function ActionButtonItemViewer({
   id,
-  clickable,
   style,
   className,
   ...rteProps
@@ -33,7 +31,7 @@ export function ActionButtonItemViewer({
       style={{ backgroundColor, ...style }}
       className={clsx(textItemEditorStyles.editor, styles.root, className, {
         [textItemEditorStyles.interactive]: isInteractiveElement,
-        [styles.clickable]: clickable,
+        [styles.static]: !rteProps.isEditable,
       })}
       {...rteProps}
     />

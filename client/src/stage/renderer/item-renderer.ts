@@ -22,10 +22,18 @@ export class EditorItemRenderer<T extends EditableItemViewModel> extends ItemRen
   private preview = new Graphics({ label: 'preview', zIndex: 0 })
   private commentsIndicator?: CommentsIndicatorContainer
 
-  constructor(store: TapestryEditorStore, stage: TapestryStage, viewModel: T) {
-    super(store.as('base'), stage, viewModel)
+  constructor(
+    private editorStore: TapestryEditorStore,
+    stage: TapestryStage,
+    viewModel: T,
+  ) {
+    super(editorStore.as('base'), stage, viewModel)
 
     this.pixiContainer.zIndex = DEFAULT_ITEM_Z_INDEX
+  }
+
+  protected hasButtonFeedback() {
+    return this.editorStore.get('interactionMode') !== 'edit'
   }
 
   private drawPreview(state: ItemRenderState<T>) {

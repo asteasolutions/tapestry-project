@@ -48,7 +48,8 @@ export const TextItem = memo(({ id }: TapestryItemProps) => {
   const isInteractiveElement = id === interactiveElement?.modelId
   const isEditable = isEditMode && isInteractiveElement
   const isTransparent = !dto.backgroundColor || dto.backgroundColor === TRANSPARENT
-  const showEmptyOutline = isEditMode && isTransparent && isHtmlEmpty(unsavedContent ?? dto.text)
+  const showEmptyOutline =
+    isEditMode && !isInteractiveElement && isTransparent && isHtmlEmpty(unsavedContent ?? dto.text)
 
   const {
     addLink,
@@ -137,10 +138,11 @@ export const TextItem = memo(({ id }: TapestryItemProps) => {
   })
 
   return (
-    <TapestryItem id={id} halo={toolbar} className={showEmptyOutline ? styles.root : undefined}>
+    <TapestryItem id={id} halo={toolbar}>
       <TextItemViewer
         id={id}
         api={editorAPI}
+        className={showEmptyOutline ? styles.emptyOutline : undefined}
         // setting value to unsavedContent prevents re-rendering of the editor with old text before the model updates
         value={!isEditable && unsavedContent !== null ? unsavedContent : dto.text}
         placeholder={isEditable ? 'Add your text here...' : undefined}
