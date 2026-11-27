@@ -4,7 +4,9 @@ import { Size } from 'tapestry-core/src/data-format/schemas/common'
 
 export const MAX_SOURCE_FILE_SIZE = 500 * 1000 * 1000 // 500 MB
 
-export const TEXT_ITEM_EXTENSIONS_MASK: { [K in keyof Controls]?: true } & { format: true } = {
+export type TiptapExtensionsMask = { [K in keyof Controls]?: true } & { format: true }
+
+export const TEXT_ITEM_EXTENSIONS_MASK: TiptapExtensionsMask = {
   format: true,
   list: true,
   link: true,

@@ -75,7 +75,7 @@ export function AnnotationsTab({
   }
 
   const focusAnnotation = (annotationId: string) => focusElement(itemDto.id, { annotationId })
-  const openAnnotationCommesnts = (annotationId: string) => {
+  const openAnnotationComments = (annotationId: string) => {
     focusAnnotation(annotationId)
     dispatch(setSidePane({ type: EditorSidePaneType.ItemAnnotations, data: { annotationId } }))
   }
@@ -84,8 +84,8 @@ export function AnnotationsTab({
     <AnnotationCommentsList
       annotationId={annotationId}
       annotations={annotations}
-      onPrev={openAnnotationCommesnts}
-      onNext={openAnnotationCommesnts}
+      onPrev={openAnnotationComments}
+      onNext={openAnnotationComments}
       onViewAll={() => dispatch(setSidePane(EditorSidePaneType.ItemAnnotations))}
       onCommentsChanged={onCommentsChangedRef}
     />
@@ -93,7 +93,7 @@ export function AnnotationsTab({
     <AnnotationsList
       annotations={annotations}
       itemDto={itemDto}
-      onOpenComments={openAnnotationCommesnts}
+      onOpenComments={openAnnotationComments}
       onAnnotationFocus={focusAnnotation}
       onDelete={() => reload(noop)}
     />

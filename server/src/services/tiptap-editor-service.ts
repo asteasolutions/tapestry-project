@@ -2,17 +2,17 @@ import { generateHTML, generateJSON } from '@tiptap/html'
 import { Extensions, getSchema, JSONContent } from '@tiptap/core'
 import { EditorState } from '@tiptap/pm/state'
 import { Node, Schema, Attrs } from '@tiptap/pm/model'
+import { TiptapExtensionsMask } from 'tapestry-shared/src/utils'
+import { getExtensions } from 'tapestry-core/src/tiptap'
 
-//extensions = getExtensions({ controls: TEXT_ITEM_EXTENSIONS_MASK, onCreateLink: () => false })
 export class TiptapEditorService {
   private schema: Schema
   private state: EditorState
+  private extensions: Extensions
 
-  constructor(
-    private extensions: Extensions,
-    html: string,
-  ) {
-    this.schema = getSchema(extensions)
+  constructor(html: string, extensionsMask: TiptapExtensionsMask) {
+    this.extensions = getExtensions({ controls: extensionsMask, onCreateLink: () => false })
+    this.schema = getSchema(this.extensions)
     const doc = Node.fromJSON(this.schema, generateJSON(html, this.extensions))
     this.state = EditorState.create({ doc, schema: this.schema })
   }
@@ -22,6 +22,7 @@ export class TiptapEditorService {
     const tr = this.state.tr.addMark(from, to, mark)
 
     this.state = this.state.apply(tr)
+    return this
   }
 
   unsetMark(markName: string, attrs: Attrs) {
@@ -29,6 +30,7 @@ export class TiptapEditorService {
     const tr = this.state.tr.removeMark(0, this.state.doc.content.size, mark)
 
     this.state = this.state.apply(tr)
+    return this
   }
 
   toHTML() {

@@ -5,7 +5,6 @@ import { canViewItem } from './items'
 import { prisma } from '../db'
 import { serialize } from '../transformers'
 import { BadRequestError } from '../errors'
-import { getExtensions } from 'tapestry-core/src/tiptap'
 import { TEXT_ITEM_EXTENSIONS_MASK } from 'tapestry-shared/src/utils'
 import { TiptapEditorService } from '../services/tiptap-editor-service'
 import { AnnotationExtension } from 'tapestry-core/src/tiptap/annotation-extension'
@@ -123,14 +122,11 @@ export const annotations: RESTResourceImpl<Resources['annotations'], never> = {
         }
         const newAnnotationId = crypto.randomUUID()
 
-        const tiptapEditorService = new TiptapEditorService(
-          getExtensions({ controls: TEXT_ITEM_EXTENSIONS_MASK, onCreateLink: () => false }),
-          item.text!,
-        )
-        tiptapEditorService.setMark(AnnotationExtension.name, body.from, body.to, {
-          id: newAnnotationId,
-        })
-        const newHTML = tiptapEditorService.toHTML()
+        const newHTML = new TiptapEditorService(item.text!, TEXT_ITEM_EXTENSIONS_MASK)
+          .setMark(AnnotationExtension.name, body.from, body.to, {
+            id: newAnnotationId,
+          })
+          .toHTML()
 
         return prisma.$transaction(async (tx) => {
           await tx.item.update({ where: { id: item.id }, data: { text: newHTML } })
@@ -151,18 +147,15 @@ export const annotations: RESTResourceImpl<Resources['annotations'], never> = {
       })
       const item = annotation.item
       if (item.type === 'text') {
-        const tiptapEditorService = new TiptapEditorService(
-          getExtensions({ controls: TEXT_ITEM_EXTENSIONS_MASK, onCreateLink: () => false }),
-          item.text!,
-        )
-        tiptapEditorService.unsetMark(AnnotationExtension.name, {
-          id,
-        })
-        const newHTML = tiptapEditorService.toHTML()
+        const newHTML = new TiptapEditorService(item.text!, TEXT_ITEM_EXTENSIONS_MASK)
+          .unsetMark(AnnotationExtension.name, {
+            id,
+          })
+          .toHTML()
 
         await prisma.$transaction(async (tx) => {
           await tx.item.update({ where: { id: item.id }, data: { text: newHTML } })
-          await prisma.itemAnnotation.delete({ where: { id } })
+          await tx.itemAnnotation.delete({ where: { id } })
         })
       } else {
         throw new BadRequestError('Annotations not implemented for this item type')

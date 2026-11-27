@@ -74,6 +74,8 @@ export function AnnotationsList({
         renderItem={({ data, id }) => (
           <div
             className={clsx(styles.annotationCard, { [styles.active]: annotationId === id })}
+            tabIndex={0}
+            role="button"
             onClick={(e) => {
               if (!(e.target instanceof HTMLElement && e.target.closest('button'))) {
                 onAnnotationFocus(id)

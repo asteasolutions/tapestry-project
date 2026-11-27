@@ -44,8 +44,8 @@ export function AnnotationBubbleMenu({
   }
 
   // from node_modules/@tiptap/extension-bubble-menu/src/bubble-menu-plugin.ts - BubbleMenuView
-  const shouldShow = useCallback(
-    ({ view, state, from, to }: Parameters<NonNullable<BubbleMenuProps['shouldShow']>>[0]) => {
+  const shouldShow = useCallback<NonNullable<BubbleMenuProps['shouldShow']>>(
+    ({ view, state, from, to }) => {
       const { doc, selection } = state
 
       // Sometime check for `empty` is not enough.
@@ -53,9 +53,9 @@ export function AnnotationBubbleMenu({
       // So we check also for an empty text size.
       const isEmptyTextBlock = !doc.textBetween(from, to).length && isTextSelection(selection)
 
-      const DOMSelectionFocusNode = window.getSelection()?.focusNode
+      const domSelectionFocusNode = window.getSelection()?.focusNode
       const hasEditorFocus =
-        (DOMSelectionFocusNode && view.dom.contains(DOMSelectionFocusNode)) ||
+        (domSelectionFocusNode && view.dom.contains(domSelectionFocusNode)) ||
         bubbleMenuRef.current?.contains(document.activeElement)
 
       if (!hasEditorFocus || selection.empty || isEmptyTextBlock) {
@@ -95,10 +95,14 @@ export function AnnotationBubbleMenu({
         className={styles.addCommentButton}
         onClick={() => {
           const editor = editorAPI.current?.editor()
+
+          // this hides the bubble menu explicitly, because it doesn't disappear on its own
+          editor?.commands.setMeta(BUBBLE_MENU_PLUGIN_KEY, 'hide')
+
+          // adds color to the annotated text so it remains visible
           editor?.commands.addSelectionToDecorationsMap(PENDING_ANNOTATION_DECORATION_KEY, {
             class: editorStyles.pendingAnnotation,
           })
-          editor?.view.dispatch(editor.state.tr.setMeta(BUBBLE_MENU_PLUGIN_KEY, 'hide'))
           window.getSelection()?.removeAllRanges()
 
           const selection = editor?.state.selection
@@ -114,6 +118,8 @@ export function AnnotationBubbleMenu({
             setSidePane(EditorSidePaneType.ItemAnnotations),
           )
           onPendingAnnotation()
+          /* We use set timeout so that the new viewport obstructions from the side pane can be calculated
+             TODO: see if it can be removed when we implement the docked comments pane */
           window.setTimeout(() => dispatch(focusItems([itemId])))
         }}
         tooltip={{ children: 'Annotate selection', side: 'bottom' }}

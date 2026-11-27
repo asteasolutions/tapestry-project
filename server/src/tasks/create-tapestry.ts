@@ -1,6 +1,6 @@
 import { getCopyName, IdMap, isHTTPURL, mapIds } from 'tapestry-core/src/utils.js'
 import { JobTypeMap } from './index.js'
-import { prisma } from '../db.js'
+import { prisma, Tx } from '../db.js'
 import { generateItemKey, s3Service, tapestryKey } from '../services/s3-service.js'
 import { omit, sumBy, compact } from 'lodash-es'
 import { actionMap, TapestryImportService } from '../services/tapestry-import-service.js'
@@ -110,7 +110,7 @@ async function cloneTapestry(
   title: string | null,
   description: string | null,
   userId: string,
-  tx: Prisma.TransactionClient,
+  tx: Tx,
 ): Promise<string> {
   const tapestryId = crypto.randomUUID()
 
@@ -145,11 +145,7 @@ async function cloneTapestry(
   return tapestryId
 }
 
-async function cloneGroups(
-  groups: Prisma.GroupGetPayload<null>[],
-  newTapestryId: string,
-  tx: Prisma.TransactionClient,
-) {
+async function cloneGroups(groups: Prisma.GroupGetPayload<null>[], newTapestryId: string, tx: Tx) {
   const newGroups = await tx.group.createManyAndReturn({
     data: groups.map((group) => ({
       ...omit(group, ['id', 'createdAt', 'updatedAt', 'tapestryId']),
@@ -161,10 +157,7 @@ async function cloneGroups(
   return mapIds(groups, newGroups)
 }
 
-async function cloneImageAssets(
-  imageAssetIds: string[],
-  tx: Prisma.TransactionClient,
-): Promise<IdMap<string>> {
+async function cloneImageAssets(imageAssetIds: string[], tx: Tx): Promise<IdMap<string>> {
   const newImageAssetIds = await tx.imageAsset.createManyAndReturn({
     data: imageAssetIds.map(() => ({})),
     select: { id: true },
@@ -190,7 +183,7 @@ async function cloneImageAssets(
 async function cloneItems(
   items: Prisma.ItemGetPayload<null>[],
   newTapestryId: string,
-  tx: Prisma.TransactionClient,
+  tx: Tx,
   groupIdMap: IdMap<string>,
   thumbnailIdMap: IdMap<string>,
 ): Promise<IdMap<string>> {
@@ -227,7 +220,7 @@ async function cloneItems(
 async function cloneRels(
   rels: Prisma.RelGetPayload<null>[],
   newTapestryId: string,
-  tx: Prisma.TransactionClient,
+  tx: Tx,
   itemIdMap: IdMap<string>,
 ) {
   await tx.rel.createMany({

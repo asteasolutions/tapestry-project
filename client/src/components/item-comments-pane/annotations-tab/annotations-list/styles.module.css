@@ -15,6 +15,7 @@
 
     &:hover {
       background-color: var(--theme-background-neutral);
+      cursor: pointer;
     }
 
     &.active {
