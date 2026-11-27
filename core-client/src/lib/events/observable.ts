@@ -4,7 +4,7 @@ import { Objectish, Patch } from 'immer'
 
 export type ChangeEvent<T> = TypedEvent<
   'change',
-  { value: T; patches: Patch[]; inversePatches: Patch[] }
+  { value: T; oldValue: T; patches: Patch[]; inversePatches: Patch[] }
 >
 
 export interface SetValueOptions {
@@ -15,9 +15,10 @@ export class Observable<T extends Objectish> extends TypedEventTarget<ChangeEven
   protected mutator = new Mutator(
     () => this._value,
     (newValue, patches, inversePatches, { silent }: SetValueOptions = {}) => {
+      const oldValue = this._value
       this._value = newValue
       if (!silent) {
-        this.dispatchEvent('change', { value: this._value, patches, inversePatches })
+        this.dispatchEvent('change', { value: newValue, oldValue, patches, inversePatches })
       }
     },
     () => undefined as never,

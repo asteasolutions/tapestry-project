@@ -4,7 +4,12 @@ import { parseDBItemSource } from '../../transformers/item.js'
 import { generateVideoThumbnail } from './video.js'
 import { generatePDFThumbnail } from './pdf.js'
 import { generateImageThumbnail } from './image.js'
-import { generateWebpageThumbnail, generateYoutubeThumbnail } from './webpage.js'
+import {
+  generateGoogleDriveThumbnail,
+  generateWebpageThumbnail,
+  generateYoutubeThumbnail,
+} from './webpage.js'
+import { GOOGLE_DRIVE_WEBPAGE_TYPES } from 'tapestry-core/src/data-format/schemas/item.js'
 import { isBlobURL } from 'tapestry-core/src/utils.js'
 
 export interface ThumbnailRenditionOutput {
@@ -48,6 +53,11 @@ export async function generatePrimaryThumbnail(
 
   if (webpageType === 'youtube') {
     return generateYoutubeThumbnail(source!)
+  }
+
+  if (webpageType && (GOOGLE_DRIVE_WEBPAGE_TYPES as readonly string[]).includes(webpageType)) {
+    const thumbnail = await generateGoogleDriveThumbnail(source!)
+    if (thumbnail) return thumbnail
   }
 
   return generateWebpageThumbnail({ url: source!, windowSize: { width, height }, timeout: 120_000 })

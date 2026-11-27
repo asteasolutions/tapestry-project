@@ -5,6 +5,8 @@ import { aspectRatio, clampSize, innerFit, Size } from 'tapestry-core/src/lib/ge
 import { WEB_SOURCE_PARSERS } from 'tapestry-core/src/web-sources'
 import { fetchIIIFCanvasCount } from 'tapestry-core/src/iiif'
 import { resource } from '../services/rest-resources'
+import { GoogleDriveMetadataProxyDto } from 'tapestry-shared/src/data-transfer/resources/dtos/proxy'
+import { GoogleDriveWebpageType } from 'tapestry-core/src/data-format/schemas/item'
 import { getBoundingRectangle } from 'tapestry-core-client/src/view-model/utils'
 import { createItemViewModel } from '../pages/tapestry/view-model/utils'
 import { duplicateItem } from '../model/data/utils'
@@ -131,6 +133,25 @@ export async function getPDFItemSize(source: MediaItemSource | Size): Promise<Si
 const DEFAULT_WEBPAGE_SIZE: Size = {
   width: 400,
   height: 500,
+}
+
+export async function getGoogleDriveMetadata(
+  source: string,
+): Promise<{ webpageType: GoogleDriveWebpageType; size?: Size }> {
+  try {
+    const { result } = (await resource('proxy').create({
+      type: 'google-drive-metadata',
+      url: source,
+    })) as GoogleDriveMetadataProxyDto
+    if (!result.size) return { webpageType: result.webpageType }
+
+    return {
+      webpageType: result.webpageType,
+      size: { width: DEFAULT_VIDEO_WIDTH, height: DEFAULT_VIDEO_WIDTH / aspectRatio(result.size) },
+    }
+  } catch {
+    return { webpageType: 'googleDrive' }
+  }
 }
 
 const EMBEDDED_TAPESTRY_MIN_WIDTH = 300

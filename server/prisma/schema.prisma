@@ -167,6 +167,12 @@ enum WebpageType {
   iaWayback
   iaAudio
   iaVideo
+  googleDrive
+  googleDriveVideo
+  googleDriveAudio
+  googleDriveImage
+  googleDrivePdf
+  googleDriveBook
 }
 
 enum ActionType {

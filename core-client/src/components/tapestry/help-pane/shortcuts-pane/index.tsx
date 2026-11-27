@@ -55,6 +55,10 @@ export const DEFAULT_ACTIONS: ActionsSection[] = deepFreeze([
         shortcut: 'Shift',
       },
       {
+        name: 'Select all items',
+        shortcut: 'meta + A',
+      },
+      {
         name: 'Focus item(s)',
         shortcut: 'F',
       },

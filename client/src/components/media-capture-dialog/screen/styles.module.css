@@ -21,6 +21,21 @@
       :global(.material-symbols-outlined) {
         font-size: inherit;
       }
+
+      &.share {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+
+        :global(.material-symbols-outlined) {
+          font-size: 40px;
+          color: var(--theme-text-secondary);
+        }
+
+        & > :last-child {
+          margin-top: 12px;
+        }
+      }
     }
   }
 }

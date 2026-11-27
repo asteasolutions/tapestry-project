@@ -6,7 +6,7 @@ import { usePropRef } from 'tapestry-core-client/src/components/lib/hooks/use-pr
 import { Button } from 'tapestry-core-client/src/components/lib/buttons/index'
 import { Text } from 'tapestry-core-client/src/components/lib/text/index'
 import mime from 'mime'
-import { compact } from 'lodash-es'
+import { compact, upperFirst } from 'lodash-es'
 import clsx from 'clsx'
 import styles from './styles.module.css'
 import { MediaCaptureTabProps } from '..'
@@ -24,6 +24,15 @@ function captureManagerIcon(man: BaseMediaCaptureManager<unknown>) {
   }
   return ''
 }
+
+function deniedDeviceLabel(
+  { inputDeviceTypes: { audio, video } }: BaseMediaCaptureManager<unknown>,
+  conjunction: 'and' | 'or',
+) {
+  if (audio && video) return `camera ${conjunction} microphone`
+  return video ? 'camera' : 'microphone'
+}
+
 export interface GenericMediaCaptureTabProps<O> extends MediaCaptureTabProps {
   className?: string
   captureManager: BaseMediaCaptureManager<O>
@@ -116,10 +125,25 @@ export function GenericMediaCaptureTab<O>({
       </div>
     )
   } else if (state === 'error') {
+    const device = deniedDeviceLabel(captureManager, 'and')
     content = (
-      <Text variant="bodySm" className={styles.status}>
-        Insufficient permissions. Please check your browser settings.
-      </Text>
+      <div className={styles.deniedContainer}>
+        <div className={styles.icon}>
+          <Icon icon={captureManager.inputDeviceTypes.video ? 'videocam_off' : 'mic_off'} />
+        </div>
+        <Text variant="body" className={styles.title}>
+          {upperFirst(deniedDeviceLabel(captureManager, 'or'))} access is blocked
+        </Text>
+        <Text variant="bodySm" component="p">
+          To record, click the settings icon on the left of your browser's address bar and allow
+          access to your {device}. Then click "Try again".
+        </Text>
+      </div>
+    )
+    buttons = (
+      <Button variant="secondary" onClick={() => captureManager.init(initOptionsRef.current)}>
+        Try again
+      </Button>
     )
   } else if (state === 'recoverable') {
     content = (
