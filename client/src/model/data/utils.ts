@@ -259,7 +259,7 @@ export function createTextItem(text = '', tapestryId: string): TextItemCreateDto
 export function createActionButtonItem(text = '', tapestryId: string): ActionButtonItemCreateDto {
   return {
     type: 'actionButton',
-    dropShadow: false,
+    dropShadow: true,
     position: ORIGIN,
     size: itemSizes.actionButton,
     backgroundColor: userSettings.getTapestrySettings(tapestryId).textItemColor,

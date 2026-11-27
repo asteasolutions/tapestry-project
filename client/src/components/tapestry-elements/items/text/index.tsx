@@ -20,6 +20,8 @@ import { TapestryItem } from '../tapestry-item'
 import { ToggleFormatButton, tooltip } from './toggle-format-button'
 import { richTextEditorToolbar } from './toolbar'
 import { useTextboxLink } from '../../../../hooks/use-textbox-link'
+import { isHtmlEmpty } from 'tapestry-core-client/src/lib/dom'
+import styles from './styles.module.css'
 
 const BACKGROUND_COLORS: Record<LiteralColor, string> = COLOR_PRESETS
 
@@ -45,6 +47,9 @@ export const TextItem = memo(({ id }: TapestryItemProps) => {
   const isEditMode = interactionMode === 'edit'
   const isInteractiveElement = id === interactiveElement?.modelId
   const isEditable = isEditMode && isInteractiveElement
+  const isTransparent = !dto.backgroundColor || dto.backgroundColor === TRANSPARENT
+  const showEmptyOutline =
+    isEditMode && !isInteractiveElement && isTransparent && isHtmlEmpty(unsavedContent ?? dto.text)
 
   const {
     addLink,
@@ -137,6 +142,7 @@ export const TextItem = memo(({ id }: TapestryItemProps) => {
       <TextItemViewer
         id={id}
         api={editorAPI}
+        className={showEmptyOutline ? styles.emptyOutline : undefined}
         // setting value to unsavedContent prevents re-rendering of the editor with old text before the model updates
         value={!isEditable && unsavedContent !== null ? unsavedContent : dto.text}
         placeholder={isEditable ? 'Add your text here...' : undefined}

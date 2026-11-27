@@ -100,9 +100,13 @@ export const ActionButtonItem = memo(({ id }: TapestryItemProps) => {
             },
             'separator',
             {
-              element: <AssignActionButton dto={dto} />,
+              element: (
+                <AssignActionButton
+                  dto={dto}
+                  description="Paste a website, or a link to an item, a video moment or a PDF page. Clicking the button takes viewers there."
+                />
+              ),
               tooltip: { side: 'bottom', children: 'Assign action' },
-              badge: !dto.action,
             },
             'separator',
             ...(showFormatToolbar ? formattingControls : editorControls),
@@ -120,7 +124,7 @@ export const ActionButtonItem = memo(({ id }: TapestryItemProps) => {
         controls={controls}
         // setting value to unsavedContent prevents re-rendering of the editor with old text before the model updates
         value={!isEditable && unsavedContent !== null ? unsavedContent : dto.text}
-        placeholder={isEditable ? 'Add your text here...' : undefined}
+        placeholder={isEditable ? 'Add your action name here...' : undefined}
         isEditable={isEditable}
         events={{
           onChange: (value) => {

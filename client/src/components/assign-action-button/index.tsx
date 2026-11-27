@@ -7,6 +7,7 @@ import { updateItem } from '../../pages/tapestry/view-model/store-commands/items
 import { ActionButtonItem, ActionItemType } from 'tapestry-core/src/data-format/schemas/item'
 import { Id } from 'tapestry-core/src/data-format/schemas/common'
 import { AddLinkModal } from '../add-link-modal'
+import { LinkActionModal } from '../link-action-modal'
 
 type ActionItemDto = Extract<ItemDto, { type: ActionItemType }>
 
@@ -29,25 +30,51 @@ export function extractAction(url: string | null, tapestryPath: string, tapestry
 interface AssignActionProps {
   dto: ActionItemDto
   icon?: IconButtonProps['icon']
+  description?: string
 }
 
-export function AssignActionButton({ dto, icon = 'link' }: AssignActionProps) {
-  const [showModal, setShowModal] = useState(false)
+export function AssignActionButton({ dto, icon = 'link', description }: AssignActionProps) {
+  const [showModal, setShowModal] = useState<'action' | 'edit'>()
   const tapestryPath = useTapestryPath('view')
   const tapestryId = useTapestryData('id')
   const dispatch = useDispatch()
 
+  const link =
+    dto.action && dto.actionType === 'internalLink'
+      ? `${window.location.origin}${tapestryPath}?${dto.action}`
+      : (dto.action ?? undefined)
+
+  function close() {
+    setShowModal(undefined)
+  }
+
   return (
     <>
-      <IconButton icon={icon} aria-label="Assign action" onClick={() => setShowModal(true)} />
-      {showModal && (
+      <IconButton
+        icon={icon}
+        aria-label="Assign action"
+        onClick={() => setShowModal(link ? 'action' : 'edit')}
+      />
+      {showModal === 'action' && link && (
+        <LinkActionModal
+          link={link}
+          onClose={close}
+          onEdit={() => setShowModal('edit')}
+          onDelete={() => {
+            close()
+            dispatch(updateItem(dto.id, { dto: { action: null, actionType: null } }))
+          }}
+        />
+      )}
+      {showModal === 'edit' && (
         <AddLinkModal
           title="Assign action"
-          onClose={() => setShowModal(false)}
-          initialLink={dto.action ?? undefined}
+          description={description}
+          onClose={close}
+          initialLink={link}
           excludeItemId={dto.id}
           onApply={(url) => {
-            setShowModal(false)
+            close()
             const { action, actionType } = extractAction(url, tapestryPath, tapestryId)
             dispatch(updateItem(dto.id, { dto: { action, actionType } }))
           }}
